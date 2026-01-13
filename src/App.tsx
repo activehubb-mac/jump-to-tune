@@ -6,6 +6,7 @@ import { FeedbackProvider } from "@/contexts/FeedbackContext";
 import { FeedbackModal } from "@/components/ui/feedback-modal";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Onboarding from "./pages/Onboarding";
 import Browse from "./pages/Browse";
 import Artists from "./pages/Artists";
 import Labels from "./pages/Labels";
@@ -29,6 +30,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/browse" element={<Browse />} />
               <Route path="/artists" element={<Artists />} />
               <Route path="/labels" element={<Labels />} />

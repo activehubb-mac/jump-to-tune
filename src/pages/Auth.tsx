@@ -21,7 +21,7 @@ const roles: { value: UserRole; label: string; icon: React.ElementType; descript
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, signIn, signUp, resendConfirmationEmail, isLoading: authLoading } = useAuth();
+  const { user, role, signIn, signUp, resendConfirmationEmail, isLoading: authLoading } = useAuth();
   const { showFeedback, closeFeedback } = useFeedback();
   
   const [mode, setMode] = useState<AuthMode>((searchParams.get("mode") as AuthMode) || "signin");
@@ -42,9 +42,15 @@ export default function Auth() {
   // Redirect if already logged in
   useEffect(() => {
     if (user && !authLoading) {
-      navigate("/");
+      // Artists and labels go to onboarding, fans go home
+      if (role === "artist" || role === "label") {
+        // Check if they have completed onboarding (has bio or avatar)
+        navigate("/onboarding");
+      } else {
+        navigate("/");
+      }
     }
-  }, [user, authLoading, navigate]);
+  }, [user, role, authLoading, navigate]);
 
   useEffect(() => {
     const urlMode = searchParams.get("mode") as AuthMode;
