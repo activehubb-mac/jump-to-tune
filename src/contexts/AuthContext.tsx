@@ -9,6 +9,7 @@ interface Profile {
   display_name: string | null;
   avatar_url: string | null;
   bio: string | null;
+  onboarding_completed: boolean | null;
 }
 
 interface AuthContextType {
