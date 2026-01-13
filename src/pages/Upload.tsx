@@ -8,7 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload as UploadIcon, Lock, Loader2, AlertCircle, Save, Rocket, UserCircle } from "lucide-react";
+import { Lock, Loader2, AlertCircle, Save, Rocket, UserCircle } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedback } from "@/contexts/FeedbackContext";
 import { useTrackUpload } from "@/hooks/useTrackUpload";
@@ -25,6 +32,29 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+
+const GENRES = [
+  "Electronic",
+  "Hip Hop",
+  "Pop",
+  "R&B",
+  "Rock",
+  "Jazz",
+  "Classical",
+  "Country",
+  "Reggae",
+  "Latin",
+  "Afrobeat",
+  "Indie",
+  "Alternative",
+  "Dance",
+  "House",
+  "Techno",
+  "Ambient",
+  "Soul",
+  "Folk",
+  "Metal",
+] as const;
 
 const uploadFormSchema = z.object({
   title: z.string().min(1, "Track title is required").max(100, "Title must be less than 100 characters"),
@@ -283,14 +313,24 @@ export default function Upload() {
                         Genre
                         <InfoTooltip content="Select a genre that best represents your sound. This helps fans discover your music through browse filters." />
                       </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="e.g., Electronic, Hip Hop"
-                          className="bg-muted/50 border-glass-border focus:border-primary"
-                          disabled={isUploading}
-                        />
-                      </FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={isUploading}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="bg-muted/50 border-glass-border focus:border-primary">
+                            <SelectValue placeholder="Select a genre" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-background border-glass-border">
+                          {GENRES.map((genre) => (
+                            <SelectItem key={genre} value={genre}>
+                              {genre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
