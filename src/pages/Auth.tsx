@@ -4,10 +4,10 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Music, Mail, Lock, User, Building2, Headphones, ArrowRight, Loader2 } from "lucide-react";
+import { Music, Mail, Lock, User, Building2, Headphones, ArrowRight, Loader2, RefreshCw, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { useFeedback } from "@/contexts/FeedbackContext";
 
 type AuthMode = "signin" | "signup";
 type UserRole = "fan" | "artist" | "label";
@@ -21,8 +21,8 @@ const roles: { value: UserRole; label: string; icon: React.ElementType; descript
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, signIn, signUp, isLoading: authLoading } = useAuth();
-  const { toast } = useToast();
+  const { user, signIn, signUp, resendConfirmationEmail, isLoading: authLoading } = useAuth();
+  const { showFeedback, closeFeedback } = useFeedback();
   
   const [mode, setMode] = useState<AuthMode>((searchParams.get("mode") as AuthMode) || "signin");
   const [selectedRole, setSelectedRole] = useState<UserRole>((searchParams.get("role") as UserRole) || "fan");
@@ -32,6 +32,12 @@ export default function Auth() {
   const [displayName, setDisplayName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  // Email confirmation states
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [isResending, setIsResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -46,6 +52,53 @@ export default function Auth() {
     if (urlMode) setMode(urlMode);
     if (urlRole) setSelectedRole(urlRole);
   }, [searchParams]);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
+
+  const handleResendEmail = async () => {
+    if (isResending || resendCooldown > 0) return;
+    
+    setIsResending(true);
+    const { error } = await resendConfirmationEmail(pendingEmail);
+    setIsResending(false);
+    
+    if (error) {
+      showFeedback({
+        type: "error",
+        title: "Failed to Resend",
+        message: error.message || "Could not resend confirmation email. Please try again.",
+        primaryAction: {
+          label: "Try Again",
+          onClick: () => {
+            closeFeedback();
+            handleResendEmail();
+          },
+        },
+      });
+    } else {
+      setResendCooldown(60);
+      showFeedback({
+        type: "success",
+        title: "Email Sent!",
+        message: `We've sent a new confirmation email to ${pendingEmail}`,
+        autoClose: true,
+        autoCloseDelay: 3000,
+      });
+    }
+  };
+
+  const handleBackToSignIn = () => {
+    setShowEmailConfirmation(false);
+    setPendingEmail("");
+    setMode("signin");
+    setError("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,7 +141,18 @@ export default function Auth() {
       
       if (signUpError) {
         if (signUpError.message.includes("already registered")) {
-          setError("An account with this email already exists. Please sign in.");
+          showFeedback({
+            type: "warning",
+            title: "Account Exists",
+            message: "An account with this email already exists. Please sign in instead.",
+            primaryAction: {
+              label: "Sign In",
+              onClick: () => {
+                closeFeedback();
+                setMode("signin");
+              },
+            },
+          });
         } else {
           setError(signUpError.message);
         }
@@ -96,16 +160,27 @@ export default function Auth() {
         return;
       }
 
-      toast({
-        title: "Account created!",
-        description: "Please check your email to confirm your account.",
-      });
+      // Show email confirmation screen
+      setPendingEmail(email);
+      setShowEmailConfirmation(true);
       setIsLoading(false);
     } else {
       const { error: signInError } = await signIn(email, password);
       
       if (signInError) {
-        if (signInError.message.includes("Invalid login credentials")) {
+        if (signInError.message.includes("Email not confirmed")) {
+          setPendingEmail(email);
+          setShowEmailConfirmation(true);
+          showFeedback({
+            type: "warning",
+            title: "Email Not Confirmed",
+            message: "Please confirm your email address before signing in. Check your inbox for the confirmation link.",
+            primaryAction: {
+              label: "Got it",
+              onClick: closeFeedback,
+            },
+          });
+        } else if (signInError.message.includes("Invalid login credentials")) {
           setError("Invalid email or password. Please try again.");
         } else {
           setError(signInError.message);
@@ -114,9 +189,12 @@ export default function Auth() {
         return;
       }
 
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in.",
+      showFeedback({
+        type: "success",
+        title: "Welcome Back!",
+        message: "You have successfully signed in.",
+        autoClose: true,
+        autoCloseDelay: 2000,
       });
       navigate("/");
     }
@@ -128,6 +206,76 @@ export default function Auth() {
       <Layout showFooter={false}>
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  // Email Confirmation Screen
+  if (showEmailConfirmation) {
+    return (
+      <Layout showFooter={false}>
+        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
+          {/* Background Effects */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-primary/20 rounded-full blur-[100px]" />
+            <div className="absolute bottom-1/3 right-1/4 w-72 h-72 bg-accent/20 rounded-full blur-[100px]" />
+          </div>
+
+          <div className="w-full max-w-md relative z-10">
+            {/* Logo */}
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center gap-2 mb-4">
+                <div className="w-16 h-16 rounded-full gradient-accent flex items-center justify-center neon-glow animate-pulse">
+                  <Mail className="w-8 h-8 text-foreground" />
+                </div>
+              </div>
+              <h1 className="text-3xl font-bold text-foreground">Check Your Email</h1>
+              <p className="text-muted-foreground mt-2">
+                We've sent a confirmation link to
+              </p>
+              <p className="text-primary font-medium mt-1">{pendingEmail}</p>
+            </div>
+
+            {/* Confirmation Card */}
+            <div className="glass-card p-8 text-center space-y-6">
+              <div className="space-y-3">
+                <p className="text-muted-foreground text-sm">
+                  Click the link in the email to verify your account and get started.
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  Don't see it? Check your spam folder.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <Button
+                  onClick={handleResendEmail}
+                  disabled={isResending || resendCooldown > 0}
+                  variant="outline"
+                  className="w-full border-glass-border hover:bg-muted/50"
+                >
+                  {isResending ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                  )}
+                  {resendCooldown > 0
+                    ? `Resend in ${resendCooldown}s`
+                    : "Resend Confirmation Email"}
+                </Button>
+
+                <Button
+                  onClick={handleBackToSignIn}
+                  variant="ghost"
+                  className="w-full text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Sign In
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </Layout>
     );
