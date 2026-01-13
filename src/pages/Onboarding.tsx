@@ -30,14 +30,17 @@ export default function Onboarding() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Redirect fans to home (no onboarding needed for them)
+  // Redirect fans to home and already-onboarded users to dashboard
   useEffect(() => {
-    if (!isLoading && user) {
+    if (!isLoading && user && profile !== null) {
       if (role === "fan") {
         navigate("/");
+      } else if (profile.onboarding_completed) {
+        // Already onboarded - redirect to dashboard
+        navigate(role === "artist" ? "/artist-dashboard" : "/label-dashboard");
       }
     }
-  }, [isLoading, user, role, navigate]);
+  }, [isLoading, user, role, profile, navigate]);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -75,6 +78,7 @@ export default function Onboarding() {
       .update({
         display_name: displayName.trim() || null,
         bio: bio.trim() || null,
+        onboarding_completed: true,
       })
       .eq("id", user.id);
 
