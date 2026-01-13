@@ -327,16 +327,16 @@ export default function Upload() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
-                        Price (ETH) *
-                        <InfoTooltip content="Set your price in ETH. Consider your audience and the value of limited editions. Free tracks (0 ETH) can help build your following." />
+                        Price (USD) *
+                        <InfoTooltip content="Set your price in USD. Consider your audience and the value of limited editions. Free tracks ($0) can help build your following." />
                       </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           type="number"
-                          step="0.001"
+                          step="0.01"
                           min="0"
-                          placeholder="0.05"
+                          placeholder="0.99"
                           className="bg-muted/50 border-glass-border focus:border-primary"
                           disabled={isUploading}
                         />
