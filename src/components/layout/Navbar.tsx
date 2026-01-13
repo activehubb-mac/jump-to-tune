@@ -1,8 +1,17 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Music, Home, Search, User, Building2, Menu, X } from "lucide-react";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
   { href: "/", label: "Home", icon: Home },
@@ -14,6 +23,26 @@ const navLinks = [
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, profile, role, signOut, isLoading } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const getDashboardLink = () => {
+    if (role === "artist") return "/artist/dashboard";
+    if (role === "label") return "/label/dashboard";
+    return "/collection";
+  };
+
+  const getInitials = () => {
+    if (profile?.display_name) {
+      return profile.display_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    }
+    return user?.email?.charAt(0).toUpperCase() || "U";
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass">
@@ -50,14 +79,80 @@ export function Navbar() {
             })}
           </div>
 
-          {/* Auth Buttons */}
+          {/* Auth Buttons / User Menu */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" asChild>
-              <Link to="/auth">Sign In</Link>
-            </Button>
-            <Button className="gradient-accent neon-glow-subtle hover:neon-glow transition-all duration-300" asChild>
-              <Link to="/auth?mode=signup">Get Started</Link>
-            </Button>
+            {isLoading ? (
+              <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
+            ) : user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar className="h-10 w-10 border-2 border-primary/50">
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback className="bg-primary/20 text-primary">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 glass" align="end">
+                  <div className="flex items-center gap-2 p-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-foreground">
+                        {profile?.display_name || "User"}
+                      </span>
+                      <span className="text-xs text-muted-foreground capitalize">
+                        {role || "Fan"}
+                      </span>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to={getDashboardLink()} className="flex items-center gap-2 cursor-pointer">
+                      <LayoutDashboard className="w-4 h-4" />
+                      {role === "fan" ? "My Collection" : "Dashboard"}
+                    </Link>
+                  </DropdownMenuItem>
+                  {(role === "artist" || role === "label") && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/upload" className="flex items-center gap-2 cursor-pointer">
+                        <Upload className="w-4 h-4" />
+                        Upload Music
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem asChild>
+                    <Link to="/collection" className="flex items-center gap-2 cursor-pointer">
+                      <Library className="w-4 h-4" />
+                      Collection
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleSignOut}
+                    className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link to="/auth">Sign In</Link>
+                </Button>
+                <Button className="gradient-accent neon-glow-subtle hover:neon-glow transition-all duration-300" asChild>
+                  <Link to="/auth?mode=signup">Get Started</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -93,14 +188,60 @@ export function Navbar() {
                   </Link>
                 );
               })}
-              <div className="flex flex-col gap-2 pt-4 mt-2">
-                <Button variant="ghost" asChild className="justify-start">
-                  <Link to="/auth" onClick={() => setIsOpen(false)}>Sign In</Link>
-                </Button>
-                <Button className="gradient-accent" asChild>
-                  <Link to="/auth?mode=signup" onClick={() => setIsOpen(false)}>Get Started</Link>
-                </Button>
-              </div>
+              
+              {user ? (
+                <>
+                  <div className="flex items-center gap-3 px-4 py-3 border-t border-glass-border mt-2 pt-4">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback className="bg-primary/20 text-primary">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium text-foreground">{profile?.display_name || "User"}</p>
+                      <p className="text-sm text-muted-foreground capitalize">{role || "Fan"}</p>
+                    </div>
+                  </div>
+                  <Link
+                    to={getDashboardLink()}
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+                  >
+                    <LayoutDashboard className="w-5 h-5" />
+                    {role === "fan" ? "My Collection" : "Dashboard"}
+                  </Link>
+                  {(role === "artist" || role === "label") && (
+                    <Link
+                      to="/upload"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+                    >
+                      <Upload className="w-5 h-5" />
+                      Upload Music
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setIsOpen(false);
+                    }}
+                    className="flex items-center gap-3 px-4 py-3 text-destructive hover:bg-destructive/10 rounded-lg w-full text-left"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <div className="flex flex-col gap-2 pt-4 mt-2 border-t border-glass-border">
+                  <Button variant="ghost" asChild className="justify-start">
+                    <Link to="/auth" onClick={() => setIsOpen(false)}>Sign In</Link>
+                  </Button>
+                  <Button className="gradient-accent" asChild>
+                    <Link to="/auth?mode=signup" onClick={() => setIsOpen(false)}>Get Started</Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         )}

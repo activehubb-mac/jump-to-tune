@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Music, Mail, Lock, User, Building2, Headphones, ArrowRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 type AuthMode = "signin" | "signup";
 type UserRole = "fan" | "artist" | "label";
@@ -19,6 +21,9 @@ const roles: { value: UserRole; label: string; icon: React.ElementType; descript
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user, signIn, signUp, isLoading: authLoading } = useAuth();
+  const { toast } = useToast();
+  
   const [mode, setMode] = useState<AuthMode>((searchParams.get("mode") as AuthMode) || "signin");
   const [selectedRole, setSelectedRole] = useState<UserRole>((searchParams.get("role") as UserRole) || "fan");
   const [email, setEmail] = useState("");
@@ -27,6 +32,13 @@ export default function Auth() {
   const [displayName, setDisplayName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user && !authLoading) {
+      navigate("/");
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     const urlMode = searchParams.get("mode") as AuthMode;
@@ -47,7 +59,20 @@ export default function Auth() {
       return;
     }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      setIsLoading(false);
+      return;
+    }
+
     if (mode === "signup") {
+      if (!displayName.trim()) {
+        setError("Please enter a display name");
+        setIsLoading(false);
+        return;
+      }
       if (password !== confirmPassword) {
         setError("Passwords do not match");
         setIsLoading(false);
@@ -58,15 +83,55 @@ export default function Auth() {
         setIsLoading(false);
         return;
       }
-    }
 
-    // TODO: Implement actual auth with Supabase
-    setTimeout(() => {
+      const { error: signUpError } = await signUp(email, password, displayName, selectedRole);
+      
+      if (signUpError) {
+        if (signUpError.message.includes("already registered")) {
+          setError("An account with this email already exists. Please sign in.");
+        } else {
+          setError(signUpError.message);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      toast({
+        title: "Account created!",
+        description: "Please check your email to confirm your account.",
+      });
       setIsLoading(false);
-      // Placeholder - will be replaced with actual auth
-      console.log("Auth attempt:", { mode, email, selectedRole, displayName });
-    }, 1000);
+    } else {
+      const { error: signInError } = await signIn(email, password);
+      
+      if (signInError) {
+        if (signInError.message.includes("Invalid login credentials")) {
+          setError("Invalid email or password. Please try again.");
+        } else {
+          setError(signInError.message);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
+      });
+      navigate("/");
+    }
   };
+
+  // Show loading state while checking auth
+  if (authLoading) {
+    return (
+      <Layout showFooter={false}>
+        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout showFooter={false}>
