@@ -190,7 +190,7 @@ export default function Upload() {
           ? "Your track has been saved as a draft. You can publish it later from your dashboard."
           : "Your track is now live and visible to fans!",
       });
-      navigate(role === "artist" ? "/artist-dashboard" : "/label-dashboard");
+      navigate(role === "artist" ? "/artist/dashboard" : "/label/dashboard");
     } else {
       showFeedback({
         type: "error",

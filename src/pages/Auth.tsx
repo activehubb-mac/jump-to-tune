@@ -46,7 +46,7 @@ export default function Auth() {
       if (role === "artist" || role === "label") {
         if (profile.onboarding_completed) {
           // Already onboarded - go to their dashboard
-          navigate(role === "artist" ? "/artist-dashboard" : "/label-dashboard");
+          navigate(role === "artist" ? "/artist/dashboard" : "/label/dashboard");
         } else {
           // Not yet onboarded - go to onboarding
           navigate("/onboarding");

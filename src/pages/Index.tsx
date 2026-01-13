@@ -149,7 +149,7 @@ export default function Index() {
               className="border-glass-border hover:bg-glass hover:border-primary/50 transition-all duration-300 text-lg px-8"
               asChild
             >
-              <Link to="/artist-dashboard">
+              <Link to="/artist/dashboard">
                 <LayoutDashboard className="w-5 h-5 mr-2" />
                 Dashboard
               </Link>
@@ -188,7 +188,7 @@ export default function Index() {
               className="border-glass-border hover:bg-glass hover:border-primary/50 transition-all duration-300 text-lg px-8"
               asChild
             >
-              <Link to="/label-dashboard">
+              <Link to="/label/dashboard">
                 <LayoutDashboard className="w-5 h-5 mr-2" />
                 Label Dashboard
               </Link>

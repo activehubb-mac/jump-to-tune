@@ -37,7 +37,7 @@ export default function Onboarding() {
         navigate("/");
       } else if (profile.onboarding_completed) {
         // Already onboarded - redirect to dashboard
-        navigate(role === "artist" ? "/artist-dashboard" : "/label-dashboard");
+        navigate(role === "artist" ? "/artist/dashboard" : "/label/dashboard");
       }
     }
   }, [isLoading, user, role, profile, navigate]);
