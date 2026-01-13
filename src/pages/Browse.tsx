@@ -51,7 +51,7 @@ export default function Browse() {
           {[...Array(15)].map((_, i) => (
             <div
               key={i}
-              className="glass-card p-4 group cursor-pointer hover:border-primary/50 transition-all duration-300"
+              className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
             >
               {/* Album Art */}
               <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">

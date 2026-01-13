@@ -3,7 +3,7 @@ import { Music, Twitter, Instagram, Youtube } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t border-glass-border bg-card/50 backdrop-blur-sm">
+    <footer className="bg-card/30 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
@@ -62,7 +62,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-glass-border mt-8 pt-8 text-center text-sm text-muted-foreground">
+        <div className="mt-8 pt-8 text-center text-sm text-muted-foreground">
           <p>© 2025 JumTunes. All rights reserved.</p>
         </div>
       </div>

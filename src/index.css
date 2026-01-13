@@ -108,11 +108,15 @@
 
 @layer utilities {
   .glass {
-    @apply bg-glass/50 backdrop-blur-xl border border-glass-border;
+    @apply bg-glass/50 backdrop-blur-xl;
   }
 
   .glass-card {
-    @apply bg-glass/60 backdrop-blur-xl border border-glass-border rounded-xl;
+    @apply bg-glass/40 backdrop-blur-xl rounded-xl;
+  }
+
+  .glass-card-bordered {
+    @apply bg-glass/40 backdrop-blur-xl border border-glass-border/30 rounded-xl;
   }
 
   .neon-glow {

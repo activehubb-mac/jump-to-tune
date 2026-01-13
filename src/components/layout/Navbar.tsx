@@ -16,7 +16,7 @@ export function Navbar() {
   const location = useLocation();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-glass-border">
+    <nav className="fixed top-0 left-0 right-0 z-50 glass">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -71,7 +71,7 @@ export function Navbar() {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden py-4 border-t border-glass-border">
+          <div className="md:hidden py-4">
             <div className="flex flex-col gap-2">
               {navLinks.map((link) => {
                 const Icon = link.icon;
@@ -93,7 +93,7 @@ export function Navbar() {
                   </Link>
                 );
               })}
-              <div className="flex flex-col gap-2 pt-4 border-t border-glass-border mt-2">
+              <div className="flex flex-col gap-2 pt-4 mt-2">
                 <Button variant="ghost" asChild className="justify-start">
                   <Link to="/auth" onClick={() => setIsOpen(false)}>Sign In</Link>
                 </Button>

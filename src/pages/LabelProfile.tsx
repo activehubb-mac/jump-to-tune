@@ -74,7 +74,7 @@ export default function LabelProfile() {
               <Link
                 key={i}
                 to={`/artist/${i + 1}`}
-                className="glass-card p-4 text-center group hover:border-primary/50 transition-all duration-300"
+                className="glass-card p-4 text-center group hover:bg-primary/10 transition-all duration-300"
               >
                 <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-primary/50 to-accent/50 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
                   <Music className="w-8 h-8 text-foreground" />
@@ -97,7 +97,7 @@ export default function LabelProfile() {
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="glass-card p-4 group cursor-pointer hover:border-accent/50 transition-all duration-300"
+                className="glass-card p-4 group cursor-pointer hover:bg-accent/10 transition-all duration-300"
               >
                 <div className="aspect-square rounded-lg bg-muted/50 mb-3 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Disc3 className="w-12 h-12 text-muted-foreground/50" />

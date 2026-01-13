@@ -104,7 +104,7 @@ export default function Index() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 border-y border-glass-border bg-card/30">
+      <section className="py-16 bg-card/20">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
@@ -136,7 +136,7 @@ export default function Index() {
               return (
                 <div
                   key={index}
-                  className="glass-card p-6 group hover:border-primary/50 hover:neon-glow-subtle transition-all duration-300"
+                  className="glass-card p-6 group hover:bg-primary/10 transition-all duration-300"
                 >
                   <div className="w-12 h-12 rounded-lg gradient-accent flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                     <Icon className="w-6 h-6 text-foreground" />
@@ -151,7 +151,7 @@ export default function Index() {
       </section>
 
       {/* Role CTA Section */}
-      <section className="py-24 bg-card/30 border-y border-glass-border">
+      <section className="py-24 bg-card/20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">
@@ -164,7 +164,7 @@ export default function Index() {
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Fan Card */}
-            <div className="glass-card p-8 text-center group hover:border-secondary/50 transition-all duration-300">
+            <div className="glass-card p-8 text-center group hover:bg-secondary/10 transition-all duration-300">
               <div className="w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <Headphones className="w-8 h-8 text-secondary" />
               </div>
@@ -178,7 +178,7 @@ export default function Index() {
             </div>
 
             {/* Artist Card */}
-            <div className="glass-card p-8 text-center group hover:border-primary/50 hover:neon-glow-subtle transition-all duration-300">
+            <div className="glass-card p-8 text-center group hover:bg-primary/10 transition-all duration-300">
               <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <Music className="w-8 h-8 text-primary" />
               </div>
@@ -192,7 +192,7 @@ export default function Index() {
             </div>
 
             {/* Label Card */}
-            <div className="glass-card p-8 text-center group hover:border-accent/50 transition-all duration-300">
+            <div className="glass-card p-8 text-center group hover:bg-accent/10 transition-all duration-300">
               <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <Building2 className="w-8 h-8 text-accent" />
               </div>
@@ -227,7 +227,7 @@ export default function Index() {
           {/* Placeholder for trending tracks */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="glass-card p-4 group cursor-pointer hover:border-primary/50 transition-all duration-300">
+              <div key={i} className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300">
                 <div className="aspect-square rounded-lg bg-muted/50 mb-3 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Disc3 className="w-12 h-12 text-muted-foreground" />
                 </div>
