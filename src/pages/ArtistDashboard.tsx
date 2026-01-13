@@ -3,9 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Music, Upload, DollarSign, Users, TrendingUp, BarChart3, Plus, Lock, AlertCircle, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useArtistStats } from "@/hooks/useArtistStats";
+import { useArtistTracks } from "@/hooks/useTracks";
+import { formatEarnings } from "@/lib/formatters";
+import { TrackCard } from "@/components/dashboard/TrackCard";
 
 export default function ArtistDashboard() {
   const { user, role, profile, isLoading } = useAuth();
+  const { data: stats, isLoading: statsLoading } = useArtistStats(user?.id);
+  const { data: tracks, isLoading: tracksLoading } = useArtistTracks(user?.id);
 
   // Show loading state while checking auth
   if (isLoading) {
@@ -66,6 +72,8 @@ export default function ArtistDashboard() {
     );
   }
 
+  const isDataLoading = statsLoading || tracksLoading;
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -94,7 +102,9 @@ export default function ArtistDashboard() {
               </div>
               <span className="text-muted-foreground text-sm">Total Tracks</span>
             </div>
-            <div className="text-3xl font-bold text-foreground">0</div>
+            <div className="text-3xl font-bold text-foreground">
+              {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats?.totalTracks ?? 0}
+            </div>
           </div>
 
           <div className="glass-card p-6">
@@ -104,7 +114,13 @@ export default function ArtistDashboard() {
               </div>
               <span className="text-muted-foreground text-sm">Total Earnings</span>
             </div>
-            <div className="text-3xl font-bold text-foreground">0 ETH</div>
+            <div className="text-3xl font-bold text-foreground">
+              {isDataLoading ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : (
+                formatEarnings(stats?.totalEarnings ?? 0)
+              )}
+            </div>
           </div>
 
           <div className="glass-card p-6">
@@ -114,7 +130,9 @@ export default function ArtistDashboard() {
               </div>
               <span className="text-muted-foreground text-sm">Collectors</span>
             </div>
-            <div className="text-3xl font-bold text-foreground">0</div>
+            <div className="text-3xl font-bold text-foreground">
+              {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats?.collectorsCount ?? 0}
+            </div>
           </div>
 
           <div className="glass-card p-6">
@@ -124,7 +142,15 @@ export default function ArtistDashboard() {
               </div>
               <span className="text-muted-foreground text-sm">This Month</span>
             </div>
-            <div className="text-3xl font-bold text-foreground">--</div>
+            <div className="text-3xl font-bold text-foreground">
+              {isDataLoading ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : stats?.thisMonthSales ? (
+                `${stats.thisMonthSales} sales`
+              ) : (
+                "--"
+              )}
+            </div>
           </div>
         </div>
 
@@ -134,18 +160,39 @@ export default function ArtistDashboard() {
           <div className="lg:col-span-2 glass-card p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-foreground">Your Tracks</h2>
-              <Button variant="ghost" size="sm" className="text-primary">View All</Button>
+              {tracks && tracks.length > 0 && (
+                <Button variant="ghost" size="sm" className="text-primary">View All</Button>
+              )}
             </div>
-            <div className="text-center py-12 text-muted-foreground">
-              <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>You haven't uploaded any tracks yet.</p>
-              <Button className="mt-4 gradient-accent" asChild>
-                <Link to="/upload">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Upload Your First Track
-                </Link>
-              </Button>
-            </div>
+            
+            {tracksLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : tracks && tracks.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {tracks.slice(0, 6).map((track) => (
+                  <TrackCard
+                    key={track.id}
+                    track={track}
+                    showActions
+                    onEdit={(id) => console.log("Edit track:", id)}
+                    onDelete={(id) => console.log("Delete track:", id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>You haven't uploaded any tracks yet.</p>
+                <Button className="mt-4 gradient-accent" asChild>
+                  <Link to="/upload">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Upload Your First Track
+                  </Link>
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Quick Actions */}
