@@ -175,17 +175,9 @@ export default function Auth() {
       
       if (signInError) {
         if (signInError.message.includes("Email not confirmed")) {
+          // Just show the email confirmation screen - no modal overlay needed
           setPendingEmail(email);
           setShowEmailConfirmation(true);
-          showFeedback({
-            type: "warning",
-            title: "Email Not Confirmed",
-            message: "Please confirm your email address before signing in. Check your inbox for the confirmation link.",
-            primaryAction: {
-              label: "Got it",
-              onClick: closeFeedback,
-            },
-          });
         } else if (signInError.message.includes("Invalid login credentials")) {
           setError("Invalid email or password. Please try again.");
         } else {
