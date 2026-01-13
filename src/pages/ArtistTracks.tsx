@@ -14,6 +14,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useArtistTracks } from "@/hooks/useTracks";
 import { TrackCard } from "@/components/dashboard/TrackCard";
+import { TrackDetailModal } from "@/components/dashboard/TrackDetailModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ export default function ArtistTracks() {
   const { data: tracks, isLoading: tracksLoading } = useArtistTracks(user?.id);
   const [deleteTrackId, setDeleteTrackId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState<typeof tracks extends (infer T)[] ? T : never | null>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -49,7 +51,8 @@ export default function ArtistTracks() {
       if (error) throw error;
 
       toast.success("Track deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["artist-tracks"] });
+      // Fix: Use correct query keys that match useTracks hook
+      queryClient.invalidateQueries({ queryKey: ["tracks"] });
       queryClient.invalidateQueries({ queryKey: ["artist-stats"] });
     } catch (error) {
       console.error("Error deleting track:", error);
@@ -151,6 +154,7 @@ export default function ArtistTracks() {
                 showActions
                 onEdit={handleEdit}
                 onDelete={(id) => setDeleteTrackId(id)}
+                onClick={() => setSelectedTrack(track)}
               />
             ))}
           </div>
@@ -172,6 +176,13 @@ export default function ArtistTracks() {
           </div>
         )}
       </div>
+
+      {/* Track Detail Modal with Audio Player */}
+      <TrackDetailModal
+        track={selectedTrack}
+        open={!!selectedTrack}
+        onOpenChange={(open) => !open && setSelectedTrack(null)}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteTrackId} onOpenChange={() => setDeleteTrackId(null)}>

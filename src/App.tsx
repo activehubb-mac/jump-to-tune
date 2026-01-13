@@ -19,6 +19,7 @@ import ArtistCollectors from "./pages/ArtistCollectors";
 import ArtistTracks from "./pages/ArtistTracks";
 import LabelDashboard from "./pages/LabelDashboard";
 import Upload from "./pages/Upload";
+import TrackEdit from "./pages/TrackEdit";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/artist/analytics" element={<ArtistAnalytics />} />
               <Route path="/artist/collectors" element={<ArtistCollectors />} />
               <Route path="/artist/tracks" element={<ArtistTracks />} />
+              <Route path="/track/:id/edit" element={<TrackEdit />} />
               <Route path="/label/dashboard" element={<LabelDashboard />} />
               <Route path="/upload" element={<Upload />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
