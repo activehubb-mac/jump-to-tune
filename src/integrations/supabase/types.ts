@@ -14,35 +14,327 @@ export type Database = {
   }
   public: {
     Tables: {
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      label_roster: {
+        Row: {
+          artist_id: string
+          id: string
+          joined_at: string
+          label_id: string
+          status: string
+        }
+        Insert: {
+          artist_id: string
+          id?: string
+          joined_at?: string
+          label_id: string
+          status?: string
+        }
+        Update: {
+          artist_id?: string
+          id?: string
+          joined_at?: string
+          label_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "label_roster_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "label_roster_label_id_fkey"
+            columns: ["label_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      likes: {
+        Row: {
+          created_at: string
+          id: string
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_genres: {
+        Row: {
+          genre: string
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          genre: string
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          genre?: string
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_genres_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          banner_image_url: string | null
           bio: string | null
           created_at: string
           display_name: string | null
           id: string
+          is_verified: boolean | null
           onboarding_completed: boolean | null
           updated_at: string
+          website_url: string | null
         }
         Insert: {
           avatar_url?: string | null
+          banner_image_url?: string | null
           bio?: string | null
           created_at?: string
           display_name?: string | null
           id: string
+          is_verified?: boolean | null
           onboarding_completed?: boolean | null
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
           avatar_url?: string | null
+          banner_image_url?: string | null
           bio?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
+          is_verified?: boolean | null
           onboarding_completed?: boolean | null
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: []
+      }
+      purchases: {
+        Row: {
+          edition_number: number
+          id: string
+          price_paid: number
+          purchased_at: string
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          edition_number: number
+          id?: string
+          price_paid: number
+          purchased_at?: string
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          edition_number?: number
+          id?: string
+          price_paid?: number
+          purchased_at?: string
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      track_karaoke: {
+        Row: {
+          created_at: string
+          id: string
+          instrumental_url: string
+          lyrics: string | null
+          track_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instrumental_url: string
+          lyrics?: string | null
+          track_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instrumental_url?: string
+          lyrics?: string | null
+          track_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "track_karaoke_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: true
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tracks: {
+        Row: {
+          artist_id: string
+          audio_url: string
+          cover_art_url: string | null
+          created_at: string
+          description: string | null
+          duration: number | null
+          editions_sold: number
+          genre: string | null
+          has_karaoke: boolean | null
+          id: string
+          is_draft: boolean | null
+          label_id: string | null
+          price: number
+          title: string
+          total_editions: number
+          updated_at: string
+        }
+        Insert: {
+          artist_id: string
+          audio_url: string
+          cover_art_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          editions_sold?: number
+          genre?: string | null
+          has_karaoke?: boolean | null
+          id?: string
+          is_draft?: boolean | null
+          label_id?: string | null
+          price?: number
+          title: string
+          total_editions?: number
+          updated_at?: string
+        }
+        Update: {
+          artist_id?: string
+          audio_url?: string
+          cover_art_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          editions_sold?: number
+          genre?: string | null
+          has_karaoke?: boolean | null
+          id?: string
+          is_draft?: boolean | null
+          label_id?: string | null
+          price?: number
+          title?: string
+          total_editions?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracks_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tracks_label_id_fkey"
+            columns: ["label_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
