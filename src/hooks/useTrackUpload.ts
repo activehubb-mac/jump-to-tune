@@ -92,17 +92,26 @@ export const useTrackUpload = (): UseTrackUploadReturn => {
     setUploadProgress({ audio: 0, cover: 0, instrumental: 0 });
 
     try {
+      // Helper to sanitize filenames for storage (remove special chars, spaces)
+      const sanitizeFilename = (name: string): string => {
+        return name
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+          .replace(/[^a-zA-Z0-9._-]/g, '_') // Replace special chars with underscore
+          .replace(/_+/g, '_'); // Collapse multiple underscores
+      };
+
       // Get audio duration
       const duration = await getAudioDuration(audioFile);
 
-      // Generate unique file paths
+      // Generate unique file paths with sanitized filenames
       const timestamp = Date.now();
-      const audioPath = `${user.id}/${timestamp}_${audioFile.name}`;
+      const audioPath = `${user.id}/${timestamp}_${sanitizeFilename(audioFile.name)}`;
       const coverPath = coverFile
-        ? `${user.id}/${timestamp}_${coverFile.name}`
+        ? `${user.id}/${timestamp}_${sanitizeFilename(coverFile.name)}`
         : null;
       const instrumentalPath = karaokeData.instrumentalFile
-        ? `${user.id}/${timestamp}_instrumental_${karaokeData.instrumentalFile.name}`
+        ? `${user.id}/${timestamp}_instrumental_${sanitizeFilename(karaokeData.instrumentalFile.name)}`
         : null;
 
       // Upload audio file
