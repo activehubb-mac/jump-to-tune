@@ -8,6 +8,7 @@ import { useArtistStats } from "@/hooks/useArtistStats";
 import { useArtistTracks } from "@/hooks/useTracks";
 import { formatEarnings } from "@/lib/formatters";
 import { TrackCard } from "@/components/dashboard/TrackCard";
+import { TrackDetailModal } from "@/components/dashboard/TrackDetailModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ export default function ArtistDashboard() {
   const { data: tracks, isLoading: tracksLoading } = useArtistTracks(user?.id);
   const [deleteTrackId, setDeleteTrackId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState<typeof tracks extends (infer T)[] ? T : never | null>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -47,7 +49,8 @@ export default function ArtistDashboard() {
       if (error) throw error;
 
       toast.success("Track deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["artist-tracks"] });
+      // Fix: Use correct query keys that match useTracks hook
+      queryClient.invalidateQueries({ queryKey: ["tracks"] });
       queryClient.invalidateQueries({ queryKey: ["artist-stats"] });
     } catch (error) {
       console.error("Error deleting track:", error);
@@ -59,9 +62,7 @@ export default function ArtistDashboard() {
   };
 
   const handleEdit = (trackId: string) => {
-    // For now, show toast - edit page can be added later
-    toast.info("Track editing coming soon!");
-    // navigate(`/track/${trackId}/edit`);
+    navigate(`/track/${trackId}/edit`);
   };
 
   // Show loading state while checking auth
@@ -146,9 +147,12 @@ export default function ArtistDashboard() {
           </Button>
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats Grid - Clickable Tiles */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="glass-card p-6">
+          <Link 
+            to="/artist/tracks" 
+            className="glass-card p-6 hover:border-primary/50 transition-colors cursor-pointer"
+          >
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
                 <Music className="w-5 h-5 text-primary" />
@@ -158,9 +162,12 @@ export default function ArtistDashboard() {
             <div className="text-3xl font-bold text-foreground">
               {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats?.totalTracks ?? 0}
             </div>
-          </div>
+          </Link>
 
-          <div className="glass-card p-6">
+          <Link 
+            to="/artist/analytics" 
+            className="glass-card p-6 hover:border-primary/50 transition-colors cursor-pointer"
+          >
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
                 <DollarSign className="w-5 h-5 text-secondary" />
@@ -174,9 +181,12 @@ export default function ArtistDashboard() {
                 formatEarnings(stats?.totalEarnings ?? 0)
               )}
             </div>
-          </div>
+          </Link>
 
-          <div className="glass-card p-6">
+          <Link 
+            to="/artist/collectors" 
+            className="glass-card p-6 hover:border-primary/50 transition-colors cursor-pointer"
+          >
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
                 <Users className="w-5 h-5 text-accent" />
@@ -186,9 +196,12 @@ export default function ArtistDashboard() {
             <div className="text-3xl font-bold text-foreground">
               {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats?.collectorsCount ?? 0}
             </div>
-          </div>
+          </Link>
 
-          <div className="glass-card p-6">
+          <Link 
+            to="/artist/analytics" 
+            className="glass-card p-6 hover:border-primary/50 transition-colors cursor-pointer"
+          >
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-green-500" />
@@ -204,7 +217,7 @@ export default function ArtistDashboard() {
                 "--"
               )}
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Recent Activity & Quick Actions */}
@@ -235,6 +248,7 @@ export default function ArtistDashboard() {
                     showActions
                     onEdit={handleEdit}
                     onDelete={(id) => setDeleteTrackId(id)}
+                    onClick={() => setSelectedTrack(track)}
                   />
                 ))}
               </div>
@@ -278,6 +292,13 @@ export default function ArtistDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Track Detail Modal with Audio Player */}
+      <TrackDetailModal
+        track={selectedTrack}
+        open={!!selectedTrack}
+        onOpenChange={(open) => !open && setSelectedTrack(null)}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteTrackId} onOpenChange={() => setDeleteTrackId(null)}>
