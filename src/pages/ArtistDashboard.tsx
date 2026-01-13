@@ -56,7 +56,7 @@ export default function ArtistDashboard() {
               {role === "fan" && " Browse our collection and discover new music!"}
             </p>
             <Button className="gradient-accent neon-glow-subtle" asChild>
-              <Link to={role === "label" ? "/label-dashboard" : "/browse"}>
+              <Link to={role === "label" ? "/label/dashboard" : "/browse"}>
                 {role === "label" ? "Go to Label Dashboard" : "Browse Music"}
               </Link>
             </Button>
