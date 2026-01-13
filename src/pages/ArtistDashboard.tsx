@@ -1,13 +1,25 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Music, Upload, DollarSign, Users, TrendingUp, BarChart3, Plus, Lock } from "lucide-react";
+import { Music, Upload, DollarSign, Users, TrendingUp, BarChart3, Plus, Lock, AlertCircle, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ArtistDashboard() {
-  const isLoggedIn = false; // Will be replaced with actual auth state
-  const isArtist = false; // Will check role
+  const { user, role, profile, isLoading } = useAuth();
 
-  if (!isLoggedIn) {
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-24 flex justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  // Not logged in - show sign in prompt
+  if (!user) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-24">
@@ -28,13 +40,41 @@ export default function ArtistDashboard() {
     );
   }
 
+  // Logged in but not an artist - show access denied
+  if (role !== "artist") {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-24">
+          <div className="max-w-md mx-auto text-center">
+            <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-6">
+              <AlertCircle className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h1 className="text-3xl font-bold text-foreground mb-4">Artist Access Only</h1>
+            <p className="text-muted-foreground mb-8">
+              This dashboard is for artists only. 
+              {role === "label" && " Check out your Label Dashboard instead!"}
+              {role === "fan" && " Browse our collection and discover new music!"}
+            </p>
+            <Button className="gradient-accent neon-glow-subtle" asChild>
+              <Link to={role === "label" ? "/label-dashboard" : "/browse"}>
+                {role === "label" ? "Go to Label Dashboard" : "Browse Music"}
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">Artist Dashboard</h1>
+            <h1 className="text-4xl font-bold text-foreground mb-2">
+              {profile?.display_name ? `Welcome, ${profile.display_name}` : "Artist Dashboard"}
+            </h1>
             <p className="text-muted-foreground">Manage your music and track your earnings</p>
           </div>
           <Button className="gradient-accent neon-glow-subtle hover:neon-glow" asChild>
@@ -54,7 +94,7 @@ export default function ArtistDashboard() {
               </div>
               <span className="text-muted-foreground text-sm">Total Tracks</span>
             </div>
-            <div className="text-3xl font-bold text-foreground">24</div>
+            <div className="text-3xl font-bold text-foreground">0</div>
           </div>
 
           <div className="glass-card p-6">
@@ -64,7 +104,7 @@ export default function ArtistDashboard() {
               </div>
               <span className="text-muted-foreground text-sm">Total Earnings</span>
             </div>
-            <div className="text-3xl font-bold text-foreground">2.5 ETH</div>
+            <div className="text-3xl font-bold text-foreground">0 ETH</div>
           </div>
 
           <div className="glass-card p-6">
@@ -74,7 +114,7 @@ export default function ArtistDashboard() {
               </div>
               <span className="text-muted-foreground text-sm">Collectors</span>
             </div>
-            <div className="text-3xl font-bold text-foreground">156</div>
+            <div className="text-3xl font-bold text-foreground">0</div>
           </div>
 
           <div className="glass-card p-6">
@@ -84,7 +124,7 @@ export default function ArtistDashboard() {
               </div>
               <span className="text-muted-foreground text-sm">This Month</span>
             </div>
-            <div className="text-3xl font-bold text-foreground">+12%</div>
+            <div className="text-3xl font-bold text-foreground">--</div>
           </div>
         </div>
 
@@ -96,22 +136,15 @@ export default function ArtistDashboard() {
               <h2 className="text-xl font-bold text-foreground">Your Tracks</h2>
               <Button variant="ghost" size="sm" className="text-primary">View All</Button>
             </div>
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                  <div className="w-12 h-12 rounded-lg bg-muted/50 flex items-center justify-center">
-                    <Music className="w-6 h-6 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-foreground truncate">Track Name #{i + 1}</h3>
-                    <p className="text-sm text-muted-foreground">{50 - i * 5}/100 remaining</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium text-foreground">0.05 ETH</div>
-                    <div className="text-xs text-muted-foreground">{i + 1} sold</div>
-                  </div>
-                </div>
-              ))}
+            <div className="text-center py-12 text-muted-foreground">
+              <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>You haven't uploaded any tracks yet.</p>
+              <Button className="mt-4 gradient-accent" asChild>
+                <Link to="/upload">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Upload Your First Track
+                </Link>
+              </Button>
             </div>
           </div>
 
