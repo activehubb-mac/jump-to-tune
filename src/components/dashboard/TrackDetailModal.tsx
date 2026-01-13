@@ -53,17 +53,21 @@ export function TrackDetailModal({
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
 
-  // Reset player state when modal closes or track changes
+  // Initialize with stored duration or 0, reset when modal closes/track changes
   useEffect(() => {
+    if (open && track?.duration) {
+      setDuration(track.duration);
+    }
     if (!open) {
       setIsPlaying(false);
       setCurrentTime(0);
+      setDuration(track?.duration || 0);
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
       }
     }
-  }, [open, track?.id]);
+  }, [open, track?.id, track?.duration]);
 
   const handlePlayPause = () => {
     if (!audioRef.current) return;
@@ -84,7 +88,21 @@ export function TrackDetailModal({
 
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
-      setDuration(audioRef.current.duration);
+      const audioDuration = audioRef.current.duration;
+      // Only update if we get a valid, finite duration
+      if (audioDuration && isFinite(audioDuration) && audioDuration > 0) {
+        setDuration(audioDuration);
+      }
+    }
+  };
+
+  // Handle duration change (fires when duration becomes available for streaming audio)
+  const handleDurationChange = () => {
+    if (audioRef.current) {
+      const audioDuration = audioRef.current.duration;
+      if (audioDuration && isFinite(audioDuration) && audioDuration > 0) {
+        setDuration(audioDuration);
+      }
     }
   };
 
@@ -202,8 +220,9 @@ export function TrackDetailModal({
               src={audioUrl}
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={handleLoadedMetadata}
+              onDurationChange={handleDurationChange}
               onEnded={handleEnded}
-              preload="metadata"
+              preload="auto"
             />
 
             {/* Progress Bar */}
