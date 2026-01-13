@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Disc3, Play, Heart, Edit, Trash2 } from "lucide-react";
+import { Disc3, Edit, Trash2 } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 
 interface TrackCardProps {
@@ -45,20 +45,8 @@ export function TrackCard({
             <Disc3 className="w-16 h-16 text-muted-foreground/50" />
           </div>
         )}
-        
-        {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Button size="icon" className="rounded-full gradient-accent neon-glow w-12 h-12">
-            <Play className="w-5 h-5 ml-0.5" />
-          </Button>
-        </div>
-        
-        {/* Like Button */}
-        <button className="absolute top-2 right-2 p-2 rounded-full bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80">
-          <Heart className="w-4 h-4 text-foreground" />
-        </button>
 
-        {/* Actions for owner */}
+        {/* Actions for owner - Edit and Delete only */}
         {showActions && (
           <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
@@ -66,7 +54,8 @@ export function TrackCard({
                 e.stopPropagation();
                 onEdit?.(track.id);
               }}
-              className="p-2 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/80"
+              className="p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
+              title="Edit track"
             >
               <Edit className="w-4 h-4 text-foreground" />
             </button>
@@ -75,9 +64,10 @@ export function TrackCard({
                 e.stopPropagation();
                 onDelete?.(track.id);
               }}
-              className="p-2 rounded-full bg-destructive/50 backdrop-blur-sm hover:bg-destructive/80"
+              className="p-2 rounded-full bg-destructive/80 backdrop-blur-sm hover:bg-destructive transition-colors"
+              title="Delete track"
             >
-              <Trash2 className="w-4 h-4 text-foreground" />
+              <Trash2 className="w-4 h-4 text-destructive-foreground" />
             </button>
           </div>
         )}

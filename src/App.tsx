@@ -14,6 +14,9 @@ import ArtistProfile from "./pages/ArtistProfile";
 import LabelProfile from "./pages/LabelProfile";
 import Collection from "./pages/Collection";
 import ArtistDashboard from "./pages/ArtistDashboard";
+import ArtistAnalytics from "./pages/ArtistAnalytics";
+import ArtistCollectors from "./pages/ArtistCollectors";
+import ArtistTracks from "./pages/ArtistTracks";
 import LabelDashboard from "./pages/LabelDashboard";
 import Upload from "./pages/Upload";
 import NotFound from "./pages/NotFound";
@@ -38,6 +41,9 @@ const App = () => (
               <Route path="/label/:id" element={<LabelProfile />} />
               <Route path="/collection" element={<Collection />} />
               <Route path="/artist/dashboard" element={<ArtistDashboard />} />
+              <Route path="/artist/analytics" element={<ArtistAnalytics />} />
+              <Route path="/artist/collectors" element={<ArtistCollectors />} />
+              <Route path="/artist/tracks" element={<ArtistTracks />} />
               <Route path="/label/dashboard" element={<LabelDashboard />} />
               <Route path="/upload" element={<Upload />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -1,17 +1,68 @@
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Music, Upload, DollarSign, Users, TrendingUp, BarChart3, Plus, Lock, AlertCircle, Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Music, Upload, DollarSign, Users, TrendingUp, BarChart3, Plus, Lock, AlertCircle, Loader2, Trash2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useArtistStats } from "@/hooks/useArtistStats";
 import { useArtistTracks } from "@/hooks/useTracks";
 import { formatEarnings } from "@/lib/formatters";
 import { TrackCard } from "@/components/dashboard/TrackCard";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+// Show max 6 tracks on dashboard, more leads to "View All" page
+const MAX_DASHBOARD_TRACKS = 6;
 
 export default function ArtistDashboard() {
   const { user, role, profile, isLoading } = useAuth();
   const { data: stats, isLoading: statsLoading } = useArtistStats(user?.id);
   const { data: tracks, isLoading: tracksLoading } = useArtistTracks(user?.id);
+  const [deleteTrackId, setDeleteTrackId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  const handleDelete = async () => {
+    if (!deleteTrackId) return;
+
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("tracks")
+        .delete()
+        .eq("id", deleteTrackId);
+
+      if (error) throw error;
+
+      toast.success("Track deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["artist-tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["artist-stats"] });
+    } catch (error) {
+      console.error("Error deleting track:", error);
+      toast.error("Failed to delete track");
+    } finally {
+      setIsDeleting(false);
+      setDeleteTrackId(null);
+    }
+  };
+
+  const handleEdit = (trackId: string) => {
+    // For now, show toast - edit page can be added later
+    toast.info("Track editing coming soon!");
+    // navigate(`/track/${trackId}/edit`);
+  };
 
   // Show loading state while checking auth
   if (isLoading) {
@@ -73,6 +124,8 @@ export default function ArtistDashboard() {
   }
 
   const isDataLoading = statsLoading || tracksLoading;
+  const displayTracks = tracks?.slice(0, MAX_DASHBOARD_TRACKS) ?? [];
+  const hasMoreTracks = (tracks?.length ?? 0) > MAX_DASHBOARD_TRACKS;
 
   return (
     <Layout>
@@ -161,7 +214,11 @@ export default function ArtistDashboard() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-foreground">Your Tracks</h2>
               {tracks && tracks.length > 0 && (
-                <Button variant="ghost" size="sm" className="text-primary">View All</Button>
+                <Button variant="ghost" size="sm" className="text-primary" asChild>
+                  <Link to="/artist/tracks">
+                    View All {hasMoreTracks && `(${tracks.length})`}
+                  </Link>
+                </Button>
               )}
             </div>
             
@@ -169,15 +226,15 @@ export default function ArtistDashboard() {
               <div className="flex justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
-            ) : tracks && tracks.length > 0 ? (
+            ) : displayTracks.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {tracks.slice(0, 6).map((track) => (
+                {displayTracks.map((track) => (
                   <TrackCard
                     key={track.id}
                     track={track}
                     showActions
-                    onEdit={(id) => console.log("Edit track:", id)}
-                    onDelete={(id) => console.log("Delete track:", id)}
+                    onEdit={handleEdit}
+                    onDelete={(id) => setDeleteTrackId(id)}
                   />
                 ))}
               </div>
@@ -205,18 +262,53 @@ export default function ArtistDashboard() {
                   Upload New Track
                 </Link>
               </Button>
-              <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                View Analytics
+              <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50" asChild>
+                <Link to="/artist/analytics">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  View Analytics
+                </Link>
               </Button>
-              <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50">
-                <Users className="w-4 h-4 mr-2" />
-                Manage Collectors
+              <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50" asChild>
+                <Link to="/artist/collectors">
+                  <Users className="w-4 h-4 mr-2" />
+                  Manage Collectors
+                </Link>
               </Button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteTrackId} onOpenChange={() => setDeleteTrackId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-destructive" />
+              Delete Track
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this track? This action cannot be undone.
+              All associated data including purchases will be removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Trash2 className="w-4 h-4 mr-2" />
+              )}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 }
