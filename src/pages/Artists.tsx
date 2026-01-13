@@ -31,7 +31,7 @@ export default function Artists() {
               <Link
                 key={i}
                 to={`/artist/${i + 1}`}
-                className="glass-card p-6 group hover:border-primary/50 hover:neon-glow-subtle transition-all duration-300"
+                className="glass-card p-6 group hover:bg-primary/10 transition-all duration-300"
               >
                 <div className="flex items-start gap-4">
                   {/* Avatar */}
@@ -71,7 +71,7 @@ export default function Artists() {
               <Link
                 key={i}
                 to={`/artist/${i + 1}`}
-                className="glass-card p-4 text-center group hover:border-primary/50 transition-all duration-300"
+                className="glass-card p-4 text-center group hover:bg-primary/10 transition-all duration-300"
               >
                 {/* Avatar */}
                 <div className="w-24 h-24 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">

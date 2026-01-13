@@ -31,7 +31,7 @@ export default function Labels() {
               <Link
                 key={i}
                 to={`/label/${i + 1}`}
-                className="glass-card p-6 group hover:border-accent/50 hover:neon-glow-subtle transition-all duration-300"
+                className="glass-card p-6 group hover:bg-accent/10 transition-all duration-300"
               >
                 <div className="flex items-start gap-4">
                   {/* Logo */}
@@ -71,7 +71,7 @@ export default function Labels() {
               <Link
                 key={i}
                 to={`/label/${i + 1}`}
-                className="glass-card p-6 text-center group hover:border-accent/50 transition-all duration-300"
+                className="glass-card p-6 text-center group hover:bg-accent/10 transition-all duration-300"
               >
                 {/* Logo */}
                 <div className="w-20 h-20 mx-auto rounded-xl bg-muted/50 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">

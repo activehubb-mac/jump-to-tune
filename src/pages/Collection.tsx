@@ -66,7 +66,7 @@ export default function Collection() {
           {[...Array(12)].map((_, i) => (
             <div
               key={i}
-              className="glass-card p-4 group cursor-pointer hover:border-primary/50 transition-all duration-300"
+              className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
             >
               <div className="aspect-square rounded-lg bg-muted/50 mb-3 relative overflow-hidden">
                 <div className="absolute inset-0 flex items-center justify-center">
