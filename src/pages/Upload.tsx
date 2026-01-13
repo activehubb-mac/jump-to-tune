@@ -4,14 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload as UploadIcon, Music, Image, Lock, Loader2 } from "lucide-react";
+import { Upload as UploadIcon, Music, Image, Lock, Loader2, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Upload() {
-  const isLoggedIn = false; // Will be replaced with actual auth state
+  const { user, role, isLoading } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
 
-  if (!isLoggedIn) {
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-24 flex justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  // Not logged in - show sign in prompt
+  if (!user) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-24">
@@ -31,6 +44,28 @@ export default function Upload() {
                 <Link to="/auth?role=label">Sign In as Label</Link>
               </Button>
             </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Logged in but not an artist or label - show access denied
+  if (role !== "artist" && role !== "label") {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-24">
+          <div className="max-w-md mx-auto text-center">
+            <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-6">
+              <AlertCircle className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h1 className="text-3xl font-bold text-foreground mb-4">Artist or Label Access Only</h1>
+            <p className="text-muted-foreground mb-8">
+              Only artists and labels can upload music. Browse our collection instead!
+            </p>
+            <Button className="gradient-accent neon-glow-subtle" asChild>
+              <Link to="/browse">Browse Music</Link>
+            </Button>
           </div>
         </div>
       </Layout>
