@@ -1,7 +1,8 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Music, Disc3, Users, Building2, Headphones, Zap, TrendingUp, Shield } from "lucide-react";
+import { Music, Disc3, Users, Building2, Headphones, Zap, TrendingUp, Shield, Upload, LayoutDashboard, Library } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const features = [
   {
@@ -34,6 +35,197 @@ const stats = [
 ];
 
 export default function Index() {
+  const { user, role, profile } = useAuth();
+
+  // Determine hero content based on auth state and role
+  const getHeroContent = () => {
+    if (!user) {
+      // Not logged in - show default marketing
+      return {
+        badge: "The Future of Music Ownership",
+        heading: (
+          <>
+            <span className="text-foreground">Collect Music.</span>
+            <br />
+            <span className="text-gradient">Own the Experience.</span>
+          </>
+        ),
+        subheading: "JumTunes is where fans become collectors. Discover exclusive tracks, support your favorite artists, and build a music collection that's truly yours.",
+        ctas: (
+          <>
+            <Button
+              size="lg"
+              className="gradient-accent neon-glow hover:scale-105 transition-all duration-300 text-lg px-8"
+              asChild
+            >
+              <Link to="/auth?mode=signup">
+                <Headphones className="w-5 h-5 mr-2" />
+                Start Collecting
+              </Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-glass-border hover:bg-glass hover:border-primary/50 transition-all duration-300 text-lg px-8"
+              asChild
+            >
+              <Link to="/browse">
+                <Music className="w-5 h-5 mr-2" />
+                Browse Music
+              </Link>
+            </Button>
+          </>
+        ),
+      };
+    }
+
+    const displayName = profile?.display_name || "there";
+
+    if (role === "fan") {
+      return {
+        badge: "Welcome Back, Collector",
+        heading: (
+          <>
+            <span className="text-foreground">Hey {displayName}!</span>
+            <br />
+            <span className="text-gradient">Ready to Discover?</span>
+          </>
+        ),
+        subheading: "Explore new releases from your favorite artists, grow your collection, and find your next favorite track.",
+        ctas: (
+          <>
+            <Button
+              size="lg"
+              className="gradient-accent neon-glow hover:scale-105 transition-all duration-300 text-lg px-8"
+              asChild
+            >
+              <Link to="/browse">
+                <Music className="w-5 h-5 mr-2" />
+                Discover Music
+              </Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-glass-border hover:bg-glass hover:border-primary/50 transition-all duration-300 text-lg px-8"
+              asChild
+            >
+              <Link to="/collection">
+                <Library className="w-5 h-5 mr-2" />
+                My Collection
+              </Link>
+            </Button>
+          </>
+        ),
+      };
+    }
+
+    if (role === "artist") {
+      return {
+        badge: "Artist Studio",
+        heading: (
+          <>
+            <span className="text-foreground">Welcome, {displayName}!</span>
+            <br />
+            <span className="text-gradient">Share Your Sound.</span>
+          </>
+        ),
+        subheading: "Upload new tracks, connect with your collectors, and grow your fanbase on JumTunes.",
+        ctas: (
+          <>
+            <Button
+              size="lg"
+              className="gradient-accent neon-glow hover:scale-105 transition-all duration-300 text-lg px-8"
+              asChild
+            >
+              <Link to="/upload">
+                <Upload className="w-5 h-5 mr-2" />
+                Upload Track
+              </Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-glass-border hover:bg-glass hover:border-primary/50 transition-all duration-300 text-lg px-8"
+              asChild
+            >
+              <Link to="/artist-dashboard">
+                <LayoutDashboard className="w-5 h-5 mr-2" />
+                Dashboard
+              </Link>
+            </Button>
+          </>
+        ),
+      };
+    }
+
+    if (role === "label") {
+      return {
+        badge: "Label HQ",
+        heading: (
+          <>
+            <span className="text-foreground">Welcome, {displayName}!</span>
+            <br />
+            <span className="text-gradient">Manage Your Roster.</span>
+          </>
+        ),
+        subheading: "Upload music for your artists, manage your roster, and track your label's performance.",
+        ctas: (
+          <>
+            <Button
+              size="lg"
+              className="gradient-accent neon-glow hover:scale-105 transition-all duration-300 text-lg px-8"
+              asChild
+            >
+              <Link to="/upload">
+                <Upload className="w-5 h-5 mr-2" />
+                Upload for Artist
+              </Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-glass-border hover:bg-glass hover:border-primary/50 transition-all duration-300 text-lg px-8"
+              asChild
+            >
+              <Link to="/label-dashboard">
+                <LayoutDashboard className="w-5 h-5 mr-2" />
+                Label Dashboard
+              </Link>
+            </Button>
+          </>
+        ),
+      };
+    }
+
+    // Fallback for any edge case
+    return {
+      badge: "Welcome to JumTunes",
+      heading: (
+        <>
+          <span className="text-foreground">Collect Music.</span>
+          <br />
+          <span className="text-gradient">Own the Experience.</span>
+        </>
+      ),
+      subheading: "JumTunes is where fans become collectors. Discover exclusive tracks, support your favorite artists, and build a music collection that's truly yours.",
+      ctas: (
+        <Button
+          size="lg"
+          className="gradient-accent neon-glow hover:scale-105 transition-all duration-300 text-lg px-8"
+          asChild
+        >
+          <Link to="/browse">
+            <Music className="w-5 h-5 mr-2" />
+            Browse Music
+          </Link>
+        </Button>
+      ),
+    };
+  };
+
+  const heroContent = getHeroContent();
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -50,44 +242,22 @@ export default function Index() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-8 animate-float">
               <Zap className="w-4 h-4 text-accent" />
-              <span className="text-sm text-muted-foreground">The Future of Music Ownership</span>
+              <span className="text-sm text-muted-foreground">{heroContent.badge}</span>
             </div>
 
             {/* Main Heading */}
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              <span className="text-foreground">Collect Music.</span>
-              <br />
-              <span className="text-gradient">Own the Experience.</span>
+              {heroContent.heading}
             </h1>
 
             {/* Subheading */}
             <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-              JumTunes is where fans become collectors. Discover exclusive tracks, support your favorite artists, and build a music collection that's truly yours.
+              {heroContent.subheading}
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="gradient-accent neon-glow hover:scale-105 transition-all duration-300 text-lg px-8"
-                asChild
-              >
-                <Link to="/auth?mode=signup">
-                  <Headphones className="w-5 h-5 mr-2" />
-                  Start Collecting
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-glass-border hover:bg-glass hover:border-primary/50 transition-all duration-300 text-lg px-8"
-                asChild
-              >
-                <Link to="/browse">
-                  <Music className="w-5 h-5 mr-2" />
-                  Browse Music
-                </Link>
-              </Button>
+              {heroContent.ctas}
             </div>
 
             {/* Animated Music Icon */}
@@ -150,63 +320,65 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Role CTA Section */}
-      <section className="py-24 bg-card/20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">
-              Join the Revolution
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Whether you're a fan, artist, or label – there's a place for you on JumTunes.
-            </p>
+      {/* Role CTA Section - Only show for non-logged-in users */}
+      {!user && (
+        <section className="py-24 bg-card/20">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">
+                Join the Revolution
+              </h2>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                Whether you're a fan, artist, or label – there's a place for you on JumTunes.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {/* Fan Card */}
+              <div className="glass-card p-8 text-center group hover:bg-secondary/10 transition-all duration-300">
+                <div className="w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                  <Headphones className="w-8 h-8 text-secondary" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3 text-foreground">For Fans</h3>
+                <p className="text-muted-foreground mb-6">
+                  Discover, collect, and own exclusive music from artists you love.
+                </p>
+                <Button variant="outline" className="border-secondary/50 hover:bg-secondary/10" asChild>
+                  <Link to="/auth?mode=signup&role=fan">Join as Fan</Link>
+                </Button>
+              </div>
+
+              {/* Artist Card */}
+              <div className="glass-card p-8 text-center group hover:bg-primary/10 transition-all duration-300">
+                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                  <Music className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3 text-foreground">For Artists</h3>
+                <p className="text-muted-foreground mb-6">
+                  Upload your music, connect with fans, and earn directly from your art.
+                </p>
+                <Button className="gradient-accent" asChild>
+                  <Link to="/auth?mode=signup&role=artist">Join as Artist</Link>
+                </Button>
+              </div>
+
+              {/* Label Card */}
+              <div className="glass-card p-8 text-center group hover:bg-accent/10 transition-all duration-300">
+                <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                  <Building2 className="w-8 h-8 text-accent" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3 text-foreground">For Labels</h3>
+                <p className="text-muted-foreground mb-6">
+                  Manage your artist roster and release music on their behalf.
+                </p>
+                <Button variant="outline" className="border-accent/50 hover:bg-accent/10" asChild>
+                  <Link to="/auth?mode=signup&role=label">Join as Label</Link>
+                </Button>
+              </div>
+            </div>
           </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Fan Card */}
-            <div className="glass-card p-8 text-center group hover:bg-secondary/10 transition-all duration-300">
-              <div className="w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <Headphones className="w-8 h-8 text-secondary" />
-              </div>
-              <h3 className="text-2xl font-bold mb-3 text-foreground">For Fans</h3>
-              <p className="text-muted-foreground mb-6">
-                Discover, collect, and own exclusive music from artists you love.
-              </p>
-              <Button variant="outline" className="border-secondary/50 hover:bg-secondary/10" asChild>
-                <Link to="/auth?mode=signup&role=fan">Join as Fan</Link>
-              </Button>
-            </div>
-
-            {/* Artist Card */}
-            <div className="glass-card p-8 text-center group hover:bg-primary/10 transition-all duration-300">
-              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <Music className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="text-2xl font-bold mb-3 text-foreground">For Artists</h3>
-              <p className="text-muted-foreground mb-6">
-                Upload your music, connect with fans, and earn directly from your art.
-              </p>
-              <Button className="gradient-accent" asChild>
-                <Link to="/auth?mode=signup&role=artist">Join as Artist</Link>
-              </Button>
-            </div>
-
-            {/* Label Card */}
-            <div className="glass-card p-8 text-center group hover:bg-accent/10 transition-all duration-300">
-              <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <Building2 className="w-8 h-8 text-accent" />
-              </div>
-              <h3 className="text-2xl font-bold mb-3 text-foreground">For Labels</h3>
-              <p className="text-muted-foreground mb-6">
-                Manage your artist roster and release music on their behalf.
-              </p>
-              <Button variant="outline" className="border-accent/50 hover:bg-accent/10" asChild>
-                <Link to="/auth?mode=signup&role=label">Join as Label</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Trending Section Placeholder */}
       <section className="py-24">
