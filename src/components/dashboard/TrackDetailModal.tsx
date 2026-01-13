@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Disc3, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { Slider } from "@/components/ui/slider";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Track {
   id: string;
@@ -120,6 +121,18 @@ export function TrackDetailModal({
     setCurrentTime(0);
   };
 
+  // Construct full audio URL if it's a relative path
+  const audioUrl = useMemo(() => {
+    if (!track?.audio_url) return "";
+    // Check if it's already a full URL
+    if (track.audio_url.startsWith("http")) {
+      return track.audio_url;
+    }
+    // Otherwise, construct the full Supabase storage URL
+    const { data } = supabase.storage.from("tracks").getPublicUrl(track.audio_url);
+    return data.publicUrl;
+  }, [track?.audio_url]);
+
   if (!track) return null;
 
   return (
@@ -186,10 +199,11 @@ export function TrackDetailModal({
           <div className="w-full space-y-3 glass-card p-4 rounded-xl">
             <audio
               ref={audioRef}
-              src={track.audio_url}
+              src={audioUrl}
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={handleLoadedMetadata}
               onEnded={handleEnded}
+              preload="metadata"
             />
 
             {/* Progress Bar */}

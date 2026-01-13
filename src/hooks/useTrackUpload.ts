@@ -63,14 +63,9 @@ export const useTrackUpload = (): UseTrackUploadReturn => {
 
       setUploadProgress((prev) => ({ ...prev, [progressKey]: 100 }));
 
-      // Get public URL for public buckets
-      if (bucket === 'covers' || bucket === 'banners') {
-        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-        return data.publicUrl;
-      }
-
-      // Return path for private buckets
-      return path;
+      // Get public URL for all buckets
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+      return data.publicUrl;
     } catch (error) {
       console.error(`Error uploading to ${bucket}:`, error);
       return null;
