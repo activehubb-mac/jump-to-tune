@@ -73,28 +73,56 @@ export default function Onboarding() {
 
     setIsSaving(true);
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        display_name: displayName.trim() || null,
-        bio: bio.trim() || null,
-        onboarding_completed: true,
-      })
-      .eq("id", user.id);
+    try {
+      // Update profile
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          display_name: displayName.trim() || null,
+          bio: bio.trim() || null,
+          onboarding_completed: true,
+        })
+        .eq("id", user.id);
 
-    if (error) {
+      if (profileError) {
+        throw profileError;
+      }
+
+      // Save genres - first delete existing, then insert new ones
+      if (selectedGenres.length > 0) {
+        // Delete existing genres
+        await supabase
+          .from("profile_genres")
+          .delete()
+          .eq("profile_id", user.id);
+
+        // Insert new genres
+        const genreInserts = selectedGenres.map((genre) => ({
+          profile_id: user.id,
+          genre,
+        }));
+
+        const { error: genresError } = await supabase
+          .from("profile_genres")
+          .insert(genreInserts);
+
+        if (genresError) {
+          console.error("Failed to save genres:", genresError);
+          // Don't throw - genres are not critical for onboarding completion
+        }
+      }
+
+      await refreshProfile();
+      setStep("complete");
+    } catch (error) {
       showFeedback({
         type: "error",
         title: "Something went wrong",
         message: "Could not save your profile. Please try again.",
       });
+    } finally {
       setIsSaving(false);
-      return;
     }
-
-    await refreshProfile();
-    setStep("complete");
-    setIsSaving(false);
   };
 
   const goToDashboard = () => {
