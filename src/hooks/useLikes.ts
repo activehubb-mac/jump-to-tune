@@ -2,6 +2,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
+interface LikedTrack {
+  id: string;
+  title: string;
+  cover_art_url: string | null;
+  audio_url: string;
+  duration: number | null;
+  genre: string | null;
+  price: number;
+  artist: {
+    id: string;
+    display_name: string | null;
+    avatar_url: string | null;
+  } | null;
+  liked_at: string;
+}
+
 export function useLikes() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -50,6 +66,7 @@ export function useLikes() {
     onMutate: async (trackId) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["likes", user?.id] });
+      await queryClient.cancelQueries({ queryKey: ["likedTracks", user?.id] });
 
       // Snapshot previous value
       const previousLikes = queryClient.getQueryData<string[]>(["likes", user?.id]);
@@ -72,6 +89,7 @@ export function useLikes() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["likes", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["likedTracks", user?.id] });
     },
   });
 
@@ -84,4 +102,57 @@ export function useLikes() {
     toggleLike: toggleLike.mutate,
     isToggling: toggleLike.isPending,
   };
+}
+
+// Hook to fetch full track details for liked tracks
+export function useLikedTracks() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["likedTracks", user?.id],
+    queryFn: async (): Promise<LikedTrack[]> => {
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from("likes")
+        .select(`
+          created_at,
+          track:tracks!inner (
+            id,
+            title,
+            cover_art_url,
+            audio_url,
+            duration,
+            genre,
+            price,
+            is_draft,
+            artist:profiles!tracks_artist_id_fkey (
+              id,
+              display_name,
+              avatar_url
+            )
+          )
+        `)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Transform and filter out draft tracks
+      return (data || [])
+        .filter((like: any) => like.track && !like.track.is_draft)
+        .map((like: any) => ({
+          id: like.track.id,
+          title: like.track.title,
+          cover_art_url: like.track.cover_art_url,
+          audio_url: like.track.audio_url,
+          duration: like.track.duration,
+          genre: like.track.genre,
+          price: like.track.price,
+          artist: like.track.artist,
+          liked_at: like.created_at,
+        }));
+    },
+    enabled: !!user,
+  });
 }
