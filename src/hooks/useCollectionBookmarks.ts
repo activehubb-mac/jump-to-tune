@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
+import { useSubscription } from "./useSubscription";
 
 interface Bookmark {
   id: string;
@@ -32,6 +33,7 @@ export type { Bookmark };
 export function useCollectionBookmarks() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { hasActiveSubscription } = useSubscription();
 
   const { data: bookmarks = [], isLoading, error } = useQuery({
     queryKey: ["collection-bookmarks", user?.id],
@@ -72,6 +74,7 @@ export function useCollectionBookmarks() {
   const addBookmark = useMutation({
     mutationFn: async (trackId: string) => {
       if (!user) throw new Error("User not authenticated");
+      if (!hasActiveSubscription) throw new Error("Subscription required to bookmark tracks");
 
       const { error } = await supabase
         .from("collection_bookmarks")
