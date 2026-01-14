@@ -4,6 +4,7 @@ import { Disc3, Edit, Trash2, Play, Pause, ListPlus } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
+import { DownloadButton } from "@/components/download/DownloadButton";
 
 interface TrackCardProps {
   track: {
@@ -110,6 +111,19 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
               >
                 <ListPlus className="w-4 h-4" />
               </Button>
+              <DownloadButton
+                track={{
+                  id: track.id,
+                  title: track.title,
+                  cover_art_url: track.cover_art_url,
+                  price: track.price,
+                  audio_url: track.audio_url || "",
+                  artist: track.artist ? { display_name: track.artist.display_name } : undefined,
+                }}
+                variant="outline"
+                size="icon"
+                className="rounded-full w-10 h-10 border-glass-border/50 hover:border-primary/50"
+              />
             </div>
           )}
 
