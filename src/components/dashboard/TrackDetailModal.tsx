@@ -1,4 +1,3 @@
-import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Disc3, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { Slider } from "@/components/ui/slider";
-import { supabase } from "@/integrations/supabase/client";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 
 interface Track {
   id: string;
@@ -46,110 +45,52 @@ export function TrackDetailModal({
   open,
   onOpenChange,
 }: TrackDetailModalProps) {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
+  const {
+    currentTrack,
+    isPlaying,
+    currentTime,
+    duration,
+    volume,
+    isMuted,
+    playTrack,
+    togglePlayPause,
+    seek,
+    setVolume,
+    toggleMute,
+  } = useAudioPlayer();
 
-  // Initialize with stored duration or 0, reset when modal closes/track changes
-  useEffect(() => {
-    if (open && track?.duration) {
-      setDuration(track.duration);
-    }
-    if (!open) {
-      setIsPlaying(false);
-      setCurrentTime(0);
-      setDuration(track?.duration || 0);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-    }
-  }, [open, track?.id, track?.duration]);
+  // Check if this track is the currently playing track
+  const isThisTrackPlaying = currentTrack?.id === track?.id;
+  const displayDuration = isThisTrackPlaying ? duration : (track?.duration || 0);
+  const displayCurrentTime = isThisTrackPlaying ? currentTime : 0;
+  const displayIsPlaying = isThisTrackPlaying && isPlaying;
 
   const handlePlayPause = () => {
-    if (!audioRef.current) return;
+    if (!track) return;
     
-    if (isPlaying) {
-      audioRef.current.pause();
+    if (isThisTrackPlaying) {
+      togglePlayPause();
     } else {
-      audioRef.current.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
-    }
-  };
-
-  const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      const audioDuration = audioRef.current.duration;
-      // Only update if we get a valid, finite duration
-      if (audioDuration && isFinite(audioDuration) && audioDuration > 0) {
-        setDuration(audioDuration);
-      }
-    }
-  };
-
-  // Handle duration change (fires when duration becomes available for streaming audio)
-  const handleDurationChange = () => {
-    if (audioRef.current) {
-      const audioDuration = audioRef.current.duration;
-      if (audioDuration && isFinite(audioDuration) && audioDuration > 0) {
-        setDuration(audioDuration);
-      }
+      playTrack({
+        id: track.id,
+        title: track.title,
+        audio_url: track.audio_url,
+        cover_art_url: track.cover_art_url,
+        duration: track.duration,
+        artist: track.artist,
+      });
     }
   };
 
   const handleSeek = (value: number[]) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = value[0];
-      setCurrentTime(value[0]);
+    if (isThisTrackPlaying) {
+      seek(value[0]);
     }
   };
 
   const handleVolumeChange = (value: number[]) => {
-    const newVolume = value[0];
-    setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-    }
-    setIsMuted(newVolume === 0);
+    setVolume(value[0]);
   };
-
-  const toggleMute = () => {
-    if (audioRef.current) {
-      if (isMuted) {
-        audioRef.current.volume = volume || 0.5;
-        setIsMuted(false);
-      } else {
-        audioRef.current.volume = 0;
-        setIsMuted(true);
-      }
-    }
-  };
-
-  const handleEnded = () => {
-    setIsPlaying(false);
-    setCurrentTime(0);
-  };
-
-  // Construct full audio URL if it's a relative path
-  const audioUrl = useMemo(() => {
-    if (!track?.audio_url) return "";
-    // Check if it's already a full URL
-    if (track.audio_url.startsWith("http")) {
-      return track.audio_url;
-    }
-    // Otherwise, construct the full Supabase storage URL
-    const { data } = supabase.storage.from("tracks").getPublicUrl(track.audio_url);
-    return data.publicUrl;
-  }, [track?.audio_url]);
 
   if (!track) return null;
 
@@ -215,20 +156,10 @@ export function TrackDetailModal({
 
           {/* Audio Player */}
           <div className="w-full space-y-3 glass-card p-4 rounded-xl">
-            <audio
-              ref={audioRef}
-              src={audioUrl}
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleLoadedMetadata}
-              onDurationChange={handleDurationChange}
-              onEnded={handleEnded}
-              preload="auto"
-            />
-
             {/* Progress Bar */}
             <Slider
-              value={[currentTime]}
-              max={duration || 100}
+              value={[displayCurrentTime]}
+              max={displayDuration || 100}
               step={0.1}
               onValueChange={handleSeek}
               className="cursor-pointer"
@@ -236,8 +167,8 @@ export function TrackDetailModal({
 
             {/* Time Display */}
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
+              <span>{formatTime(displayCurrentTime)}</span>
+              <span>{formatTime(displayDuration)}</span>
             </div>
 
             {/* Controls */}
@@ -271,7 +202,7 @@ export function TrackDetailModal({
                 className="rounded-full w-14 h-14 gradient-accent neon-glow-subtle"
                 onClick={handlePlayPause}
               >
-                {isPlaying ? (
+                {displayIsPlaying ? (
                   <Pause className="h-6 w-6" />
                 ) : (
                   <Play className="h-6 w-6 ml-1" />

@@ -3,7 +3,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { FeedbackProvider } from "@/contexts/FeedbackContext";
+import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import { FeedbackModal } from "@/components/ui/feedback-modal";
+import { GlobalAudioPlayer } from "@/components/audio/GlobalAudioPlayer";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
@@ -28,31 +30,34 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <FeedbackProvider>
-        <TooltipProvider>
-          <FeedbackModal />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/browse" element={<Browse />} />
-              <Route path="/artists" element={<Artists />} />
-              <Route path="/labels" element={<Labels />} />
-              <Route path="/artist/:id" element={<ArtistProfile />} />
-              <Route path="/label/:id" element={<LabelProfile />} />
-              <Route path="/collection" element={<Collection />} />
-              <Route path="/artist/dashboard" element={<ArtistDashboard />} />
-              <Route path="/artist/analytics" element={<ArtistAnalytics />} />
-              <Route path="/artist/collectors" element={<ArtistCollectors />} />
-              <Route path="/artist/tracks" element={<ArtistTracks />} />
-              <Route path="/track/:id/edit" element={<TrackEdit />} />
-              <Route path="/label/dashboard" element={<LabelDashboard />} />
-              <Route path="/upload" element={<Upload />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+        <AudioPlayerProvider>
+          <TooltipProvider>
+            <FeedbackModal />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/browse" element={<Browse />} />
+                <Route path="/artists" element={<Artists />} />
+                <Route path="/labels" element={<Labels />} />
+                <Route path="/artist/:id" element={<ArtistProfile />} />
+                <Route path="/label/:id" element={<LabelProfile />} />
+                <Route path="/collection" element={<Collection />} />
+                <Route path="/artist/dashboard" element={<ArtistDashboard />} />
+                <Route path="/artist/analytics" element={<ArtistAnalytics />} />
+                <Route path="/artist/collectors" element={<ArtistCollectors />} />
+                <Route path="/artist/tracks" element={<ArtistTracks />} />
+                <Route path="/track/:id/edit" element={<TrackEdit />} />
+                <Route path="/label/dashboard" element={<LabelDashboard />} />
+                <Route path="/upload" element={<Upload />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <GlobalAudioPlayer />
+            </BrowserRouter>
+          </TooltipProvider>
+        </AudioPlayerProvider>
       </FeedbackProvider>
     </AuthProvider>
   </QueryClientProvider>

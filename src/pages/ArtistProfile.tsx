@@ -1,15 +1,17 @@
 import { useParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Music, Users, Play, Heart, Share2, ExternalLink, Disc3, Loader2 } from "lucide-react";
+import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2 } from "lucide-react";
 import { useArtistProfile } from "@/hooks/useArtistProfile";
 import { useTracks } from "@/hooks/useTracks";
 import { formatPrice, formatEditions, formatCompactNumber } from "@/lib/formatters";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 
 export default function ArtistProfile() {
   const { id } = useParams();
   const { data: artist, isLoading: profileLoading } = useArtistProfile(id);
   const { data: tracks, isLoading: tracksLoading } = useTracks({ artistId: id, publishedOnly: true });
+  const { playTrack, currentTrack, isPlaying } = useAudioPlayer();
 
   if (profileLoading) {
     return <Layout><div className="container mx-auto px-4 py-24 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div></Layout>;
@@ -65,7 +67,23 @@ export default function ArtistProfile() {
                   <div className="aspect-square rounded-lg bg-muted/50 mb-3 relative overflow-hidden">
                     {track.cover_art_url ? <img src={track.cover_art_url} alt={track.title} className="absolute inset-0 w-full h-full object-cover" /> : <div className="absolute inset-0 flex items-center justify-center"><Disc3 className="w-12 h-12 text-muted-foreground/50" /></div>}
                     <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button size="icon" className="rounded-full gradient-accent w-10 h-10"><Play className="w-4 h-4 ml-0.5" /></Button>
+                      <Button 
+                        size="icon" 
+                        className="rounded-full gradient-accent w-10 h-10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          playTrack({
+                            id: track.id,
+                            title: track.title,
+                            audio_url: track.audio_url,
+                            cover_art_url: track.cover_art_url,
+                            duration: track.duration,
+                            artist: { id: artist.id, display_name: artist.display_name },
+                          });
+                        }}
+                      >
+                        {currentTrack?.id === track.id && isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                      </Button>
                     </div>
                   </div>
                   <h3 className="font-semibold text-foreground truncate">{track.title}</h3>
