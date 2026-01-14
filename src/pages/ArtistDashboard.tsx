@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Music, Upload, DollarSign, Users, TrendingUp, BarChart3, Plus, Lock, AlertCircle, Loader2, Trash2 } from "lucide-react";
+import { Music, Upload, DollarSign, Users, TrendingUp, BarChart3, Plus, Lock, AlertCircle, Loader2, Trash2, Wallet } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useArtistStats } from "@/hooks/useArtistStats";
@@ -9,9 +9,11 @@ import { useArtistTracks } from "@/hooks/useTracks";
 import { formatEarnings } from "@/lib/formatters";
 import { TrackCard } from "@/components/dashboard/TrackCard";
 import { TrackDetailModal } from "@/components/dashboard/TrackDetailModal";
+import { EarningsWidget } from "@/components/dashboard/EarningsWidget";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useLowBalanceNotification } from "@/hooks/useLowBalanceNotification";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +37,9 @@ export default function ArtistDashboard() {
   const [selectedTrack, setSelectedTrack] = useState<typeof tracks extends (infer T)[] ? T : never | null>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  // Enable low balance notifications for artists
+  useLowBalanceNotification();
 
   const handleDelete = async () => {
     if (!deleteTrackId) return;
@@ -266,29 +271,41 @@ export default function ArtistDashboard() {
             )}
           </div>
 
-          {/* Quick Actions */}
-          <div className="glass-card p-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">Quick Actions</h2>
-            <div className="space-y-3">
-              <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50" asChild>
-                <Link to="/upload">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Upload New Track
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50" asChild>
-                <Link to="/artist/analytics">
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  View Analytics
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50" asChild>
-                <Link to="/artist/collectors">
-                  <Users className="w-4 h-4 mr-2" />
-                  Manage Collectors
-                </Link>
-              </Button>
+          {/* Quick Actions & Earnings */}
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <div className="glass-card p-6">
+              <h2 className="text-xl font-bold text-foreground mb-4">Quick Actions</h2>
+              <div className="space-y-3">
+                <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50" asChild>
+                  <Link to="/upload">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Upload New Track
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50" asChild>
+                  <Link to="/artist/analytics">
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    View Analytics
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50" asChild>
+                  <Link to="/artist/collectors">
+                    <Users className="w-4 h-4 mr-2" />
+                    Manage Collectors
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50" asChild>
+                  <Link to="/wallet">
+                    <Wallet className="w-4 h-4 mr-2" />
+                    My Wallet
+                  </Link>
+                </Button>
+              </div>
             </div>
+
+            {/* Earnings Widget */}
+            <EarningsWidget />
           </div>
         </div>
       </div>
