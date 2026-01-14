@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users } from "lucide-react";
+import { Search, Filter, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePublishedTracks } from "@/hooks/useTracks";
 import { formatPrice, formatEditions, formatCompactNumber } from "@/lib/formatters";
@@ -13,6 +13,8 @@ import { useFollow } from "@/hooks/useFollows";
 import { useFollowerCounts } from "@/hooks/useFollowerCounts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedback } from "@/contexts/FeedbackContext";
+import { useFeatureGate } from "@/hooks/useFeatureGate";
+import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 
 const genres = ["All", "Electronic", "Hip Hop", "R&B", "Pop", "Rock", "Jazz", "Classical", "Indie"];
 
@@ -22,6 +24,8 @@ export default function Browse() {
   const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
   const { isLiked, toggleLike } = useLikes();
   const { isFollowing, toggleFollow } = useFollow();
+  const { canUseFeature } = useFeatureGate();
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const { user } = useAuth();
   const { showFeedback } = useFeedback();
   
@@ -78,6 +82,11 @@ export default function Browse() {
   };
 
   const handleAddToQueue = (track: typeof tracks extends (infer T)[] ? T : never) => {
+    if (!canUseFeature("addToQueue")) {
+      setShowPremiumModal(true);
+      return;
+    }
+    
     addToQueue({
       id: track.id,
       title: track.title,
@@ -96,6 +105,11 @@ export default function Browse() {
 
   return (
     <Layout>
+      <PremiumFeatureModal
+        open={showPremiumModal}
+        onOpenChange={setShowPremiumModal}
+        feature="Add to Queue"
+      />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -212,13 +226,17 @@ export default function Browse() {
                     </button>
                     {/* Add to Queue Button */}
                     <button 
-                      className="absolute top-2 left-2 p-2 rounded-full bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80"
+                      className="absolute top-2 left-2 p-2 rounded-full bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80 relative"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleAddToQueue(track);
                       }}
+                      title={canUseFeature("addToQueue") ? "Add to queue" : "Premium feature"}
                     >
                       <ListPlus className="w-4 h-4 text-foreground" />
+                      {!canUseFeature("addToQueue") && (
+                        <Lock className="h-2 w-2 absolute -top-0.5 -right-0.5 text-primary" />
+                      )}
                     </button>
                   </div>
 

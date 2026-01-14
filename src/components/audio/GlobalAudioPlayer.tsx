@@ -1,11 +1,13 @@
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical } from "lucide-react";
+import { useState } from "react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAudioPlayer, AudioTrack } from "@/contexts/AudioPlayerContext";
 import { useAudioKeyboardShortcuts } from "@/hooks/useAudioKeyboardShortcuts";
+import { useFeatureGate } from "@/hooks/useFeatureGate";
+import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { Link } from "react-router-dom";
-import { useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -134,7 +136,10 @@ export function GlobalAudioPlayer() {
     reorderQueue,
   } = useAudioPlayer();
 
+  const { canUseFeature } = useFeatureGate();
   const [showQueue, setShowQueue] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [premiumFeatureName, setPremiumFeatureName] = useState("");
 
   // Enable keyboard shortcuts
   useAudioKeyboardShortcuts();
@@ -161,6 +166,33 @@ export function GlobalAudioPlayer() {
     setVolume(value[0]);
   };
 
+  const handleShuffleClick = () => {
+    if (!canUseFeature("shuffle")) {
+      setPremiumFeatureName("Shuffle mode");
+      setShowPremiumModal(true);
+      return;
+    }
+    toggleShuffle();
+  };
+
+  const handleRepeatClick = () => {
+    if (!canUseFeature("repeat")) {
+      setPremiumFeatureName("Repeat mode");
+      setShowPremiumModal(true);
+      return;
+    }
+    cycleRepeatMode();
+  };
+
+  const handleQueueClick = () => {
+    if (!canUseFeature("queuePanel")) {
+      setPremiumFeatureName("Queue management");
+      setShowPremiumModal(true);
+      return;
+    }
+    setShowQueue(!showQueue);
+  };
+
   const hasNext = queueIndex < queue.length - 1 || repeatMode === "all";
   const hasPrevious = queueIndex > 0 || currentTime > 3;
 
@@ -183,10 +215,21 @@ export function GlobalAudioPlayer() {
     }
   };
 
+  const canAccessQueue = canUseFeature("queuePanel");
+  const canShuffle = canUseFeature("shuffle");
+  const canRepeat = canUseFeature("repeat");
+
   return (
     <>
+      {/* Premium Feature Modal */}
+      <PremiumFeatureModal
+        open={showPremiumModal}
+        onOpenChange={setShowPremiumModal}
+        feature={premiumFeatureName}
+      />
+
       {/* Queue Panel */}
-      {showQueue && (
+      {showQueue && canAccessQueue && (
         <div className="fixed bottom-20 md:bottom-16 right-4 z-50 w-80 max-h-[28rem] glass-card border border-glass-border/30 backdrop-blur-xl rounded-lg overflow-hidden animate-in slide-in-from-bottom duration-200">
           <div className="p-3 border-b border-glass-border/30">
             <div className="flex items-center justify-between">
@@ -357,11 +400,12 @@ export function GlobalAudioPlayer() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-8 w-8 ${isShuffled ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                  onClick={toggleShuffle}
-                  title={isShuffled ? "Shuffle on" : "Shuffle off"}
+                  className={`h-8 w-8 relative ${isShuffled && canShuffle ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                  onClick={handleShuffleClick}
+                  title={canShuffle ? (isShuffled ? "Shuffle on" : "Shuffle off") : "Premium feature"}
                 >
                   <Shuffle className="h-4 w-4" />
+                  {!canShuffle && <Lock className="h-2 w-2 absolute -top-0.5 -right-0.5 text-primary" />}
                 </Button>
 
                 <Button
@@ -402,15 +446,16 @@ export function GlobalAudioPlayer() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-8 w-8 ${repeatMode !== "off" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                  onClick={cycleRepeatMode}
-                  title={repeatMode === "off" ? "Repeat off" : repeatMode === "all" ? "Repeat all" : "Repeat one"}
+                  className={`h-8 w-8 relative ${repeatMode !== "off" && canRepeat ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                  onClick={handleRepeatClick}
+                  title={canRepeat ? (repeatMode === "off" ? "Repeat off" : repeatMode === "all" ? "Repeat all" : "Repeat one") : "Premium feature"}
                 >
-                  {repeatMode === "one" ? (
+                  {repeatMode === "one" && canRepeat ? (
                     <Repeat1 className="h-4 w-4" />
                   ) : (
                     <Repeat className="h-4 w-4" />
                   )}
+                  {!canRepeat && <Lock className="h-2 w-2 absolute -top-0.5 -right-0.5 text-primary" />}
                 </Button>
                 
                 <span className="text-xs text-muted-foreground w-10 text-right">
@@ -472,15 +517,16 @@ export function GlobalAudioPlayer() {
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-8 w-8 relative ${showQueue ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                onClick={() => setShowQueue(!showQueue)}
+                className={`h-8 w-8 relative ${showQueue && canAccessQueue ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                onClick={handleQueueClick}
               >
                 <ListMusic className="h-4 w-4" />
-                {queue.length > 1 && (
+                {canAccessQueue && queue.length > 1 && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
                     {queue.length}
                   </span>
                 )}
+                {!canAccessQueue && <Lock className="h-2 w-2 absolute -top-0.5 -right-0.5 text-primary" />}
               </Button>
 
               <div className="hidden md:flex items-center gap-2">
