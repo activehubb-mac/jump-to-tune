@@ -9,7 +9,7 @@ import { formatPrice, formatEditions } from "@/lib/formatters";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useLikes } from "@/hooks/useLikes";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/hooks/use-toast";
+import { useFeedback } from "@/contexts/FeedbackContext";
 
 const genres = ["All", "Electronic", "Hip Hop", "R&B", "Pop", "Rock", "Jazz", "Classical", "Indie"];
 
@@ -19,6 +19,7 @@ export default function Browse() {
   const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
   const { isLiked, toggleLike } = useLikes();
   const { user } = useAuth();
+  const { showFeedback } = useFeedback();
   
   const { data: tracks, isLoading } = usePublishedTracks({
     genre: selectedGenre,
@@ -27,14 +28,31 @@ export default function Browse() {
 
   const handleLike = (trackId: string) => {
     if (!user) {
-      toast({
+      showFeedback({
+        type: "warning",
         title: "Sign in required",
-        description: "Please sign in to like tracks",
-        variant: "destructive",
+        message: "Please sign in to like tracks",
       });
       return;
     }
     toggleLike(trackId);
+  };
+
+  const handleAddToQueue = (track: typeof tracks extends (infer T)[] ? T : never) => {
+    addToQueue({
+      id: track.id,
+      title: track.title,
+      audio_url: track.audio_url,
+      cover_art_url: track.cover_art_url,
+      duration: track.duration,
+      artist: track.artist,
+    });
+    showFeedback({
+      type: "success",
+      title: "Added to queue",
+      message: track.title,
+      autoCloseDelay: 2000,
+    });
   };
 
   return (
@@ -148,18 +166,7 @@ export default function Browse() {
                     className="absolute top-2 left-2 p-2 rounded-full bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80"
                     onClick={(e) => {
                       e.stopPropagation();
-                      addToQueue({
-                        id: track.id,
-                        title: track.title,
-                        audio_url: track.audio_url,
-                        cover_art_url: track.cover_art_url,
-                        duration: track.duration,
-                        artist: track.artist,
-                      });
-                      toast({
-                        title: "Added to queue",
-                        description: track.title,
-                      });
+                      handleAddToQueue(track);
                     }}
                   >
                     <ListPlus className="w-4 h-4 text-foreground" />
