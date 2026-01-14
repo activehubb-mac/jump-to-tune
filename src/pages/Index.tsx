@@ -1,7 +1,7 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Music, Disc3, Users, Building2, Headphones, Zap, TrendingUp, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History, ListPlus } from "lucide-react";
+import { Music, Disc3, Users, Building2, Headphones, Zap, TrendingUp, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History, ListPlus, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRecommendedArtists } from "@/hooks/useRecommendedArtists";
 import { useFollow } from "@/hooks/useFollows";
@@ -11,7 +11,9 @@ import { useNewReleases } from "@/hooks/useNewReleases";
 import { useRecentlyPlayed } from "@/hooks/useRecentlyPlayed";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { formatCompactNumber } from "@/lib/formatters";
-
+import { useFeatureGate } from "@/hooks/useFeatureGate";
+import { useState } from "react";
+import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 const features = [
   {
     icon: Disc3,
@@ -51,6 +53,16 @@ export default function Index() {
   const { isFollowing, toggleFollow } = useFollow();
   const { showFeedback } = useFeedback();
   const { playTrack, addToQueue } = useAudioPlayer();
+  const { canUseFeature } = useFeatureGate();
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+
+  const handleAddToQueue = (track: Parameters<typeof addToQueue>[0]) => {
+    if (!canUseFeature("addToQueue")) {
+      setShowPremiumModal(true);
+      return;
+    }
+    addToQueue(track);
+  };
 
   const handleFollow = async (artistId: string, artistName: string) => {
     if (!user) {
@@ -470,7 +482,7 @@ export default function Index() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          addToQueue({
+                          handleAddToQueue({
                             id: track.id,
                             title: track.title,
                             audio_url: "",
@@ -479,9 +491,13 @@ export default function Index() {
                           });
                         }}
                         className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center hover:bg-white/10"
-                        title="Add to queue"
+                        title={canUseFeature("addToQueue") ? "Add to queue" : "Subscribe to add to queue"}
                       >
-                        <ListPlus className="w-5 h-5 text-white" />
+                        {canUseFeature("addToQueue") ? (
+                          <ListPlus className="w-5 h-5 text-white" />
+                        ) : (
+                          <Lock className="w-4 h-4 text-white/70" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -680,7 +696,7 @@ export default function Index() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            addToQueue({
+                            handleAddToQueue({
                               id: track.id,
                               title: track.title,
                               audio_url: track.audio_url,
@@ -689,9 +705,13 @@ export default function Index() {
                             });
                           }}
                           className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center hover:bg-white/10"
-                          title="Add to queue"
+                          title={canUseFeature("addToQueue") ? "Add to queue" : "Subscribe to add to queue"}
                         >
-                          <ListPlus className="w-5 h-5 text-white" />
+                          {canUseFeature("addToQueue") ? (
+                            <ListPlus className="w-5 h-5 text-white" />
+                          ) : (
+                            <Lock className="w-4 h-4 text-white/70" />
+                          )}
                         </button>
                       </div>
                       <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-primary/90 text-xs font-medium text-primary-foreground">
@@ -791,7 +811,7 @@ export default function Index() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          addToQueue({
+                          handleAddToQueue({
                             id: track.id,
                             title: track.title,
                             audio_url: track.audio_url,
@@ -800,9 +820,13 @@ export default function Index() {
                           });
                         }}
                         className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center hover:bg-white/10"
-                        title="Add to queue"
+                        title={canUseFeature("addToQueue") ? "Add to queue" : "Subscribe to add to queue"}
                       >
-                        <ListPlus className="w-5 h-5 text-white" />
+                        {canUseFeature("addToQueue") ? (
+                          <ListPlus className="w-5 h-5 text-white" />
+                        ) : (
+                          <Lock className="w-4 h-4 text-white/70" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -843,6 +867,11 @@ export default function Index() {
           </div>
         </div>
       </section>
+      <PremiumFeatureModal
+        open={showPremiumModal}
+        onOpenChange={setShowPremiumModal}
+        feature="Add to Queue"
+      />
     </Layout>
   );
 }
