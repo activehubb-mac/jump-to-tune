@@ -41,51 +41,62 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const [isMuted, setIsMuted] = useState(false);
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
 
-  // Initialize audio element
+  const ensureAudioElement = useCallback(() => {
+    if (audioRef.current) return audioRef.current;
+
+    const audio = new Audio();
+    audio.volume = 1;
+
+    audio.addEventListener("timeupdate", () => {
+      setCurrentTime(audio.currentTime || 0);
+    });
+
+    const syncDuration = () => {
+      const audioDuration = audio.duration;
+      if (audioDuration && isFinite(audioDuration) && audioDuration > 0) {
+        setDuration(audioDuration);
+      }
+    };
+
+    audio.addEventListener("loadedmetadata", syncDuration);
+    audio.addEventListener("durationchange", syncDuration);
+
+    audio.addEventListener("ended", () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+    });
+
+    audio.addEventListener("play", () => {
+      setIsPlaying(true);
+    });
+
+    audio.addEventListener("pause", () => {
+      setIsPlaying(false);
+    });
+
+    audio.addEventListener("error", () => {
+      // Helps diagnose CORS/permissions issues for Supabase storage URLs
+      // eslint-disable-next-line no-console
+      console.error("Audio playback error", audio.error);
+      setIsPlaying(false);
+    });
+
+    audioRef.current = audio;
+    return audio;
+  }, []);
+
+  // Initialize audio element on mount so first click never races the useEffect
   useEffect(() => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio();
-      audioRef.current.volume = 1;
-      
-      audioRef.current.addEventListener("timeupdate", () => {
-        setCurrentTime(audioRef.current?.currentTime || 0);
-      });
-      
-      audioRef.current.addEventListener("loadedmetadata", () => {
-        const audioDuration = audioRef.current?.duration;
-        if (audioDuration && isFinite(audioDuration) && audioDuration > 0) {
-          setDuration(audioDuration);
-        }
-      });
-      
-      audioRef.current.addEventListener("durationchange", () => {
-        const audioDuration = audioRef.current?.duration;
-        if (audioDuration && isFinite(audioDuration) && audioDuration > 0) {
-          setDuration(audioDuration);
-        }
-      });
-      
-      audioRef.current.addEventListener("ended", () => {
-        setIsPlaying(false);
-        setCurrentTime(0);
-      });
-      
-      audioRef.current.addEventListener("play", () => {
-        setIsPlaying(true);
-      });
-      
-      audioRef.current.addEventListener("pause", () => {
-        setIsPlaying(false);
-      });
-    }
-    
+    ensureAudioElement();
+
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current.src = "";
         audioRef.current = null;
       }
     };
-  }, []);
+  }, [ensureAudioElement]);
 
   const getAudioUrl = useCallback((url: string) => {
     if (url.startsWith("http")) {
@@ -96,69 +107,70 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   }, []);
 
   const playTrack = useCallback((track: AudioTrack) => {
-    if (!audioRef.current) return;
-    
+    const audio = ensureAudioElement();
+
     // If same track, just toggle play/pause
     if (currentTrack?.id === track.id) {
       if (isPlaying) {
-        audioRef.current.pause();
+        audio.pause();
       } else {
-        audioRef.current.play();
+        audio.play().catch(console.error);
       }
       return;
     }
-    
+
     // New track - load and play
     setCurrentTrack(track);
     setCurrentTime(0);
     setDuration(track.duration || 0);
     setIsPlayerVisible(true);
-    
+
     const audioUrl = getAudioUrl(track.audio_url);
-    audioRef.current.src = audioUrl;
-    audioRef.current.load();
-    audioRef.current.play().catch(console.error);
-  }, [currentTrack?.id, isPlaying, getAudioUrl]);
+    audio.src = audioUrl;
+    audio.load();
+    audio.play().catch(console.error);
+  }, [currentTrack?.id, isPlaying, getAudioUrl, ensureAudioElement]);
 
   const togglePlayPause = useCallback(() => {
-    if (!audioRef.current) return;
-    
+    const audio = ensureAudioElement();
+
     if (isPlaying) {
-      audioRef.current.pause();
+      audio.pause();
     } else {
-      audioRef.current.play().catch(console.error);
+      audio.play().catch(console.error);
     }
-  }, [isPlaying]);
+  }, [isPlaying, ensureAudioElement]);
 
   const seek = useCallback((time: number) => {
-    if (!audioRef.current) return;
-    audioRef.current.currentTime = time;
+    const audio = ensureAudioElement();
+    audio.currentTime = time;
     setCurrentTime(time);
-  }, []);
+  }, [ensureAudioElement]);
 
   const setVolume = useCallback((level: number) => {
-    if (!audioRef.current) return;
-    audioRef.current.volume = level;
+    const audio = ensureAudioElement();
+    audio.volume = level;
     setVolumeState(level);
     setIsMuted(level === 0);
-  }, []);
+  }, [ensureAudioElement]);
 
   const toggleMute = useCallback(() => {
-    if (!audioRef.current) return;
-    
+    const audio = ensureAudioElement();
+
     if (isMuted) {
-      audioRef.current.volume = volume || 0.5;
+      audio.volume = volume || 0.5;
       setIsMuted(false);
     } else {
-      audioRef.current.volume = 0;
+      audio.volume = 0;
       setIsMuted(true);
     }
-  }, [isMuted, volume]);
+  }, [isMuted, volume, ensureAudioElement]);
 
   const closePlayer = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = "";
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.src = "";
     }
     setCurrentTrack(null);
     setIsPlaying(false);
