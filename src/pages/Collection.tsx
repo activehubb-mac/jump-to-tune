@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, Bookmark, X, Download } from "lucide-react";
+import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, Bookmark, X, Download, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCollectionStats, useOwnedTracks } from "@/hooks/useCollectionStats";
@@ -19,6 +19,8 @@ import { useCollectionBookmarks } from "@/hooks/useCollectionBookmarks";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { formatPrice } from "@/lib/formatters";
 import { DownloadButton } from "@/components/download/DownloadButton";
+import { useFeatureGate } from "@/hooks/useFeatureGate";
+import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 
 type SortOption = "recent" | "title" | "artist" | "price";
 
@@ -36,6 +38,9 @@ export default function Collection() {
   const { toggleLike } = useLikes();
   const { toggleFollow } = useFollow();
   const { playTrack, addToQueue } = useAudioPlayer();
+  const { canUseFeature } = useFeatureGate();
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [premiumFeatureName, setPremiumFeatureName] = useState("");
 
   // Sort liked tracks - must be called before any early returns
   const sortedLikedTracks = useMemo(() => {
@@ -148,23 +153,64 @@ export default function Collection() {
     });
   };
 
-  const SortSelect = ({ value, onChange }: { value: SortOption; onChange: (v: SortOption) => void }) => (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-[140px] h-8 text-xs glass border-glass-border/30">
-        <ArrowUpDown className="w-3 h-3 mr-1" />
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent className="glass">
-        <SelectItem value="recent">Most Recent</SelectItem>
-        <SelectItem value="title">Title</SelectItem>
-        <SelectItem value="artist">Artist</SelectItem>
-        <SelectItem value="price">Price</SelectItem>
-      </SelectContent>
-    </Select>
-  );
+  const handleAddToQueue = (track: NonNullable<typeof likedTracks>[number]) => {
+    if (!canUseFeature("addToQueue")) {
+      setPremiumFeatureName("Add to Queue");
+      setShowPremiumModal(true);
+      return;
+    }
+    addToQueue({
+      id: track.id,
+      title: track.title,
+      audio_url: track.audio_url,
+      cover_art_url: track.cover_art_url,
+      duration: track.duration,
+      artist: track.artist,
+    });
+  };
+
+  const SortSelect = ({ value, onChange }: { value: SortOption; onChange: (v: SortOption) => void }) => {
+    if (!canUseFeature("sorting")) {
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs glass border-glass-border/30 relative"
+          onClick={() => {
+            setPremiumFeatureName("Collection sorting");
+            setShowPremiumModal(true);
+          }}
+        >
+          <ArrowUpDown className="w-3 h-3 mr-1" />
+          Sort
+          <Lock className="h-2 w-2 ml-1 text-primary" />
+        </Button>
+      );
+    }
+    
+    return (
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="w-[140px] h-8 text-xs glass border-glass-border/30">
+          <ArrowUpDown className="w-3 h-3 mr-1" />
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent className="glass">
+          <SelectItem value="recent">Most Recent</SelectItem>
+          <SelectItem value="title">Title</SelectItem>
+          <SelectItem value="artist">Artist</SelectItem>
+          <SelectItem value="price">Price</SelectItem>
+        </SelectContent>
+      </Select>
+    );
+  };
 
   return (
     <Layout>
+      <PremiumFeatureModal
+        open={showPremiumModal}
+        onOpenChange={setShowPremiumModal}
+        feature={premiumFeatureName}
+      />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -218,9 +264,14 @@ export default function Collection() {
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="bookmarked" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="bookmarked" 
+              className="flex items-center gap-2"
+              disabled={!canUseFeature("bookmark")}
+            >
               <Bookmark className="w-4 h-4" />
               <span className="hidden sm:inline">Bookmarked</span>
+              {!canUseFeature("bookmark") && <Lock className="w-3 h-3 text-primary" />}
               {bookmarks && bookmarks.length > 0 && (
                 <span className="text-xs bg-primary/20 px-2 py-0.5 rounded-full">
                   {bookmarks.length}
@@ -285,21 +336,17 @@ export default function Collection() {
                         <Button
                           size="icon"
                           variant="outline"
-                          className="rounded-full w-10 h-10 border-glass-border/50 hover:border-primary/50"
+                          className="rounded-full w-10 h-10 border-glass-border/50 hover:border-primary/50 relative"
                           onClick={(e) => {
                             e.stopPropagation();
-                            addToQueue({
-                              id: track.id,
-                              title: track.title,
-                              audio_url: track.audio_url,
-                              cover_art_url: track.cover_art_url,
-                              duration: track.duration,
-                              artist: track.artist,
-                            });
+                            handleAddToQueue(track);
                           }}
-                          title="Add to queue"
+                          title={canUseFeature("addToQueue") ? "Add to queue" : "Premium feature"}
                         >
                           <ListPlus className="w-4 h-4" />
+                          {!canUseFeature("addToQueue") && (
+                            <Lock className="h-2 w-2 absolute -top-0.5 -right-0.5 text-primary" />
+                          )}
                         </Button>
                       </div>
                       {/* Unlike Button */}

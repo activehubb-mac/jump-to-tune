@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus } from "lucide-react";
+import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock } from "lucide-react";
 import { useArtistProfile } from "@/hooks/useArtistProfile";
 import { useTracks } from "@/hooks/useTracks";
 import { useFollow } from "@/hooks/useFollows";
@@ -9,6 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeedback } from "@/contexts/FeedbackContext";
 import { formatPrice, formatEditions, formatCompactNumber } from "@/lib/formatters";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
+import { useFeatureGate } from "@/hooks/useFeatureGate";
+import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 
 export default function ArtistProfile() {
   const { id } = useParams();
@@ -18,6 +21,8 @@ export default function ArtistProfile() {
   const { isFollowing, toggleFollow, isToggling } = useFollow();
   const { user } = useAuth();
   const { showFeedback } = useFeedback();
+  const { canUseFeature } = useFeatureGate();
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   const handleFollow = async () => {
     if (!user) {
@@ -60,6 +65,11 @@ export default function ArtistProfile() {
 
   return (
     <Layout>
+      <PremiumFeatureModal
+        open={showPremiumModal}
+        onOpenChange={setShowPremiumModal}
+        feature="Add to Queue"
+      />
       <div className="relative h-64 md:h-80 bg-gradient-to-b from-primary/30 to-background overflow-hidden">
         {artist.banner_image_url && <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: `url(${artist.banner_image_url})` }} />}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
@@ -143,9 +153,13 @@ export default function ArtistProfile() {
                       <Button
                         size="icon"
                         variant="outline"
-                        className="rounded-full w-10 h-10 border-glass-border/50 hover:border-primary/50"
+                        className="rounded-full w-10 h-10 border-glass-border/50 hover:border-primary/50 relative"
                         onClick={(e) => {
                           e.stopPropagation();
+                          if (!canUseFeature("addToQueue")) {
+                            setShowPremiumModal(true);
+                            return;
+                          }
                           addToQueue({
                             id: track.id,
                             title: track.title,
@@ -155,9 +169,12 @@ export default function ArtistProfile() {
                             artist: { id: artist.id, display_name: artist.display_name },
                           });
                         }}
-                        title="Add to queue"
+                        title={canUseFeature("addToQueue") ? "Add to queue" : "Premium feature"}
                       >
                         <ListPlus className="w-4 h-4" />
+                        {!canUseFeature("addToQueue") && (
+                          <Lock className="h-2 w-2 absolute -top-0.5 -right-0.5 text-primary" />
+                        )}
                       </Button>
                     </div>
                   </div>

@@ -2,11 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSubscription } from "@/hooks/useSubscription";
-import { useCollectionBookmarks } from "@/hooks/useCollectionBookmarks";
 import { useDownload } from "@/hooks/useDownload";
-import { SubscriptionRequiredModal } from "./SubscriptionRequiredModal";
-import { DownloadOptionsModal } from "./DownloadOptionsModal";
 import { TipPaymentModal } from "./TipPaymentModal";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -39,12 +35,8 @@ export function DownloadButton({
 }: DownloadButtonProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { hasActiveSubscription, isLoading: subscriptionLoading } = useSubscription();
-  const { addBookmark, isAdding } = useCollectionBookmarks();
   const { downloadOwnedTrack, isDownloading } = useDownload();
 
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-  const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
@@ -63,26 +55,11 @@ export function DownloadButton({
       return;
     }
 
-    // Check subscription status
-    if (!hasActiveSubscription && !subscriptionLoading) {
-      setShowSubscriptionModal(true);
-      return;
-    }
-
-    // Show download options
-    setShowOptionsModal(true);
-  };
-
-  const handleAddToCollection = () => {
-    addBookmark(track.id);
-    toast.success("Added to collection!");
-  };
-
-  const handleDownloadToDevice = () => {
+    // Go directly to payment - no subscription check needed for downloads
     setShowTipModal(true);
   };
 
-  const isLoading = subscriptionLoading || isDownloading || isAdding;
+  const isLoading = isDownloading;
 
   return (
     <>
@@ -100,20 +77,6 @@ export function DownloadButton({
         )}
         {size !== "icon" && <span className="ml-2">Download</span>}
       </Button>
-
-      <SubscriptionRequiredModal
-        open={showSubscriptionModal}
-        onOpenChange={setShowSubscriptionModal}
-      />
-
-      <DownloadOptionsModal
-        open={showOptionsModal}
-        onOpenChange={setShowOptionsModal}
-        track={track}
-        onAddToCollection={handleAddToCollection}
-        onDownloadToDevice={handleDownloadToDevice}
-        isAddingToCollection={isAdding}
-      />
 
       <TipPaymentModal
         open={showTipModal}
