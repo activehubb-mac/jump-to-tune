@@ -1,8 +1,12 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Music, Disc3, Users, Building2, Headphones, Zap, TrendingUp, Shield, Upload, LayoutDashboard, Library } from "lucide-react";
+import { Music, Disc3, Users, Building2, Headphones, Zap, TrendingUp, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRecommendedArtists } from "@/hooks/useRecommendedArtists";
+import { useFollow } from "@/hooks/useFollows";
+import { useFeedback } from "@/contexts/FeedbackContext";
+import { formatCompactNumber } from "@/lib/formatters";
 
 const features = [
   {
@@ -36,6 +40,35 @@ const stats = [
 
 export default function Index() {
   const { user, role, profile } = useAuth();
+  const { data: recommendedArtists, isLoading: recommendationsLoading } = useRecommendedArtists(6);
+  const { isFollowing, toggleFollow } = useFollow();
+  const { showFeedback } = useFeedback();
+
+  const handleFollow = async (artistId: string, artistName: string) => {
+    if (!user) {
+      showFeedback({
+        type: "warning",
+        title: "Sign in required",
+        message: "Please sign in to follow artists",
+      });
+      return;
+    }
+    try {
+      const result = await toggleFollow(artistId, artistName);
+      showFeedback({
+        type: "success",
+        title: result.action === "followed" ? "Following" : "Unfollowed",
+        message: result.artistName || "Artist",
+        autoCloseDelay: 2000,
+      });
+    } catch {
+      showFeedback({
+        type: "error",
+        title: "Error",
+        message: "Failed to update follow status",
+      });
+    }
+  };
 
   // Determine hero content based on auth state and role
   const getHeroContent = () => {
@@ -272,6 +305,103 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* Discover Section - Only show for authenticated users */}
+      {user && recommendedArtists && recommendedArtists.length > 0 && (
+        <section className="py-16 bg-card/20">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
+                  <Sparkles className="w-8 h-8 text-accent" />
+                  Discover Artists
+                </h2>
+                <p className="text-muted-foreground mt-2">Artists you might like based on who you follow</p>
+              </div>
+              <Button variant="outline" className="hidden md:flex" asChild>
+                <Link to="/artists">View All</Link>
+              </Button>
+            </div>
+
+            {recommendationsLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {recommendedArtists.map((artist) => {
+                  const following = isFollowing(artist.id);
+                  
+                  return (
+                    <div
+                      key={artist.id}
+                      className="glass-card p-4 text-center group hover:bg-primary/10 transition-all duration-300"
+                    >
+                      <Link to={`/artist/${artist.id}`}>
+                        <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform overflow-hidden">
+                          {artist.avatar_url ? (
+                            <img
+                              src={artist.avatar_url}
+                              alt={artist.display_name || "Artist"}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Music className="w-8 h-8 text-muted-foreground" />
+                          )}
+                        </div>
+                        <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                          {artist.display_name || "Unknown"}
+                        </h3>
+                      </Link>
+                      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-1">
+                        <span>{artist.trackCount} tracks</span>
+                        <span>•</span>
+                        <span>{formatCompactNumber(artist.followerCount)} fans</span>
+                      </div>
+                      {artist.matchingGenres.length > 0 && (
+                        <div className="flex flex-wrap justify-center gap-1 mt-2">
+                          {artist.matchingGenres.slice(0, 2).map((genre) => (
+                            <span
+                              key={genre}
+                              className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary"
+                            >
+                              {genre}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <Button
+                        size="sm"
+                        variant={following ? "outline" : "default"}
+                        className={`mt-3 w-full ${following ? "border-glass-border" : "gradient-accent"}`}
+                        onClick={() => handleFollow(artist.id, artist.display_name || "Artist")}
+                      >
+                        {following ? (
+                          <>
+                            <UserMinus className="w-3 h-3 mr-1" />
+                            Following
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="w-3 h-3 mr-1" />
+                            Follow
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="mt-8 text-center md:hidden">
+              <Button variant="outline" asChild>
+                <Link to="/artists">Discover More Artists</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Stats Section - Only show for guests */}
       {!user && (
