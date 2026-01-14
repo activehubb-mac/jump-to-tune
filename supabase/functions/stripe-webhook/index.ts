@@ -151,47 +151,134 @@ serve(async (req) => {
             }
           }
         } else if (session.mode === "payment") {
-          // Handle track purchase
-          const userId = metadata.user_id;
-          const trackId = metadata.track_id;
-          const trackPrice = parseFloat(metadata.track_price || "0");
-          const tipAmount = parseFloat(metadata.tip_amount || "0");
+          // Check if this is a credit purchase
+          if (metadata.type === "credit_purchase") {
+            const userId = metadata.user_id;
+            const creditsCents = parseInt(metadata.credits_cents || "0", 10);
+            const feeCents = parseInt(metadata.fee_cents || "0", 10);
+            const amountCents = parseInt(metadata.amount_cents || "0", 10);
 
-          if (userId && trackId) {
-            // Get current editions sold
-            const { data: track } = await supabaseClient
-              .from("tracks")
-              .select("editions_sold, total_editions")
-              .eq("id", trackId)
-              .single();
+            if (userId && creditsCents > 0) {
+              logStep("Processing credit purchase", { userId, creditsCents, feeCents });
 
-            if (track && track.editions_sold < track.total_editions) {
-              const editionNumber = track.editions_sold + 1;
+              // Get or create wallet
+              let { data: wallet } = await supabaseClient
+                .from("credit_wallets")
+                .select("*")
+                .eq("user_id", userId)
+                .single();
 
-              // Create purchase record
-              const { error: purchaseError } = await supabaseClient
-                .from("purchases")
-                .insert({
-                  user_id: userId,
-                  track_id: trackId,
-                  edition_number: editionNumber,
-                  price_paid: trackPrice + tipAmount,
-                  tip_amount: tipAmount,
-                });
-
-              if (purchaseError) {
-                logStep("Error creating purchase", { error: purchaseError });
-              } else {
-                // Update editions sold
-                await supabaseClient
-                  .from("tracks")
-                  .update({ editions_sold: editionNumber })
-                  .eq("id", trackId);
-
-                logStep("Purchase created successfully", { editionNumber });
+              if (!wallet) {
+                const { data: newWallet, error: createError } = await supabaseClient
+                  .from("credit_wallets")
+                  .insert({ user_id: userId, balance_cents: 0 })
+                  .select()
+                  .single();
+                
+                if (createError) {
+                  logStep("Error creating wallet", { error: createError });
+                } else {
+                  wallet = newWallet;
+                }
               }
-            } else {
-              logStep("Track sold out or not found");
+
+              if (wallet) {
+                // Add credits to wallet
+                const newBalance = wallet.balance_cents + creditsCents;
+                const { error: updateError } = await supabaseClient
+                  .from("credit_wallets")
+                  .update({ balance_cents: newBalance })
+                  .eq("user_id", userId);
+
+                if (updateError) {
+                  logStep("Error updating wallet balance", { error: updateError });
+                } else {
+                  logStep("Credits added to wallet", { 
+                    previousBalance: wallet.balance_cents, 
+                    added: creditsCents, 
+                    newBalance 
+                  });
+
+                  // Record transaction
+                  await supabaseClient
+                    .from("credit_transactions")
+                    .insert({
+                      user_id: userId,
+                      type: "purchase",
+                      amount_cents: creditsCents,
+                      fee_cents: feeCents,
+                      stripe_payment_intent_id: session.payment_intent as string,
+                      description: `Added $${(creditsCents / 100).toFixed(2)} credits`,
+                    });
+                  
+                  logStep("Credit transaction recorded");
+                }
+              }
+            }
+          } else {
+            // Handle track purchase (legacy Stripe direct purchase)
+            const userId = metadata.user_id;
+            const trackId = metadata.track_id;
+            const trackPrice = parseFloat(metadata.track_price || "0");
+            const tipAmount = parseFloat(metadata.tip_amount || "0");
+
+            if (userId && trackId) {
+              // Get current editions sold
+              const { data: track } = await supabaseClient
+                .from("tracks")
+                .select("editions_sold, total_editions, artist_id, title")
+                .eq("id", trackId)
+                .single();
+
+              if (track && track.editions_sold < track.total_editions) {
+                const editionNumber = track.editions_sold + 1;
+                const totalPaid = trackPrice + tipAmount;
+                const priceCents = Math.round(totalPaid * 100);
+                const platformFeeCents = Math.ceil(priceCents * 0.15);
+                const artistPayoutCents = priceCents - platformFeeCents;
+
+                // Create purchase record
+                const { data: purchase, error: purchaseError } = await supabaseClient
+                  .from("purchases")
+                  .insert({
+                    user_id: userId,
+                    track_id: trackId,
+                    edition_number: editionNumber,
+                    price_paid: totalPaid,
+                    tip_amount: tipAmount,
+                  })
+                  .select()
+                  .single();
+
+                if (purchaseError) {
+                  logStep("Error creating purchase", { error: purchaseError });
+                } else {
+                  // Update editions sold
+                  await supabaseClient
+                    .from("tracks")
+                    .update({ editions_sold: editionNumber })
+                    .eq("id", trackId);
+
+                  // Record artist earnings
+                  await supabaseClient
+                    .from("artist_earnings")
+                    .insert({
+                      artist_id: track.artist_id,
+                      purchase_id: purchase.id,
+                      gross_amount_cents: priceCents,
+                      platform_fee_cents: platformFeeCents,
+                      artist_payout_cents: artistPayoutCents,
+                      status: "pending",
+                    });
+
+                  logStep("Purchase created successfully", { 
+                    editionNumber, 
+                    artistEarnings: artistPayoutCents / 100 
+                  });
+                }
+              } else {
+                logStep("Track sold out or not found");
+              }
             }
           }
         }
