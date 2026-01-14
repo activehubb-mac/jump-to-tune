@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      collection_bookmarks: {
+        Row: {
+          created_at: string
+          id: string
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_bookmarks_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_bookmarks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           created_at: string
@@ -196,6 +232,7 @@ export type Database = {
           id: string
           price_paid: number
           purchased_at: string
+          tip_amount: number | null
           track_id: string
           user_id: string
         }
@@ -204,6 +241,7 @@ export type Database = {
           id?: string
           price_paid: number
           purchased_at?: string
+          tip_amount?: number | null
           track_id: string
           user_id: string
         }
@@ -212,6 +250,7 @@ export type Database = {
           id?: string
           price_paid?: number
           purchased_at?: string
+          tip_amount?: number | null
           track_id?: string
           user_id?: string
         }
@@ -227,6 +266,56 @@ export type Database = {
             foreignKeyName: "purchases_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          tier: Database["public"]["Enums"]["app_role"]
+          trial_ends_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: Database["public"]["Enums"]["app_role"]
+          trial_ends_at: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: Database["public"]["Enums"]["app_role"]
+          trial_ends_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -376,6 +465,7 @@ export type Database = {
     }
     Enums: {
       app_role: "fan" | "artist" | "label"
+      subscription_status: "trialing" | "active" | "canceled" | "past_due"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -504,6 +594,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["fan", "artist", "label"],
+      subscription_status: ["trialing", "active", "canceled", "past_due"],
     },
   },
 } as const
