@@ -16,10 +16,18 @@ interface Bookmark {
     audio_url: string;
     artist_id: string;
     genre: string | null;
+    duration: number | null;
     editions_sold: number;
     total_editions: number;
+    artist?: {
+      id: string;
+      display_name: string | null;
+      avatar_url: string | null;
+    } | null;
   } | null;
 }
+
+export type { Bookmark };
 
 export function useCollectionBookmarks() {
   const { user } = useAuth();
@@ -42,8 +50,14 @@ export function useCollectionBookmarks() {
             audio_url,
             artist_id,
             genre,
+            duration,
             editions_sold,
-            total_editions
+            total_editions,
+            artist:profiles!tracks_artist_id_fkey(
+              id,
+              display_name,
+              avatar_url
+            )
           )
         `)
         .eq("user_id", user.id)
