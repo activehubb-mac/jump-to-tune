@@ -1,17 +1,108 @@
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2 } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
+import { useAudioPlayer, AudioTrack } from "@/contexts/AudioPlayerContext";
 import { useAudioKeyboardShortcuts } from "@/hooks/useAudioKeyboardShortcuts";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 function formatTime(seconds: number): string {
   if (!seconds || isNaN(seconds)) return "0:00";
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+interface SortableTrackItemProps {
+  track: AudioTrack;
+  actualIndex: number;
+  onPlay: () => void;
+  onRemove: () => void;
+}
+
+function SortableTrackItem({ track, actualIndex, onPlay, onRemove }: SortableTrackItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: `${track.id}-${actualIndex}` });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 transition-colors group cursor-pointer"
+    >
+      <button
+        className="touch-none cursor-grab active:cursor-grabbing p-1 text-muted-foreground/50 hover:text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="w-3 h-3" />
+      </button>
+      <div
+        className="flex items-center gap-3 flex-1 min-w-0"
+        onClick={onPlay}
+      >
+        <div className="w-8 h-8 rounded bg-muted/50 overflow-hidden flex-shrink-0 relative">
+          {track.cover_art_url ? (
+            <img src={track.cover_art_url} alt={track.title} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Disc3 className="w-3 h-3 text-muted-foreground/50" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <Play className="w-3 h-3 text-foreground" />
+          </div>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm text-foreground truncate">{track.title}</p>
+          <p className="text-xs text-muted-foreground truncate">
+            {track.artist?.display_name || "Unknown Artist"}
+          </p>
+        </div>
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive flex-shrink-0"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
+      >
+        <Trash2 className="w-3 h-3" />
+      </Button>
+    </div>
+  );
 }
 
 export function GlobalAudioPlayer() {
@@ -40,12 +131,25 @@ export function GlobalAudioPlayer() {
     removeFromQueue,
     clearQueue,
     playTrack,
+    reorderQueue,
   } = useAudioPlayer();
 
   const [showQueue, setShowQueue] = useState(false);
 
   // Enable keyboard shortcuts
   useAudioKeyboardShortcuts();
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   if (!isPlayerVisible || !currentTrack) return null;
 
@@ -59,6 +163,25 @@ export function GlobalAudioPlayer() {
 
   const hasNext = queueIndex < queue.length - 1 || repeatMode === "all";
   const hasPrevious = queueIndex > 0 || currentTime > 3;
+
+  // Get upcoming tracks for drag and drop
+  const upcomingTracks = queue.slice(queueIndex + 1);
+  const upcomingIds = upcomingTracks.map((track, index) => `${track.id}-${queueIndex + 1 + index}`);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = upcomingIds.indexOf(active.id as string);
+    const newIndex = upcomingIds.indexOf(over.id as string);
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      // Convert to actual queue indices
+      const actualOldIndex = queueIndex + 1 + oldIndex;
+      const actualNewIndex = queueIndex + 1 + newIndex;
+      reorderQueue(actualOldIndex, actualNewIndex);
+    }
+  };
 
   return (
     <>
@@ -128,50 +251,30 @@ export function GlobalAudioPlayer() {
                   </div>
                 )}
 
-                {/* Up Next */}
-                {queue.length > queueIndex + 1 && (
+                {/* Up Next - Drag and Drop */}
+                {upcomingTracks.length > 0 && (
                   <div className="px-3 py-1 mt-2">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Up Next</p>
-                    {queue.slice(queueIndex + 1).map((track, index) => {
-                      const actualIndex = queueIndex + 1 + index;
-                      return (
-                        <div
-                          key={`${track.id}-${actualIndex}`}
-                          className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors group cursor-pointer"
-                          onClick={() => playTrack(track)}
-                        >
-                          <div className="w-8 h-8 rounded bg-muted/50 overflow-hidden flex-shrink-0 relative">
-                            {track.cover_art_url ? (
-                              <img src={track.cover_art_url} alt={track.title} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Disc3 className="w-3 h-3 text-muted-foreground/50" />
-                              </div>
-                            )}
-                            <div className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Play className="w-3 h-3 text-foreground" />
-                            </div>
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm text-foreground truncate">{track.title}</p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {track.artist?.display_name || "Unknown Artist"}
-                            </p>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeFromQueue(actualIndex);
-                            }}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      );
-                    })}
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext items={upcomingIds} strategy={verticalListSortingStrategy}>
+                        {upcomingTracks.map((track, index) => {
+                          const actualIndex = queueIndex + 1 + index;
+                          return (
+                            <SortableTrackItem
+                              key={`${track.id}-${actualIndex}`}
+                              track={track}
+                              actualIndex={actualIndex}
+                              onPlay={() => playTrack(track)}
+                              onRemove={() => removeFromQueue(actualIndex)}
+                            />
+                          );
+                        })}
+                      </SortableContext>
+                    </DndContext>
                   </div>
                 )}
 
@@ -369,7 +472,7 @@ export function GlobalAudioPlayer() {
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-8 w-8 ${showQueue ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                className={`h-8 w-8 relative ${showQueue ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
                 onClick={() => setShowQueue(!showQueue)}
               >
                 <ListMusic className="h-4 w-4" />
@@ -420,11 +523,11 @@ export function GlobalAudioPlayer() {
               max={duration || 100}
               step={0.1}
               onValueChange={handleSeek}
-              className="cursor-pointer"
+              className="w-full"
             />
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
+            <div className="flex justify-between mt-1">
+              <span className="text-xs text-muted-foreground">{formatTime(currentTime)}</span>
+              <span className="text-xs text-muted-foreground">{formatTime(duration)}</span>
             </div>
           </div>
         </div>

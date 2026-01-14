@@ -1,7 +1,7 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Music, Disc3, Users, Building2, Headphones, Zap, TrendingUp, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History } from "lucide-react";
+import { Music, Disc3, Users, Building2, Headphones, Zap, TrendingUp, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History, ListPlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRecommendedArtists } from "@/hooks/useRecommendedArtists";
 import { useFollow } from "@/hooks/useFollows";
@@ -50,7 +50,7 @@ export default function Index() {
   const { recentlyPlayed } = useRecentlyPlayed(6);
   const { isFollowing, toggleFollow } = useFollow();
   const { showFeedback } = useFeedback();
-  const { playTrack } = useAudioPlayer();
+  const { playTrack, addToQueue } = useAudioPlayer();
 
   const handleFollow = async (artistId: string, artistName: string) => {
     if (!user) {
@@ -451,8 +451,38 @@ export default function Index() {
                     ) : (
                       <Disc3 className="w-12 h-12 text-muted-foreground" />
                     )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Play className="w-10 h-10 text-white fill-white" />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          playTrack({
+                            id: track.id,
+                            title: track.title,
+                            audio_url: "",
+                            cover_art_url: track.cover_art_url,
+                            artist: { id: track.artist_id, display_name: track.artist_name },
+                          });
+                        }}
+                        className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center"
+                      >
+                        <Play className="w-5 h-5 text-secondary-foreground ml-0.5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToQueue({
+                            id: track.id,
+                            title: track.title,
+                            audio_url: "",
+                            cover_art_url: track.cover_art_url,
+                            artist: { id: track.artist_id, display_name: track.artist_name },
+                          });
+                        }}
+                        className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center hover:bg-white/10"
+                        title="Add to queue"
+                      >
+                        <ListPlus className="w-5 h-5 text-white" />
+                      </button>
                     </div>
                   </div>
                   <h3 className="font-semibold text-foreground truncate group-hover:text-secondary transition-colors">
@@ -631,8 +661,38 @@ export default function Index() {
                       ) : (
                         <Disc3 className="w-12 h-12 text-muted-foreground" />
                       )}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Play className="w-10 h-10 text-white fill-white" />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            playTrack({
+                              id: track.id,
+                              title: track.title,
+                              audio_url: track.audio_url,
+                              cover_art_url: track.cover_art_url,
+                              artist: { id: track.artist_id, display_name: track.artist_name },
+                            });
+                          }}
+                          className="w-10 h-10 rounded-full bg-primary flex items-center justify-center"
+                        >
+                          <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToQueue({
+                              id: track.id,
+                              title: track.title,
+                              audio_url: track.audio_url,
+                              cover_art_url: track.cover_art_url,
+                              artist: { id: track.artist_id, display_name: track.artist_name },
+                            });
+                          }}
+                          className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center hover:bg-white/10"
+                          title="Add to queue"
+                        >
+                          <ListPlus className="w-5 h-5 text-white" />
+                        </button>
                       </div>
                       <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-primary/90 text-xs font-medium text-primary-foreground">
                         NEW
@@ -712,8 +772,38 @@ export default function Index() {
                     ) : (
                       <Disc3 className="w-12 h-12 text-muted-foreground" />
                     )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Play className="w-10 h-10 text-white fill-white" />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          playTrack({
+                            id: track.id,
+                            title: track.title,
+                            audio_url: track.audio_url,
+                            cover_art_url: track.cover_art_url,
+                            artist: { id: track.artist_id, display_name: track.artist_name },
+                          });
+                        }}
+                        className="w-10 h-10 rounded-full bg-accent flex items-center justify-center"
+                      >
+                        <Play className="w-5 h-5 text-accent-foreground ml-0.5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToQueue({
+                            id: track.id,
+                            title: track.title,
+                            audio_url: track.audio_url,
+                            cover_art_url: track.cover_art_url,
+                            artist: { id: track.artist_id, display_name: track.artist_name },
+                          });
+                        }}
+                        className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center hover:bg-white/10"
+                        title="Add to queue"
+                      >
+                        <ListPlus className="w-5 h-5 text-white" />
+                      </button>
                     </div>
                   </div>
                   <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">

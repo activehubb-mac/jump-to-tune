@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown } from "lucide-react";
+import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCollectionStats, useOwnedTracks } from "@/hooks/useCollectionStats";
@@ -31,7 +31,7 @@ export default function Collection() {
   const { data: followedArtists, isLoading: followingLoading } = useFollowedArtists();
   const { toggleLike } = useLikes();
   const { toggleFollow } = useFollow();
-  const { playTrack } = useAudioPlayer();
+  const { playTrack, addToQueue } = useAudioPlayer();
 
   // Show loading state while checking auth
   if (isLoading) {
@@ -245,10 +245,28 @@ export default function Collection() {
                           <Disc3 className="w-16 h-16 text-muted-foreground/50" />
                         </div>
                       )}
-                      {/* Hover Overlay */}
-                      <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <Button size="icon" className="rounded-full gradient-accent neon-glow w-12 h-12">
-                          <Play className="w-5 h-5 ml-0.5" />
+                      <div className="absolute inset-0 bg-background/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <Button size="icon" className="rounded-full gradient-accent neon-glow w-10 h-10">
+                          <Play className="w-4 h-4 ml-0.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="rounded-full w-10 h-10 border-glass-border/50 hover:border-primary/50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToQueue({
+                              id: track.id,
+                              title: track.title,
+                              audio_url: track.audio_url,
+                              cover_art_url: track.cover_art_url,
+                              duration: track.duration,
+                              artist: track.artist,
+                            });
+                          }}
+                          title="Add to queue"
+                        >
+                          <ListPlus className="w-4 h-4" />
                         </Button>
                       </div>
                       {/* Unlike Button */}
