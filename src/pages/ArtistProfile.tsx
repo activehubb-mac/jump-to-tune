@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus } from "lucide-react";
+import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus } from "lucide-react";
 import { useArtistProfile } from "@/hooks/useArtistProfile";
 import { useTracks } from "@/hooks/useTracks";
 import { useFollow } from "@/hooks/useFollows";
@@ -14,7 +14,7 @@ export default function ArtistProfile() {
   const { id } = useParams();
   const { data: artist, isLoading: profileLoading } = useArtistProfile(id);
   const { data: tracks, isLoading: tracksLoading } = useTracks({ artistId: id, publishedOnly: true });
-  const { playTrack, currentTrack, isPlaying } = useAudioPlayer();
+  const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
   const { isFollowing, toggleFollow, isToggling } = useFollow();
   const { user } = useAuth();
   const { showFeedback } = useFeedback();
@@ -122,7 +122,7 @@ export default function ArtistProfile() {
                 <div key={track.id} className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300">
                   <div className="aspect-square rounded-lg bg-muted/50 mb-3 relative overflow-hidden">
                     {track.cover_art_url ? <img src={track.cover_art_url} alt={track.title} className="absolute inset-0 w-full h-full object-cover" /> : <div className="absolute inset-0 flex items-center justify-center"><Disc3 className="w-12 h-12 text-muted-foreground/50" /></div>}
-                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button 
                         size="icon" 
                         className="rounded-full gradient-accent w-10 h-10"
@@ -139,6 +139,25 @@ export default function ArtistProfile() {
                         }}
                       >
                         {currentTrack?.id === track.id && isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="rounded-full w-10 h-10 border-glass-border/50 hover:border-primary/50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToQueue({
+                            id: track.id,
+                            title: track.title,
+                            audio_url: track.audio_url,
+                            cover_art_url: track.cover_art_url,
+                            duration: track.duration,
+                            artist: { id: artist.id, display_name: artist.display_name },
+                          });
+                        }}
+                        title="Add to queue"
+                      >
+                        <ListPlus className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>

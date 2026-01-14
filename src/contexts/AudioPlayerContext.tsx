@@ -75,6 +75,7 @@ interface AudioPlayerContextType {
   removeFromQueue: (index: number) => void;
   toggleShuffle: () => void;
   cycleRepeatMode: () => void;
+  reorderQueue: (fromIndex: number, toIndex: number) => void;
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined);
@@ -405,6 +406,15 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     });
   }, []);
 
+  const reorderQueue = useCallback((fromIndex: number, toIndex: number) => {
+    setQueue(prev => {
+      const newQueue = [...prev];
+      const [removed] = newQueue.splice(fromIndex, 1);
+      newQueue.splice(toIndex, 0, removed);
+      return newQueue;
+    });
+  }, []);
+
   const closePlayer = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
@@ -451,6 +461,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         removeFromQueue,
         toggleShuffle,
         cycleRepeatMode,
+        reorderQueue,
       }}
     >
       {children}

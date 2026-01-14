@@ -1,7 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Disc3, Edit, Trash2 } from "lucide-react";
+import { Disc3, Edit, Trash2, Play, Pause, ListPlus } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
+import { Button } from "@/components/ui/button";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 
 interface TrackCardProps {
   track: {
@@ -22,6 +24,7 @@ interface TrackCardProps {
   };
   showArtist?: boolean;
   showActions?: boolean;
+  showPlayButton?: boolean;
   onEdit?: (trackId: string) => void;
   onDelete?: (trackId: string) => void;
   onClick?: () => void;
@@ -33,12 +36,41 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
       track,
       showArtist = false,
       showActions = false,
+      showPlayButton = false,
       onEdit,
       onDelete,
       onClick,
     },
     ref
   ) {
+    const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
+    
+    const isCurrentTrack = currentTrack?.id === track.id;
+    
+    const handlePlay = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      playTrack({
+        id: track.id,
+        title: track.title,
+        audio_url: track.audio_url || "",
+        cover_art_url: track.cover_art_url,
+        duration: track.duration,
+        artist: track.artist,
+      });
+    };
+    
+    const handleAddToQueue = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      addToQueue({
+        id: track.id,
+        title: track.title,
+        audio_url: track.audio_url || "",
+        cover_art_url: track.cover_art_url,
+        duration: track.duration,
+        artist: track.artist,
+      });
+    };
+
     return (
       <div
         ref={ref}
@@ -56,6 +88,28 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
               <Disc3 className="w-16 h-16 text-muted-foreground/50" />
+            </div>
+          )}
+
+          {/* Play overlay for fan-facing cards */}
+          {showPlayButton && (
+            <div className="absolute inset-0 bg-background/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button 
+                size="icon" 
+                className="rounded-full gradient-accent w-10 h-10"
+                onClick={handlePlay}
+              >
+                {isCurrentTrack && isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+              </Button>
+              <Button
+                size="icon"
+                variant="outline"
+                className="rounded-full w-10 h-10 border-glass-border/50 hover:border-primary/50"
+                onClick={handleAddToQueue}
+                title="Add to queue"
+              >
+                <ListPlus className="w-4 h-4" />
+              </Button>
             </div>
           )}
 

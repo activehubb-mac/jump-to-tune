@@ -19,6 +19,7 @@ const navLinks = [
   { href: "/browse", label: "Browse", icon: Search },
   { href: "/artists", label: "Artists", icon: User },
   { href: "/labels", label: "Labels", icon: Building2 },
+  { href: "/collection", label: "Collection", icon: Library, authRequired: true },
 ];
 
 export function Navbar() {
@@ -62,6 +63,9 @@ export function Navbar() {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => {
+                // Skip auth-required links for non-authenticated users
+                if (link.authRequired && !user) return null;
+                
                 const Icon = link.icon;
                 const isActive = location.pathname === link.href;
                 return (
@@ -179,6 +183,9 @@ export function Navbar() {
             <div className="md:hidden py-4">
               <div className="flex flex-col gap-2">
                 {navLinks.map((link) => {
+                  // Skip auth-required links for non-authenticated users
+                  if (link.authRequired && !user) return null;
+                  
                   const Icon = link.icon;
                   const isActive = location.pathname === link.href;
                   return (
