@@ -7,6 +7,8 @@ import { Link } from "react-router-dom";
 import { usePublishedTracks } from "@/hooks/useTracks";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
+import { useLikes } from "@/hooks/useLikes";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
 const genres = ["All", "Electronic", "Hip Hop", "R&B", "Pop", "Rock", "Jazz", "Classical", "Indie"];
@@ -15,11 +17,25 @@ export default function Browse() {
   const [selectedGenre, setSelectedGenre] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
+  const { isLiked, toggleLike } = useLikes();
+  const { user } = useAuth();
   
   const { data: tracks, isLoading } = usePublishedTracks({
     genre: selectedGenre,
     searchQuery: searchQuery || undefined,
   });
+
+  const handleLike = (trackId: string) => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to like tracks",
+        variant: "destructive",
+      });
+      return;
+    }
+    toggleLike(trackId);
+  };
 
   return (
     <Layout>
@@ -114,8 +130,18 @@ export default function Browse() {
                     </Button>
                   </div>
                   {/* Like Button */}
-                  <button className="absolute top-2 right-2 p-2 rounded-full bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80">
-                    <Heart className="w-4 h-4 text-foreground" />
+                  <button 
+                    className={`absolute top-2 right-2 p-2 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all hover:scale-110 ${
+                      isLiked(track.id) 
+                        ? "bg-primary/20 text-primary" 
+                        : "bg-background/50 text-foreground hover:bg-background/80"
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLike(track.id);
+                    }}
+                  >
+                    <Heart className={`w-4 h-4 ${isLiked(track.id) ? "fill-current" : ""}`} />
                   </button>
                   {/* Add to Queue Button */}
                   <button 
