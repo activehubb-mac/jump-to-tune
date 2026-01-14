@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, Bookmark, X } from "lucide-react";
+import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, Bookmark, X, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCollectionStats, useOwnedTracks } from "@/hooks/useCollectionStats";
@@ -18,6 +18,7 @@ import { useFollowedArtists, useFollow } from "@/hooks/useFollows";
 import { useCollectionBookmarks } from "@/hooks/useCollectionBookmarks";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { formatPrice } from "@/lib/formatters";
+import { DownloadButton } from "@/components/download/DownloadButton";
 
 type SortOption = "recent" | "title" | "artist" | "price";
 
@@ -447,10 +448,20 @@ export default function Collection() {
                           <span className="text-sm font-medium text-primary">
                             {formatPrice(bookmark.track?.price || 0)}
                           </span>
-                          {bookmark.track?.genre && (
-                            <span className="text-xs text-muted-foreground">
-                              {bookmark.track.genre}
-                            </span>
+                          {bookmark.track && (
+                            <DownloadButton
+                              track={{
+                                id: bookmark.track.id,
+                                title: bookmark.track.title,
+                                price: bookmark.track.price,
+                                audio_url: bookmark.track.audio_url,
+                                cover_art_url: bookmark.track.cover_art_url,
+                                artist: bookmark.track.artist,
+                              }}
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs"
+                            />
                           )}
                         </div>
                       </div>

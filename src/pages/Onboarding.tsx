@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Music, ArrowRight, ArrowLeft, Loader2, Check, Sparkles } from "lucide-react";
+import { Music, ArrowRight, ArrowLeft, Loader2, Check, Sparkles, Crown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedback } from "@/contexts/FeedbackContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
+import { useDownload } from "@/hooks/useDownload";
 import { cn } from "@/lib/utils";
 
 const GENRE_OPTIONS = [
@@ -16,7 +18,28 @@ const GENRE_OPTIONS = [
   "Classical", "Country", "Reggae", "Afrobeats", "Latin", "Indie"
 ];
 
-type OnboardingStep = "welcome" | "avatar" | "bio" | "genres" | "complete";
+const SUBSCRIPTION_TIERS = [
+  {
+    tier: "fan" as const,
+    name: "Fan",
+    price: "$0.99",
+    features: ["Unlimited streaming", "Download to collection", "Download to device"],
+  },
+  {
+    tier: "artist" as const,
+    name: "Artist",
+    price: "$4.99",
+    features: ["All Fan features", "Upload unlimited tracks", "Artist dashboard & analytics"],
+  },
+  {
+    tier: "label" as const,
+    name: "Label",
+    price: "$9.99",
+    features: ["All Artist features", "Manage up to 10 artists", "Label dashboard & analytics"],
+  },
+];
+
+type OnboardingStep = "welcome" | "avatar" | "bio" | "genres" | "subscription" | "complete";
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -29,6 +52,8 @@ export default function Onboarding() {
   const [bio, setBio] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [loadingTier, setLoadingTier] = useState<string | null>(null);
+  const { createSubscriptionCheckout } = useDownload();
 
   // Redirect fans to home and already-onboarded users to dashboard
   useEffect(() => {
@@ -148,6 +173,7 @@ export default function Onboarding() {
     { key: "avatar", label: "Photo" },
     { key: "bio", label: "About" },
     { key: "genres", label: "Genres" },
+    { key: "subscription", label: "Plan" },
     { key: "complete", label: "Done" },
   ];
 
@@ -355,17 +381,116 @@ export default function Onboarding() {
                   Back
                 </Button>
                 <Button
-                  onClick={handleComplete}
+                  onClick={() => setStep("subscription")}
                   disabled={isSaving}
                   className="flex-1 gradient-accent neon-glow-subtle hover:neon-glow"
+                >
+                  Continue
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Subscription Step */}
+          {step === "subscription" && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h1 className="text-2xl font-bold text-foreground mb-2">
+                  Choose Your Plan
+                </h1>
+                <p className="text-muted-foreground">
+                  Start with a 3-month free trial. Cancel anytime.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 bg-primary/10 rounded-lg p-3">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <span className="font-semibold text-primary">3 Months FREE Trial</span>
+              </div>
+
+              <div className="space-y-3">
+                {SUBSCRIPTION_TIERS.map((tierInfo) => {
+                  const isRecommended = tierInfo.tier === role;
+                  return (
+                    <div
+                      key={tierInfo.tier}
+                      className={cn(
+                        "border rounded-lg p-4 transition-all",
+                        isRecommended
+                          ? "border-primary bg-primary/5"
+                          : "border-border"
+                      )}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Crown className="h-4 w-4 text-primary" />
+                          <span className="font-semibold">{tierInfo.name}</span>
+                          {isRecommended && (
+                            <Badge variant="default" className="text-xs">
+                              Recommended
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {tierInfo.price}/mo after trial
+                        </span>
+                      </div>
+                      <ul className="text-sm text-muted-foreground mb-3 space-y-1">
+                        {tierInfo.features.map((feature) => (
+                          <li key={feature} className="flex items-center gap-2">
+                            <Check className="h-3 w-3 text-primary" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                      <Button
+                        className="w-full"
+                        variant={isRecommended ? "default" : "outline"}
+                        onClick={async () => {
+                          setLoadingTier(tierInfo.tier);
+                          try {
+                            const url = await createSubscriptionCheckout(tierInfo.tier);
+                            if (url) {
+                              // Save profile first before redirecting to checkout
+                              await handleComplete();
+                              window.open(url, "_blank");
+                            }
+                          } finally {
+                            setLoadingTier(null);
+                          }
+                        }}
+                        disabled={loadingTier !== null || isSaving}
+                      >
+                        {loadingTier === tierInfo.tier || (isSaving && loadingTier === tierInfo.tier) ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : null}
+                        Start Free Trial
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setStep("genres")}
+                  className="flex-1 border-glass-border"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={handleComplete}
+                  disabled={isSaving}
+                  className="flex-1"
                 >
                   {isSaving ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <>
-                      Complete Setup
-                      <Check className="w-4 h-4 ml-2" />
-                    </>
+                    "Skip for Now"
                   )}
                 </Button>
               </div>
