@@ -1,4 +1,4 @@
-import { Play, Pause, Volume2, VolumeX, X, Disc3 } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -15,6 +15,7 @@ export function GlobalAudioPlayer() {
   const {
     currentTrack,
     isPlaying,
+    isBuffering,
     currentTime,
     duration,
     volume,
@@ -79,8 +80,11 @@ export function GlobalAudioPlayer() {
                 size="icon"
                 className="rounded-full w-10 h-10 gradient-accent neon-glow-subtle flex-shrink-0"
                 onClick={togglePlayPause}
+                disabled={isBuffering}
               >
-                {isPlaying ? (
+                {isBuffering ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : isPlaying ? (
                   <Pause className="h-5 w-5" />
                 ) : (
                   <Play className="h-5 w-5 ml-0.5" />
@@ -110,8 +114,11 @@ export function GlobalAudioPlayer() {
             size="icon"
             className="rounded-full w-10 h-10 gradient-accent neon-glow-subtle flex-shrink-0 md:hidden"
             onClick={togglePlayPause}
+            disabled={isBuffering}
           >
-            {isPlaying ? (
+            {isBuffering ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : isPlaying ? (
               <Pause className="h-5 w-5" />
             ) : (
               <Play className="h-5 w-5 ml-0.5" />
