@@ -69,13 +69,13 @@ export function useFollow() {
     enabled: !!user,
   });
 
-  const toggleFollow = useMutation({
-    mutationFn: async (artistId: string) => {
+  const toggleFollowMutation = useMutation({
+    mutationFn: async ({ artistId, artistName }: { artistId: string; artistName?: string }) => {
       if (!user) throw new Error("Must be logged in to follow artists");
 
-      const isFollowing = followingIds.includes(artistId);
+      const isCurrentlyFollowing = followingIds.includes(artistId);
 
-      if (isFollowing) {
+      if (isCurrentlyFollowing) {
         const { error } = await supabase
           .from("follows")
           .delete()
@@ -83,19 +83,20 @@ export function useFollow() {
           .eq("following_id", artistId);
 
         if (error) throw error;
-        return { action: "unfollowed", artistId };
+        return { action: "unfollowed" as const, artistId, artistName };
       } else {
         const { error } = await supabase
           .from("follows")
           .insert({ follower_id: user.id, following_id: artistId });
 
         if (error) throw error;
-        return { action: "followed", artistId };
+        return { action: "followed" as const, artistId, artistName };
       }
     },
-    onMutate: async (artistId) => {
+    onMutate: async ({ artistId }) => {
       await queryClient.cancelQueries({ queryKey: ["following", user?.id] });
       await queryClient.cancelQueries({ queryKey: ["followedArtists", user?.id] });
+      await queryClient.cancelQueries({ queryKey: ["followerCounts"] });
 
       const previousFollowing = queryClient.getQueryData<string[]>(["following", user?.id]);
 
@@ -108,7 +109,7 @@ export function useFollow() {
 
       return { previousFollowing };
     },
-    onError: (_err, _artistId, context) => {
+    onError: (_err, _variables, context) => {
       if (context?.previousFollowing) {
         queryClient.setQueryData(["following", user?.id], context.previousFollowing);
       }
@@ -116,15 +117,20 @@ export function useFollow() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["following", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["followedArtists", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["followerCounts"] });
     },
   });
 
   const isFollowing = (artistId: string) => followingIds.includes(artistId);
 
+  const toggleFollow = (artistId: string, artistName?: string) => {
+    return toggleFollowMutation.mutateAsync({ artistId, artistName });
+  };
+
   return {
     followingIds,
     isFollowing,
-    toggleFollow: toggleFollow.mutate,
-    isToggling: toggleFollow.isPending,
+    toggleFollow,
+    isToggling: toggleFollowMutation.isPending,
   };
 }
