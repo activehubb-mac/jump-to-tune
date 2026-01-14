@@ -1,13 +1,14 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Music, Disc3, Users, Building2, Headphones, Zap, TrendingUp, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock } from "lucide-react";
+import { Music, Disc3, Users, Building2, Headphones, Zap, TrendingUp, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRecommendedArtists } from "@/hooks/useRecommendedArtists";
 import { useFollow } from "@/hooks/useFollows";
 import { useFeedback } from "@/contexts/FeedbackContext";
 import { useTrendingTracks } from "@/hooks/useTrendingTracks";
 import { useNewReleases } from "@/hooks/useNewReleases";
+import { useRecentlyPlayed } from "@/hooks/useRecentlyPlayed";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { formatCompactNumber } from "@/lib/formatters";
 
@@ -46,6 +47,7 @@ export default function Index() {
   const { data: recommendedArtists, isLoading: recommendationsLoading } = useRecommendedArtists(6);
   const { data: trendingTracks, isLoading: trendingLoading } = useTrendingTracks(6);
   const { data: newReleases, isLoading: newReleasesLoading } = useNewReleases(6);
+  const { recentlyPlayed } = useRecentlyPlayed(6);
   const { isFollowing, toggleFollow } = useFollow();
   const { showFeedback } = useFeedback();
   const { playTrack } = useAudioPlayer();
@@ -404,6 +406,67 @@ export default function Index() {
               <Button variant="outline" asChild>
                 <Link to="/artists">Discover More Artists</Link>
               </Button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Recently Played Section - Only for logged-in users with history */}
+      {user && recentlyPlayed.length > 0 && (
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
+                  <History className="w-8 h-8 text-secondary" />
+                  Recently Played
+                </h2>
+                <p className="text-muted-foreground mt-2">Pick up where you left off</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {recentlyPlayed.map((track) => (
+                <div
+                  key={track.id}
+                  className="glass-card p-4 group cursor-pointer hover:bg-secondary/10 transition-all duration-300"
+                  onClick={() => playTrack({
+                    id: track.id,
+                    title: track.title,
+                    audio_url: "",
+                    cover_art_url: track.cover_art_url,
+                    artist: {
+                      id: track.artist_id,
+                      display_name: track.artist_name,
+                    },
+                  })}
+                >
+                  <div className="aspect-square rounded-lg bg-muted/50 mb-3 flex items-center justify-center group-hover:scale-105 transition-transform overflow-hidden relative">
+                    {track.cover_art_url ? (
+                      <img
+                        src={track.cover_art_url}
+                        alt={track.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Disc3 className="w-12 h-12 text-muted-foreground" />
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Play className="w-10 h-10 text-white fill-white" />
+                    </div>
+                  </div>
+                  <h3 className="font-semibold text-foreground truncate group-hover:text-secondary transition-colors">
+                    {track.title}
+                  </h3>
+                  <Link
+                    to={`/artist/${track.artist_id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-sm text-muted-foreground hover:text-secondary transition-colors truncate block"
+                  >
+                    {track.artist_name || "Unknown Artist"}
+                  </Link>
+                </div>
+              ))}
             </div>
           </div>
         </section>
