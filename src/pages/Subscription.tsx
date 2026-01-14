@@ -4,6 +4,14 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Crown,
   Loader2,
   Check,
@@ -13,12 +21,17 @@ import {
   CreditCard,
   ArrowRight,
   Lock,
+  AlertTriangle,
+  Music,
+  Users,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useDownload } from "@/hooks/useDownload";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 const SUBSCRIPTION_TIERS = [
   {
@@ -47,6 +60,22 @@ const SUBSCRIPTION_TIERS = [
   },
 ];
 
+interface ValidationResult {
+  allowed: boolean;
+  reason?: string;
+  message?: string;
+  warning?: string;
+  trackCount?: number;
+  rosterCount?: number;
+  isUpgrade?: boolean;
+  isDowngrade?: boolean;
+  prorationInfo?: {
+    isUpgrade?: boolean;
+    isDowngrade?: boolean;
+    message: string;
+  };
+}
+
 export default function Subscription() {
   const navigate = useNavigate();
   const { user, role, isLoading: authLoading } = useAuth();
@@ -55,18 +84,86 @@ export default function Subscription() {
   
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
   const [openingPortal, setOpeningPortal] = useState(false);
+  const [validationError, setValidationError] = useState<ValidationResult | null>(null);
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
+  const [warningDetails, setWarningDetails] = useState<ValidationResult | null>(null);
+  const [pendingTier, setPendingTier] = useState<"fan" | "artist" | "label" | null>(null);
 
   const isLoading = authLoading || subLoading;
 
+  const validateTierChange = async (newTier: "fan" | "artist" | "label"): Promise<ValidationResult> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("validate-tier-change", {
+        body: { newTier },
+      });
+
+      if (error) throw error;
+      return data as ValidationResult;
+    } catch (error) {
+      console.error("Validation error:", error);
+      throw error;
+    }
+  };
+
   const handleSubscribe = async (tier: "fan" | "artist" | "label") => {
     setLoadingTier(tier);
+    setValidationError(null);
+    
     try {
+      // Validate tier change first
+      const validation = await validateTierChange(tier);
+      
+      if (!validation.allowed) {
+        setValidationError(validation);
+        setLoadingTier(null);
+        return;
+      }
+
+      // If there's a warning (e.g., roster release), show confirmation dialog
+      if (validation.warning) {
+        setWarningDetails(validation);
+        setPendingTier(tier);
+        setShowWarningDialog(true);
+        setLoadingTier(null);
+        return;
+      }
+
+      // Show proration info if applicable
+      if (validation.prorationInfo) {
+        toast.info(validation.prorationInfo.message);
+      }
+
+      // Proceed with checkout
       const url = await createSubscriptionCheckout(tier);
       if (url) {
         window.open(url, "_blank");
       }
+    } catch (error) {
+      console.error("Subscription error:", error);
+      toast.error("Failed to start checkout. Please try again.");
     } finally {
       setLoadingTier(null);
+    }
+  };
+
+  const handleConfirmWarning = async () => {
+    if (!pendingTier) return;
+    
+    setShowWarningDialog(false);
+    setLoadingTier(pendingTier);
+    
+    try {
+      const url = await createSubscriptionCheckout(pendingTier);
+      if (url) {
+        window.open(url, "_blank");
+      }
+    } catch (error) {
+      console.error("Subscription error:", error);
+      toast.error("Failed to start checkout. Please try again.");
+    } finally {
+      setLoadingTier(null);
+      setPendingTier(null);
+      setWarningDetails(null);
     }
   };
 
@@ -122,6 +219,35 @@ export default function Subscription() {
           </div>
         ) : (
           <div className="space-y-8">
+            {/* Validation Error Alert */}
+            {validationError && (
+              <div className="glass-card p-4 border-destructive/50 bg-destructive/10">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-1">Cannot Change Plan</h3>
+                    <p className="text-sm text-muted-foreground">{validationError.message}</p>
+                    {validationError.reason === "has_tracks" && (
+                      <div className="mt-3 flex items-center gap-2">
+                        <Music className="w-4 h-4 text-primary" />
+                        <span className="text-sm text-muted-foreground">
+                          You have {validationError.trackCount} track{validationError.trackCount !== 1 ? 's' : ''} uploaded
+                        </span>
+                      </div>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-3"
+                      onClick={() => setValidationError(null)}
+                    >
+                      Dismiss
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Current Plan Section */}
             {hasActiveSubscription && (
               <div className="glass-card p-6">
@@ -311,6 +437,49 @@ export default function Subscription() {
           </div>
         )}
       </div>
+
+      {/* Warning Confirmation Dialog */}
+      <Dialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
+        <DialogContent className="glass">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-orange-500" />
+              Confirm Plan Change
+            </DialogTitle>
+            <DialogDescription className="text-left">
+              {warningDetails?.message}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {warningDetails?.warning === "roster_release" && warningDetails.rosterCount && (
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+              <Users className="w-5 h-5 text-primary" />
+              <span className="text-sm text-muted-foreground">
+                {warningDetails.rosterCount} artist{warningDetails.rosterCount !== 1 ? 's' : ''} will be released from your roster
+              </span>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowWarningDialog(false);
+                setPendingTier(null);
+                setWarningDetails(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleConfirmWarning}
+              className="gradient-accent"
+            >
+              Continue to Checkout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
