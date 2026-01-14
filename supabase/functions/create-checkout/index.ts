@@ -105,7 +105,7 @@ serve(async (req) => {
           },
         ],
         mode: "payment",
-        success_url: `${origin}/download-success?session_id={CHECKOUT_SESSION_ID}&track_id=${trackId}`,
+        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=purchase&track_id=${trackId}`,
         cancel_url: `${origin}/`,
         metadata: {
           user_id: user.id,
