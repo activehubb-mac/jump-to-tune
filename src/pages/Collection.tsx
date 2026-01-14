@@ -2,11 +2,12 @@ import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Disc3, Play, Music, Lock, Loader2, Heart } from "lucide-react";
+import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCollectionStats, useOwnedTracks } from "@/hooks/useCollectionStats";
 import { useLikedTracks, useLikes } from "@/hooks/useLikes";
+import { useFollowedArtists, useFollow } from "@/hooks/useFollows";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { formatPrice } from "@/lib/formatters";
 
@@ -16,7 +17,9 @@ export default function Collection() {
   const { data: stats, isLoading: statsLoading } = useCollectionStats(user?.id);
   const { data: ownedTracks, isLoading: tracksLoading } = useOwnedTracks(user?.id);
   const { data: likedTracks, isLoading: likedLoading } = useLikedTracks();
+  const { data: followedArtists, isLoading: followingLoading } = useFollowedArtists();
   const { toggleLike } = useLikes();
+  const { toggleFollow } = useFollow();
   const { playTrack } = useAudioPlayer();
 
   // Show loading state while checking auth
@@ -97,6 +100,12 @@ export default function Collection() {
           </div>
           <div className="glass-card p-4 text-center">
             <div className="text-3xl font-bold text-gradient">
+              {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : followedArtists?.length ?? 0}
+            </div>
+            <div className="text-sm text-muted-foreground">Following</div>
+          </div>
+          <div className="glass-card p-4 text-center">
+            <div className="text-3xl font-bold text-gradient">
               {isDataLoading ? (
                 <Loader2 className="w-6 h-6 animate-spin mx-auto" />
               ) : (
@@ -105,20 +114,14 @@ export default function Collection() {
             </div>
             <div className="text-sm text-muted-foreground">USD Spent</div>
           </div>
-          <div className="glass-card p-4 text-center">
-            <div className="text-3xl font-bold text-gradient">
-              {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : stats?.artistsFollowed ?? 0}
-            </div>
-            <div className="text-sm text-muted-foreground">Artists Followed</div>
-          </div>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
+          <TabsList className="grid w-full max-w-2xl grid-cols-3 mb-8">
             <TabsTrigger value="liked" className="flex items-center gap-2">
               <Heart className="w-4 h-4" />
-              Liked Tracks
+              <span className="hidden sm:inline">Liked</span>
               {likedTracks && likedTracks.length > 0 && (
                 <span className="text-xs bg-primary/20 px-2 py-0.5 rounded-full">
                   {likedTracks.length}
@@ -127,10 +130,19 @@ export default function Collection() {
             </TabsTrigger>
             <TabsTrigger value="owned" className="flex items-center gap-2">
               <Disc3 className="w-4 h-4" />
-              Owned Tracks
+              <span className="hidden sm:inline">Owned</span>
               {ownedTracks && ownedTracks.length > 0 && (
                 <span className="text-xs bg-primary/20 px-2 py-0.5 rounded-full">
                   {ownedTracks.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="following" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Following</span>
+              {followedArtists && followedArtists.length > 0 && (
+                <span className="text-xs bg-primary/20 px-2 py-0.5 rounded-full">
+                  {followedArtists.length}
                 </span>
               )}
             </TabsTrigger>
@@ -292,6 +304,75 @@ export default function Collection() {
                     <Disc3 className="w-4 h-4 mr-2" />
                     Browse Music
                   </Link>
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Following Tab */}
+          <TabsContent value="following">
+            {followingLoading ? (
+              <div className="glass-card p-12 flex justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : followedArtists && followedArtists.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {followedArtists.map((artist) => (
+                  <Link
+                    key={artist.id}
+                    to={`/artist/${artist.id}`}
+                    className="glass-card p-4 group hover:bg-primary/10 transition-all duration-300"
+                  >
+                    {/* Avatar */}
+                    <div className="aspect-square rounded-full bg-muted/50 mb-4 relative overflow-hidden mx-auto w-32 h-32">
+                      {artist.avatar_url ? (
+                        <img
+                          src={artist.avatar_url}
+                          alt={artist.display_name || "Artist"}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <User className="w-12 h-12 text-muted-foreground/50" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Artist Info */}
+                    <div className="text-center">
+                      <h3 className="font-semibold text-foreground truncate">
+                        {artist.display_name || "Unknown Artist"}
+                      </h3>
+                      {artist.bio && (
+                        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                          {artist.bio}
+                        </p>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 w-full"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleFollow(artist.id);
+                        }}
+                      >
+                        Unfollow
+                      </Button>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="glass-card p-12 text-center">
+                <Users className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                <h2 className="text-xl font-semibold text-foreground mb-2">Not following anyone yet</h2>
+                <p className="text-muted-foreground mb-6">
+                  Discover and follow artists to stay updated with their latest releases!
+                </p>
+                <Button variant="outline" asChild>
+                  <Link to="/artists">Discover Artists</Link>
                 </Button>
               </div>
             )}
