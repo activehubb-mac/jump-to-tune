@@ -2,6 +2,7 @@ import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
+import { useAudioKeyboardShortcuts } from "@/hooks/useAudioKeyboardShortcuts";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
@@ -38,6 +39,9 @@ export function GlobalAudioPlayer() {
   } = useAudioPlayer();
 
   const [showQueue, setShowQueue] = useState(false);
+
+  // Enable keyboard shortcuts
+  useAudioKeyboardShortcuts();
 
   if (!isPlayerVisible || !currentTrack) return null;
 
