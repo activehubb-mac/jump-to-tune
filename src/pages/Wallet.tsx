@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/hooks/useWallet";
 import { QuickTopupModal } from "@/components/wallet/QuickTopupModal";
 import { TransactionHistory } from "@/components/wallet/TransactionHistory";
+import { useLowBalanceNotification } from "@/hooks/useLowBalanceNotification";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,9 @@ export default function WalletPage() {
   const { balance, balanceDollars, transactions, isLoading, refetch, purchaseCredits, isPurchasing } = useWallet();
   const [showTopupModal, setShowTopupModal] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
+
+  // Check for low balance and show notification if needed
+  useLowBalanceNotification();
 
   // Handle success/canceled from Stripe redirect
   useEffect(() => {
