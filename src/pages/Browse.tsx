@@ -2,16 +2,18 @@ import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Disc3, Play, Heart, Loader2 } from "lucide-react";
+import { Search, Filter, Disc3, Play, Pause, Heart, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePublishedTracks } from "@/hooks/useTracks";
 import { formatPrice, formatEditions } from "@/lib/formatters";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 
 const genres = ["All", "Electronic", "Hip Hop", "R&B", "Pop", "Rock", "Jazz", "Classical", "Indie"];
 
 export default function Browse() {
   const [selectedGenre, setSelectedGenre] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const { playTrack, currentTrack, isPlaying } = useAudioPlayer();
   
   const { data: tracks, isLoading } = usePublishedTracks({
     genre: selectedGenre,
@@ -88,8 +90,26 @@ export default function Browse() {
                   )}
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <Button size="icon" className="rounded-full gradient-accent neon-glow w-12 h-12">
-                      <Play className="w-5 h-5 ml-0.5" />
+                    <Button 
+                      size="icon" 
+                      className="rounded-full gradient-accent neon-glow w-12 h-12"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playTrack({
+                          id: track.id,
+                          title: track.title,
+                          audio_url: track.audio_url,
+                          cover_art_url: track.cover_art_url,
+                          duration: track.duration,
+                          artist: track.artist,
+                        });
+                      }}
+                    >
+                      {currentTrack?.id === track.id && isPlaying ? (
+                        <Pause className="w-5 h-5" />
+                      ) : (
+                        <Play className="w-5 h-5 ml-0.5" />
+                      )}
                     </Button>
                   </div>
                   {/* Like Button */}
