@@ -17,3 +17,18 @@ verify_jwt = false
 
 [functions.validate-tier-change]
 verify_jwt = false
+
+[functions.get-wallet-balance]
+verify_jwt = false
+
+[functions.purchase-credits]
+verify_jwt = false
+
+[functions.spend-credits]
+verify_jwt = false
+
+[functions.create-connect-account]
+verify_jwt = false
+
+[functions.artist-payout-status]
+verify_jwt = false
