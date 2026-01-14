@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
@@ -8,11 +9,14 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown } from "lucide-react";
-import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown, Bell, Check, ArrowUp, ArrowDown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/hooks/useNotifications";
 import { ProfileEditModal } from "@/components/profile/ProfileEditModal";
+import { formatDistanceToNow } from "date-fns";
 
 const navLinks = [
   { href: "/", label: "Home", icon: Home },
@@ -28,6 +32,7 @@ export function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, role, signOut, isLoading } = useAuth();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
   const handleSignOut = async () => {
     await signOut();
@@ -45,6 +50,19 @@ export function Navbar() {
       return profile.display_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
     }
     return user?.email?.charAt(0).toUpperCase() || "U";
+  };
+
+  const getNotificationIcon = (notification: { type: string; metadata?: Record<string, unknown> }) => {
+    if (notification.type === "role_change") {
+      const changeType = notification.metadata?.change_type;
+      if (changeType === "upgrade") return <ArrowUp className="w-4 h-4 text-green-500" />;
+      if (changeType === "downgrade") return <ArrowDown className="w-4 h-4 text-orange-500" />;
+      return <Sparkles className="w-4 h-4 text-primary" />;
+    }
+    if (notification.type === "subscription_canceled") {
+      return <Crown className="w-4 h-4 text-destructive" />;
+    }
+    return <Bell className="w-4 h-4 text-muted-foreground" />;
   };
 
   return (
@@ -91,78 +109,158 @@ export function Navbar() {
               {isLoading ? (
                 <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
               ) : user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                      <Avatar className="h-10 w-10 border-2 border-primary/50">
-                        <AvatarImage src={profile?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-primary/20 text-primary">
-                          {getInitials()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 glass" align="end">
-                    <div className="flex items-center gap-2 p-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={profile?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-primary/20 text-primary text-xs">
-                          {getInitials()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-foreground">
-                          {profile?.display_name || "User"}
-                        </span>
-                        <span className="text-xs text-muted-foreground capitalize">
-                          {role || "Fan"}
-                        </span>
+                <>
+                  {/* Notifications Bell */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="relative">
+                        <Bell className="w-5 h-5" />
+                        {unreadCount > 0 && (
+                          <Badge 
+                            variant="destructive" 
+                            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                          >
+                            {unreadCount > 9 ? "9+" : unreadCount}
+                          </Badge>
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-80 glass" align="end">
+                      <div className="flex items-center justify-between p-2 border-b border-border">
+                        <span className="font-semibold text-foreground">Notifications</span>
+                        {unreadCount > 0 && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-xs"
+                            onClick={() => markAllAsRead()}
+                          >
+                            <Check className="w-3 h-3 mr-1" />
+                            Mark all read
+                          </Button>
+                        )}
                       </div>
-                    </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to={getDashboardLink()} className="flex items-center gap-2 cursor-pointer">
-                        <LayoutDashboard className="w-4 h-4" />
-                        {role === "fan" ? "My Collection" : "Dashboard"}
-                      </Link>
-                    </DropdownMenuItem>
-                    {(role === "artist" || role === "label") && (
+                      <ScrollArea className="h-[300px]">
+                        {notifications.length === 0 ? (
+                          <div className="p-4 text-center text-muted-foreground">
+                            <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">No notifications yet</p>
+                          </div>
+                        ) : (
+                          notifications.map((notification) => (
+                            <div
+                              key={notification.id}
+                              className={cn(
+                                "p-3 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors",
+                                !notification.read && "bg-primary/5"
+                              )}
+                              onClick={() => {
+                                if (!notification.read) markAsRead(notification.id);
+                              }}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="mt-0.5">
+                                  {getNotificationIcon(notification)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className={cn(
+                                    "text-sm",
+                                    !notification.read ? "font-medium text-foreground" : "text-muted-foreground"
+                                  )}>
+                                    {notification.title}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                                    {notification.message}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground/60 mt-1">
+                                    {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                                  </p>
+                                </div>
+                                {!notification.read && (
+                                  <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1" />
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </ScrollArea>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* User Menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                        <Avatar className="h-10 w-10 border-2 border-primary/50">
+                          <AvatarImage src={profile?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-primary/20 text-primary">
+                            {getInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 glass" align="end">
+                      <div className="flex items-center gap-2 p-2">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={profile?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                            {getInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-foreground">
+                            {profile?.display_name || "User"}
+                          </span>
+                          <span className="text-xs text-muted-foreground capitalize">
+                            {role || "Fan"}
+                          </span>
+                        </div>
+                      </div>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
-                        <Link to="/upload" className="flex items-center gap-2 cursor-pointer">
-                          <Upload className="w-4 h-4" />
-                          Upload Music
+                        <Link to={getDashboardLink()} className="flex items-center gap-2 cursor-pointer">
+                          <LayoutDashboard className="w-4 h-4" />
+                          {role === "fan" ? "My Collection" : "Dashboard"}
                         </Link>
                       </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem asChild>
-                      <Link to="/collection" className="flex items-center gap-2 cursor-pointer">
-                        <Library className="w-4 h-4" />
-                        Collection
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/subscription" className="flex items-center gap-2 cursor-pointer">
-                        <Crown className="w-4 h-4" />
-                        Subscription
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => setIsProfileOpen(true)}
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <Settings className="w-4 h-4" />
-                      Edit Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={handleSignOut}
-                      className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      {(role === "artist" || role === "label") && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/upload" className="flex items-center gap-2 cursor-pointer">
+                            <Upload className="w-4 h-4" />
+                            Upload Music
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem asChild>
+                        <Link to="/collection" className="flex items-center gap-2 cursor-pointer">
+                          <Library className="w-4 h-4" />
+                          Collection
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/subscription" className="flex items-center gap-2 cursor-pointer">
+                          <Crown className="w-4 h-4" />
+                          Subscription
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => setIsProfileOpen(true)}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Edit Profile
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={handleSignOut}
+                        className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
               ) : (
                 <>
                   <Button variant="ghost" asChild>
@@ -225,6 +323,11 @@ export function Navbar() {
                         <p className="font-medium text-foreground">{profile?.display_name || "User"}</p>
                         <p className="text-sm text-muted-foreground capitalize">{role || "Fan"}</p>
                       </div>
+                      {unreadCount > 0 && (
+                        <Badge variant="destructive" className="ml-auto">
+                          {unreadCount} new
+                        </Badge>
+                      )}
                     </div>
                     <Link
                       to={getDashboardLink()}

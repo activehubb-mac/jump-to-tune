@@ -12,6 +12,13 @@ const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
+// Map Stripe price IDs to tiers (reverse of SUBSCRIPTION_PRICES)
+const PRICE_TO_TIER: Record<string, "fan" | "artist" | "label"> = {
+  "price_1SpXymEKeZaBsSwjs3UezAPu": "fan",
+  "price_1SpXyyEKeZaBsSwj0fe2MazX": "artist",
+  "price_1SpXz9EKeZaBsSwjgEhsxsHg": "label",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -63,7 +70,18 @@ serve(async (req) => {
           const tier = metadata.tier as "fan" | "artist" | "label";
           
           if (userId && tier) {
-            const { error } = await supabaseClient
+            // Get current role before update
+            const { data: existingRole } = await supabaseClient
+              .from("user_roles")
+              .select("role")
+              .eq("user_id", userId)
+              .single();
+            
+            const previousRole = existingRole?.role || "fan";
+            logStep("Current user role", { userId, previousRole, newTier: tier });
+
+            // Update subscriptions table
+            const { error: subError } = await supabaseClient
               .from("subscriptions")
               .upsert({
                 user_id: userId,
@@ -76,10 +94,60 @@ serve(async (req) => {
                 updated_at: new Date().toISOString(),
               }, { onConflict: "user_id" });
 
-            if (error) {
-              logStep("Error updating subscription", { error });
+            if (subError) {
+              logStep("Error updating subscription", { error: subError });
             } else {
               logStep("Subscription updated successfully");
+            }
+
+            // Sync user_roles table with new tier
+            if (previousRole !== tier) {
+              const { error: roleError } = await supabaseClient
+                .from("user_roles")
+                .upsert({
+                  user_id: userId,
+                  role: tier,
+                }, { onConflict: "user_id" });
+
+              if (roleError) {
+                logStep("Error updating user role", { error: roleError });
+              } else {
+                logStep("User role synced", { from: previousRole, to: tier });
+                
+                // Handle Label → Artist downgrade: release roster
+                if (previousRole === "label" && tier === "artist") {
+                  const { error: rosterError } = await supabaseClient
+                    .from("label_roster")
+                    .update({ status: "released" })
+                    .eq("label_id", userId)
+                    .eq("status", "active");
+                  
+                  if (rosterError) {
+                    logStep("Error releasing roster", { error: rosterError });
+                  } else {
+                    logStep("Roster released due to downgrade");
+                  }
+                }
+
+                // Create notification for role change
+                await supabaseClient
+                  .from("notifications")
+                  .insert({
+                    user_id: userId,
+                    type: "role_change",
+                    title: previousRole === tier ? "Subscription Activated" : "Plan Changed",
+                    message: previousRole === tier 
+                      ? `Your ${tier.charAt(0).toUpperCase() + tier.slice(1)} subscription is now active!`
+                      : `Your plan has been changed from ${previousRole.charAt(0).toUpperCase() + previousRole.slice(1)} to ${tier.charAt(0).toUpperCase() + tier.slice(1)}.`,
+                    metadata: {
+                      previous_role: previousRole,
+                      new_role: tier,
+                      change_type: tier === previousRole ? "activation" : 
+                        (["fan", "artist", "label"].indexOf(tier) > ["fan", "artist", "label"].indexOf(previousRole) ? "upgrade" : "downgrade"),
+                    },
+                  });
+                logStep("Role change notification created");
+              }
             }
           }
         } else if (session.mode === "payment") {
@@ -134,21 +202,83 @@ serve(async (req) => {
         const subscription = event.data.object as Stripe.Subscription;
         logStep("Subscription updated", { subscriptionId: subscription.id, status: subscription.status });
 
-        // Find user by stripe_subscription_id and update status
-        const { error } = await supabaseClient
-          .from("subscriptions")
-          .update({
-            status: subscription.status === "active" ? "active" : 
-                   subscription.status === "past_due" ? "past_due" :
-                   subscription.status === "canceled" ? "canceled" : "trialing",
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq("stripe_subscription_id", subscription.id);
+        // Get tier from subscription price
+        const priceId = subscription.items.data[0]?.price?.id;
+        const tierFromPrice = priceId ? PRICE_TO_TIER[priceId] : null;
+        
+        // Get metadata tier as fallback
+        const subscriptionMeta = subscription.metadata || {};
+        const tierFromMeta = subscriptionMeta.tier as "fan" | "artist" | "label" | undefined;
+        
+        const newTier = tierFromPrice || tierFromMeta;
 
-        if (error) {
-          logStep("Error updating subscription status", { error });
+        // Find user by stripe_subscription_id
+        const { data: subRecord } = await supabaseClient
+          .from("subscriptions")
+          .select("user_id, tier")
+          .eq("stripe_subscription_id", subscription.id)
+          .single();
+
+        if (subRecord) {
+          const userId = subRecord.user_id;
+          const currentTier = subRecord.tier;
+
+          // Update subscription status
+          const { error: updateError } = await supabaseClient
+            .from("subscriptions")
+            .update({
+              status: subscription.status === "active" ? "active" : 
+                     subscription.status === "past_due" ? "past_due" :
+                     subscription.status === "canceled" ? "canceled" : "trialing",
+              tier: newTier || currentTier, // Update tier if changed
+              current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq("stripe_subscription_id", subscription.id);
+
+          if (updateError) {
+            logStep("Error updating subscription status", { error: updateError });
+          }
+
+          // If tier changed, sync user_roles
+          if (newTier && newTier !== currentTier) {
+            const { error: roleError } = await supabaseClient
+              .from("user_roles")
+              .update({ role: newTier })
+              .eq("user_id", userId);
+
+            if (roleError) {
+              logStep("Error syncing user role on subscription update", { error: roleError });
+            } else {
+              logStep("User role synced on subscription update", { from: currentTier, to: newTier });
+              
+              // Handle Label → Artist downgrade: release roster
+              if (currentTier === "label" && newTier === "artist") {
+                await supabaseClient
+                  .from("label_roster")
+                  .update({ status: "released" })
+                  .eq("label_id", userId)
+                  .eq("status", "active");
+                logStep("Roster released due to plan change");
+              }
+
+              // Create notification for plan change
+              await supabaseClient
+                .from("notifications")
+                .insert({
+                  user_id: userId,
+                  type: "role_change",
+                  title: "Plan Changed",
+                  message: `Your subscription has been changed from ${currentTier.charAt(0).toUpperCase() + currentTier.slice(1)} to ${newTier.charAt(0).toUpperCase() + newTier.slice(1)}.`,
+                  metadata: {
+                    previous_role: currentTier,
+                    new_role: newTier,
+                    change_type: ["fan", "artist", "label"].indexOf(newTier) > ["fan", "artist", "label"].indexOf(currentTier) ? "upgrade" : "downgrade",
+                  },
+                });
+            }
+          }
         }
         break;
       }
@@ -156,6 +286,12 @@ serve(async (req) => {
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
         logStep("Subscription deleted", { subscriptionId: subscription.id });
+
+        const { data: subRecord } = await supabaseClient
+          .from("subscriptions")
+          .select("user_id")
+          .eq("stripe_subscription_id", subscription.id)
+          .single();
 
         const { error } = await supabaseClient
           .from("subscriptions")
@@ -167,6 +303,21 @@ serve(async (req) => {
 
         if (error) {
           logStep("Error marking subscription as canceled", { error });
+        }
+
+        // Create notification for subscription cancellation
+        if (subRecord) {
+          await supabaseClient
+            .from("notifications")
+            .insert({
+              user_id: subRecord.user_id,
+              type: "subscription_canceled",
+              title: "Subscription Canceled",
+              message: "Your subscription has been canceled. Some features may become restricted.",
+              metadata: {
+                canceled_at: new Date().toISOString(),
+              },
+            });
         }
         break;
       }

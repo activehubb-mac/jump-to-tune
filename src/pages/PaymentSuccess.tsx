@@ -2,14 +2,17 @@ import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Music, Disc3 } from "lucide-react";
+import { CheckCircle, Music, Disc3, Crown, ArrowUp } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const type = searchParams.get("type"); // "subscription" or "track"
   const queryClient = useQueryClient();
+  const { refreshProfile } = useAuth();
 
   useEffect(() => {
     // Invalidate relevant queries to refresh subscription/purchase data
@@ -17,7 +20,15 @@ export default function PaymentSuccess() {
     queryClient.invalidateQueries({ queryKey: ["owned-tracks"] });
     queryClient.invalidateQueries({ queryKey: ["collection-stats"] });
     queryClient.invalidateQueries({ queryKey: ["collection-bookmarks"] });
-  }, [queryClient]);
+    queryClient.invalidateQueries({ queryKey: ["notifications"] });
+
+    // If this is a subscription change, refresh the auth profile to get new role
+    if (type === "subscription") {
+      refreshProfile().then(() => {
+        toast.success("Your profile has been updated with your new plan!");
+      });
+    }
+  }, [queryClient, type, refreshProfile]);
 
   return (
     <Layout>
@@ -51,6 +62,14 @@ export default function PaymentSuccess() {
                   <li className="flex items-start gap-2">
                     <Disc3 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                     <span>Download tracks for offline listening</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Crown className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    <span>Access all premium features based on your plan</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <ArrowUp className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    <span>Your role and permissions have been updated</span>
                   </li>
                 </>
               ) : (
