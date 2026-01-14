@@ -2,14 +2,15 @@ import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus } from "lucide-react";
+import { Search, Filter, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePublishedTracks } from "@/hooks/useTracks";
-import { formatPrice, formatEditions } from "@/lib/formatters";
+import { formatPrice, formatEditions, formatCompactNumber } from "@/lib/formatters";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useLikes } from "@/hooks/useLikes";
 import { useLikeCounts } from "@/hooks/useLikeCounts";
 import { useFollow } from "@/hooks/useFollows";
+import { useFollowerCounts } from "@/hooks/useFollowerCounts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedback } from "@/contexts/FeedbackContext";
 
@@ -30,7 +31,13 @@ export default function Browse() {
   });
 
   const trackIds = useMemo(() => tracks?.map((t) => t.id) || [], [tracks]);
+  const artistIds = useMemo(() => {
+    const ids = tracks?.map((t) => t.artist?.id).filter(Boolean) as string[] || [];
+    return [...new Set(ids)];
+  }, [tracks]);
+  
   const { data: likeCounts = {} } = useLikeCounts(trackIds);
+  const { data: followerCounts = {} } = useFollowerCounts(artistIds);
 
   const handleLike = (trackId: string) => {
     if (!user) {
@@ -44,7 +51,7 @@ export default function Browse() {
     toggleLike(trackId);
   };
 
-  const handleFollow = (artistId: string) => {
+  const handleFollow = async (artistId: string, artistName: string) => {
     if (!user) {
       showFeedback({
         type: "warning",
@@ -53,7 +60,21 @@ export default function Browse() {
       });
       return;
     }
-    toggleFollow(artistId);
+    try {
+      const result = await toggleFollow(artistId, artistName);
+      showFeedback({
+        type: "success",
+        title: result.action === "followed" ? "Following" : "Unfollowed",
+        message: result.artistName || "Artist",
+        autoCloseDelay: 2000,
+      });
+    } catch {
+      showFeedback({
+        type: "error",
+        title: "Error",
+        message: "Failed to update follow status",
+      });
+    }
   };
 
   const handleAddToQueue = (track: typeof tracks extends (infer T)[] ? T : never) => {
@@ -125,8 +146,10 @@ export default function Browse() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {tracks.map((track) => {
               const artistId = track.artist?.id;
+              const artistName = track.artist?.display_name || "Unknown Artist";
               const following = artistId ? isFollowing(artistId) : false;
               const isOwnTrack = user?.id === artistId;
+              const artistFollowers = artistId ? followerCounts[artistId] || 0 : 0;
 
               return (
                 <div
@@ -208,7 +231,7 @@ export default function Browse() {
                         className="text-sm text-muted-foreground truncate hover:text-primary transition-colors flex-1"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        {track.artist?.display_name || "Unknown Artist"}
+                        {artistName}
                       </Link>
                       {artistId && !isOwnTrack && (
                         <button
@@ -219,7 +242,7 @@ export default function Browse() {
                           }`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleFollow(artistId);
+                            handleFollow(artistId, artistName);
                           }}
                           title={following ? "Unfollow" : "Follow"}
                         >
@@ -231,6 +254,12 @@ export default function Browse() {
                         </button>
                       )}
                     </div>
+                    {artistFollowers > 0 && (
+                      <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                        <Users className="w-3 h-3" />
+                        <span>{formatCompactNumber(artistFollowers)} fans</span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-sm font-medium text-primary">{formatPrice(track.price)}</span>
                       <span className="text-xs text-muted-foreground">

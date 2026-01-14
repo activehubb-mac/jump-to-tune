@@ -19,7 +19,7 @@ export default function ArtistProfile() {
   const { user } = useAuth();
   const { showFeedback } = useFeedback();
 
-  const handleFollow = () => {
+  const handleFollow = async () => {
     if (!user) {
       showFeedback({
         type: "warning",
@@ -28,8 +28,22 @@ export default function ArtistProfile() {
       });
       return;
     }
-    if (id) {
-      toggleFollow(id);
+    if (id && artist) {
+      try {
+        const result = await toggleFollow(id, artist.display_name || "Artist");
+        showFeedback({
+          type: "success",
+          title: result.action === "followed" ? "Following" : "Unfollowed",
+          message: result.artistName || artist.display_name || "Artist",
+          autoCloseDelay: 2000,
+        });
+      } catch {
+        showFeedback({
+          type: "error",
+          title: "Error",
+          message: "Failed to update follow status",
+        });
+      }
     }
   };
 
