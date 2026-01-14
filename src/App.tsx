@@ -24,6 +24,7 @@ import Upload from "./pages/Upload";
 import TrackEdit from "./pages/TrackEdit";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCanceled from "./pages/PaymentCanceled";
+import Subscription from "./pages/Subscription";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,7 +56,7 @@ const App = () => (
                 <Route path="/upload" element={<Upload />} />
                 <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route path="/payment-canceled" element={<PaymentCanceled />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="/subscription" element={<Subscription />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <GlobalAudioPlayer />

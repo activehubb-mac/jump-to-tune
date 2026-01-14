@@ -104,10 +104,34 @@ export function useDownload() {
     }
   };
 
+  const openCustomerPortal = async () => {
+    if (!session) {
+      toast.error("Please sign in to manage subscription");
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      return data.url as string;
+    } catch (err) {
+      console.error("Portal error:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to open subscription portal");
+      return null;
+    }
+  };
+
   return {
     downloadOwnedTrack,
     createPaymentCheckout,
     createSubscriptionCheckout,
+    openCustomerPortal,
     isDownloading,
   };
 }
