@@ -25,6 +25,8 @@ import TrackEdit from "./pages/TrackEdit";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCanceled from "./pages/PaymentCanceled";
 import Subscription from "./pages/Subscription";
+import Wallet from "./pages/Wallet";
+import ArtistPayouts from "./pages/ArtistPayouts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +59,8 @@ const App = () => (
                 <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route path="/payment-canceled" element={<PaymentCanceled />} />
                 <Route path="/subscription" element={<Subscription />} />
+                <Route path="/wallet" element={<Wallet />} />
+                <Route path="/artist/payouts" element={<ArtistPayouts />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <GlobalAudioPlayer />

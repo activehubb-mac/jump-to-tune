@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      artist_earnings: {
+        Row: {
+          artist_id: string
+          artist_payout_cents: number
+          created_at: string
+          gross_amount_cents: number
+          id: string
+          paid_at: string | null
+          platform_fee_cents: number
+          purchase_id: string
+          status: Database["public"]["Enums"]["earnings_status"]
+          stripe_transfer_id: string | null
+        }
+        Insert: {
+          artist_id: string
+          artist_payout_cents: number
+          created_at?: string
+          gross_amount_cents: number
+          id?: string
+          paid_at?: string | null
+          platform_fee_cents: number
+          purchase_id: string
+          status?: Database["public"]["Enums"]["earnings_status"]
+          stripe_transfer_id?: string | null
+        }
+        Update: {
+          artist_id?: string
+          artist_payout_cents?: number
+          created_at?: string
+          gross_amount_cents?: number
+          id?: string
+          paid_at?: string | null
+          platform_fee_cents?: number
+          purchase_id?: string
+          status?: Database["public"]["Enums"]["earnings_status"]
+          stripe_transfer_id?: string | null
+        }
+        Relationships: []
+      }
       collection_bookmarks: {
         Row: {
           created_at: string
@@ -49,6 +88,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      credit_transactions: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          description: string
+          fee_cents: number | null
+          id: string
+          reference_id: string | null
+          stripe_payment_intent_id: string | null
+          type: Database["public"]["Enums"]["credit_transaction_type"]
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          description: string
+          fee_cents?: number | null
+          id?: string
+          reference_id?: string | null
+          stripe_payment_intent_id?: string | null
+          type: Database["public"]["Enums"]["credit_transaction_type"]
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          description?: string
+          fee_cents?: number | null
+          id?: string
+          reference_id?: string | null
+          stripe_payment_intent_id?: string | null
+          type?: Database["public"]["Enums"]["credit_transaction_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credit_wallets: {
+        Row: {
+          balance_cents: number
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance_cents?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance_cents?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       follows: {
         Row: {
@@ -230,6 +329,9 @@ export type Database = {
           id: string
           is_verified: boolean | null
           onboarding_completed: boolean | null
+          stripe_account_id: string | null
+          stripe_account_status: string | null
+          stripe_payouts_enabled: boolean | null
           updated_at: string
           website_url: string | null
         }
@@ -242,6 +344,9 @@ export type Database = {
           id: string
           is_verified?: boolean | null
           onboarding_completed?: boolean | null
+          stripe_account_id?: string | null
+          stripe_account_status?: string | null
+          stripe_payouts_enabled?: boolean | null
           updated_at?: string
           website_url?: string | null
         }
@@ -254,6 +359,9 @@ export type Database = {
           id?: string
           is_verified?: boolean | null
           onboarding_completed?: boolean | null
+          stripe_account_id?: string | null
+          stripe_account_status?: string | null
+          stripe_payouts_enabled?: boolean | null
           updated_at?: string
           website_url?: string | null
         }
@@ -498,6 +606,8 @@ export type Database = {
     }
     Enums: {
       app_role: "fan" | "artist" | "label"
+      credit_transaction_type: "purchase" | "spend" | "refund"
+      earnings_status: "pending" | "paid" | "failed"
       subscription_status: "trialing" | "active" | "canceled" | "past_due"
     }
     CompositeTypes: {
@@ -627,6 +737,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["fan", "artist", "label"],
+      credit_transaction_type: ["purchase", "spend", "refund"],
+      earnings_status: ["pending", "paid", "failed"],
       subscription_status: ["trialing", "active", "canceled", "past_due"],
     },
   },
