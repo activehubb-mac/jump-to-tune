@@ -328,11 +328,19 @@ export default function Collection() {
                         <span className="text-sm font-medium text-primary">
                           {formatPrice(track.price)}
                         </span>
-                        {track.genre && (
-                          <span className="text-xs text-muted-foreground">
-                            {track.genre}
-                          </span>
-                        )}
+                        <DownloadButton
+                          track={{
+                            id: track.id,
+                            title: track.title,
+                            price: track.price,
+                            audio_url: track.audio_url,
+                            cover_art_url: track.cover_art_url,
+                            artist: track.artist,
+                          }}
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                        />
                       </div>
                     </div>
                   </div>

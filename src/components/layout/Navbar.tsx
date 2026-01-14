@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings } from "lucide-react";
+import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -140,6 +140,12 @@ export function Navbar() {
                         Collection
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/subscription" className="flex items-center gap-2 cursor-pointer">
+                        <Crown className="w-4 h-4" />
+                        Subscription
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
                       onClick={() => setIsProfileOpen(true)}
@@ -238,6 +244,14 @@ export function Navbar() {
                         Upload Music
                       </Link>
                     )}
+                    <Link
+                      to="/subscription"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+                    >
+                      <Crown className="w-5 h-5" />
+                      Subscription
+                    </Link>
                     <button
                       onClick={() => {
                         setIsOpen(false);
