@@ -22,6 +22,8 @@ import ArtistTracks from "./pages/ArtistTracks";
 import LabelDashboard from "./pages/LabelDashboard";
 import Upload from "./pages/Upload";
 import TrackEdit from "./pages/TrackEdit";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCanceled from "./pages/PaymentCanceled";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +53,8 @@ const App = () => (
                 <Route path="/track/:id/edit" element={<TrackEdit />} />
                 <Route path="/label/dashboard" element={<LabelDashboard />} />
                 <Route path="/upload" element={<Upload />} />
+                <Route path="/payment-success" element={<PaymentSuccess />} />
+                <Route path="/payment-canceled" element={<PaymentCanceled />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
