@@ -16,6 +16,7 @@ export interface AudioTrack {
 interface AudioPlayerContextType {
   currentTrack: AudioTrack | null;
   isPlaying: boolean;
+  isBuffering: boolean;
   currentTime: number;
   duration: number;
   volume: number;
@@ -35,6 +36,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [currentTrack, setCurrentTrack] = useState<AudioTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(1);
@@ -72,6 +74,14 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
     audio.addEventListener("pause", () => {
       setIsPlaying(false);
+    });
+
+    audio.addEventListener("waiting", () => {
+      setIsBuffering(true);
+    });
+
+    audio.addEventListener("canplay", () => {
+      setIsBuffering(false);
     });
 
     audio.addEventListener("error", () => {
@@ -184,6 +194,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       value={{
         currentTrack,
         isPlaying,
+        isBuffering,
         currentTime,
         duration,
         volume,
