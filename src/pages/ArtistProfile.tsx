@@ -1,9 +1,12 @@
 import { useParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2 } from "lucide-react";
+import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus } from "lucide-react";
 import { useArtistProfile } from "@/hooks/useArtistProfile";
 import { useTracks } from "@/hooks/useTracks";
+import { useFollow } from "@/hooks/useFollows";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFeedback } from "@/contexts/FeedbackContext";
 import { formatPrice, formatEditions, formatCompactNumber } from "@/lib/formatters";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 
@@ -12,6 +15,23 @@ export default function ArtistProfile() {
   const { data: artist, isLoading: profileLoading } = useArtistProfile(id);
   const { data: tracks, isLoading: tracksLoading } = useTracks({ artistId: id, publishedOnly: true });
   const { playTrack, currentTrack, isPlaying } = useAudioPlayer();
+  const { isFollowing, toggleFollow, isToggling } = useFollow();
+  const { user } = useAuth();
+  const { showFeedback } = useFeedback();
+
+  const handleFollow = () => {
+    if (!user) {
+      showFeedback({
+        type: "warning",
+        title: "Sign in required",
+        message: "Please sign in to follow artists",
+      });
+      return;
+    }
+    if (id) {
+      toggleFollow(id);
+    }
+  };
 
   if (profileLoading) {
     return <Layout><div className="container mx-auto px-4 py-24 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div></Layout>;
@@ -20,6 +40,9 @@ export default function ArtistProfile() {
   if (!artist) {
     return <Layout><div className="container mx-auto px-4 py-24 text-center"><h1 className="text-2xl font-bold text-foreground">Artist not found</h1></div></Layout>;
   }
+
+  const isOwnProfile = user?.id === id;
+  const following = id ? isFollowing(id) : false;
 
   return (
     <Layout>
@@ -46,7 +69,26 @@ export default function ArtistProfile() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Button className="gradient-accent neon-glow-subtle hover:neon-glow"><Heart className="w-4 h-4 mr-2" />Follow</Button>
+              {!isOwnProfile && (
+                <Button 
+                  className={following ? "border-glass-border" : "gradient-accent neon-glow-subtle hover:neon-glow"}
+                  variant={following ? "outline" : "default"}
+                  onClick={handleFollow}
+                  disabled={isToggling}
+                >
+                  {following ? (
+                    <>
+                      <UserMinus className="w-4 h-4 mr-2" />
+                      Following
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Follow
+                    </>
+                  )}
+                </Button>
+              )}
               <Button variant="outline" className="border-glass-border hover:border-primary/50"><Share2 className="w-4 h-4 mr-2" />Share</Button>
               {artist.website_url && <Button variant="ghost" className="text-muted-foreground hover:text-foreground" asChild><a href={artist.website_url} target="_blank" rel="noopener noreferrer"><ExternalLink className="w-4 h-4 mr-2" />Website</a></Button>}
             </div>

@@ -2,13 +2,14 @@ import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Disc3, Play, Pause, Heart, Loader2, ListPlus } from "lucide-react";
+import { Search, Filter, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePublishedTracks } from "@/hooks/useTracks";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useLikes } from "@/hooks/useLikes";
 import { useLikeCounts } from "@/hooks/useLikeCounts";
+import { useFollow } from "@/hooks/useFollows";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedback } from "@/contexts/FeedbackContext";
 
@@ -19,6 +20,7 @@ export default function Browse() {
   const [searchQuery, setSearchQuery] = useState("");
   const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
   const { isLiked, toggleLike } = useLikes();
+  const { isFollowing, toggleFollow } = useFollow();
   const { user } = useAuth();
   const { showFeedback } = useFeedback();
   
@@ -40,6 +42,18 @@ export default function Browse() {
       return;
     }
     toggleLike(trackId);
+  };
+
+  const handleFollow = (artistId: string) => {
+    if (!user) {
+      showFeedback({
+        type: "warning",
+        title: "Sign in required",
+        message: "Please sign in to follow artists",
+      });
+      return;
+    }
+    toggleFollow(artistId);
   };
 
   const handleAddToQueue = (track: typeof tracks extends (infer T)[] ? T : never) => {
@@ -109,96 +123,124 @@ export default function Browse() {
           </div>
         ) : tracks && tracks.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {tracks.map((track) => (
-              <div
-                key={track.id}
-                className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
-              >
-                {/* Album Art */}
-                <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">
-                  {track.cover_art_url ? (
-                    <img
-                      src={track.cover_art_url}
-                      alt={track.title}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Disc3 className="w-16 h-16 text-muted-foreground/50" />
+            {tracks.map((track) => {
+              const artistId = track.artist?.id;
+              const following = artistId ? isFollowing(artistId) : false;
+              const isOwnTrack = user?.id === artistId;
+
+              return (
+                <div
+                  key={track.id}
+                  className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
+                >
+                  {/* Album Art */}
+                  <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">
+                    {track.cover_art_url ? (
+                      <img
+                        src={track.cover_art_url}
+                        alt={track.title}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Disc3 className="w-16 h-16 text-muted-foreground/50" />
+                      </div>
+                    )}
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <Button 
+                        size="icon" 
+                        className="rounded-full gradient-accent neon-glow w-12 h-12"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          playTrack({
+                            id: track.id,
+                            title: track.title,
+                            audio_url: track.audio_url,
+                            cover_art_url: track.cover_art_url,
+                            duration: track.duration,
+                            artist: track.artist,
+                          });
+                        }}
+                      >
+                        {currentTrack?.id === track.id && isPlaying ? (
+                          <Pause className="w-5 h-5" />
+                        ) : (
+                          <Play className="w-5 h-5 ml-0.5" />
+                        )}
+                      </Button>
                     </div>
-                  )}
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <Button 
-                      size="icon" 
-                      className="rounded-full gradient-accent neon-glow w-12 h-12"
+                    {/* Like Button with Count */}
+                    <button 
+                      className={`absolute top-2 right-2 px-2 py-1.5 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all hover:scale-105 flex items-center gap-1 ${
+                        isLiked(track.id) 
+                          ? "bg-primary/20 text-primary" 
+                          : "bg-background/50 text-foreground hover:bg-background/80"
+                      }`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        playTrack({
-                          id: track.id,
-                          title: track.title,
-                          audio_url: track.audio_url,
-                          cover_art_url: track.cover_art_url,
-                          duration: track.duration,
-                          artist: track.artist,
-                        });
+                        handleLike(track.id);
                       }}
                     >
-                      {currentTrack?.id === track.id && isPlaying ? (
-                        <Pause className="w-5 h-5" />
-                      ) : (
-                        <Play className="w-5 h-5 ml-0.5" />
+                      <Heart className={`w-4 h-4 ${isLiked(track.id) ? "fill-current" : ""}`} />
+                      {(likeCounts[track.id] || 0) > 0 && (
+                        <span className="text-xs font-medium">{likeCounts[track.id]}</span>
                       )}
-                    </Button>
+                    </button>
+                    {/* Add to Queue Button */}
+                    <button 
+                      className="absolute top-2 left-2 p-2 rounded-full bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToQueue(track);
+                      }}
+                    >
+                      <ListPlus className="w-4 h-4 text-foreground" />
+                    </button>
                   </div>
-                  {/* Like Button with Count */}
-                  <button 
-                    className={`absolute top-2 right-2 px-2 py-1.5 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all hover:scale-105 flex items-center gap-1 ${
-                      isLiked(track.id) 
-                        ? "bg-primary/20 text-primary" 
-                        : "bg-background/50 text-foreground hover:bg-background/80"
-                    }`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleLike(track.id);
-                    }}
-                  >
-                    <Heart className={`w-4 h-4 ${isLiked(track.id) ? "fill-current" : ""}`} />
-                    {(likeCounts[track.id] || 0) > 0 && (
-                      <span className="text-xs font-medium">{likeCounts[track.id]}</span>
-                    )}
-                  </button>
-                  {/* Add to Queue Button */}
-                  <button 
-                    className="absolute top-2 left-2 p-2 rounded-full bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAddToQueue(track);
-                    }}
-                  >
-                    <ListPlus className="w-4 h-4 text-foreground" />
-                  </button>
-                </div>
 
-                {/* Track Info */}
-                <div>
-                  <h3 className="font-semibold text-foreground truncate">{track.title}</h3>
-                  <Link
-                    to={`/artist/${track.artist?.id}`}
-                    className="text-sm text-muted-foreground truncate hover:text-primary transition-colors block"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {track.artist?.display_name || "Unknown Artist"}
-                  </Link>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-sm font-medium text-primary">{formatPrice(track.price)}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatEditions(track.editions_sold, track.total_editions)}
-                    </span>
+                  {/* Track Info */}
+                  <div>
+                    <h3 className="font-semibold text-foreground truncate">{track.title}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Link
+                        to={`/artist/${track.artist?.id}`}
+                        className="text-sm text-muted-foreground truncate hover:text-primary transition-colors flex-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {track.artist?.display_name || "Unknown Artist"}
+                      </Link>
+                      {artistId && !isOwnTrack && (
+                        <button
+                          className={`p-1 rounded-full transition-colors ${
+                            following
+                              ? "text-primary"
+                              : "text-muted-foreground hover:text-primary"
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFollow(artistId);
+                          }}
+                          title={following ? "Unfollow" : "Follow"}
+                        >
+                          {following ? (
+                            <UserMinus className="w-3.5 h-3.5" />
+                          ) : (
+                            <UserPlus className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-sm font-medium text-primary">{formatPrice(track.price)}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatEditions(track.editions_sold, track.total_editions)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-24">
