@@ -360,6 +360,14 @@ export function Navbar() {
                       </Link>
                     )}
                     <Link
+                      to="/wallet"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+                    >
+                      <Wallet className="w-5 h-5" />
+                      Wallet
+                    </Link>
+                    <Link
                       to="/subscription"
                       onClick={() => setIsOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"

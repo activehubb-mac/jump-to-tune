@@ -3,7 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDownload } from "@/hooks/useDownload";
-import { TipPaymentModal } from "./TipPaymentModal";
+import { useWallet } from "@/hooks/useWallet";
+import { useInstantPurchase, isInsufficientCreditsError } from "@/hooks/useInstantPurchase";
+import { InstantPurchaseModal } from "@/components/wallet/InstantPurchaseModal";
+import { InsufficientCreditsModal } from "@/components/wallet/InsufficientCreditsModal";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -36,8 +39,12 @@ export function DownloadButton({
   const navigate = useNavigate();
   const { user } = useAuth();
   const { downloadOwnedTrack, isDownloading } = useDownload();
+  const { balance } = useWallet();
 
-  const [showTipModal, setShowTipModal] = useState(false);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [showInsufficientModal, setShowInsufficientModal] = useState(false);
+
+  const priceCents = Math.round(track.price * 100);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -55,8 +62,14 @@ export function DownloadButton({
       return;
     }
 
-    // Go directly to payment - no subscription check needed for downloads
-    setShowTipModal(true);
+    // Check if user has enough credits
+    if (balance >= priceCents) {
+      // Show instant purchase confirmation
+      setShowPurchaseModal(true);
+    } else {
+      // Show insufficient credits modal
+      setShowInsufficientModal(true);
+    }
   };
 
   const isLoading = isDownloading;
@@ -78,10 +91,17 @@ export function DownloadButton({
         {size !== "icon" && <span className="ml-2">Download</span>}
       </Button>
 
-      <TipPaymentModal
-        open={showTipModal}
-        onOpenChange={setShowTipModal}
+      <InstantPurchaseModal
+        open={showPurchaseModal}
+        onOpenChange={setShowPurchaseModal}
         track={track}
+      />
+
+      <InsufficientCreditsModal
+        open={showInsufficientModal}
+        onOpenChange={setShowInsufficientModal}
+        requiredCents={priceCents}
+        trackTitle={track.title}
       />
     </>
   );
