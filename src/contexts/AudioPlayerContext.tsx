@@ -13,6 +13,8 @@ export interface AudioTrack {
   };
 }
 
+type RepeatMode = "off" | "all" | "one";
+
 interface AudioPlayerContextType {
   currentTrack: AudioTrack | null;
   isPlaying: boolean;
@@ -24,6 +26,8 @@ interface AudioPlayerContextType {
   isPlayerVisible: boolean;
   queue: AudioTrack[];
   queueIndex: number;
+  isShuffled: boolean;
+  repeatMode: RepeatMode;
   playTrack: (track: AudioTrack) => void;
   togglePlayPause: () => void;
   seek: (time: number) => void;
@@ -35,6 +39,8 @@ interface AudioPlayerContextType {
   playPrevious: () => void;
   clearQueue: () => void;
   removeFromQueue: (index: number) => void;
+  toggleShuffle: () => void;
+  cycleRepeatMode: () => void;
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined);
@@ -51,6 +57,9 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
   const [queue, setQueue] = useState<AudioTrack[]>([]);
   const [queueIndex, setQueueIndex] = useState(-1);
+  const [isShuffled, setIsShuffled] = useState(false);
+  const [repeatMode, setRepeatMode] = useState<RepeatMode>("off");
+  const [originalQueue, setOriginalQueue] = useState<AudioTrack[]>([]);
 
   const ensureAudioElement = useCallback(() => {
     if (audioRef.current) return audioRef.current;
@@ -119,7 +128,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     audio.play().catch(console.error);
   }, [getAudioUrl, ensureAudioElement]);
 
-  // Handle track ended - auto-play next in queue
+  // Handle track ended - auto-play next based on repeat/shuffle modes
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -128,17 +137,25 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       setIsPlaying(false);
       setCurrentTime(0);
       
-      // Auto-play next track if available
-      if (queueIndex < queue.length - 1) {
+      if (repeatMode === "one") {
+        // Repeat current track
+        audio.currentTime = 0;
+        audio.play().catch(console.error);
+      } else if (queueIndex < queue.length - 1) {
+        // Play next track
         const nextIndex = queueIndex + 1;
         setQueueIndex(nextIndex);
         playTrackInternal(queue[nextIndex]);
+      } else if (repeatMode === "all" && queue.length > 0) {
+        // Loop back to start
+        setQueueIndex(0);
+        playTrackInternal(queue[0]);
       }
     };
 
     audio.addEventListener("ended", handleEnded);
     return () => audio.removeEventListener("ended", handleEnded);
-  }, [queue, queueIndex, playTrackInternal]);
+  }, [queue, queueIndex, repeatMode, playTrackInternal]);
 
   useEffect(() => {
     ensureAudioElement();
@@ -196,8 +213,12 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       const nextIndex = queueIndex + 1;
       setQueueIndex(nextIndex);
       playTrackInternal(queue[nextIndex]);
+    } else if (repeatMode === "all" && queue.length > 0) {
+      // Loop back to start
+      setQueueIndex(0);
+      playTrackInternal(queue[0]);
     }
-  }, [queue, queueIndex, playTrackInternal]);
+  }, [queue, queueIndex, repeatMode, playTrackInternal]);
 
   const playPrevious = useCallback(() => {
     const audio = ensureAudioElement();
@@ -276,6 +297,45 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     }
   }, [isMuted, volume, ensureAudioElement]);
 
+  const toggleShuffle = useCallback(() => {
+    if (isShuffled) {
+      // Restore original order
+      if (originalQueue.length > 0) {
+        const currentTrackId = currentTrack?.id;
+        setQueue(originalQueue);
+        if (currentTrackId) {
+          const newIndex = originalQueue.findIndex(t => t.id === currentTrackId);
+          setQueueIndex(newIndex !== -1 ? newIndex : 0);
+        }
+      }
+      setIsShuffled(false);
+    } else {
+      // Shuffle queue but keep current track in place
+      setOriginalQueue([...queue]);
+      const currentTrackItem = queue[queueIndex];
+      const otherTracks = queue.filter((_, i) => i !== queueIndex);
+      
+      // Fisher-Yates shuffle
+      for (let i = otherTracks.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [otherTracks[i], otherTracks[j]] = [otherTracks[j], otherTracks[i]];
+      }
+      
+      const shuffled = [currentTrackItem, ...otherTracks];
+      setQueue(shuffled);
+      setQueueIndex(0);
+      setIsShuffled(true);
+    }
+  }, [isShuffled, queue, queueIndex, currentTrack, originalQueue]);
+
+  const cycleRepeatMode = useCallback(() => {
+    setRepeatMode(prev => {
+      if (prev === "off") return "all";
+      if (prev === "all") return "one";
+      return "off";
+    });
+  }, []);
+
   const closePlayer = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
@@ -289,6 +349,9 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     setIsPlayerVisible(false);
     setQueue([]);
     setQueueIndex(-1);
+    setIsShuffled(false);
+    setRepeatMode("off");
+    setOriginalQueue([]);
   }, []);
 
   return (
@@ -304,6 +367,8 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         isPlayerVisible,
         queue,
         queueIndex,
+        isShuffled,
+        repeatMode,
         playTrack,
         togglePlayPause,
         seek,
@@ -315,6 +380,8 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         playPrevious,
         clearQueue,
         removeFromQueue,
+        toggleShuffle,
+        cycleRepeatMode,
       }}
     >
       {children}

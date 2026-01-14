@@ -1,4 +1,4 @@
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -24,6 +24,8 @@ export function GlobalAudioPlayer() {
     isPlayerVisible,
     queue,
     queueIndex,
+    isShuffled,
+    repeatMode,
     togglePlayPause,
     seek,
     setVolume,
@@ -31,6 +33,8 @@ export function GlobalAudioPlayer() {
     closePlayer,
     playNext,
     playPrevious,
+    toggleShuffle,
+    cycleRepeatMode,
   } = useAudioPlayer();
 
   const [showQueue, setShowQueue] = useState(false);
@@ -45,7 +49,7 @@ export function GlobalAudioPlayer() {
     setVolume(value[0]);
   };
 
-  const hasNext = queueIndex < queue.length - 1;
+  const hasNext = queueIndex < queue.length - 1 || repeatMode === "all";
   const hasPrevious = queueIndex > 0 || currentTime > 3;
 
   return (
@@ -146,7 +150,17 @@ export function GlobalAudioPlayer() {
             {/* Center Controls */}
             <div className="flex-1 flex flex-col items-center gap-1 max-w-2xl mx-auto hidden md:flex">
               {/* Play Button & Progress */}
-              <div className="flex items-center gap-3 w-full">
+              <div className="flex items-center gap-2 w-full">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-8 w-8 ${isShuffled ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                  onClick={toggleShuffle}
+                  title={isShuffled ? "Shuffle on" : "Shuffle off"}
+                >
+                  <Shuffle className="h-4 w-4" />
+                </Button>
+
                 <Button
                   variant="ghost"
                   size="icon"
@@ -180,6 +194,20 @@ export function GlobalAudioPlayer() {
                   disabled={!hasNext}
                 >
                   <SkipForward className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-8 w-8 ${repeatMode !== "off" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                  onClick={cycleRepeatMode}
+                  title={repeatMode === "off" ? "Repeat off" : repeatMode === "all" ? "Repeat all" : "Repeat one"}
+                >
+                  {repeatMode === "one" ? (
+                    <Repeat1 className="h-4 w-4" />
+                  ) : (
+                    <Repeat className="h-4 w-4" />
+                  )}
                 </Button>
                 
                 <span className="text-xs text-muted-foreground w-10 text-right">
