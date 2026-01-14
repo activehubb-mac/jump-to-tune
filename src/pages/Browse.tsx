@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { usePublishedTracks } from "@/hooks/useTracks";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useLikes } from "@/hooks/useLikes";
+import { useLikeCounts } from "@/hooks/useLikeCounts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedback } from "@/contexts/FeedbackContext";
 
@@ -25,6 +26,9 @@ export default function Browse() {
     genre: selectedGenre,
     searchQuery: searchQuery || undefined,
   });
+
+  const trackIds = useMemo(() => tracks?.map((t) => t.id) || [], [tracks]);
+  const { data: likeCounts = {} } = useLikeCounts(trackIds);
 
   const handleLike = (trackId: string) => {
     if (!user) {
@@ -147,9 +151,9 @@ export default function Browse() {
                       )}
                     </Button>
                   </div>
-                  {/* Like Button */}
+                  {/* Like Button with Count */}
                   <button 
-                    className={`absolute top-2 right-2 p-2 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all hover:scale-110 ${
+                    className={`absolute top-2 right-2 px-2 py-1.5 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all hover:scale-105 flex items-center gap-1 ${
                       isLiked(track.id) 
                         ? "bg-primary/20 text-primary" 
                         : "bg-background/50 text-foreground hover:bg-background/80"
@@ -160,6 +164,9 @@ export default function Browse() {
                     }}
                   >
                     <Heart className={`w-4 h-4 ${isLiked(track.id) ? "fill-current" : ""}`} />
+                    {(likeCounts[track.id] || 0) > 0 && (
+                      <span className="text-xs font-medium">{likeCounts[track.id]}</span>
+                    )}
                   </button>
                   {/* Add to Queue Button */}
                   <button 

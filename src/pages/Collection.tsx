@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Disc3, Play, Music, Lock, Loader2, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +11,7 @@ import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { formatPrice } from "@/lib/formatters";
 
 export default function Collection() {
+  const [activeTab, setActiveTab] = useState("liked");
   const { user, profile, isLoading } = useAuth();
   const { data: stats, isLoading: statsLoading } = useCollectionStats(user?.id);
   const { data: ownedTracks, isLoading: tracksLoading } = useOwnedTracks(user?.id);
@@ -88,9 +91,9 @@ export default function Collection() {
           </div>
           <div className="glass-card p-4 text-center">
             <div className="text-3xl font-bold text-gradient">
-              {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : stats?.artistsFollowed ?? 0}
+              {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : likedTracks?.length ?? 0}
             </div>
-            <div className="text-sm text-muted-foreground">Artists Followed</div>
+            <div className="text-sm text-muted-foreground">Liked Tracks</div>
           </div>
           <div className="glass-card p-4 text-center">
             <div className="text-3xl font-bold text-gradient">
@@ -104,187 +107,196 @@ export default function Collection() {
           </div>
           <div className="glass-card p-4 text-center">
             <div className="text-3xl font-bold text-gradient">
-              {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : stats?.rareEditions ?? 0}
+              {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : stats?.artistsFollowed ?? 0}
             </div>
-            <div className="text-sm text-muted-foreground">Rare Editions</div>
+            <div className="text-sm text-muted-foreground">Artists Followed</div>
           </div>
         </div>
 
-        {/* Liked Tracks Section */}
-        <div className="mb-12">
-          <div className="flex items-center gap-2 mb-6">
-            <Heart className="w-5 h-5 text-primary fill-primary" />
-            <h2 className="text-2xl font-bold text-foreground">Liked Tracks</h2>
-            {likedTracks && likedTracks.length > 0 && (
-              <span className="text-sm text-muted-foreground">({likedTracks.length})</span>
-            )}
-          </div>
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
+            <TabsTrigger value="liked" className="flex items-center gap-2">
+              <Heart className="w-4 h-4" />
+              Liked Tracks
+              {likedTracks && likedTracks.length > 0 && (
+                <span className="text-xs bg-primary/20 px-2 py-0.5 rounded-full">
+                  {likedTracks.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="owned" className="flex items-center gap-2">
+              <Disc3 className="w-4 h-4" />
+              Owned Tracks
+              {ownedTracks && ownedTracks.length > 0 && (
+                <span className="text-xs bg-primary/20 px-2 py-0.5 rounded-full">
+                  {ownedTracks.length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-          {likedLoading ? (
-            <div className="glass-card p-12 flex justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          ) : likedTracks && likedTracks.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-              {likedTracks.map((track) => (
-                <div
-                  key={track.id}
-                  className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
-                  onClick={() => handlePlayTrack(track)}
-                >
-                  {/* Album Art */}
-                  <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">
-                    {track.cover_art_url ? (
-                      <img
-                        src={track.cover_art_url}
-                        alt={track.title}
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Disc3 className="w-16 h-16 text-muted-foreground/50" />
-                      </div>
-                    )}
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Button size="icon" className="rounded-full gradient-accent neon-glow w-12 h-12">
-                        <Play className="w-5 h-5 ml-0.5" />
-                      </Button>
-                    </div>
-                    {/* Unlike Button */}
-                    <button
-                      className="absolute top-2 right-2 p-2 rounded-full bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleLike(track.id);
-                      }}
-                    >
-                      <Heart className="w-4 h-4 text-primary fill-primary" />
-                    </button>
-                  </div>
-
-                  {/* Track Info */}
-                  <div>
-                    <h3 className="font-semibold text-foreground truncate">{track.title}</h3>
-                    <Link
-                      to={`/artist/${track.artist?.id}`}
-                      className="text-sm text-muted-foreground truncate hover:text-primary transition-colors block"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {track.artist?.display_name || "Unknown Artist"}
-                    </Link>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-sm font-medium text-primary">
-                        {formatPrice(track.price)}
-                      </span>
-                      {track.genre && (
-                        <span className="text-xs text-muted-foreground">
-                          {track.genre}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="glass-card p-8 text-center">
-              <Heart className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">
-                No liked tracks yet. Browse music and click the heart to save your favorites!
-              </p>
-              <Button className="mt-4" variant="outline" asChild>
-                <Link to="/browse">Browse Music</Link>
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Owned Tracks Section */}
-        <div>
-          <div className="flex items-center gap-2 mb-6">
-            <Disc3 className="w-5 h-5 text-primary" />
-            <h2 className="text-2xl font-bold text-foreground">Owned Tracks</h2>
-            {ownedTracks && ownedTracks.length > 0 && (
-              <span className="text-sm text-muted-foreground">({ownedTracks.length})</span>
-            )}
-          </div>
-
-          {tracksLoading ? (
-            <div className="glass-card p-12 flex justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          ) : ownedTracks && ownedTracks.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-              {ownedTracks.map((purchase) => (
-                <div
-                  key={purchase.id}
-                  className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
-                >
-                  {/* Album Art */}
-                  <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">
-                    {purchase.track?.cover_art_url ? (
-                      <img
-                        src={purchase.track.cover_art_url}
-                        alt={purchase.track.title}
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Disc3 className="w-16 h-16 text-muted-foreground/50" />
-                      </div>
-                    )}
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Button size="icon" className="rounded-full gradient-accent neon-glow w-12 h-12">
-                        <Play className="w-5 h-5 ml-0.5" />
-                      </Button>
-                    </div>
-                    {/* Edition Badge */}
-                    <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-primary/80 backdrop-blur-sm text-xs font-medium text-primary-foreground">
-                      #{purchase.edition_number}
-                    </div>
-                  </div>
-
-                  {/* Track Info */}
-                  <div>
-                    <h3 className="font-semibold text-foreground truncate">{purchase.track?.title}</h3>
-                    <Link
-                      to={`/artist/${purchase.track?.artist?.id}`}
-                      className="text-sm text-muted-foreground truncate hover:text-primary transition-colors block"
-                    >
-                      {purchase.track?.artist?.display_name || "Unknown Artist"}
-                    </Link>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-sm font-medium text-primary">
-                        {formatPrice(purchase.price_paid)}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        of {purchase.track?.total_editions}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="glass-card p-12 text-center">
-              <div className="w-20 h-20 mx-auto rounded-full bg-muted/30 flex items-center justify-center mb-6">
-                <Music className="w-10 h-10 text-muted-foreground/50" />
+          {/* Liked Tracks Tab */}
+          <TabsContent value="liked">
+            {likedLoading ? (
+              <div className="glass-card p-12 flex justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground mb-4">Your collection is empty</h2>
-              <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-                Start building your collection by browsing and purchasing tracks from talented artists.
-              </p>
-              <Button className="gradient-accent neon-glow-subtle hover:neon-glow" asChild>
-                <Link to="/browse">
-                  <Disc3 className="w-4 h-4 mr-2" />
-                  Browse Music
-                </Link>
-              </Button>
-            </div>
-          )}
-        </div>
+            ) : likedTracks && likedTracks.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {likedTracks.map((track) => (
+                  <div
+                    key={track.id}
+                    className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
+                    onClick={() => handlePlayTrack(track)}
+                  >
+                    {/* Album Art */}
+                    <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">
+                      {track.cover_art_url ? (
+                        <img
+                          src={track.cover_art_url}
+                          alt={track.title}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Disc3 className="w-16 h-16 text-muted-foreground/50" />
+                        </div>
+                      )}
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <Button size="icon" className="rounded-full gradient-accent neon-glow w-12 h-12">
+                          <Play className="w-5 h-5 ml-0.5" />
+                        </Button>
+                      </div>
+                      {/* Unlike Button */}
+                      <button
+                        className="absolute top-2 right-2 p-2 rounded-full bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleLike(track.id);
+                        }}
+                      >
+                        <Heart className="w-4 h-4 text-primary fill-primary" />
+                      </button>
+                    </div>
+
+                    {/* Track Info */}
+                    <div>
+                      <h3 className="font-semibold text-foreground truncate">{track.title}</h3>
+                      <Link
+                        to={`/artist/${track.artist?.id}`}
+                        className="text-sm text-muted-foreground truncate hover:text-primary transition-colors block"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {track.artist?.display_name || "Unknown Artist"}
+                      </Link>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-sm font-medium text-primary">
+                          {formatPrice(track.price)}
+                        </span>
+                        {track.genre && (
+                          <span className="text-xs text-muted-foreground">
+                            {track.genre}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="glass-card p-12 text-center">
+                <Heart className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                <h2 className="text-xl font-semibold text-foreground mb-2">No liked tracks yet</h2>
+                <p className="text-muted-foreground mb-6">
+                  Browse music and click the heart to save your favorites!
+                </p>
+                <Button variant="outline" asChild>
+                  <Link to="/browse">Browse Music</Link>
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Owned Tracks Tab */}
+          <TabsContent value="owned">
+            {tracksLoading ? (
+              <div className="glass-card p-12 flex justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : ownedTracks && ownedTracks.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {ownedTracks.map((purchase) => (
+                  <div
+                    key={purchase.id}
+                    className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
+                  >
+                    {/* Album Art */}
+                    <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">
+                      {purchase.track?.cover_art_url ? (
+                        <img
+                          src={purchase.track.cover_art_url}
+                          alt={purchase.track.title}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Disc3 className="w-16 h-16 text-muted-foreground/50" />
+                        </div>
+                      )}
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <Button size="icon" className="rounded-full gradient-accent neon-glow w-12 h-12">
+                          <Play className="w-5 h-5 ml-0.5" />
+                        </Button>
+                      </div>
+                      {/* Edition Badge */}
+                      <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-primary/80 backdrop-blur-sm text-xs font-medium text-primary-foreground">
+                        #{purchase.edition_number}
+                      </div>
+                    </div>
+
+                    {/* Track Info */}
+                    <div>
+                      <h3 className="font-semibold text-foreground truncate">{purchase.track?.title}</h3>
+                      <Link
+                        to={`/artist/${purchase.track?.artist?.id}`}
+                        className="text-sm text-muted-foreground truncate hover:text-primary transition-colors block"
+                      >
+                        {purchase.track?.artist?.display_name || "Unknown Artist"}
+                      </Link>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-sm font-medium text-primary">
+                          {formatPrice(purchase.price_paid)}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          of {purchase.track?.total_editions}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="glass-card p-12 text-center">
+                <div className="w-20 h-20 mx-auto rounded-full bg-muted/30 flex items-center justify-center mb-6">
+                  <Music className="w-10 h-10 text-muted-foreground/50" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground mb-4">Your collection is empty</h2>
+                <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+                  Start building your collection by browsing and purchasing tracks from talented artists.
+                </p>
+                <Button className="gradient-accent neon-glow-subtle hover:neon-glow" asChild>
+                  <Link to="/browse">
+                    <Disc3 className="w-4 h-4 mr-2" />
+                    Browse Music
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
