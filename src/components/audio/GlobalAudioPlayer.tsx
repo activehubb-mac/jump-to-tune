@@ -1,6 +1,7 @@
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1 } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useAudioKeyboardShortcuts } from "@/hooks/useAudioKeyboardShortcuts";
 import { Link } from "react-router-dom";
@@ -36,6 +37,9 @@ export function GlobalAudioPlayer() {
     playPrevious,
     toggleShuffle,
     cycleRepeatMode,
+    removeFromQueue,
+    clearQueue,
+    playTrack,
   } = useAudioPlayer();
 
   const [showQueue, setShowQueue] = useState(false);
@@ -60,60 +64,152 @@ export function GlobalAudioPlayer() {
     <>
       {/* Queue Panel */}
       {showQueue && (
-        <div className="fixed bottom-20 md:bottom-16 right-4 z-50 w-80 max-h-96 glass-card border border-glass-border/30 backdrop-blur-xl rounded-lg overflow-hidden animate-in slide-in-from-bottom duration-200">
+        <div className="fixed bottom-20 md:bottom-16 right-4 z-50 w-80 max-h-[28rem] glass-card border border-glass-border/30 backdrop-blur-xl rounded-lg overflow-hidden animate-in slide-in-from-bottom duration-200">
           <div className="p-3 border-b border-glass-border/30">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">Up Next</h3>
-              <span className="text-xs text-muted-foreground">{queue.length} tracks</span>
+              <h3 className="text-sm font-semibold text-foreground">Queue</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{queue.length} tracks</span>
+                {queue.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-xs text-muted-foreground hover:text-destructive"
+                    onClick={clearQueue}
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-          <div className="overflow-y-auto max-h-72">
+          
+          <ScrollArea className="max-h-80">
             {queue.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground text-sm">
-                Queue is empty
+              <div className="p-6 text-center">
+                <ListMusic className="w-10 h-10 mx-auto text-muted-foreground/30 mb-2" />
+                <p className="text-muted-foreground text-sm">Queue is empty</p>
+                <p className="text-muted-foreground/70 text-xs mt-1">Play a track to start building your queue</p>
               </div>
             ) : (
-              queue.map((track, index) => (
-                <div
-                  key={`${track.id}-${index}`}
-                  className={`flex items-center gap-3 p-3 hover:bg-white/5 transition-colors ${
-                    index === queueIndex ? "bg-primary/10" : ""
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded bg-muted/50 overflow-hidden flex-shrink-0">
-                    {track.cover_art_url ? (
-                      <img src={track.cover_art_url} alt={track.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Disc3 className="w-4 h-4 text-muted-foreground/50" />
+              <div className="py-1">
+                {/* Now Playing */}
+                {currentTrack && queueIndex >= 0 && (
+                  <div className="px-3 py-1">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Now Playing</p>
+                    <div className="flex items-center gap-3 p-2 rounded-lg bg-primary/10">
+                      <div className="w-10 h-10 rounded bg-muted/50 overflow-hidden flex-shrink-0">
+                        {currentTrack.cover_art_url ? (
+                          <img src={currentTrack.cover_art_url} alt={currentTrack.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Disc3 className="w-4 h-4 text-muted-foreground/50" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className={`text-sm truncate ${index === queueIndex ? "text-primary font-medium" : "text-foreground"}`}>
-                      {track.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {track.artist?.display_name || "Unknown Artist"}
-                    </p>
-                  </div>
-                  {index === queueIndex && (
-                    <div className="flex-shrink-0">
-                      {isPlaying ? (
-                        <div className="flex gap-0.5">
-                          <div className="w-0.5 h-3 bg-primary rounded-full animate-pulse" />
-                          <div className="w-0.5 h-3 bg-primary rounded-full animate-pulse delay-75" />
-                          <div className="w-0.5 h-3 bg-primary rounded-full animate-pulse delay-150" />
-                        </div>
-                      ) : (
-                        <Play className="w-3 h-3 text-primary" />
-                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-primary truncate">{currentTrack.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {currentTrack.artist?.display_name || "Unknown Artist"}
+                        </p>
+                      </div>
+                      <div className="flex-shrink-0">
+                        {isPlaying ? (
+                          <div className="flex gap-0.5">
+                            <div className="w-0.5 h-3 bg-primary rounded-full animate-pulse" />
+                            <div className="w-0.5 h-3 bg-primary rounded-full animate-pulse delay-75" />
+                            <div className="w-0.5 h-3 bg-primary rounded-full animate-pulse delay-150" />
+                          </div>
+                        ) : (
+                          <Play className="w-3 h-3 text-primary" />
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))
+                  </div>
+                )}
+
+                {/* Up Next */}
+                {queue.length > queueIndex + 1 && (
+                  <div className="px-3 py-1 mt-2">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Up Next</p>
+                    {queue.slice(queueIndex + 1).map((track, index) => {
+                      const actualIndex = queueIndex + 1 + index;
+                      return (
+                        <div
+                          key={`${track.id}-${actualIndex}`}
+                          className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors group cursor-pointer"
+                          onClick={() => playTrack(track)}
+                        >
+                          <div className="w-8 h-8 rounded bg-muted/50 overflow-hidden flex-shrink-0 relative">
+                            {track.cover_art_url ? (
+                              <img src={track.cover_art_url} alt={track.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Disc3 className="w-3 h-3 text-muted-foreground/50" />
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Play className="w-3 h-3 text-foreground" />
+                            </div>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm text-foreground truncate">{track.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {track.artist?.display_name || "Unknown Artist"}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeFromQueue(actualIndex);
+                            }}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Previously Played */}
+                {queueIndex > 0 && (
+                  <div className="px-3 py-1 mt-2 border-t border-glass-border/20 pt-3">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Previously Played</p>
+                    {queue.slice(0, queueIndex).map((track, index) => (
+                      <div
+                        key={`${track.id}-prev-${index}`}
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors group cursor-pointer opacity-60"
+                        onClick={() => playTrack(track)}
+                      >
+                        <div className="w-8 h-8 rounded bg-muted/50 overflow-hidden flex-shrink-0 relative">
+                          {track.cover_art_url ? (
+                            <img src={track.cover_art_url} alt={track.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Disc3 className="w-3 h-3 text-muted-foreground/50" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Play className="w-3 h-3 text-foreground" />
+                          </div>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-foreground truncate">{track.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {track.artist?.display_name || "Unknown Artist"}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
-          </div>
+          </ScrollArea>
         </div>
       )}
 

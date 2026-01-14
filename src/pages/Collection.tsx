@@ -1,8 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCollectionStats, useOwnedTracks } from "@/hooks/useCollectionStats";
@@ -11,8 +18,12 @@ import { useFollowedArtists, useFollow } from "@/hooks/useFollows";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { formatPrice } from "@/lib/formatters";
 
+type SortOption = "recent" | "title" | "artist" | "price";
+
 export default function Collection() {
   const [activeTab, setActiveTab] = useState("liked");
+  const [likedSort, setLikedSort] = useState<SortOption>("recent");
+  const [ownedSort, setOwnedSort] = useState<SortOption>("recent");
   const { user, profile, isLoading } = useAuth();
   const { data: stats, isLoading: statsLoading } = useCollectionStats(user?.id);
   const { data: ownedTracks, isLoading: tracksLoading } = useOwnedTracks(user?.id);
@@ -62,6 +73,46 @@ export default function Collection() {
 
   const isDataLoading = statsLoading || tracksLoading;
 
+  // Sort liked tracks
+  const sortedLikedTracks = useMemo(() => {
+    if (!likedTracks) return [];
+    const sorted = [...likedTracks];
+    switch (likedSort) {
+      case "title":
+        return sorted.sort((a, b) => a.title.localeCompare(b.title));
+      case "artist":
+        return sorted.sort((a, b) => 
+          (a.artist?.display_name || "").localeCompare(b.artist?.display_name || "")
+        );
+      case "price":
+        return sorted.sort((a, b) => b.price - a.price);
+      case "recent":
+      default:
+        return sorted; // Already sorted by most recent from hook
+    }
+  }, [likedTracks, likedSort]);
+
+  // Sort owned tracks
+  const sortedOwnedTracks = useMemo(() => {
+    if (!ownedTracks) return [];
+    const sorted = [...ownedTracks];
+    switch (ownedSort) {
+      case "title":
+        return sorted.sort((a, b) => 
+          (a.track?.title || "").localeCompare(b.track?.title || "")
+        );
+      case "artist":
+        return sorted.sort((a, b) => 
+          (a.track?.artist?.display_name || "").localeCompare(b.track?.artist?.display_name || "")
+        );
+      case "price":
+        return sorted.sort((a, b) => (b.price_paid || 0) - (a.price_paid || 0));
+      case "recent":
+      default:
+        return sorted; // Already sorted by most recent from hook
+    }
+  }, [ownedTracks, ownedSort]);
+
   const handlePlayTrack = (track: NonNullable<typeof likedTracks>[number]) => {
     playTrack({
       id: track.id,
@@ -72,6 +123,21 @@ export default function Collection() {
       artist: track.artist,
     });
   };
+
+  const SortSelect = ({ value, onChange }: { value: SortOption; onChange: (v: SortOption) => void }) => (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="w-[140px] h-8 text-xs glass border-glass-border/30">
+        <ArrowUpDown className="w-3 h-3 mr-1" />
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="glass">
+        <SelectItem value="recent">Most Recent</SelectItem>
+        <SelectItem value="title">Title</SelectItem>
+        <SelectItem value="artist">Artist</SelectItem>
+        <SelectItem value="price">Price</SelectItem>
+      </SelectContent>
+    </Select>
+  );
 
   return (
     <Layout>
@@ -154,9 +220,13 @@ export default function Collection() {
               <div className="glass-card p-12 flex justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
-            ) : likedTracks && likedTracks.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {likedTracks.map((track) => (
+            ) : sortedLikedTracks.length > 0 ? (
+              <div>
+                <div className="flex justify-end mb-4">
+                  <SortSelect value={likedSort} onChange={setLikedSort} />
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {sortedLikedTracks.map((track) => (
                   <div
                     key={track.id}
                     className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
@@ -216,6 +286,7 @@ export default function Collection() {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
             ) : (
               <div className="glass-card p-12 text-center">
@@ -237,9 +308,13 @@ export default function Collection() {
               <div className="glass-card p-12 flex justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
-            ) : ownedTracks && ownedTracks.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {ownedTracks.map((purchase) => (
+            ) : sortedOwnedTracks.length > 0 ? (
+              <div>
+                <div className="flex justify-end mb-4">
+                  <SortSelect value={ownedSort} onChange={setOwnedSort} />
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {sortedOwnedTracks.map((purchase) => (
                   <div
                     key={purchase.id}
                     className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
@@ -289,6 +364,7 @@ export default function Collection() {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
             ) : (
               <div className="glass-card p-12 text-center">
