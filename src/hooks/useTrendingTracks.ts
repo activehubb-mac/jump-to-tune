@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface TrendingTrack {
   id: string;
   title: string;
+  audio_url: string;
   cover_art_url: string | null;
   price: number;
   artist_id: string;
@@ -61,6 +62,7 @@ export function useTrendingTracks(limit: number = 6) {
           .select(`
             id,
             title,
+            audio_url,
             cover_art_url,
             price,
             artist_id,
@@ -85,6 +87,7 @@ export function useTrendingTracks(limit: number = 6) {
             return {
               id: track.id,
               title: track.title,
+              audio_url: track.audio_url,
               cover_art_url: track.cover_art_url,
               price: track.price,
               artist_id: track.artist_id,
@@ -101,6 +104,7 @@ export function useTrendingTracks(limit: number = 6) {
         .select(`
           id,
           title,
+          audio_url,
           cover_art_url,
           price,
           artist_id,
@@ -120,6 +124,7 @@ export function useTrendingTracks(limit: number = 6) {
         return {
           id: track.id,
           title: track.title,
+          audio_url: track.audio_url,
           cover_art_url: track.cover_art_url,
           price: track.price,
           artist_id: track.artist_id,

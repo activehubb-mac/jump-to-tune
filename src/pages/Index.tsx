@@ -613,7 +613,7 @@ export default function Index() {
                     onClick={() => playTrack({
                       id: track.id,
                       title: track.title,
-                      audio_url: "",
+                      audio_url: track.audio_url,
                       cover_art_url: track.cover_art_url,
                       artist: {
                         id: track.artist_id,
@@ -694,7 +694,7 @@ export default function Index() {
                   onClick={() => playTrack({
                     id: track.id,
                     title: track.title,
-                    audio_url: "", // Will be loaded by the player
+                    audio_url: track.audio_url,
                     cover_art_url: track.cover_art_url,
                     artist: {
                       id: track.artist_id,

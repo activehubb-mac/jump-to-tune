@@ -148,19 +148,51 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     return data.publicUrl;
   }, []);
 
-  const playTrackInternal = useCallback((track: AudioTrack) => {
+  const playTrackInternal = useCallback(async (track: AudioTrack) => {
     const audio = ensureAudioElement();
     
     setCurrentTrack(track);
     setCurrentTime(0);
     setDuration(track.duration || 0);
     setIsPlayerVisible(true);
+    setIsBuffering(true);
 
     // Save to recently played
     saveToRecentlyPlayed(track);
 
-    const audioUrl = getAudioUrl(track.audio_url);
-    audio.src = audioUrl;
+    let audioUrl = track.audio_url;
+
+    // If audio_url is empty, fetch it from the database
+    if (!audioUrl || audioUrl.trim() === "") {
+      try {
+        const { data, error } = await supabase
+          .from("tracks")
+          .select("audio_url")
+          .eq("id", track.id)
+          .maybeSingle();
+        
+        if (error) {
+          console.error("Failed to fetch audio URL:", error);
+          setIsBuffering(false);
+          return;
+        }
+        
+        if (!data?.audio_url) {
+          console.error("No audio URL found for track:", track.id);
+          setIsBuffering(false);
+          return;
+        }
+        
+        audioUrl = data.audio_url;
+      } catch (e) {
+        console.error("Error fetching audio URL:", e);
+        setIsBuffering(false);
+        return;
+      }
+    }
+
+    const resolvedUrl = getAudioUrl(audioUrl);
+    audio.src = resolvedUrl;
     audio.load();
     audio.play().catch(console.error);
   }, [getAudioUrl, ensureAudioElement]);
