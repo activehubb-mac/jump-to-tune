@@ -2,18 +2,19 @@ import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Disc3, Play, Pause, Heart, Loader2 } from "lucide-react";
+import { Search, Filter, Disc3, Play, Pause, Heart, Loader2, ListPlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePublishedTracks } from "@/hooks/useTracks";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
+import { toast } from "@/hooks/use-toast";
 
 const genres = ["All", "Electronic", "Hip Hop", "R&B", "Pop", "Rock", "Jazz", "Classical", "Indie"];
 
 export default function Browse() {
   const [selectedGenre, setSelectedGenre] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const { playTrack, currentTrack, isPlaying } = useAudioPlayer();
+  const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
   
   const { data: tracks, isLoading } = usePublishedTracks({
     genre: selectedGenre,
@@ -115,6 +116,27 @@ export default function Browse() {
                   {/* Like Button */}
                   <button className="absolute top-2 right-2 p-2 rounded-full bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80">
                     <Heart className="w-4 h-4 text-foreground" />
+                  </button>
+                  {/* Add to Queue Button */}
+                  <button 
+                    className="absolute top-2 left-2 p-2 rounded-full bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToQueue({
+                        id: track.id,
+                        title: track.title,
+                        audio_url: track.audio_url,
+                        cover_art_url: track.cover_art_url,
+                        duration: track.duration,
+                        artist: track.artist,
+                      });
+                      toast({
+                        title: "Added to queue",
+                        description: track.title,
+                      });
+                    }}
+                  >
+                    <ListPlus className="w-4 h-4 text-foreground" />
                   </button>
                 </div>
 
