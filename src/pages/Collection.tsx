@@ -33,6 +33,46 @@ export default function Collection() {
   const { toggleFollow } = useFollow();
   const { playTrack, addToQueue } = useAudioPlayer();
 
+  // Sort liked tracks - must be called before any early returns
+  const sortedLikedTracks = useMemo(() => {
+    if (!likedTracks) return [];
+    const sorted = [...likedTracks];
+    switch (likedSort) {
+      case "title":
+        return sorted.sort((a, b) => a.title.localeCompare(b.title));
+      case "artist":
+        return sorted.sort((a, b) => 
+          (a.artist?.display_name || "").localeCompare(b.artist?.display_name || "")
+        );
+      case "price":
+        return sorted.sort((a, b) => b.price - a.price);
+      case "recent":
+      default:
+        return sorted; // Already sorted by most recent from hook
+    }
+  }, [likedTracks, likedSort]);
+
+  // Sort owned tracks - must be called before any early returns
+  const sortedOwnedTracks = useMemo(() => {
+    if (!ownedTracks) return [];
+    const sorted = [...ownedTracks];
+    switch (ownedSort) {
+      case "title":
+        return sorted.sort((a, b) => 
+          (a.track?.title || "").localeCompare(b.track?.title || "")
+        );
+      case "artist":
+        return sorted.sort((a, b) => 
+          (a.track?.artist?.display_name || "").localeCompare(b.track?.artist?.display_name || "")
+        );
+      case "price":
+        return sorted.sort((a, b) => (b.price_paid || 0) - (a.price_paid || 0));
+      case "recent":
+      default:
+        return sorted; // Already sorted by most recent from hook
+    }
+  }, [ownedTracks, ownedSort]);
+
   // Show loading state while checking auth
   if (isLoading) {
     return (
@@ -72,46 +112,6 @@ export default function Collection() {
   }
 
   const isDataLoading = statsLoading || tracksLoading;
-
-  // Sort liked tracks
-  const sortedLikedTracks = useMemo(() => {
-    if (!likedTracks) return [];
-    const sorted = [...likedTracks];
-    switch (likedSort) {
-      case "title":
-        return sorted.sort((a, b) => a.title.localeCompare(b.title));
-      case "artist":
-        return sorted.sort((a, b) => 
-          (a.artist?.display_name || "").localeCompare(b.artist?.display_name || "")
-        );
-      case "price":
-        return sorted.sort((a, b) => b.price - a.price);
-      case "recent":
-      default:
-        return sorted; // Already sorted by most recent from hook
-    }
-  }, [likedTracks, likedSort]);
-
-  // Sort owned tracks
-  const sortedOwnedTracks = useMemo(() => {
-    if (!ownedTracks) return [];
-    const sorted = [...ownedTracks];
-    switch (ownedSort) {
-      case "title":
-        return sorted.sort((a, b) => 
-          (a.track?.title || "").localeCompare(b.track?.title || "")
-        );
-      case "artist":
-        return sorted.sort((a, b) => 
-          (a.track?.artist?.display_name || "").localeCompare(b.track?.artist?.display_name || "")
-        );
-      case "price":
-        return sorted.sort((a, b) => (b.price_paid || 0) - (a.price_paid || 0));
-      case "recent":
-      default:
-        return sorted; // Already sorted by most recent from hook
-    }
-  }, [ownedTracks, ownedSort]);
 
   const handlePlayTrack = (track: NonNullable<typeof likedTracks>[number]) => {
     playTrack({
