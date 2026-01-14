@@ -1,6 +1,40 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+const RECENTLY_PLAYED_KEY = "jumtunes_recently_played";
+const MAX_RECENTLY_PLAYED = 20;
+
+// Helper to save recently played track
+const saveToRecentlyPlayed = (track: { 
+  id: string; 
+  title: string; 
+  cover_art_url: string | null;
+  artist?: { id: string; display_name: string | null };
+}) => {
+  try {
+    const stored = localStorage.getItem(RECENTLY_PLAYED_KEY);
+    let existing = stored ? JSON.parse(stored) : [];
+    
+    // Remove if already exists
+    existing = existing.filter((t: { id: string }) => t.id !== track.id);
+    
+    // Add to front with timestamp
+    const newTrack = {
+      id: track.id,
+      title: track.title,
+      cover_art_url: track.cover_art_url,
+      artist_id: track.artist?.id || "",
+      artist_name: track.artist?.display_name || null,
+      playedAt: Date.now(),
+    };
+    
+    existing = [newTrack, ...existing].slice(0, MAX_RECENTLY_PLAYED);
+    localStorage.setItem(RECENTLY_PLAYED_KEY, JSON.stringify(existing));
+  } catch (e) {
+    console.error("Failed to save recently played:", e);
+  }
+};
+
 export interface AudioTrack {
   id: string;
   title: string;
@@ -121,6 +155,9 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     setCurrentTime(0);
     setDuration(track.duration || 0);
     setIsPlayerVisible(true);
+
+    // Save to recently played
+    saveToRecentlyPlayed(track);
 
     const audioUrl = getAudioUrl(track.audio_url);
     audio.src = audioUrl;
