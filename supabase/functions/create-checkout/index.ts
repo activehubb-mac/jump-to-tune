@@ -76,7 +76,7 @@ serve(async (req) => {
             tier: tier,
           },
         },
-        success_url: `${origin}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
+        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=subscription`,
         cancel_url: `${origin}/`,
         metadata: {
           user_id: user.id,
