@@ -7,6 +7,7 @@ interface LabelStats {
   totalEarnings: number;
   thisMonthEarnings: number;
   thisMonthSales: number;
+  collectorsCount: number;
 }
 
 export function useLabelStats(labelId: string | undefined) {
@@ -20,6 +21,7 @@ export function useLabelStats(labelId: string | undefined) {
           totalEarnings: 0,
           thisMonthEarnings: 0,
           thisMonthSales: 0,
+          collectorsCount: 0,
         };
       }
 
@@ -47,12 +49,13 @@ export function useLabelStats(labelId: string | undefined) {
       let totalEarnings = 0;
       let thisMonthEarnings = 0;
       let thisMonthSales = 0;
+      let collectorsCount = 0;
 
       if (trackIds.length > 0) {
         // Get earnings from purchases
         const { data: purchases } = await supabase
           .from("purchases")
-          .select("price_paid, purchased_at")
+          .select("price_paid, purchased_at, user_id")
           .in("track_id", trackIds);
 
         if (purchases) {
@@ -69,6 +72,10 @@ export function useLabelStats(labelId: string | undefined) {
             0
           );
           thisMonthSales = thisMonthPurchases.length;
+
+          // Count unique collectors
+          const uniqueCollectors = new Set(purchases.map((p) => p.user_id));
+          collectorsCount = uniqueCollectors.size;
         }
       }
 
@@ -78,6 +85,7 @@ export function useLabelStats(labelId: string | undefined) {
         totalEarnings,
         thisMonthEarnings,
         thisMonthSales,
+        collectorsCount,
       };
     },
     enabled: !!labelId,

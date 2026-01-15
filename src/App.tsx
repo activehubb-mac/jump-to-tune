@@ -20,6 +20,10 @@ import ArtistAnalytics from "./pages/ArtistAnalytics";
 import ArtistCollectors from "./pages/ArtistCollectors";
 import ArtistTracks from "./pages/ArtistTracks";
 import LabelDashboard from "./pages/LabelDashboard";
+import LabelAnalytics from "./pages/LabelAnalytics";
+import LabelCollectors from "./pages/LabelCollectors";
+import LabelTracks from "./pages/LabelTracks";
+import LabelPayouts from "./pages/LabelPayouts";
 import Upload from "./pages/Upload";
 import TrackEdit from "./pages/TrackEdit";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -56,6 +60,10 @@ const App = () => (
                 <Route path="/artist/tracks" element={<ArtistTracks />} />
                 <Route path="/track/:id/edit" element={<TrackEdit />} />
                 <Route path="/label/dashboard" element={<LabelDashboard />} />
+                <Route path="/label/analytics" element={<LabelAnalytics />} />
+                <Route path="/label/collectors" element={<LabelCollectors />} />
+                <Route path="/label/tracks" element={<LabelTracks />} />
+                <Route path="/label/payouts" element={<LabelPayouts />} />
                 <Route path="/upload" element={<Upload />} />
                 <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route path="/payment-canceled" element={<PaymentCanceled />} />
