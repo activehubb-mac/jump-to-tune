@@ -79,7 +79,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send the response email
     const emailResponse = await resend.emails.send({
-      from: "JumTunes <notifications@resend.dev>",
+      from: "JumTunes <noreply@send.jumtunes.com>",
       to: [labelEmail],
       subject: `${artistName} ${status} your roster invitation`,
       html: `
