@@ -671,6 +671,30 @@ serve(async (req) => {
                 },
               });
             logStep("Payout received notification created", { userId: profile.id });
+
+            // Send payout email notification (non-blocking)
+            try {
+              const emailResponse = await fetch(
+                `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-payout-email`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                  },
+                  body: JSON.stringify({
+                    artistId: profile.id,
+                    payoutAmountCents: payout.amount,
+                    status: "paid",
+                  }),
+                }
+              );
+              logStep("Payout email sent", { status: emailResponse.status });
+            } catch (emailError) {
+              logStep("Payout email error (non-blocking)", { 
+                error: emailError instanceof Error ? emailError.message : "Unknown" 
+              });
+            }
           }
         }
         break;
@@ -715,6 +739,31 @@ serve(async (req) => {
                 },
               });
             logStep("Payout failure notification created", { userId: profile.id });
+
+            // Send payout failed email notification (non-blocking)
+            try {
+              const emailResponse = await fetch(
+                `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-payout-email`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                  },
+                  body: JSON.stringify({
+                    artistId: profile.id,
+                    payoutAmountCents: payout.amount,
+                    status: "failed",
+                    failureReason: payout.failure_message,
+                  }),
+                }
+              );
+              logStep("Payout failed email sent", { status: emailResponse.status });
+            } catch (emailError) {
+              logStep("Payout failed email error (non-blocking)", { 
+                error: emailError instanceof Error ? emailError.message : "Unknown" 
+              });
+            }
           }
         }
         break;

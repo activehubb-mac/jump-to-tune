@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, displayName: string, selectedRole: AppRole) => {
     const redirectUrl = `${window.location.origin}/`;
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -125,6 +125,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       return { error };
+    }
+
+    // Send welcome email (non-blocking)
+    if (data.user) {
+      try {
+        await supabase.functions.invoke("send-welcome-email", {
+          body: {
+            userId: data.user.id,
+            email,
+            displayName,
+            role: selectedRole,
+          },
+        });
+      } catch (emailError) {
+        console.error("Failed to send welcome email:", emailError);
+        // Non-blocking - don't fail signup
+      }
     }
 
     return { error: null };
