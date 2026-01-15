@@ -9,9 +9,9 @@ export function LabelInvitesSection() {
   const { invites, isLoading, acceptInvite, declineInvite } = useLabelInvites();
   const { showFeedback } = useFeedbackSafe();
 
-  const handleAccept = async (rosterId: string, labelName: string) => {
+  const handleAccept = async (rosterId: string, labelId: string, labelName: string) => {
     try {
-      await acceptInvite.mutateAsync(rosterId);
+      await acceptInvite.mutateAsync({ rosterId, labelId });
       showFeedback({
         type: "success",
         title: "Invitation Accepted",
@@ -29,9 +29,9 @@ export function LabelInvitesSection() {
     }
   };
 
-  const handleDecline = async (rosterId: string) => {
+  const handleDecline = async (rosterId: string, labelId: string) => {
     try {
-      await declineInvite.mutateAsync(rosterId);
+      await declineInvite.mutateAsync({ rosterId, labelId });
       showFeedback({
         type: "info",
         title: "Invitation Declined",
@@ -99,7 +99,7 @@ export function LabelInvitesSection() {
                 size="sm"
                 variant="outline"
                 className="border-destructive/50 text-destructive hover:bg-destructive/10"
-                onClick={() => handleDecline(invite.id)}
+                onClick={() => handleDecline(invite.id, invite.label_id)}
                 disabled={declineInvite.isPending}
               >
                 {declineInvite.isPending ? (
@@ -111,7 +111,7 @@ export function LabelInvitesSection() {
               <Button
                 size="sm"
                 className="bg-accent hover:bg-accent/90"
-                onClick={() => handleAccept(invite.id, invite.label?.display_name || "")}
+                onClick={() => handleAccept(invite.id, invite.label_id, invite.label?.display_name || "")}
                 disabled={acceptInvite.isPending}
               >
                 {acceptInvite.isPending ? (
