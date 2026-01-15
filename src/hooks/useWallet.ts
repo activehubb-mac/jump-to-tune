@@ -1,7 +1,8 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFeedback } from "@/contexts/FeedbackContext";
 import { toast } from "sonner";
 
 interface CreditTransaction {
@@ -21,7 +22,9 @@ interface WalletData {
 export function useWallet() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { showFeedback } = useFeedback();
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const previousBalanceRef = useRef<number | null>(null);
   
   const userId = user?.id;
 
@@ -49,6 +52,29 @@ export function useWallet() {
     staleTime: 30000,
   });
 
+  // Track balance changes for notification
+  useEffect(() => {
+    if (data?.balance_cents !== undefined) {
+      const currentBalance = data.balance_cents;
+      const previousBalance = previousBalanceRef.current;
+      
+      // Only show notification if balance increased (not on initial load)
+      if (previousBalance !== null && currentBalance > previousBalance) {
+        const addedAmount = (currentBalance - previousBalance) / 100;
+        showFeedback({
+          type: "success",
+          title: "Credits Added!",
+          message: `$${addedAmount.toFixed(2)} credits have been added to your wallet.`,
+          autoClose: true,
+          autoCloseDelay: 4000,
+        });
+      }
+      
+      previousBalanceRef.current = currentBalance;
+    }
+  }, [data?.balance_cents, showFeedback]);
+
+  // Subscribe to real-time wallet updates
   useEffect(() => {
     if (!userId) return;
 
@@ -60,6 +86,31 @@ export function useWallet() {
           event: 'UPDATE',
           schema: 'public',
           table: 'credit_wallets',
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["wallet", userId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, queryClient]);
+
+  // Subscribe to real-time transaction updates
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel(`transactions-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'credit_transactions',
           filter: `user_id=eq.${userId}`,
         },
         () => {

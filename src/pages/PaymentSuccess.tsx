@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { CheckCircle, Music, Disc3, Crown, ArrowUp, Download, Loader2, Wallet, S
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDownload } from "@/hooks/useDownload";
-import { toast } from "sonner";
+import { useFeedback } from "@/contexts/FeedbackContext";
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
@@ -17,7 +17,9 @@ export default function PaymentSuccess() {
   const queryClient = useQueryClient();
   const { refreshProfile } = useAuth();
   const { downloadOwnedTrack, isDownloading } = useDownload();
+  const { showFeedback } = useFeedback();
   const [hasDownloaded, setHasDownloaded] = useState(false);
+  const hasShownFeedback = useRef(false);
 
   useEffect(() => {
     // Invalidate relevant queries to refresh data
@@ -28,18 +30,43 @@ export default function PaymentSuccess() {
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
     queryClient.invalidateQueries({ queryKey: ["wallet"] });
 
-    // If this is a subscription change, refresh the auth profile to get new role
-    if (type === "subscription") {
-      refreshProfile().then(() => {
-        toast.success("Your profile has been updated with your new plan!");
-      });
-    }
+    // Show feedback modal only once
+    if (!hasShownFeedback.current) {
+      hasShownFeedback.current = true;
 
-    // Show toast for credit purchases
-    if (type === "credits" && credits) {
-      toast.success(`$${(parseInt(credits) / 100).toFixed(2)} credits added to your wallet!`);
+      if (type === "subscription") {
+        refreshProfile().then(() => {
+          showFeedback({
+            type: "success",
+            title: "Subscription Activated!",
+            message: "Welcome! Your subscription is now active. Enjoy unlimited streaming and downloads.",
+            autoClose: true,
+            autoCloseDelay: 5000,
+          });
+        });
+      } else if (type === "credits" && credits) {
+        showFeedback({
+          type: "success",
+          title: "Credits Added!",
+          message: `$${(parseInt(credits) / 100).toFixed(2)} credits have been successfully added to your wallet.`,
+          primaryAction: {
+            label: "View Wallet",
+            onClick: () => window.location.href = "/wallet",
+          },
+          autoClose: true,
+          autoCloseDelay: 6000,
+        });
+      } else if (type === "purchase") {
+        showFeedback({
+          type: "success",
+          title: "Purchase Complete!",
+          message: "Thank you for your purchase! The track has been added to your collection.",
+          autoClose: true,
+          autoCloseDelay: 5000,
+        });
+      }
     }
-  }, [queryClient, type, refreshProfile, credits]);
+  }, [queryClient, type, refreshProfile, credits, showFeedback]);
 
   const handleDownload = async () => {
     if (trackId) {
