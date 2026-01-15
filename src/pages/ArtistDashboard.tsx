@@ -12,8 +12,10 @@ import { TrackDetailModal } from "@/components/dashboard/TrackDetailModal";
 import { EarningsWidget } from "@/components/dashboard/EarningsWidget";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { useLowBalanceNotification } from "@/hooks/useLowBalanceNotification";
+import { useWallet } from "@/hooks/useWallet";
+import { LowBalanceWarningModal } from "@/components/wallet/LowBalanceWarningModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +34,8 @@ export default function ArtistDashboard() {
   const { user, role, profile, isLoading } = useAuth();
   const { data: stats, isLoading: statsLoading } = useArtistStats(user?.id);
   const { data: tracks, isLoading: tracksLoading } = useArtistTracks(user?.id);
+  const { showFeedback } = useFeedbackSafe();
+  const { showLowBalanceWarning, setShowLowBalanceWarning, lowBalanceWarningData } = useWallet();
   const [deleteTrackId, setDeleteTrackId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState<typeof tracks extends (infer T)[] ? T : never | null>(null);
@@ -53,13 +57,23 @@ export default function ArtistDashboard() {
 
       if (error) throw error;
 
-      toast.success("Track deleted successfully");
+      showFeedback({
+        type: "success",
+        title: "Track Deleted",
+        message: "Your track has been successfully removed.",
+        autoClose: true,
+      });
       // Fix: Use correct query keys that match useTracks hook
       queryClient.invalidateQueries({ queryKey: ["tracks"] });
       queryClient.invalidateQueries({ queryKey: ["artist-stats"] });
     } catch (error) {
       console.error("Error deleting track:", error);
-      toast.error("Failed to delete track");
+      showFeedback({
+        type: "error",
+        title: "Delete Failed",
+        message: "Failed to delete track. Please try again.",
+        autoClose: true,
+      });
     } finally {
       setIsDeleting(false);
       setDeleteTrackId(null);
@@ -347,6 +361,14 @@ export default function ArtistDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Low Balance Warning Modal */}
+      <LowBalanceWarningModal
+        open={showLowBalanceWarning}
+        onOpenChange={setShowLowBalanceWarning}
+        currentBalance={lowBalanceWarningData?.currentBalance ?? 0}
+        averagePurchase={lowBalanceWarningData?.averagePurchase}
+      />
     </Layout>
   );
 }
