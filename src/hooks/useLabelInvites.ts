@@ -15,7 +15,7 @@ interface LabelInvite {
 }
 
 export function useLabelInvites() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
 
   // Fetch pending invites for current artist
@@ -44,9 +44,30 @@ export function useLabelInvites() {
     enabled: !!user?.id,
   });
 
+  // Helper to send response email
+  const sendResponseEmail = async (labelId: string, accepted: boolean) => {
+    try {
+      const artistName = profile?.display_name || "An artist";
+      const { error } = await supabase.functions.invoke("send-invite-response-email", {
+        body: {
+          labelId,
+          artistId: user?.id,
+          artistName,
+          accepted,
+        },
+      });
+
+      if (error) {
+        console.error("Failed to send response email:", error);
+      }
+    } catch (err) {
+      console.error("Email send error:", err);
+    }
+  };
+
   // Accept invitation
   const acceptInvite = useMutation({
-    mutationFn: async (rosterId: string) => {
+    mutationFn: async ({ rosterId, labelId }: { rosterId: string; labelId: string }) => {
       if (!user?.id) throw new Error("Not authenticated");
 
       const { error } = await supabase
@@ -56,6 +77,9 @@ export function useLabelInvites() {
         .eq("artist_id", user.id);
 
       if (error) throw error;
+
+      // Send email notification to the label
+      await sendResponseEmail(labelId, true);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["label-invites"] });
@@ -65,7 +89,7 @@ export function useLabelInvites() {
 
   // Decline invitation
   const declineInvite = useMutation({
-    mutationFn: async (rosterId: string) => {
+    mutationFn: async ({ rosterId, labelId }: { rosterId: string; labelId: string }) => {
       if (!user?.id) throw new Error("Not authenticated");
 
       const { error } = await supabase
@@ -75,6 +99,9 @@ export function useLabelInvites() {
         .eq("artist_id", user.id);
 
       if (error) throw error;
+
+      // Send email notification to the label
+      await sendResponseEmail(labelId, false);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["label-invites"] });
