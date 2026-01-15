@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useFeedback } from "@/contexts/FeedbackContext";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 
 interface CreditTransaction {
   id: string;
@@ -21,7 +21,7 @@ interface WalletData {
 export function useWallet() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { showFeedback } = useFeedback();
+  const { showFeedback } = useFeedbackSafe();
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const previousBalanceRef = useRef<number | null>(null);
