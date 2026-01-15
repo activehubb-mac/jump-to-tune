@@ -95,7 +95,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send the invitation email
     const emailResponse = await resend.emails.send({
-      from: "JumTunes <notifications@resend.dev>",
+      from: "JumTunes <noreply@send.jumtunes.com>",
       to: [artistEmail],
       subject: `${labelName} wants to add you to their roster!`,
       html: `
