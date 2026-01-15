@@ -188,8 +188,25 @@ serve(async (req) => {
 
             // Handle role change side effects
             if (previousRole !== tier) {
-              // Handle Label → Artist downgrade: release roster
+              // Handle Artist → Label upgrade: migrate tracks
+              if (previousRole === "artist" && tier === "label") {
+                const { data: migratedTracks, error: trackMigrationError } = await supabaseClient
+                  .from("tracks")
+                  .update({ label_id: userId })
+                  .eq("artist_id", userId)
+                  .is("label_id", null)
+                  .select("id");
+                
+                if (trackMigrationError) {
+                  logStep("Error migrating tracks to label", { error: trackMigrationError });
+                } else {
+                  logStep("Tracks migrated to label ownership", { count: migratedTracks?.length || 0 });
+                }
+              }
+
+              // Handle Label → Artist downgrade: release roster and revert tracks
               if (previousRole === "label" && tier === "artist") {
+                // Release roster
                 const { error: rosterError } = await supabaseClient
                   .from("label_roster")
                   .update({ status: "released" })
@@ -200,6 +217,20 @@ serve(async (req) => {
                   logStep("Error releasing roster", { error: rosterError });
                 } else {
                   logStep("Roster released due to downgrade");
+                }
+
+                // Revert tracks: remove label_id for user's own tracks
+                const { data: revertedTracks, error: trackRevertError } = await supabaseClient
+                  .from("tracks")
+                  .update({ label_id: null })
+                  .eq("label_id", userId)
+                  .eq("artist_id", userId)
+                  .select("id");
+                
+                if (trackRevertError) {
+                  logStep("Error reverting tracks from label", { error: trackRevertError });
+                } else {
+                  logStep("Tracks reverted to artist ownership", { count: revertedTracks?.length || 0 });
                 }
               }
 
@@ -441,14 +472,45 @@ serve(async (req) => {
             } else {
               logStep("User role synced on subscription update", { from: currentTier, to: newTier });
               
-              // Handle Label → Artist downgrade: release roster
+              // Handle Artist → Label upgrade: migrate tracks
+              if (currentTier === "artist" && newTier === "label") {
+                const { data: migratedTracks, error: trackMigrationError } = await supabaseClient
+                  .from("tracks")
+                  .update({ label_id: userId })
+                  .eq("artist_id", userId)
+                  .is("label_id", null)
+                  .select("id");
+                
+                if (trackMigrationError) {
+                  logStep("Error migrating tracks to label on update", { error: trackMigrationError });
+                } else {
+                  logStep("Tracks migrated to label ownership on update", { count: migratedTracks?.length || 0 });
+                }
+              }
+
+              // Handle Label → Artist downgrade: release roster and revert tracks
               if (currentTier === "label" && newTier === "artist") {
+                // Release roster
                 await supabaseClient
                   .from("label_roster")
                   .update({ status: "released" })
                   .eq("label_id", userId)
                   .eq("status", "active");
                 logStep("Roster released due to plan change");
+
+                // Revert tracks: remove label_id for user's own tracks
+                const { data: revertedTracks, error: trackRevertError } = await supabaseClient
+                  .from("tracks")
+                  .update({ label_id: null })
+                  .eq("label_id", userId)
+                  .eq("artist_id", userId)
+                  .select("id");
+                
+                if (trackRevertError) {
+                  logStep("Error reverting tracks from label on update", { error: trackRevertError });
+                } else {
+                  logStep("Tracks reverted to artist ownership on update", { count: revertedTracks?.length || 0 });
+                }
               }
 
               // Create notification for plan change
