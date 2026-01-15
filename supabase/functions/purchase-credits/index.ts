@@ -100,8 +100,8 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${origin}/wallet?success=true&credits=${creditsCents}`,
-      cancel_url: `${origin}/wallet?canceled=true`,
+      success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=credits&credits=${creditsCents}`,
+      cancel_url: `${origin}/payment-canceled`,
       metadata: {
         type: "credit_purchase",
         user_id: user.id,

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,6 @@ import { useWallet } from "@/hooks/useWallet";
 import { QuickTopupModal } from "@/components/wallet/QuickTopupModal";
 import { TransactionHistory } from "@/components/wallet/TransactionHistory";
 import { useLowBalanceNotification } from "@/hooks/useLowBalanceNotification";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const PRESET_AMOUNTS = [
@@ -22,24 +21,12 @@ const PRESET_AMOUNTS = [
 
 export default function WalletPage() {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
   const { balance, balanceDollars, transactions, isLoading, refetch, purchaseCredits, isPurchasing } = useWallet();
   const [showTopupModal, setShowTopupModal] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
 
   // Check for low balance and show notification if needed
   useLowBalanceNotification();
-
-  // Handle success/canceled from Stripe redirect
-  useEffect(() => {
-    if (searchParams.get("success") === "true") {
-      const credits = searchParams.get("credits");
-      toast.success(`Successfully added ${credits ? `$${(parseInt(credits) / 100).toFixed(2)}` : ""} credits!`);
-      refetch();
-    } else if (searchParams.get("canceled") === "true") {
-      toast.info("Credit purchase was canceled");
-    }
-  }, [searchParams, refetch]);
 
   const handleQuickPurchase = async (cents: number) => {
     setSelectedPreset(cents);
