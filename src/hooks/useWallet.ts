@@ -22,9 +22,11 @@ export function useWallet() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isPurchasing, setIsPurchasing] = useState(false);
+  
+  const userId = user?.id;
 
   const { data, isLoading, error, refetch } = useQuery<WalletData>({
-    queryKey: ["wallet", user?.id],
+    queryKey: ["wallet", userId],
     queryFn: async () => {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
@@ -43,28 +45,25 @@ export function useWallet() {
 
       return data;
     },
-    enabled: !!user,
-    staleTime: 30000, // 30 seconds
+    enabled: !!userId,
+    staleTime: 30000,
   });
 
-  // Subscribe to real-time wallet updates
   useEffect(() => {
-    if (!user?.id) return;
+    if (!userId) return;
 
     const channel = supabase
-      .channel('wallet-updates')
+      .channel(`wallet-updates-${userId}`)
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
           table: 'credit_wallets',
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${userId}`,
         },
-        (payload) => {
-          console.log('Wallet updated in real-time:', payload);
-          // Invalidate and refetch wallet data
-          queryClient.invalidateQueries({ queryKey: ["wallet", user.id] });
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["wallet", userId] });
         }
       )
       .subscribe();
@@ -72,7 +71,7 @@ export function useWallet() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, queryClient]);
+  }, [userId, queryClient]);
 
   const purchaseCredits = useCallback(async (amountCents: number) => {
     setIsPurchasing(true);
