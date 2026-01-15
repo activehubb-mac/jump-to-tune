@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedback } from "@/contexts/FeedbackContext";
-import { toast } from "sonner";
 
 interface CreditTransaction {
   id: string;
@@ -129,7 +128,12 @@ export function useWallet() {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
-        toast.error("Please sign in to purchase credits");
+        showFeedback({
+          type: "error",
+          title: "Authentication Required",
+          message: "Please sign in to purchase credits.",
+          autoClose: true,
+        });
         return null;
       }
 
@@ -141,7 +145,12 @@ export function useWallet() {
       });
 
       if (error) {
-        toast.error(error.message || "Failed to create checkout");
+        showFeedback({
+          type: "error",
+          title: "Purchase Failed",
+          message: error.message || "Failed to create checkout. Please try again.",
+          autoClose: true,
+        });
         return null;
       }
 
@@ -153,12 +162,17 @@ export function useWallet() {
       return null;
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred";
-      toast.error(message);
+      showFeedback({
+        type: "error",
+        title: "Error",
+        message,
+        autoClose: true,
+      });
       return null;
     } finally {
       setIsPurchasing(false);
     }
-  }, []);
+  }, [showFeedback]);
 
   return {
     balance: data?.balance_cents ?? 0,
