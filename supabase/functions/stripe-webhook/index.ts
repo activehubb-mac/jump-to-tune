@@ -60,7 +60,8 @@ serve(async (req) => {
     
     if (webhookSecret && signature) {
       try {
-        event = stripe.webhooks.constructEvent(bodyText, signature, webhookSecret);
+        // Deno requires async signature verification (SubtleCrypto)
+        event = await stripe.webhooks.constructEventAsync(bodyText, signature, webhookSecret);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
         const errorStack = err instanceof Error ? err.stack : undefined;
