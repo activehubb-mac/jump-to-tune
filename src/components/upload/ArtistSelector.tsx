@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Users, Info } from 'lucide-react';
+import { Users, Info, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -55,18 +56,54 @@ export const ArtistSelector = ({ value, onChange, disabled }: ArtistSelectorProp
     fetchRosterArtists();
   }, [user]);
 
+  // Check if there are pending invites that haven't been accepted yet
+  const [hasPendingArtists, setHasPendingArtists] = useState(false);
+  
+  useEffect(() => {
+    const checkPending = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('label_roster')
+        .select('id')
+        .eq('label_id', user.id)
+        .eq('status', 'pending')
+        .limit(1);
+      
+      setHasPendingArtists((data?.length ?? 0) > 0);
+    };
+    
+    if (artists.length === 0 && !isLoading) {
+      checkPending();
+    }
+  }, [user, artists.length, isLoading]);
+
   if (artists.length === 0 && !isLoading) {
     return (
-      <div className="glass-card p-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-            <Users className="w-5 h-5 text-muted-foreground" />
+      <div className="glass-card p-4 border-yellow-500/30">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center shrink-0">
+            {hasPendingArtists ? (
+              <Clock className="w-5 h-5 text-yellow-500" />
+            ) : (
+              <Users className="w-5 h-5 text-muted-foreground" />
+            )}
           </div>
           <div>
-            <p className="font-medium text-foreground">No Artists in Roster</p>
-            <p className="text-sm text-muted-foreground">
-              Add artists to your roster before uploading tracks for them.
+            <p className="font-medium text-foreground">
+              {hasPendingArtists ? "Waiting for Artist Approval" : "No Artists in Roster"}
             </p>
+            <p className="text-sm text-muted-foreground mb-2">
+              {hasPendingArtists 
+                ? "You have pending invitations. Artists must accept your invitation before you can upload tracks for them."
+                : "Add artists to your roster before uploading tracks for them."}
+            </p>
+            <Link 
+              to="/label/dashboard" 
+              className="text-sm text-accent hover:underline"
+            >
+              {hasPendingArtists ? "View Pending Invites →" : "Go to Dashboard →"}
+            </Link>
           </div>
         </div>
       </div>
