@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { 
   Building2, 
   Users, 
@@ -14,24 +16,62 @@ import {
   Loader2,
   BarChart3,
   CreditCard,
-  ChevronRight
+  ChevronRight,
+  X
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLabelStats } from "@/hooks/useLabelStats";
 import { useLabelTracks } from "@/hooks/useTracks";
 import { useLabelRoster } from "@/hooks/useLabelRoster";
+import { useLabelRosterActions } from "@/hooks/useLabelRosterActions";
 import { formatEarnings } from "@/lib/formatters";
 import { TrackCard } from "@/components/dashboard/TrackCard";
 import { SubscriptionStatusBanner } from "@/components/subscription/SubscriptionStatusBanner";
 import { EarningsWidget } from "@/components/dashboard/EarningsWidget";
+import { AddArtistModal } from "@/components/label/AddArtistModal";
+import { UpgradePlanModal } from "@/components/label/UpgradePlanModal";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 
 export default function LabelDashboard() {
   const { user, role, profile, isLoading } = useAuth();
   const { data: stats, isLoading: statsLoading } = useLabelStats(user?.id);
   const { data: tracks, isLoading: tracksLoading } = useLabelTracks(user?.id);
   const { data: roster, isLoading: rosterLoading } = useLabelRoster(user?.id);
+  const { activeArtistCount, canAddMoreArtists, artistLimit, removeArtist } = useLabelRosterActions();
+  const { showFeedback } = useFeedbackSafe();
   const navigate = useNavigate();
+  
+  const [showAddArtistModal, setShowAddArtistModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  const handleAddArtistClick = () => {
+    if (!canAddMoreArtists) {
+      setShowUpgradeModal(true);
+    } else {
+      setShowAddArtistModal(true);
+    }
+  };
+
+  const handleRemoveArtist = async (rosterId: string, artistName: string) => {
+    try {
+      await removeArtist.mutateAsync(rosterId);
+      showFeedback({
+        type: "success",
+        title: "Artist Removed",
+        message: `${artistName || "Artist"} has been removed from your roster.`,
+        autoClose: true,
+      });
+    } catch (error) {
+      console.error("Failed to remove artist:", error);
+      showFeedback({
+        type: "error",
+        title: "Failed",
+        message: "Could not remove artist. Please try again.",
+        autoClose: true,
+      });
+    }
+  };
 
   // Show loading state while checking auth
   if (isLoading) {
@@ -109,9 +149,16 @@ export default function LabelDashboard() {
             <p className="text-muted-foreground">Manage your artists and releases</p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" className="border-glass-border hover:border-accent/50">
+            <Button 
+              variant="outline" 
+              className="border-glass-border hover:border-accent/50"
+              onClick={handleAddArtistClick}
+            >
               <UserPlus className="w-4 h-4 mr-2" />
               Add Artist
+              <Badge variant="secondary" className="ml-2 text-xs">
+                {activeArtistCount}/{artistLimit}
+              </Badge>
             </Button>
             <Button className="bg-accent hover:bg-accent/90 neon-glow-subtle" asChild>
               <Link to="/upload">
@@ -135,7 +182,7 @@ export default function LabelDashboard() {
                   <span className="text-muted-foreground text-sm">Artists</span>
                 </div>
                 <div className="text-3xl font-bold text-foreground">
-                  {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : `${stats?.artistCount ?? 0}/10`}
+                  {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : `${activeArtistCount}/${artistLimit}`}
                 </div>
               </div>
 
@@ -201,7 +248,7 @@ export default function LabelDashboard() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-foreground">Artist Roster</h2>
                 <span className="text-sm text-muted-foreground">
-                  {stats?.artistCount ?? 0} of 10 slots used
+                  {activeArtistCount} of {artistLimit} artists with uploads
                 </span>
               </div>
               
@@ -212,8 +259,8 @@ export default function LabelDashboard() {
               ) : roster && roster.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {roster.map((artist) => (
-                    <div key={artist.id} className="flex items-center gap-4 p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                    <div key={artist.id} className="flex items-center gap-4 p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0">
                         {artist.artist?.avatar_url ? (
                           <img
                             src={artist.artist.avatar_url}
@@ -228,10 +275,25 @@ export default function LabelDashboard() {
                         <h3 className="font-semibold text-foreground truncate">
                           {artist.artist?.display_name || "Unknown Artist"}
                         </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {artist.trackCount} tracks • {artist.status}
-                        </p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span>{artist.trackCount} tracks</span>
+                          <Badge 
+                            variant={artist.status === "active" ? "default" : "secondary"}
+                            className={artist.status === "pending" ? "bg-yellow-500/20 text-yellow-500 border-yellow-500/30" : ""}
+                          >
+                            {artist.status}
+                          </Badge>
+                        </div>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                        onClick={() => handleRemoveArtist(artist.id, artist.artist?.display_name || "")}
+                        disabled={removeArtist.isPending}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -239,7 +301,11 @@ export default function LabelDashboard() {
                 <div className="text-center py-12 text-muted-foreground">
                   <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
                   <p>You haven't added any artists to your roster yet.</p>
-                  <Button variant="outline" className="mt-4 border-glass-border hover:border-accent/50">
+                  <Button 
+                    variant="outline" 
+                    className="mt-4 border-glass-border hover:border-accent/50"
+                    onClick={handleAddArtistClick}
+                  >
                     <UserPlus className="w-4 h-4 mr-2" />
                     Add Your First Artist
                   </Button>
@@ -364,6 +430,20 @@ export default function LabelDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Add Artist Modal */}
+      <AddArtistModal
+        open={showAddArtistModal}
+        onOpenChange={setShowAddArtistModal}
+      />
+
+      {/* Upgrade Plan Modal */}
+      <UpgradePlanModal
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
+        currentCount={activeArtistCount}
+        limit={artistLimit}
+      />
     </Layout>
   );
 }

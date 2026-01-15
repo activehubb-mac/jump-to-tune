@@ -11,6 +11,7 @@ import { TrackCard } from "@/components/dashboard/TrackCard";
 import { TrackDetailModal } from "@/components/dashboard/TrackDetailModal";
 import { EarningsWidget } from "@/components/dashboard/EarningsWidget";
 import { SubscriptionStatusBanner } from "@/components/subscription/SubscriptionStatusBanner";
+import { LabelInvitesSection } from "@/components/artist/LabelInvitesSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
@@ -153,6 +154,9 @@ export default function ArtistDashboard() {
       <div className="container mx-auto px-4 py-8">
         {/* Subscription Status Banner */}
         <SubscriptionStatusBanner className="mb-6" />
+
+        {/* Label Invitations Section */}
+        <LabelInvitesSection />
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">

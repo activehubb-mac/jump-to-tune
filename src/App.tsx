@@ -24,6 +24,7 @@ import LabelAnalytics from "./pages/LabelAnalytics";
 import LabelCollectors from "./pages/LabelCollectors";
 import LabelTracks from "./pages/LabelTracks";
 import LabelPayouts from "./pages/LabelPayouts";
+import LabelRoster from "./pages/LabelRoster";
 import Upload from "./pages/Upload";
 import TrackEdit from "./pages/TrackEdit";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -64,6 +65,7 @@ const App = () => (
                 <Route path="/label/collectors" element={<LabelCollectors />} />
                 <Route path="/label/tracks" element={<LabelTracks />} />
                 <Route path="/label/payouts" element={<LabelPayouts />} />
+                <Route path="/label/roster" element={<LabelRoster />} />
                 <Route path="/upload" element={<Upload />} />
                 <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route path="/payment-canceled" element={<PaymentCanceled />} />
