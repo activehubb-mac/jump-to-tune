@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useCallback, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -46,6 +46,33 @@ export function useWallet() {
     enabled: !!user,
     staleTime: 30000, // 30 seconds
   });
+
+  // Subscribe to real-time wallet updates
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel('wallet-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'credit_wallets',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('Wallet updated in real-time:', payload);
+          // Invalidate and refetch wallet data
+          queryClient.invalidateQueries({ queryKey: ["wallet", user.id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient]);
 
   const purchaseCredits = useCallback(async (amountCents: number) => {
     setIsPurchasing(true);
