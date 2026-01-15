@@ -79,6 +79,25 @@ export function useLabelRosterActions() {
         // Don't throw - the invite was still sent successfully
       }
 
+      // Send email notification via edge function
+      try {
+        const { error: emailError } = await supabase.functions.invoke("send-invite-email", {
+          body: {
+            artistId,
+            labelId: user.id,
+            labelName,
+          },
+        });
+
+        if (emailError) {
+          console.error("Failed to send invite email:", emailError);
+          // Don't throw - the invite was still created successfully
+        }
+      } catch (emailErr) {
+        console.error("Email send error:", emailErr);
+        // Non-blocking error
+      }
+
       return roster;
     },
     onSuccess: () => {
