@@ -8,6 +8,7 @@ import { useLabelTracks } from "@/hooks/useTracks";
 import { useLabelRoster } from "@/hooks/useLabelRoster";
 import { formatEarnings } from "@/lib/formatters";
 import { TrackCard } from "@/components/dashboard/TrackCard";
+import { SubscriptionStatusBanner } from "@/components/subscription/SubscriptionStatusBanner";
 
 export default function LabelDashboard() {
   const { user, role, profile, isLoading } = useAuth();
@@ -79,6 +80,9 @@ export default function LabelDashboard() {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
+        {/* Subscription Status Banner */}
+        <SubscriptionStatusBanner className="mb-6" />
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>

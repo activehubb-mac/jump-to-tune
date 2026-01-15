@@ -32,6 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { CheckoutLoadingOverlay } from "@/components/subscription/CheckoutLoadingOverlay";
 
 const SUBSCRIPTION_TIERS = [
   {
@@ -89,6 +90,7 @@ export default function Subscription() {
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [warningDetails, setWarningDetails] = useState<ValidationResult | null>(null);
   const [pendingTier, setPendingTier] = useState<"fan" | "artist" | "label" | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const isLoading = authLoading || subLoading;
 
@@ -137,13 +139,18 @@ export default function Subscription() {
       // Proceed with checkout - redirect in same tab to preserve session
       const url = await createSubscriptionCheckout(tier);
       if (url) {
+        setIsRedirecting(true);
+        setLoadingTier(null);
         window.location.href = url;
+        return;
       }
     } catch (error) {
       console.error("Subscription error:", error);
       showFeedback({ type: "error", title: "Checkout Failed", message: "Failed to start checkout. Please try again." });
     } finally {
-      setLoadingTier(null);
+      if (!isRedirecting) {
+        setLoadingTier(null);
+      }
     }
   };
 
@@ -156,15 +163,20 @@ export default function Subscription() {
     try {
       const url = await createSubscriptionCheckout(pendingTier);
       if (url) {
+        setIsRedirecting(true);
+        setLoadingTier(null);
         window.location.href = url;
+        return;
       }
     } catch (error) {
       console.error("Subscription error:", error);
       showFeedback({ type: "error", title: "Checkout Failed", message: "Failed to start checkout. Please try again." });
     } finally {
-      setLoadingTier(null);
-      setPendingTier(null);
-      setWarningDetails(null);
+      if (!isRedirecting) {
+        setLoadingTier(null);
+        setPendingTier(null);
+        setWarningDetails(null);
+      }
     }
   };
 
@@ -474,6 +486,9 @@ export default function Subscription() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Checkout Loading Overlay */}
+      <CheckoutLoadingOverlay isVisible={isRedirecting} />
     </Layout>
   );
 }
