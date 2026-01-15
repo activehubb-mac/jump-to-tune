@@ -121,7 +121,7 @@ export default function LabelPayouts() {
           </Button>
         </div>
 
-        {/* Stripe Connect Setup Banner */}
+        {/* Withdrawal Setup Banner */}
         {!isConnected && (
           <Card className="glass border-accent/30 mb-8">
             <CardContent className="p-6">
@@ -131,10 +131,10 @@ export default function LabelPayouts() {
                     <Wallet className="h-6 w-6 text-accent" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Set Up Payouts</h3>
+                    <h3 className="font-semibold text-lg">Set Up Withdrawals</h3>
                     <p className="text-muted-foreground text-sm">
-                      Connect your bank account via Stripe to receive your label's earnings. 
-                      It only takes a few minutes.
+                      Connect your bank account to receive your label's earnings directly when fans purchase tracks. 
+                      Powered by Stripe.
                     </p>
                   </div>
                 </div>
@@ -150,7 +150,7 @@ export default function LabelPayouts() {
                     </>
                   ) : (
                     <>
-                      Connect Stripe
+                      Connect Withdrawal Details
                       <ExternalLink className="h-4 w-4 ml-2" />
                     </>
                   )}
@@ -170,9 +170,9 @@ export default function LabelPayouts() {
                     <Clock className="h-6 w-6 text-amber-500" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Complete Your Setup</h3>
+                    <h3 className="font-semibold text-lg">Complete Withdrawal Setup</h3>
                     <p className="text-muted-foreground text-sm">
-                      Your Stripe account is pending. Complete the onboarding to start receiving payouts.
+                      Your withdrawal account setup is pending. Complete it to start receiving your earnings.
                     </p>
                   </div>
                 </div>
@@ -248,7 +248,7 @@ export default function LabelPayouts() {
                   <div>
                     <p className="font-medium text-sm">Automatic Payouts</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Earnings are automatically transferred to your bank via Stripe.
+                      Earnings are sent directly to your connected bank account automatically.
                     </p>
                   </div>
                 </div>
