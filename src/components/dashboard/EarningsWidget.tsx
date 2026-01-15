@@ -30,7 +30,7 @@ export function EarningsWidget() {
     );
   }
 
-  // Not connected to Stripe
+  // Not connected - show withdrawal setup
   if (!isConnected) {
     return (
       <div className="glass-card p-6">
@@ -39,7 +39,7 @@ export function EarningsWidget() {
           <h3 className="font-semibold text-foreground">Earnings</h3>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
-          Set up Stripe to receive payouts from your sales.
+          Set up your withdrawal account to receive earnings from your sales directly.
         </p>
         <Button
           onClick={startOnboarding}
@@ -51,7 +51,7 @@ export function EarningsWidget() {
           ) : (
             <ExternalLink className="w-4 h-4 mr-2" />
           )}
-          Connect Stripe
+          Set Up Withdrawals
         </Button>
       </div>
     );
@@ -67,7 +67,7 @@ export function EarningsWidget() {
         </div>
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-4">
           <p className="text-sm text-yellow-400">
-            Complete Stripe setup to enable payouts.
+            Complete withdrawal setup to start receiving earnings.
           </p>
         </div>
         <Button
@@ -81,7 +81,7 @@ export function EarningsWidget() {
           ) : (
             <ExternalLink className="w-4 h-4 mr-2" />
           )}
-          Complete Setup
+          Complete Withdrawal Setup
         </Button>
       </div>
     );

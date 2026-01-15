@@ -58,6 +58,16 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://jump-to-tune.lovable.app";
 
+    // Get user role to determine correct return URL
+    const { data: userRole } = await supabaseClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .single();
+
+    const isLabel = userRole?.role === "label";
+    const payoutsPath = isLabel ? "/label/payouts" : "/artist/payouts";
+
     // Check if user already has a Connect account
     if (profile.stripe_account_id) {
       logStep("User already has Connect account, creating login link", { 
@@ -85,8 +95,8 @@ serve(async (req) => {
           // Account exists but onboarding not complete, create new onboarding link
           const accountLink = await stripe.accountLinks.create({
             account: profile.stripe_account_id,
-            refresh_url: `${origin}/artist/payouts?refresh=true`,
-            return_url: `${origin}/artist/payouts?success=true`,
+            refresh_url: `${origin}${payoutsPath}?refresh=true`,
+            return_url: `${origin}${payoutsPath}?success=true`,
             type: "account_onboarding",
           });
 
@@ -145,8 +155,8 @@ serve(async (req) => {
     // Create account link for onboarding
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
-      refresh_url: `${origin}/artist/payouts?refresh=true`,
-      return_url: `${origin}/artist/payouts?success=true`,
+      refresh_url: `${origin}${payoutsPath}?refresh=true`,
+      return_url: `${origin}${payoutsPath}?success=true`,
       type: "account_onboarding",
     });
 
