@@ -7,7 +7,7 @@ import { useArtistProfile } from "@/hooks/useArtistProfile";
 import { useTracks } from "@/hooks/useTracks";
 import { useFollow } from "@/hooks/useFollows";
 import { useAuth } from "@/contexts/AuthContext";
-import { useFeedback } from "@/contexts/FeedbackContext";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { formatPrice, formatEditions, formatCompactNumber } from "@/lib/formatters";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
@@ -20,7 +20,7 @@ export default function ArtistProfile() {
   const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
   const { isFollowing, toggleFollow, isToggling } = useFollow();
   const { user } = useAuth();
-  const { showFeedback } = useFeedback();
+  const { showFeedback } = useFeedbackSafe();
   const { canUseFeature } = useFeatureGate();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
 

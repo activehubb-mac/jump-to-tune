@@ -12,7 +12,7 @@ import { useLikeCounts } from "@/hooks/useLikeCounts";
 import { useFollow } from "@/hooks/useFollows";
 import { useFollowerCounts } from "@/hooks/useFollowerCounts";
 import { useAuth } from "@/contexts/AuthContext";
-import { useFeedback } from "@/contexts/FeedbackContext";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 
@@ -27,7 +27,7 @@ export default function Browse() {
   const { canUseFeature } = useFeatureGate();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const { user } = useAuth();
-  const { showFeedback } = useFeedback();
+  const { showFeedback } = useFeedbackSafe();
   
   const { data: tracks, isLoading } = usePublishedTracks({
     genre: selectedGenre,

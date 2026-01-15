@@ -5,7 +5,7 @@ import { Music, Disc3, Users, Building2, Headphones, Zap, TrendingUp, Shield, Up
 import { useAuth } from "@/contexts/AuthContext";
 import { useRecommendedArtists } from "@/hooks/useRecommendedArtists";
 import { useFollow } from "@/hooks/useFollows";
-import { useFeedback } from "@/contexts/FeedbackContext";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { useTrendingTracks } from "@/hooks/useTrendingTracks";
 import { useNewReleases } from "@/hooks/useNewReleases";
 import { useRecentlyPlayed } from "@/hooks/useRecentlyPlayed";
@@ -51,7 +51,7 @@ export default function Index() {
   const { data: newReleases, isLoading: newReleasesLoading } = useNewReleases(6);
   const { recentlyPlayed } = useRecentlyPlayed(6);
   const { isFollowing, toggleFollow } = useFollow();
-  const { showFeedback } = useFeedback();
+  const { showFeedback } = useFeedbackSafe();
   const { playTrack, addToQueue } = useAudioPlayer();
   const { canUseFeature } = useFeatureGate();
   const [showPremiumModal, setShowPremiumModal] = useState(false);

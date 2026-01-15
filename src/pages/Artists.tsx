@@ -8,7 +8,7 @@ import { useArtists } from "@/hooks/useArtists";
 import { useFollow } from "@/hooks/useFollows";
 import { useFollowerCounts } from "@/hooks/useFollowerCounts";
 import { useAuth } from "@/contexts/AuthContext";
-import { useFeedback } from "@/contexts/FeedbackContext";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { formatCompactNumber } from "@/lib/formatters";
 
 export default function Artists() {
@@ -16,7 +16,7 @@ export default function Artists() {
   const { data: artists, isLoading } = useArtists({ searchQuery: searchQuery || undefined });
   const { isFollowing, toggleFollow } = useFollow();
   const { user } = useAuth();
-  const { showFeedback } = useFeedback();
+  const { showFeedback } = useFeedbackSafe();
 
   const artistIds = useMemo(() => artists?.map((a) => a.id) || [], [artists]);
   const { data: followerCounts = {} } = useFollowerCounts(artistIds);
