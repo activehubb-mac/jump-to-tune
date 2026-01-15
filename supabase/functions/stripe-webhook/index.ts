@@ -104,81 +104,135 @@ serve(async (req) => {
             // Get current role before update
             const { data: existingRole } = await supabaseClient
               .from("user_roles")
-              .select("role")
+              .select("id, role")
               .eq("user_id", userId)
               .single();
             
             const previousRole = existingRole?.role || "fan";
             logStep("Current user role", { userId, previousRole, newTier: tier });
 
-            // Update subscriptions table
+            // Fetch the Stripe subscription to get accurate period dates
+            let stripeSubscription: Stripe.Subscription | null = null;
+            if (session.subscription) {
+              try {
+                stripeSubscription = await stripe.subscriptions.retrieve(session.subscription as string);
+                logStep("Retrieved Stripe subscription", { 
+                  subscriptionId: stripeSubscription.id, 
+                  status: stripeSubscription.status,
+                  trialEnd: stripeSubscription.trial_end
+                });
+              } catch (e) {
+                logStep("Error fetching Stripe subscription", { error: e });
+              }
+            }
+
+            // Calculate trial_ends_at - use Stripe value or default to 90 days
+            const trialEndsAt = stripeSubscription?.trial_end 
+              ? new Date(stripeSubscription.trial_end * 1000).toISOString()
+              : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+
+            // Calculate subscription status
+            const subStatus = stripeSubscription?.status === "trialing" ? "trialing" : "active";
+
+            // Update subscriptions table - MUST include trial_ends_at (NOT NULL constraint)
             const { error: subError } = await supabaseClient
               .from("subscriptions")
               .upsert({
                 user_id: userId,
                 tier: tier,
-                status: "active",
+                status: subStatus,
                 stripe_subscription_id: session.subscription as string,
                 stripe_customer_id: session.customer as string,
-                current_period_start: new Date().toISOString(),
-                current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                trial_ends_at: trialEndsAt,
+                current_period_start: stripeSubscription 
+                  ? new Date(stripeSubscription.current_period_start * 1000).toISOString()
+                  : new Date().toISOString(),
+                current_period_end: stripeSubscription 
+                  ? new Date(stripeSubscription.current_period_end * 1000).toISOString()
+                  : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                 updated_at: new Date().toISOString(),
               }, { onConflict: "user_id" });
 
             if (subError) {
               logStep("Error updating subscription", { error: subError });
             } else {
-              logStep("Subscription updated successfully");
+              logStep("Subscription updated successfully", { tier, status: subStatus, trialEndsAt });
             }
 
-            // Sync user_roles table with new tier
-            if (previousRole !== tier) {
+            // Sync user_roles table with new tier using UPDATE/INSERT strategy
+            // (user_roles has unique constraint on user_id+role, not just user_id)
+            if (existingRole) {
+              // Update existing role
               const { error: roleError } = await supabaseClient
                 .from("user_roles")
-                .upsert({
-                  user_id: userId,
-                  role: tier,
-                }, { onConflict: "user_id" });
+                .update({ role: tier })
+                .eq("user_id", userId);
 
               if (roleError) {
                 logStep("Error updating user role", { error: roleError });
               } else {
-                logStep("User role synced", { from: previousRole, to: tier });
-                
-                // Handle Label → Artist downgrade: release roster
-                if (previousRole === "label" && tier === "artist") {
-                  const { error: rosterError } = await supabaseClient
-                    .from("label_roster")
-                    .update({ status: "released" })
-                    .eq("label_id", userId)
-                    .eq("status", "active");
-                  
-                  if (rosterError) {
-                    logStep("Error releasing roster", { error: rosterError });
-                  } else {
-                    logStep("Roster released due to downgrade");
-                  }
-                }
-
-                // Create notification for role change
-                await supabaseClient
-                  .from("notifications")
-                  .insert({
-                    user_id: userId,
-                    type: "role_change",
-                    title: previousRole === tier ? "Subscription Activated" : "Plan Changed",
-                    message: previousRole === tier 
-                      ? `Your ${tier.charAt(0).toUpperCase() + tier.slice(1)} subscription is now active!`
-                      : `Your plan has been changed from ${previousRole.charAt(0).toUpperCase() + previousRole.slice(1)} to ${tier.charAt(0).toUpperCase() + tier.slice(1)}.`,
-                    metadata: {
-                      previous_role: previousRole,
-                      new_role: tier,
-                      change_type: tier === previousRole ? "activation" : 
-                        (["fan", "artist", "label"].indexOf(tier) > ["fan", "artist", "label"].indexOf(previousRole) ? "upgrade" : "downgrade"),
-                    },
-                  });
-                logStep("Role change notification created");
+                logStep("User role updated", { from: previousRole, to: tier });
               }
+            } else {
+              // Insert new role
+              const { error: roleError } = await supabaseClient
+                .from("user_roles")
+                .insert({ user_id: userId, role: tier });
+
+              if (roleError) {
+                logStep("Error inserting user role", { error: roleError });
+              } else {
+                logStep("User role inserted", { role: tier });
+              }
+            }
+
+            // Handle role change side effects
+            if (previousRole !== tier) {
+              // Handle Label → Artist downgrade: release roster
+              if (previousRole === "label" && tier === "artist") {
+                const { error: rosterError } = await supabaseClient
+                  .from("label_roster")
+                  .update({ status: "released" })
+                  .eq("label_id", userId)
+                  .eq("status", "active");
+                
+                if (rosterError) {
+                  logStep("Error releasing roster", { error: rosterError });
+                } else {
+                  logStep("Roster released due to downgrade");
+                }
+              }
+
+              // Create notification for role change
+              await supabaseClient
+                .from("notifications")
+                .insert({
+                  user_id: userId,
+                  type: "role_change",
+                  title: "Plan Changed",
+                  message: `Your plan has been changed from ${previousRole.charAt(0).toUpperCase() + previousRole.slice(1)} to ${tier.charAt(0).toUpperCase() + tier.slice(1)}.`,
+                  metadata: {
+                    previous_role: previousRole,
+                    new_role: tier,
+                    change_type: ["fan", "artist", "label"].indexOf(tier) > ["fan", "artist", "label"].indexOf(previousRole) ? "upgrade" : "downgrade",
+                  },
+                });
+              logStep("Role change notification created");
+            } else {
+              // Create activation notification
+              await supabaseClient
+                .from("notifications")
+                .insert({
+                  user_id: userId,
+                  type: "role_change",
+                  title: "Subscription Activated",
+                  message: `Your ${tier.charAt(0).toUpperCase() + tier.slice(1)} subscription is now active!`,
+                  metadata: {
+                    new_role: tier,
+                    change_type: "activation",
+                  },
+                });
+              logStep("Subscription activation notification created");
             }
           }
         } else if (session.mode === "payment") {
@@ -359,12 +413,28 @@ serve(async (req) => {
             logStep("Error updating subscription status", { error: updateError });
           }
 
-          // If tier changed, sync user_roles
+          // If tier changed, sync user_roles using UPDATE (not upsert with wrong constraint)
           if (newTier && newTier !== currentTier) {
-            const { error: roleError } = await supabaseClient
+            // First check if user has a role entry
+            const { data: existingUserRole } = await supabaseClient
               .from("user_roles")
-              .update({ role: newTier })
-              .eq("user_id", userId);
+              .select("id")
+              .eq("user_id", userId)
+              .single();
+
+            let roleError = null;
+            if (existingUserRole) {
+              const { error } = await supabaseClient
+                .from("user_roles")
+                .update({ role: newTier })
+                .eq("user_id", userId);
+              roleError = error;
+            } else {
+              const { error } = await supabaseClient
+                .from("user_roles")
+                .insert({ user_id: userId, role: newTier });
+              roleError = error;
+            }
 
             if (roleError) {
               logStep("Error syncing user role on subscription update", { error: roleError });

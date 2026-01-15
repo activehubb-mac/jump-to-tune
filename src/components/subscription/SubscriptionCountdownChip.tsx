@@ -2,7 +2,13 @@ import { Link } from "react-router-dom";
 import { Crown, Calendar, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSubscription } from "@/hooks/useSubscription";
-import { differenceInDays, parseISO } from "date-fns";
+import { differenceInDays, parseISO, format } from "date-fns";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function SubscriptionCountdownChip() {
   const { subscription, isLoading, hasActiveSubscription, isInTrial, daysLeftInTrial } = useSubscription();
@@ -34,22 +40,45 @@ export function SubscriptionCountdownChip() {
   // Icon based on status
   const Icon = isInTrial ? Crown : Calendar;
 
+  // Format tier name for display
+  const tierName = subscription.tier 
+    ? subscription.tier.charAt(0).toUpperCase() + subscription.tier.slice(1) 
+    : "Unknown";
+
   return (
-    <Link
-      to="/subscription"
-      className={cn(
-        "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300",
-        "glass border border-glass-border hover:border-primary/50",
-        isUrgent && "border-destructive/50 bg-destructive/10 text-destructive animate-pulse",
-        isWarning && "border-yellow-500/50 bg-yellow-500/10 text-yellow-500",
-        !isUrgent && !isWarning && "text-primary"
-      )}
-      title={endDate ? `${isInTrial ? "Trial ends" : "Renews"}: ${endDate.toLocaleDateString()}` : undefined}
-    >
-      <Icon className="w-3.5 h-3.5" />
-      <span className="hidden sm:inline">{label}:</span>
-      <span className="font-bold">{daysRemaining}d</span>
-      {isUrgent && <Clock className="w-3 h-3 ml-0.5" />}
-    </Link>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link
+            to="/subscription"
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300",
+              "glass border border-glass-border hover:border-primary/50",
+              isUrgent && "border-destructive/50 bg-destructive/10 text-destructive animate-pulse",
+              isWarning && "border-yellow-500/50 bg-yellow-500/10 text-yellow-500",
+              !isUrgent && !isWarning && "text-primary"
+            )}
+          >
+            <Icon className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{label}:</span>
+            <span className="font-bold">{daysRemaining}d</span>
+            {isUrgent && <Clock className="w-3 h-3 ml-0.5" />}
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="p-3">
+          <div className="space-y-1">
+            <p className="font-semibold text-foreground">{tierName} Plan</p>
+            <p className="text-sm text-muted-foreground">
+              {isInTrial ? "Trial ends" : "Renews"}: {endDate ? format(endDate, "MMM d, yyyy") : "N/A"}
+            </p>
+            {isUrgent && (
+              <p className="text-xs text-destructive font-medium">
+                ⚠️ Expiring soon - renew now!
+              </p>
+            )}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

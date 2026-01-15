@@ -47,7 +47,12 @@ serve(async (req) => {
       .single();
 
     if (localSub) {
-      logStep("Found local subscription", { status: localSub.status, trialEnds: localSub.trial_ends_at });
+      logStep("Found local subscription", { 
+        status: localSub.status, 
+        tier: localSub.tier,
+        trialEnds: localSub.trial_ends_at,
+        periodEnd: localSub.current_period_end 
+      });
       
       // If in trial and trial hasn't expired, return trial status
       if (localSub.status === "trialing" && new Date(localSub.trial_ends_at) > new Date()) {
@@ -58,6 +63,7 @@ serve(async (req) => {
           tier: localSub.tier,
           trial_ends_at: localSub.trial_ends_at,
           days_left_in_trial: daysLeft,
+          current_period_end: localSub.current_period_end || localSub.trial_ends_at,
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
@@ -71,11 +77,18 @@ serve(async (req) => {
         try {
           const subscription = await stripe.subscriptions.retrieve(localSub.stripe_subscription_id);
           const isActive = subscription.status === "active" || subscription.status === "trialing";
+          const isTrialing = subscription.status === "trialing";
           
           return new Response(JSON.stringify({
             subscribed: isActive,
             status: subscription.status,
             tier: localSub.tier,
+            trial_ends_at: isTrialing && subscription.trial_end 
+              ? new Date(subscription.trial_end * 1000).toISOString() 
+              : localSub.trial_ends_at,
+            days_left_in_trial: isTrialing && subscription.trial_end 
+              ? Math.ceil((subscription.trial_end * 1000 - Date.now()) / (1000 * 60 * 60 * 24))
+              : 0,
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -85,6 +98,21 @@ serve(async (req) => {
           logStep("Error fetching Stripe subscription", { error: e });
         }
       }
+      
+      // Fallback: return local subscription data if Stripe fetch fails
+      return new Response(JSON.stringify({
+        subscribed: localSub.status === "active" || localSub.status === "trialing",
+        status: localSub.status,
+        tier: localSub.tier,
+        trial_ends_at: localSub.trial_ends_at,
+        current_period_end: localSub.current_period_end || localSub.trial_ends_at,
+        days_left_in_trial: localSub.status === "trialing" 
+          ? Math.ceil((new Date(localSub.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+          : 0,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
     // Check Stripe for any subscriptions by email
