@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Camera, Loader2, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAvatarUpload } from "@/hooks/useAvatarUpload";
-import { useFeedback } from "@/contexts/FeedbackContext";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 
 interface AvatarUploadProps {
   userId: string;
@@ -33,7 +33,7 @@ export function AvatarUpload({
 }: AvatarUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const { showFeedback } = useFeedback();
+  const { showFeedback } = useFeedbackSafe();
 
   const { uploadAvatar, isUploading, progress } = useAvatarUpload({
     userId,

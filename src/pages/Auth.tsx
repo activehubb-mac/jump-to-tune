@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Music, Mail, Lock, User, Building2, Headphones, ArrowRight, Loader2, RefreshCw, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { useFeedback } from "@/contexts/FeedbackContext";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 
 type AuthMode = "signin" | "signup";
 type UserRole = "fan" | "artist" | "label";
@@ -22,7 +22,7 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, role, profile, signIn, signUp, resendConfirmationEmail, isLoading: authLoading } = useAuth();
-  const { showFeedback, closeFeedback } = useFeedback();
+  const { showFeedback, closeFeedback } = useFeedbackSafe();
   
   const [mode, setMode] = useState<AuthMode>((searchParams.get("mode") as AuthMode) || "signin");
   const [selectedRole, setSelectedRole] = useState<UserRole>((searchParams.get("role") as UserRole) || "fan");

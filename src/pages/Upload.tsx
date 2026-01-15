@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
-import { useFeedback } from "@/contexts/FeedbackContext";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { useTrackUpload } from "@/hooks/useTrackUpload";
 import { AudioUpload } from "@/components/upload/AudioUpload";
 import { CoverArtUpload } from "@/components/upload/CoverArtUpload";
@@ -70,7 +70,7 @@ type UploadFormValues = z.infer<typeof uploadFormSchema>;
 export default function Upload() {
   const navigate = useNavigate();
   const { user, role, profile, isLoading } = useAuth();
-  const { showFeedback } = useFeedback();
+  const { showFeedback } = useFeedbackSafe();
   const { isUploading, uploadProgress, uploadTrack } = useTrackUpload();
 
   // File states

@@ -6,7 +6,7 @@ import { CheckCircle, Music, Disc3, Crown, ArrowUp, Download, Loader2, Wallet, S
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDownload } from "@/hooks/useDownload";
-import { useFeedback } from "@/contexts/FeedbackContext";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
@@ -17,7 +17,7 @@ export default function PaymentSuccess() {
   const queryClient = useQueryClient();
   const { refreshProfile } = useAuth();
   const { downloadOwnedTrack, isDownloading } = useDownload();
-  const { showFeedback } = useFeedback();
+  const { showFeedback } = useFeedbackSafe();
   const [hasDownloaded, setHasDownloaded] = useState(false);
   const hasShownFeedback = useRef(false);
 

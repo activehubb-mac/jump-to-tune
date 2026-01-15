@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Music, ArrowRight, ArrowLeft, Loader2, Check, Sparkles, Crown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useFeedback } from "@/contexts/FeedbackContext";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +44,7 @@ type OnboardingStep = "welcome" | "avatar" | "bio" | "genres" | "subscription" |
 export default function Onboarding() {
   const navigate = useNavigate();
   const { user, profile, role, isLoading, refreshProfile } = useAuth();
-  const { showFeedback } = useFeedback();
+  const { showFeedback } = useFeedbackSafe();
 
   const [step, setStep] = useState<OnboardingStep>("welcome");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);

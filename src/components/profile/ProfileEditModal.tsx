@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useFeedback } from "@/contexts/FeedbackContext";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ interface ProfileEditModalProps {
 
 export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) {
   const { user, profile, refreshProfile } = useAuth();
-  const { showFeedback, closeFeedback } = useFeedback();
+  const { showFeedback, closeFeedback } = useFeedbackSafe();
 
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
