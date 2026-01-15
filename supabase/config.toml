@@ -38,3 +38,12 @@ verify_jwt = false
 
 [functions.send-invite-response-email]
 verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.send-purchase-email]
+verify_jwt = false
+
+[functions.send-payout-email]
+verify_jwt = false

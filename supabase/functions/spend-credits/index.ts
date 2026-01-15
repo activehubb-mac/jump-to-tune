@@ -226,6 +226,43 @@ serve(async (req) => {
       }
     }
 
+    // 7. Send purchase confirmation email (non-blocking)
+    try {
+      const emailPayload = {
+        userId,
+        trackTitle: track.title,
+        artistName: track.artist?.display_name || "Unknown Artist",
+        coverArtUrl: track.cover_art_url,
+        pricePaid: priceCents,
+        tipAmount: 0,
+        editionNumber,
+        totalEditions: track.total_editions,
+      };
+
+      // Call the send-purchase-email function
+      const emailResponse = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-purchase-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": authHeader,
+          },
+          body: JSON.stringify(emailPayload),
+        }
+      );
+
+      if (!emailResponse.ok) {
+        logStep("Purchase email failed", { status: emailResponse.status });
+      } else {
+        logStep("Purchase email sent");
+      }
+    } catch (emailError) {
+      logStep("Purchase email error (non-blocking)", { 
+        error: emailError instanceof Error ? emailError.message : "Unknown" 
+      });
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
