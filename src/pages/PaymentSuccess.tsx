@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Music, Disc3, Crown, ArrowUp, Download, Loader2, Wallet } from "lucide-react";
+import { CheckCircle, Music, Disc3, Crown, ArrowUp, Download, Loader2, Wallet, Sparkles } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDownload } from "@/hooks/useDownload";
@@ -34,7 +34,12 @@ export default function PaymentSuccess() {
         toast.success("Your profile has been updated with your new plan!");
       });
     }
-  }, [queryClient, type, refreshProfile]);
+
+    // Show toast for credit purchases
+    if (type === "credits" && credits) {
+      toast.success(`$${(parseInt(credits) / 100).toFixed(2)} credits added to your wallet!`);
+    }
+  }, [queryClient, type, refreshProfile, credits]);
 
   const handleDownload = async () => {
     if (trackId) {
@@ -75,18 +80,36 @@ export default function PaymentSuccess() {
     <Layout>
       <div className="container mx-auto px-4 py-24">
         <div className="max-w-md mx-auto text-center">
-          {/* Success Icon */}
-          <div className="w-24 h-24 mx-auto rounded-full bg-green-500/20 flex items-center justify-center mb-8 animate-pulse">
-            <CheckCircle className="w-12 h-12 text-green-500" />
-          </div>
+          {/* Success Icon - Different for credits */}
+          {type === "credits" ? (
+            <div className="w-24 h-24 mx-auto rounded-full gradient-accent flex items-center justify-center mb-8 animate-pulse neon-glow-subtle">
+              <Wallet className="w-12 h-12 text-foreground" />
+            </div>
+          ) : (
+            <div className="w-24 h-24 mx-auto rounded-full bg-green-500/20 flex items-center justify-center mb-8 animate-pulse">
+              <CheckCircle className="w-12 h-12 text-green-500" />
+            </div>
+          )}
 
           <h1 className="text-3xl font-bold text-foreground mb-4">
             {getTitle()}
           </h1>
 
-          <p className="text-muted-foreground mb-8">
+          <p className="text-muted-foreground mb-4">
             {getDescription()}
           </p>
+
+          {/* Credit Amount Badge for credit purchases */}
+          {type === "credits" && credits && (
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-lg font-bold text-foreground">
+                +${(parseInt(credits) / 100).toFixed(2)} credits
+              </span>
+            </div>
+          )}
+
+          {type !== "credits" && <div className="mb-8" />}
 
           {/* What's Next */}
           <div className="glass-card p-6 mb-8 text-left">
@@ -174,10 +197,13 @@ export default function PaymentSuccess() {
             {type === "credits" ? (
               <>
                 <Button className="gradient-accent neon-glow-subtle" asChild>
-                  <Link to="/browse">Browse Music</Link>
+                  <Link to="/wallet">
+                    <Wallet className="h-4 w-4 mr-2" />
+                    View Wallet
+                  </Link>
                 </Button>
                 <Button variant="outline" className="border-glass-border" asChild>
-                  <Link to="/wallet">View Wallet</Link>
+                  <Link to="/browse">Browse Music</Link>
                 </Button>
               </>
             ) : (
