@@ -23,6 +23,7 @@ export function useWallet() {
   const queryClient = useQueryClient();
   const { showFeedback } = useFeedback();
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const previousBalanceRef = useRef<number | null>(null);
   
   const userId = user?.id;
@@ -51,22 +52,39 @@ export function useWallet() {
     staleTime: 30000,
   });
 
-  // Track balance changes for notification
+  // Track balance changes for notification and animation
   useEffect(() => {
     if (data?.balance_cents !== undefined) {
       const currentBalance = data.balance_cents;
       const previousBalance = previousBalanceRef.current;
       
-      // Only show notification if balance increased (not on initial load)
-      if (previousBalance !== null && currentBalance > previousBalance) {
-        const addedAmount = (currentBalance - previousBalance) / 100;
-        showFeedback({
-          type: "success",
-          title: "Credits Added!",
-          message: `$${addedAmount.toFixed(2)} credits have been added to your wallet.`,
-          autoClose: true,
-          autoCloseDelay: 4000,
-        });
+      // Only process if not initial load
+      if (previousBalance !== null && currentBalance !== previousBalance) {
+        // Trigger pulse animation
+        setIsAnimating(true);
+        setTimeout(() => setIsAnimating(false), 2000);
+        
+        if (currentBalance > previousBalance) {
+          // Credits added
+          const addedAmount = (currentBalance - previousBalance) / 100;
+          showFeedback({
+            type: "success",
+            title: "Credits Added!",
+            message: `$${addedAmount.toFixed(2)} credits have been added to your wallet.`,
+            autoClose: true,
+            autoCloseDelay: 4000,
+          });
+        } else {
+          // Credits spent
+          const spentAmount = (previousBalance - currentBalance) / 100;
+          showFeedback({
+            type: "info",
+            title: "Purchase Complete",
+            message: `$${spentAmount.toFixed(2)} credits used. Your new balance is $${(currentBalance / 100).toFixed(2)}.`,
+            autoClose: true,
+            autoCloseDelay: 4000,
+          });
+        }
       }
       
       previousBalanceRef.current = currentBalance;
@@ -179,6 +197,7 @@ export function useWallet() {
     balanceDollars: (data?.balance_cents ?? 0) / 100,
     transactions: data?.transactions ?? [],
     isLoading,
+    isAnimating,
     error,
     refetch,
     purchaseCredits,

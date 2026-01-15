@@ -16,7 +16,7 @@ export function CreditBalanceChip({
   showIcon = true,
 }: CreditBalanceChipProps) {
   const { user } = useAuth();
-  const { balanceDollars, isLoading } = useWallet();
+  const { balanceDollars, isLoading, isAnimating } = useWallet();
 
   if (!user) return null;
 
@@ -29,14 +29,25 @@ export function CreditBalanceChip({
         "border-primary/30 bg-primary/10 hover:bg-primary/20 text-foreground gap-2",
         "transition-all duration-200",
         balanceDollars < 2 && "border-amber-500/50 bg-amber-500/10",
+        isAnimating && "animate-pulse ring-2 ring-primary/50 ring-offset-2 ring-offset-background",
         className
       )}
     >
-      {showIcon && <Wallet className="h-4 w-4 text-primary" />}
+      {showIcon && (
+        <Wallet className={cn(
+          "h-4 w-4 text-primary transition-transform",
+          isAnimating && "animate-bounce"
+        )} />
+      )}
       {isLoading ? (
         <span className="animate-pulse">...</span>
       ) : (
-        <span className="font-semibold">${balanceDollars.toFixed(2)}</span>
+        <span className={cn(
+          "font-semibold transition-all",
+          isAnimating && "text-primary"
+        )}>
+          ${balanceDollars.toFixed(2)}
+        </span>
       )}
     </Button>
   );
