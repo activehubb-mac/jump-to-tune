@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -13,64 +14,43 @@ interface SubscriptionData {
 
 export function useSubscription() {
   const { user, session } = useAuth();
-  const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const checkSubscription = useCallback(async () => {
-    if (!user || !session) {
-      setSubscription(null);
-      setIsLoading(false);
-      return;
-    }
+  const { data: subscription, isLoading, error, refetch } = useQuery<SubscriptionData | null>({
+    queryKey: ["subscription", user?.id],
+    queryFn: async () => {
+      if (!session) return null;
 
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const { data, error: fnError } = await supabase.functions.invoke("check-subscription", {
+      const { data, error } = await supabase.functions.invoke("check-subscription", {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
 
-      if (fnError) {
-        throw fnError;
-      }
-
-      setSubscription(data as SubscriptionData);
-    } catch (err) {
-      console.error("Error checking subscription:", err);
-      setError(err instanceof Error ? err.message : "Failed to check subscription");
-      setSubscription(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user, session]);
-
-  useEffect(() => {
-    checkSubscription();
-  }, [checkSubscription]);
-
-  // Auto-refresh every minute
-  useEffect(() => {
-    if (!user) return;
-
-    const interval = setInterval(checkSubscription, 60000);
-    return () => clearInterval(interval);
-  }, [user, checkSubscription]);
+      if (error) throw error;
+      return data as SubscriptionData;
+    },
+    enabled: !!user && !!session,
+    staleTime: 30000, // 30 seconds - data considered fresh
+    refetchInterval: 60000, // Silent background refresh every 60 seconds
+    refetchOnWindowFocus: false, // Prevent refresh when switching tabs
+  });
 
   const hasActiveSubscription = subscription?.subscribed === true;
   const isInTrial = subscription?.status === "trialing";
   const daysLeftInTrial = subscription?.days_left_in_trial ?? 0;
 
+  // Wrap refetch to maintain backward-compatible function signature
+  const refreshSubscription = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
   return {
-    subscription,
+    subscription: subscription ?? null,
     isLoading,
-    error,
+    error: error ? (error instanceof Error ? error.message : "Failed to check subscription") : null,
     hasActiveSubscription,
     isInTrial,
     daysLeftInTrial,
-    refreshSubscription: checkSubscription,
+    refreshSubscription,
   };
 }
