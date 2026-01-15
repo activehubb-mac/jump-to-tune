@@ -134,10 +134,10 @@ export default function Subscription() {
         showFeedback({ type: "info", title: "Proration Info", message: validation.prorationInfo.message });
       }
 
-      // Proceed with checkout
+      // Proceed with checkout - redirect in same tab to preserve session
       const url = await createSubscriptionCheckout(tier);
       if (url) {
-        window.open(url, "_blank");
+        window.location.href = url;
       }
     } catch (error) {
       console.error("Subscription error:", error);
@@ -156,7 +156,7 @@ export default function Subscription() {
     try {
       const url = await createSubscriptionCheckout(pendingTier);
       if (url) {
-        window.open(url, "_blank");
+        window.location.href = url;
       }
     } catch (error) {
       console.error("Subscription error:", error);
