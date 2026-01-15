@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown, Bell, Check, ArrowUp, ArrowDown, Sparkles, Wallet } from "lucide-react";
 import { CreditBalanceChip } from "@/components/wallet/CreditBalanceChip";
+import { SubscriptionCountdownChip } from "@/components/subscription/SubscriptionCountdownChip";
 import { QuickTopupModal } from "@/components/wallet/QuickTopupModal";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -113,6 +114,9 @@ export function Navbar() {
                 <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
               ) : user ? (
                 <>
+                  {/* Subscription Countdown Chip */}
+                  <SubscriptionCountdownChip />
+
                   {/* Credit Balance Chip */}
                   <CreditBalanceChip onClick={() => setShowTopupModal(true)} />
 
@@ -324,22 +328,28 @@ export function Navbar() {
                 
                 {user ? (
                   <>
-                    <div className="flex items-center gap-3 px-4 py-3 border-t border-glass-border mt-2 pt-4">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={profile?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-primary/20 text-primary">
-                          {getInitials()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-foreground">{profile?.display_name || "User"}</p>
-                        <p className="text-sm text-muted-foreground capitalize">{role || "Fan"}</p>
+                    <div className="flex flex-col gap-2 border-t border-glass-border mt-2 pt-4">
+                      <div className="flex items-center gap-3 px-4 py-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={profile?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-primary/20 text-primary">
+                            {getInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-foreground">{profile?.display_name || "User"}</p>
+                          <p className="text-sm text-muted-foreground capitalize">{role || "Fan"}</p>
+                        </div>
+                        {unreadCount > 0 && (
+                          <Badge variant="destructive" className="ml-auto">
+                            {unreadCount} new
+                          </Badge>
+                        )}
                       </div>
-                      {unreadCount > 0 && (
-                        <Badge variant="destructive" className="ml-auto">
-                          {unreadCount} new
-                        </Badge>
-                      )}
+                      {/* Mobile Subscription Countdown */}
+                      <div className="px-4">
+                        <SubscriptionCountdownChip />
+                      </div>
                     </div>
                     <Link
                       to={getDashboardLink()}
