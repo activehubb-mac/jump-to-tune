@@ -267,6 +267,12 @@ export function Navbar() {
                         <Settings className="w-4 h-4" />
                         Edit Profile
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/settings/notifications" className="flex items-center gap-2 cursor-pointer">
+                          <Bell className="w-4 h-4" />
+                          Notification Settings
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={handleSignOut}
                         className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
