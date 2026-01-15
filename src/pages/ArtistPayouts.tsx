@@ -19,12 +19,13 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useStripeConnect } from "@/hooks/useStripeConnect";
 import { format } from "date-fns";
-import { toast } from "sonner";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { cn } from "@/lib/utils";
 
 export default function ArtistPayouts() {
   const { user, role } = useAuth();
   const [searchParams] = useSearchParams();
+  const { showFeedback } = useFeedbackSafe();
   const {
     isConnected,
     accountStatus,
@@ -42,13 +43,13 @@ export default function ArtistPayouts() {
   // Handle return from Stripe onboarding
   useEffect(() => {
     if (searchParams.get("success") === "true") {
-      toast.success("Stripe account setup complete!");
+      showFeedback({ type: "success", title: "Setup Complete", message: "Stripe account setup complete!" });
       refetch();
     } else if (searchParams.get("refresh") === "true") {
-      toast.info("Please complete your Stripe onboarding");
+      showFeedback({ type: "info", title: "Continue Setup", message: "Please complete your Stripe onboarding" });
       refetch();
     }
-  }, [searchParams, refetch]);
+  }, [searchParams, refetch, showFeedback]);
 
   if (!user) {
     return (

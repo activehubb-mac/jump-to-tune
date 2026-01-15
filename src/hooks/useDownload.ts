@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 
 interface DownloadOptions {
   trackId: string;
@@ -11,11 +11,12 @@ interface DownloadOptions {
 
 export function useDownload() {
   const { session } = useAuth();
+  const { showFeedback } = useFeedbackSafe();
   const [isDownloading, setIsDownloading] = useState(false);
 
   const downloadOwnedTrack = async (trackId: string) => {
     if (!session) {
-      toast.error("Please sign in to download");
+      showFeedback({ type: "error", title: "Sign In Required", message: "Please sign in to download" });
       return;
     }
 
@@ -38,10 +39,10 @@ export function useDownload() {
       link.click();
       document.body.removeChild(link);
 
-      toast.success("Download started!");
+      showFeedback({ type: "success", title: "Download Started", message: "Your track is downloading" });
     } catch (err) {
       console.error("Download error:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to download track");
+      showFeedback({ type: "error", title: "Download Failed", message: err instanceof Error ? err.message : "Failed to download track" });
     } finally {
       setIsDownloading(false);
     }
@@ -49,7 +50,7 @@ export function useDownload() {
 
   const createPaymentCheckout = async ({ trackId, trackTitle, trackPrice }: DownloadOptions, tipAmount: number) => {
     if (!session) {
-      toast.error("Please sign in to purchase");
+      showFeedback({ type: "error", title: "Sign In Required", message: "Please sign in to purchase" });
       return null;
     }
 
@@ -72,14 +73,14 @@ export function useDownload() {
       return data.url as string;
     } catch (err) {
       console.error("Checkout error:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to create checkout");
+      showFeedback({ type: "error", title: "Checkout Failed", message: err instanceof Error ? err.message : "Failed to create checkout" });
       return null;
     }
   };
 
   const createSubscriptionCheckout = async (tier: "fan" | "artist" | "label") => {
     if (!session) {
-      toast.error("Please sign in to subscribe");
+      showFeedback({ type: "error", title: "Sign In Required", message: "Please sign in to subscribe" });
       return null;
     }
 
@@ -99,14 +100,14 @@ export function useDownload() {
       return data.url as string;
     } catch (err) {
       console.error("Checkout error:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to create checkout");
+      showFeedback({ type: "error", title: "Checkout Failed", message: err instanceof Error ? err.message : "Failed to create checkout" });
       return null;
     }
   };
 
   const openCustomerPortal = async () => {
     if (!session) {
-      toast.error("Please sign in to manage subscription");
+      showFeedback({ type: "error", title: "Sign In Required", message: "Please sign in to manage subscription" });
       return null;
     }
 
@@ -122,7 +123,7 @@ export function useDownload() {
       return data.url as string;
     } catch (err) {
       console.error("Portal error:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to open subscription portal");
+      showFeedback({ type: "error", title: "Portal Error", message: err instanceof Error ? err.message : "Failed to open subscription portal" });
       return null;
     }
   };
