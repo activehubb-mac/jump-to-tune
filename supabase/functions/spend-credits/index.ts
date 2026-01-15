@@ -64,10 +64,14 @@ serve(async (req) => {
       throw new Error("You already own this track");
     }
 
-    // Get track details
+    // Get track details with artist and label info
     const { data: track, error: trackError } = await supabaseClient
       .from("tracks")
-      .select("*, artist:profiles!tracks_artist_id_fkey(id, display_name, stripe_account_id, stripe_payouts_enabled)")
+      .select(`
+        *, 
+        artist:profiles!tracks_artist_id_fkey(id, display_name, stripe_account_id, stripe_payouts_enabled),
+        label:profiles!tracks_label_id_fkey(id, display_name, stripe_account_id, stripe_payouts_enabled)
+      `)
       .eq("id", track_id)
       .single();
 
@@ -109,10 +113,17 @@ serve(async (req) => {
     const platformFeeCents = Math.ceil(priceCents * (PLATFORM_FEE_PERCENT / 100));
     const artistPayoutCents = priceCents - platformFeeCents;
 
+    // Determine earnings recipient: label if present, otherwise artist
+    const earningsRecipient = track.label_id ? track.label : track.artist;
+    const earningsRecipientId = track.label_id || track.artist_id;
+    const recipientType = track.label_id ? "label" : "artist";
+
     logStep("Revenue split calculated", { 
       gross: priceCents, 
       platform_fee: platformFeeCents, 
-      artist_payout: artistPayoutCents 
+      artist_payout: artistPayoutCents,
+      recipient_type: recipientType,
+      recipient_id: earningsRecipientId,
     });
 
     // Get next edition number
@@ -176,11 +187,11 @@ serve(async (req) => {
         description: `Purchased: ${track.title}`,
       });
 
-    // 4. Record artist earnings
+    // 4. Record earnings (to label if present, otherwise artist)
     const { data: earnings, error: earningsError } = await supabaseClient
       .from("artist_earnings")
       .insert({
-        artist_id: track.artist_id,
+        artist_id: earningsRecipientId, // Label or Artist receives earnings
         purchase_id: purchase.id,
         gross_amount_cents: priceCents,
         platform_fee_cents: platformFeeCents,
@@ -206,8 +217,8 @@ serve(async (req) => {
       earnings_id: earnings?.id,
     });
 
-    // 6. If artist has Stripe Connect, initiate transfer
-    if (track.artist?.stripe_account_id && track.artist?.stripe_payouts_enabled) {
+    // 6. If earnings recipient has Stripe Connect, initiate transfer
+    if (earningsRecipient?.stripe_account_id && earningsRecipient?.stripe_payouts_enabled) {
       try {
         const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
           apiVersion: "2025-11-17.clover",
@@ -215,9 +226,10 @@ serve(async (req) => {
 
         // Note: This would require having funds in your Stripe account
         // For now, we just record the earnings for later payout
-        logStep("Artist has Stripe Connect - earnings recorded for payout", {
-          stripe_account_id: track.artist.stripe_account_id,
+        logStep(`${recipientType} has Stripe Connect - earnings recorded for payout`, {
+          stripe_account_id: earningsRecipient.stripe_account_id,
           payout_cents: artistPayoutCents,
+          recipient_type: recipientType,
         });
       } catch (stripeError) {
         logStep("Stripe transfer skipped", { 
@@ -232,6 +244,7 @@ serve(async (req) => {
         userId,
         trackTitle: track.title,
         artistName: track.artist?.display_name || "Unknown Artist",
+        labelName: track.label?.display_name || null,
         coverArtUrl: track.cover_art_url,
         pricePaid: priceCents,
         tipAmount: 0,
