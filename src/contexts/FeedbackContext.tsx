@@ -63,3 +63,17 @@ export function useFeedback() {
   }
   return context;
 }
+
+// Safe version that returns no-op if outside provider
+export function useFeedbackSafe() {
+  const context = useContext(FeedbackContext);
+  if (context === undefined) {
+    return {
+      feedback: null,
+      isOpen: false,
+      showFeedback: () => {},
+      closeFeedback: () => {},
+    };
+  }
+  return context;
+}
