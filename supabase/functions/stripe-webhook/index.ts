@@ -409,6 +409,166 @@ serve(async (req) => {
         break;
       }
 
+      // Stripe Connect Events for Artist Payouts
+      case "account.updated": {
+        const account = event.data.object as Stripe.Account;
+        logStep("Connect account updated", { accountId: account.id });
+
+        // Find user by stripe_account_id
+        const { data: profile } = await supabaseClient
+          .from("profiles")
+          .select("id")
+          .eq("stripe_account_id", account.id)
+          .single();
+
+        if (profile) {
+          // Update profile with latest account status
+          const newStatus = account.details_submitted 
+            ? (account.payouts_enabled ? "active" : "restricted")
+            : "pending";
+
+          const { error: updateError } = await supabaseClient
+            .from("profiles")
+            .update({
+              stripe_account_status: newStatus,
+              stripe_payouts_enabled: account.payouts_enabled || false,
+            })
+            .eq("id", profile.id);
+
+          if (updateError) {
+            logStep("Error updating profile from webhook", { error: updateError });
+          } else {
+            logStep("Profile updated from webhook", { 
+              userId: profile.id, 
+              status: newStatus,
+              payouts_enabled: account.payouts_enabled
+            });
+          }
+
+          // Create notification if onboarding completed and payouts enabled
+          if (account.details_submitted && account.payouts_enabled) {
+            await supabaseClient
+              .from("notifications")
+              .insert({
+                user_id: profile.id,
+                type: "payout_enabled",
+                title: "Payouts Enabled!",
+                message: "Your Stripe account is set up. You can now receive payouts from track sales.",
+              });
+            logStep("Payout enabled notification created", { userId: profile.id });
+          }
+        } else {
+          logStep("No profile found for Connect account", { accountId: account.id });
+        }
+        break;
+      }
+
+      case "payout.paid": {
+        const payout = event.data.object as Stripe.Payout;
+        logStep("Payout paid", { payoutId: payout.id, amount: payout.amount });
+
+        // Get the Connect account ID from the event
+        const accountId = (event.account as string) || null;
+        
+        if (accountId) {
+          const { data: profile } = await supabaseClient
+            .from("profiles")
+            .select("id")
+            .eq("stripe_account_id", accountId)
+            .single();
+
+          if (profile) {
+            // Update pending earnings to paid status
+            const { error: earningsError } = await supabaseClient
+              .from("artist_earnings")
+              .update({ 
+                status: "paid",
+                paid_at: new Date().toISOString()
+              })
+              .eq("artist_id", profile.id)
+              .eq("status", "pending");
+
+            if (earningsError) {
+              logStep("Error updating earnings to paid", { error: earningsError });
+            } else {
+              logStep("Earnings marked as paid", { userId: profile.id });
+            }
+
+            // Create notification
+            await supabaseClient
+              .from("notifications")
+              .insert({
+                user_id: profile.id,
+                type: "payout_received",
+                title: "Payout Received!",
+                message: `$${(payout.amount / 100).toFixed(2)} has been sent to your bank account.`,
+                metadata: {
+                  payout_id: payout.id,
+                  amount_cents: payout.amount,
+                },
+              });
+            logStep("Payout received notification created", { userId: profile.id });
+          }
+        }
+        break;
+      }
+
+      case "payout.failed": {
+        const payout = event.data.object as Stripe.Payout;
+        logStep("Payout failed", { payoutId: payout.id, failureMessage: payout.failure_message });
+
+        const accountId = (event.account as string) || null;
+        
+        if (accountId) {
+          const { data: profile } = await supabaseClient
+            .from("profiles")
+            .select("id")
+            .eq("stripe_account_id", accountId)
+            .single();
+
+          if (profile) {
+            // Update earnings to failed status
+            const { error: earningsError } = await supabaseClient
+              .from("artist_earnings")
+              .update({ status: "failed" })
+              .eq("artist_id", profile.id)
+              .eq("status", "pending");
+
+            if (earningsError) {
+              logStep("Error updating earnings to failed", { error: earningsError });
+            }
+
+            // Create notification about failed payout
+            await supabaseClient
+              .from("notifications")
+              .insert({
+                user_id: profile.id,
+                type: "payout_failed",
+                title: "Payout Failed",
+                message: `Your payout could not be processed. Reason: ${payout.failure_message || "Unknown"}. Please check your bank details.`,
+                metadata: {
+                  payout_id: payout.id,
+                  failure_message: payout.failure_message,
+                },
+              });
+            logStep("Payout failure notification created", { userId: profile.id });
+          }
+        }
+        break;
+      }
+
+      case "transfer.created": {
+        const transfer = event.data.object as Stripe.Transfer;
+        logStep("Transfer created", { 
+          transferId: transfer.id, 
+          amount: transfer.amount,
+          destination: transfer.destination 
+        });
+        // Transfer events are primarily for logging/auditing
+        // The actual payout tracking happens via payout.paid events
+        break;
+      }
+
       default:
         logStep("Unhandled event type", { type: event.type });
     }
