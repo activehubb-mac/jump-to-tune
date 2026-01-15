@@ -35,25 +35,55 @@ serve(async (req) => {
   );
 
   try {
-    const body = await req.text();
-    const signature = req.headers.get("stripe-signature");
+    // Read raw body bytes for accurate signature verification
+    const rawBody = await req.arrayBuffer();
+    const bodyText = new TextDecoder().decode(rawBody);
     
-    // If webhook secret is configured, verify signature
-    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    // Trim whitespace from secret and signature header
+    const webhookSecret = (Deno.env.get("STRIPE_WEBHOOK_SECRET") ?? "").trim();
+    const signature = (req.headers.get("stripe-signature") ?? "").trim();
+    
+    // Diagnostic logging (no secrets leaked)
+    const secretPresent = webhookSecret.length > 0;
+    const signaturePresent = signature.length > 0;
+    const signaturePrefix = signature.slice(0, 20);
+    const bodyLength = rawBody.byteLength;
+    
+    logStep("Request received", { 
+      secretPresent, 
+      signaturePresent, 
+      signaturePrefix,
+      bodyLength 
+    });
+    
     let event: Stripe.Event;
     
     if (webhookSecret && signature) {
       try {
-        event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+        event = stripe.webhooks.constructEvent(bodyText, signature, webhookSecret);
       } catch (err) {
-        logStep("Webhook signature verification failed", { error: err });
-        return new Response(JSON.stringify({ error: "Webhook signature verification failed" }), {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        const errorStack = err instanceof Error ? err.stack : undefined;
+        logStep("Webhook signature verification failed", { 
+          error: errorMessage,
+          stack: errorStack,
+          secretPresent,
+          signaturePresent,
+          signaturePrefix,
+          bodyLength
+        });
+        return new Response(JSON.stringify({ 
+          error: "Webhook signature verification failed",
+          details: errorMessage 
+        }), {
           status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
     } else {
-      // Parse without verification (for testing)
-      event = JSON.parse(body);
+      // Parse without verification (for testing only - not recommended for production)
+      logStep("WARNING: Parsing event without signature verification");
+      event = JSON.parse(bodyText);
     }
 
     logStep("Event received", { type: event.type, id: event.id });
