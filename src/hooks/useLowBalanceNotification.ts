@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWallet } from "@/hooks/useWallet";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 
 const LOW_BALANCE_CHECK_INTERVAL = 60000; // Check every minute
 const MIN_THRESHOLD_CENTS = 100; // Minimum $1 threshold
@@ -10,6 +10,7 @@ const MIN_THRESHOLD_CENTS = 100; // Minimum $1 threshold
 export function useLowBalanceNotification() {
   const { user } = useAuth();
   const { balance, transactions, isLoading } = useWallet();
+  const { showFeedback } = useFeedbackSafe();
   const lastNotifiedRef = useRef<number>(0);
   const hasCheckedRef = useRef(false);
 
@@ -40,16 +41,23 @@ export function useLowBalanceNotification() {
       if (now - lastNotifiedRef.current > 3600000) {
         lastNotifiedRef.current = now;
         
-        // Show toast notification
-        toast.warning(`Low credit balance: $${(balance / 100).toFixed(2)}`, {
-          description: `Your balance is below your average purchase of $${(averagePurchase / 100).toFixed(2)}. Consider topping up!`,
-          action: {
+        // Show feedback modal with action
+        showFeedback({
+          type: "warning",
+          title: `Low Credit Balance: $${(balance / 100).toFixed(2)}`,
+          message: `Your balance is below your average purchase of $${(averagePurchase / 100).toFixed(2)}. Consider topping up!`,
+          primaryAction: {
             label: "Top Up",
             onClick: () => {
               window.location.href = "/wallet";
             },
           },
-          duration: 10000,
+          secondaryAction: {
+            label: "Dismiss",
+            onClick: () => {},
+            variant: "outline",
+          },
+          autoClose: false,
         });
 
         // Create in-app notification
@@ -58,7 +66,7 @@ export function useLowBalanceNotification() {
     }
 
     hasCheckedRef.current = true;
-  }, [user, balance, transactions, isLoading]);
+  }, [user, balance, transactions, isLoading, showFeedback]);
 }
 
 async function createLowBalanceNotification(
@@ -79,7 +87,7 @@ async function createLowBalanceNotification(
     if (existing) return; // Already have an unread notification
 
     // Insert new notification using service role (via edge function if needed)
-    // For now, we'll rely on the toast since RLS requires service_role for inserts
+    // For now, we'll rely on the modal since RLS requires service_role for inserts
     // The notification system can be enhanced to support client-side inserts if needed
   } catch {
     // Ignore errors - notification is optional

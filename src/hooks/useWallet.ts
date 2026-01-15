@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { useConfetti } from "@/hooks/useConfetti";
+import { useLowBalanceWarning } from "@/components/wallet/LowBalanceWarningModal";
 
 interface CreditTransaction {
   id: string;
@@ -22,6 +24,8 @@ export function useWallet() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { showFeedback } = useFeedbackSafe();
+  const { fireConfetti } = useConfetti();
+  const { checkAndShowWarning, showWarning, setShowWarning, warningData } = useLowBalanceWarning();
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const previousBalanceRef = useRef<number | null>(null);
@@ -52,6 +56,15 @@ export function useWallet() {
     staleTime: 30000,
   });
 
+  // Calculate average purchase for low balance threshold
+  const averagePurchase = useCallback(() => {
+    if (!data?.transactions) return undefined;
+    const spendTransactions = data.transactions.filter(t => t.type === "spend");
+    if (spendTransactions.length === 0) return undefined;
+    const total = spendTransactions.reduce((sum, t) => sum + Math.abs(t.amount_cents), 0);
+    return Math.round(total / spendTransactions.length);
+  }, [data?.transactions]);
+
   // Track balance changes for notification and animation
   useEffect(() => {
     if (data?.balance_cents !== undefined) {
@@ -65,17 +78,18 @@ export function useWallet() {
         setTimeout(() => setIsAnimating(false), 2000);
         
         if (currentBalance > previousBalance) {
-          // Credits added
+          // Credits added - fire confetti!
+          fireConfetti();
           const addedAmount = (currentBalance - previousBalance) / 100;
           showFeedback({
             type: "success",
-            title: "Credits Added!",
+            title: "Credits Added! 🎉",
             message: `$${addedAmount.toFixed(2)} credits have been added to your wallet.`,
             autoClose: true,
             autoCloseDelay: 4000,
           });
         } else {
-          // Credits spent
+          // Credits spent - check for low balance
           const spentAmount = (previousBalance - currentBalance) / 100;
           showFeedback({
             type: "info",
@@ -84,12 +98,17 @@ export function useWallet() {
             autoClose: true,
             autoCloseDelay: 4000,
           });
+          
+          // Check if we should show low balance warning after purchase
+          setTimeout(() => {
+            checkAndShowWarning(currentBalance, averagePurchase());
+          }, 1000);
         }
       }
       
       previousBalanceRef.current = currentBalance;
     }
-  }, [data?.balance_cents, showFeedback]);
+  }, [data?.balance_cents, showFeedback, fireConfetti, checkAndShowWarning, averagePurchase]);
 
   // Subscribe to real-time wallet updates
   useEffect(() => {
@@ -202,5 +221,9 @@ export function useWallet() {
     refetch,
     purchaseCredits,
     isPurchasing,
+    // Low balance warning state
+    showLowBalanceWarning: showWarning,
+    setShowLowBalanceWarning: setShowWarning,
+    lowBalanceWarningData: warningData,
   };
 }

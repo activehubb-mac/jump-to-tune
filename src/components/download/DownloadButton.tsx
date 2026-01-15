@@ -8,7 +8,7 @@ import { useInstantPurchase, isInsufficientCreditsError } from "@/hooks/useInsta
 import { InstantPurchaseModal } from "@/components/wallet/InstantPurchaseModal";
 import { InsufficientCreditsModal } from "@/components/wallet/InsufficientCreditsModal";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 
 interface Track {
   id: string;
@@ -40,6 +40,7 @@ export function DownloadButton({
   const { user } = useAuth();
   const { downloadOwnedTrack, isDownloading } = useDownload();
   const { balance } = useWallet();
+  const { showFeedback } = useFeedbackSafe();
 
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [showInsufficientModal, setShowInsufficientModal] = useState(false);
@@ -51,8 +52,16 @@ export function DownloadButton({
 
     // Check if user is logged in
     if (!user) {
-      toast.info("Please sign in to download tracks");
-      navigate("/auth");
+      showFeedback({
+        type: "info",
+        title: "Sign In Required",
+        message: "Please sign in to download tracks.",
+        primaryAction: {
+          label: "Sign In",
+          onClick: () => navigate("/auth"),
+        },
+        autoClose: false,
+      });
       return;
     }
 
