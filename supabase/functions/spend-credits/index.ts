@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
+import Stripe from "https://esm.sh/stripe@17.7.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -210,7 +210,7 @@ serve(async (req) => {
     if (track.artist?.stripe_account_id && track.artist?.stripe_payouts_enabled) {
       try {
         const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-          apiVersion: "2023-10-16",
+          apiVersion: "2025-11-17.clover",
         });
 
         // Note: This would require having funds in your Stripe account
