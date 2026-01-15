@@ -17,7 +17,7 @@ import { TrackCard } from "@/components/dashboard/TrackCard";
 import { TrackDetailModal } from "@/components/dashboard/TrackDetailModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +37,7 @@ export default function ArtistTracks() {
   const [selectedTrack, setSelectedTrack] = useState<typeof tracks extends (infer T)[] ? T : never | null>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { showFeedback } = useFeedbackSafe();
 
   const handleDelete = async () => {
     if (!deleteTrackId) return;
@@ -50,13 +51,13 @@ export default function ArtistTracks() {
 
       if (error) throw error;
 
-      toast.success("Track deleted successfully");
+      showFeedback({ type: "success", title: "Track Deleted", message: "Track deleted successfully" });
       // Fix: Use correct query keys that match useTracks hook
       queryClient.invalidateQueries({ queryKey: ["tracks"] });
       queryClient.invalidateQueries({ queryKey: ["artist-stats"] });
     } catch (error) {
       console.error("Error deleting track:", error);
-      toast.error("Failed to delete track");
+      showFeedback({ type: "error", title: "Delete Failed", message: "Failed to delete track" });
     } finally {
       setIsDeleting(false);
       setDeleteTrackId(null);

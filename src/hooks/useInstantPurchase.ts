@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 
 interface PurchaseResult {
   success: boolean;
@@ -26,12 +26,13 @@ interface InsufficientCreditsError {
 export function useInstantPurchase() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { showFeedback } = useFeedbackSafe();
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [lastPurchase, setLastPurchase] = useState<PurchaseResult | null>(null);
 
   const purchaseTrack = useCallback(async (trackId: string): Promise<PurchaseResult | InsufficientCreditsError | null> => {
     if (!user) {
-      toast.error("Please sign in to purchase tracks");
+      showFeedback({ type: "error", title: "Sign In Required", message: "Please sign in to purchase tracks" });
       return null;
     }
 
@@ -39,7 +40,7 @@ export function useInstantPurchase() {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
-        toast.error("Session expired. Please sign in again.");
+        showFeedback({ type: "error", title: "Session Expired", message: "Please sign in again" });
         return null;
       }
 
@@ -51,7 +52,7 @@ export function useInstantPurchase() {
       });
 
       if (error) {
-        toast.error(error.message || "Failed to purchase track");
+        showFeedback({ type: "error", title: "Purchase Failed", message: error.message || "Failed to purchase track" });
         return null;
       }
 
@@ -69,24 +70,24 @@ export function useInstantPurchase() {
         queryClient.invalidateQueries({ queryKey: ["owned-tracks"] });
         queryClient.invalidateQueries({ queryKey: ["collection-stats"] });
         
-        toast.success(`Purchased "${result.track.title}" - Edition #${result.edition_number}`);
+        showFeedback({ type: "success", title: "Purchase Complete", message: `Purchased "${result.track.title}" - Edition #${result.edition_number}` });
         return result;
       }
 
       if (data?.error) {
-        toast.error(data.error);
+        showFeedback({ type: "error", title: "Purchase Failed", message: data.error });
         return null;
       }
 
       return null;
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred";
-      toast.error(message);
+      showFeedback({ type: "error", title: "Error", message });
       return null;
     } finally {
       setIsPurchasing(false);
     }
-  }, [user, queryClient]);
+  }, [user, queryClient, showFeedback]);
 
   const clearLastPurchase = useCallback(() => {
     setLastPurchase(null);

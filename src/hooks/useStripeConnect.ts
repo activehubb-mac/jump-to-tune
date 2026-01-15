@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 
 interface Earning {
   id: string;
@@ -33,6 +33,7 @@ interface PayoutStatus {
 export function useStripeConnect() {
   const { user, role } = useAuth();
   const queryClient = useQueryClient();
+  const { showFeedback } = useFeedbackSafe();
   const [isConnecting, setIsConnecting] = useState(false);
 
   const { data, isLoading, error, refetch } = useQuery<PayoutStatus>({
@@ -64,7 +65,7 @@ export function useStripeConnect() {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
-        toast.error("Please sign in to set up payouts");
+        showFeedback({ type: "error", title: "Sign In Required", message: "Please sign in to set up payouts" });
         return null;
       }
 
@@ -75,7 +76,7 @@ export function useStripeConnect() {
       });
 
       if (error) {
-        toast.error(error.message || "Failed to start onboarding");
+        showFeedback({ type: "error", title: "Onboarding Failed", message: error.message || "Failed to start onboarding" });
         return null;
       }
 
@@ -87,21 +88,21 @@ export function useStripeConnect() {
       return null;
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred";
-      toast.error(message);
+      showFeedback({ type: "error", title: "Error", message });
       return null;
     } finally {
       setIsConnecting(false);
     }
-  }, []);
+  }, [showFeedback]);
 
   const openDashboard = useCallback(async () => {
     if (!data?.stripe_connected || data?.stripe_account_status !== "active") {
-      toast.error("Please complete Stripe onboarding first");
+      showFeedback({ type: "error", title: "Complete Onboarding", message: "Please complete Stripe onboarding first" });
       return null;
     }
 
     return startOnboarding(); // This will return a login link for active accounts
-  }, [data, startOnboarding]);
+  }, [data, startOnboarding, showFeedback]);
 
   return {
     isConnected: data?.stripe_connected ?? false,

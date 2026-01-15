@@ -31,7 +31,7 @@ import { useDownload } from "@/hooks/useDownload";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { toast } from "sonner";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 
 const SUBSCRIPTION_TIERS = [
   {
@@ -81,6 +81,7 @@ export default function Subscription() {
   const { user, role, isLoading: authLoading } = useAuth();
   const { subscription, isLoading: subLoading, hasActiveSubscription, isInTrial, daysLeftInTrial, refreshSubscription } = useSubscription();
   const { createSubscriptionCheckout, openCustomerPortal } = useDownload();
+  const { showFeedback } = useFeedbackSafe();
   
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
   const [openingPortal, setOpeningPortal] = useState(false);
@@ -130,7 +131,7 @@ export default function Subscription() {
 
       // Show proration info if applicable
       if (validation.prorationInfo) {
-        toast.info(validation.prorationInfo.message);
+        showFeedback({ type: "info", title: "Proration Info", message: validation.prorationInfo.message });
       }
 
       // Proceed with checkout
@@ -140,7 +141,7 @@ export default function Subscription() {
       }
     } catch (error) {
       console.error("Subscription error:", error);
-      toast.error("Failed to start checkout. Please try again.");
+      showFeedback({ type: "error", title: "Checkout Failed", message: "Failed to start checkout. Please try again." });
     } finally {
       setLoadingTier(null);
     }
@@ -159,7 +160,7 @@ export default function Subscription() {
       }
     } catch (error) {
       console.error("Subscription error:", error);
-      toast.error("Failed to start checkout. Please try again.");
+      showFeedback({ type: "error", title: "Checkout Failed", message: "Failed to start checkout. Please try again." });
     } finally {
       setLoadingTier(null);
       setPendingTier(null);
@@ -455,27 +456,20 @@ export default function Subscription() {
             <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
               <Users className="w-5 h-5 text-primary" />
               <span className="text-sm text-muted-foreground">
-                {warningDetails.rosterCount} artist{warningDetails.rosterCount !== 1 ? 's' : ''} will be released from your roster
+                {warningDetails.rosterCount} artist{warningDetails.rosterCount !== 1 ? 's' : ''} will be released from your label
               </span>
             </div>
           )}
 
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setShowWarningDialog(false);
-                setPendingTier(null);
-                setWarningDetails(null);
-              }}
-            >
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowWarningDialog(false)}>
               Cancel
             </Button>
             <Button 
               onClick={handleConfirmWarning}
               className="gradient-accent"
             >
-              Continue to Checkout
+              Confirm Change
             </Button>
           </DialogFooter>
         </DialogContent>

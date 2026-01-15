@@ -17,7 +17,7 @@ import { ArrowLeft, Loader2, Save, Disc3, Upload, Lock, AlertCircle } from "luci
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 
 const GENRES = [
   "Hip Hop",
@@ -38,6 +38,7 @@ export default function TrackEdit() {
   const navigate = useNavigate();
   const { user, role, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
+  const { showFeedback } = useFeedbackSafe();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -130,7 +131,7 @@ export default function TrackEdit() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Track updated successfully!");
+      showFeedback({ type: "success", title: "Track Updated", message: "Track updated successfully!" });
       queryClient.invalidateQueries({ queryKey: ["tracks"] });
       queryClient.invalidateQueries({ queryKey: ["track", id] });
       queryClient.invalidateQueries({ queryKey: ["artist-stats"] });
@@ -138,14 +139,14 @@ export default function TrackEdit() {
     },
     onError: (error) => {
       console.error("Error updating track:", error);
-      toast.error("Failed to update track");
+      showFeedback({ type: "error", title: "Update Failed", message: "Failed to update track" });
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
-      toast.error("Title is required");
+      showFeedback({ type: "error", title: "Validation Error", message: "Title is required" });
       return;
     }
     saveMutation.mutate();
