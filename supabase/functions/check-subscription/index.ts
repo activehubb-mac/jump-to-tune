@@ -54,6 +54,32 @@ serve(async (req) => {
         periodEnd: localSub.current_period_end 
       });
       
+      // Check for tier mismatch with user_roles (happens when onboarding skipped Stripe)
+      const { data: roleData } = await supabaseClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .single();
+      
+      const actualRole = roleData?.role || "fan";
+      
+      // If tier doesn't match role AND no Stripe subscription, sync them
+      if (localSub.tier !== actualRole && !localSub.stripe_subscription_id) {
+        logStep("Tier mismatch detected, syncing", { 
+          currentTier: localSub.tier, 
+          actualRole 
+        });
+        
+        await supabaseClient
+          .from("subscriptions")
+          .update({ tier: actualRole, updated_at: new Date().toISOString() })
+          .eq("user_id", user.id);
+        
+        // Update localSub to reflect the change
+        localSub.tier = actualRole;
+        logStep("Tier synced to match role", { newTier: actualRole });
+      }
+      
       // If in trial and trial hasn't expired, return trial status
       if (localSub.status === "trialing" && new Date(localSub.trial_ends_at) > new Date()) {
         const daysLeft = Math.ceil((new Date(localSub.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
