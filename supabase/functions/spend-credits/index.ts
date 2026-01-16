@@ -217,7 +217,59 @@ serve(async (req) => {
       earnings_id: earnings?.id,
     });
 
-    // 6. If earnings recipient has Stripe Connect, initiate transfer
+    // 6. Create notifications for buyer and seller
+    const newBalance = wallet.balance_cents - priceCents;
+
+    // Notification for buyer
+    await supabaseClient
+      .from("notifications")
+      .insert({
+        user_id: userId,
+        type: "track_purchase",
+        title: "Track Purchased!",
+        message: `You now own edition #${editionNumber} of "${track.title}"`,
+        metadata: {
+          track_id: track_id,
+          edition_number: editionNumber,
+          price_cents: priceCents,
+          artist_name: track.artist?.display_name,
+        },
+      });
+    logStep("Buyer notification created");
+
+    // Notification for artist/label about sale
+    await supabaseClient
+      .from("notifications")
+      .insert({
+        user_id: earningsRecipientId,
+        type: "track_sale",
+        title: "New Sale! 🎉",
+        message: `"${track.title}" - Edition #${editionNumber} sold for $${(priceCents / 100).toFixed(2)}`,
+        metadata: {
+          track_id: track_id,
+          edition_number: editionNumber,
+          earnings_cents: artistPayoutCents,
+          buyer_id: userId,
+        },
+      });
+    logStep("Seller notification created");
+
+    // Low balance warning notification
+    const avgPurchaseCents = 200; // Default $2 threshold
+    if (newBalance < avgPurchaseCents && newBalance > 0) {
+      await supabaseClient
+        .from("notifications")
+        .insert({
+          user_id: userId,
+          type: "low_balance",
+          title: "Low Credit Balance",
+          message: `Your balance is $${(newBalance / 100).toFixed(2)}. Consider topping up!`,
+          metadata: { balance_cents: newBalance },
+        });
+      logStep("Low balance notification created");
+    }
+
+    // 7. If earnings recipient has Stripe Connect, initiate transfer
     if (earningsRecipient?.stripe_account_id && earningsRecipient?.stripe_payouts_enabled) {
       try {
         const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {

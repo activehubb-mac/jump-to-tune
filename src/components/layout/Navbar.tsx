@@ -11,7 +11,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown, Bell, Check, ArrowUp, ArrowDown, Sparkles, Wallet } from "lucide-react";
+import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown, Bell, Check, ArrowUp, ArrowDown, Sparkles, Wallet, Heart, AlertTriangle, UserPlus, DollarSign } from "lucide-react";
 import { CreditBalanceChip } from "@/components/wallet/CreditBalanceChip";
 import { SubscriptionCountdownChip } from "@/components/subscription/SubscriptionCountdownChip";
 import { QuickTopupModal } from "@/components/wallet/QuickTopupModal";
@@ -57,16 +57,30 @@ export function Navbar() {
   };
 
   const getNotificationIcon = (notification: { type: string; metadata?: Record<string, unknown> }) => {
-    if (notification.type === "role_change") {
-      const changeType = notification.metadata?.change_type;
-      if (changeType === "upgrade") return <ArrowUp className="w-4 h-4 text-green-500" />;
-      if (changeType === "downgrade") return <ArrowDown className="w-4 h-4 text-orange-500" />;
-      return <Sparkles className="w-4 h-4 text-primary" />;
+    switch (notification.type) {
+      case "role_change": {
+        const changeType = notification.metadata?.change_type;
+        if (changeType === "upgrade") return <ArrowUp className="w-4 h-4 text-green-500" />;
+        if (changeType === "downgrade") return <ArrowDown className="w-4 h-4 text-orange-500" />;
+        return <Sparkles className="w-4 h-4 text-primary" />;
+      }
+      case "subscription_canceled":
+        return <Crown className="w-4 h-4 text-destructive" />;
+      case "credit_purchase":
+        return <DollarSign className="w-4 h-4 text-green-500" />;
+      case "track_purchase":
+        return <Music className="w-4 h-4 text-primary" />;
+      case "track_sale":
+        return <Sparkles className="w-4 h-4 text-green-500" />;
+      case "new_follower":
+        return <UserPlus className="w-4 h-4 text-blue-500" />;
+      case "track_liked":
+        return <Heart className="w-4 h-4 text-pink-500" />;
+      case "low_balance":
+        return <AlertTriangle className="w-4 h-4 text-orange-500" />;
+      default:
+        return <Bell className="w-4 h-4 text-muted-foreground" />;
     }
-    if (notification.type === "subscription_canceled") {
-      return <Crown className="w-4 h-4 text-destructive" />;
-    }
-    return <Bell className="w-4 h-4 text-muted-foreground" />;
   };
 
   return (
