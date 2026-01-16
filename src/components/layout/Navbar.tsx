@@ -289,7 +289,7 @@ export function Navbar() {
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={handleSignOut}
-                        className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+                        className="flex items-center gap-2 cursor-pointer text-destructive hover:bg-destructive/10 focus:bg-destructive/10 focus:text-destructive"
                       >
                         <LogOut className="w-4 h-4" />
                         Sign Out
