@@ -470,10 +470,42 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   );
 }
 
+// Default values for when context isn't available (prevents crashes during hot reload)
+const defaultAudioPlayerContext: AudioPlayerContextType = {
+  currentTrack: null,
+  isPlaying: false,
+  isBuffering: false,
+  currentTime: 0,
+  duration: 0,
+  volume: 1,
+  isMuted: false,
+  isPlayerVisible: false,
+  queue: [],
+  queueIndex: -1,
+  isShuffled: false,
+  repeatMode: "off",
+  playTrack: () => {},
+  togglePlayPause: () => {},
+  seek: () => {},
+  setVolume: () => {},
+  toggleMute: () => {},
+  closePlayer: () => {},
+  addToQueue: () => {},
+  playNext: () => {},
+  playPrevious: () => {},
+  clearQueue: () => {},
+  removeFromQueue: () => {},
+  toggleShuffle: () => {},
+  cycleRepeatMode: () => {},
+  reorderQueue: () => {},
+};
+
 export function useAudioPlayer() {
   const context = useContext(AudioPlayerContext);
+  // Return default context if not available (prevents crashes during hot reload or edge cases)
   if (!context) {
-    throw new Error("useAudioPlayer must be used within AudioPlayerProvider");
+    console.warn("useAudioPlayer: Context not available, using default values. This may indicate the provider is not properly mounted.");
+    return defaultAudioPlayerContext;
   }
   return context;
 }
