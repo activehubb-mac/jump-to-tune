@@ -17,6 +17,8 @@ interface OwnedTrack {
     id: string;
     title: string;
     cover_art_url: string | null;
+    audio_url: string | null;
+    duration: number | null;
     total_editions: number;
     artist: {
       id: string;
@@ -85,6 +87,8 @@ export function useOwnedTracks(userId: string | undefined) {
             id,
             title,
             cover_art_url,
+            audio_url,
+            duration,
             total_editions,
             artist_id
           )

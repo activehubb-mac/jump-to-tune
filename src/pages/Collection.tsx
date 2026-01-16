@@ -553,6 +553,18 @@ export default function Collection() {
                   <div
                     key={purchase.id}
                     className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
+                    onClick={() => {
+                      if (purchase.track) {
+                        playTrack({
+                          id: purchase.track.id,
+                          title: purchase.track.title,
+                          audio_url: purchase.track.audio_url,
+                          cover_art_url: purchase.track.cover_art_url,
+                          duration: purchase.track.duration,
+                          artist: purchase.track.artist,
+                        });
+                      }
+                    }}
                   >
                     {/* Album Art */}
                     <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">
@@ -569,7 +581,23 @@ export default function Collection() {
                       )}
                       {/* Hover Overlay */}
                       <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <Button size="icon" className="rounded-full gradient-accent neon-glow w-12 h-12">
+                        <Button 
+                          size="icon" 
+                          className="rounded-full gradient-accent neon-glow w-12 h-12"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (purchase.track) {
+                              playTrack({
+                                id: purchase.track.id,
+                                title: purchase.track.title,
+                                audio_url: purchase.track.audio_url,
+                                cover_art_url: purchase.track.cover_art_url,
+                                duration: purchase.track.duration,
+                                artist: purchase.track.artist,
+                              });
+                            }
+                          }}
+                        >
                           <Play className="w-5 h-5 ml-0.5" />
                         </Button>
                       </div>
