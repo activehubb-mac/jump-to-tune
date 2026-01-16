@@ -4,7 +4,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Music, Mail, Lock, User, Building2, Headphones, ArrowRight, Loader2, RefreshCw, ArrowLeft } from "lucide-react";
+import { Music, Mail, Lock, User, Building2, Headphones, ArrowRight, Loader2, RefreshCw, ArrowLeft, KeyRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
@@ -21,7 +21,7 @@ const roles: { value: UserRole; label: string; icon: React.ElementType; descript
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, role, profile, signIn, signUp, resendConfirmationEmail, isLoading: authLoading } = useAuth();
+  const { user, role, profile, signIn, signUp, resendConfirmationEmail, resetPassword, isLoading: authLoading } = useAuth();
   const { showFeedback, closeFeedback } = useFeedbackSafe();
   
   const [mode, setMode] = useState<AuthMode>((searchParams.get("mode") as AuthMode) || "signin");
@@ -38,6 +38,10 @@ export default function Auth() {
   const [pendingEmail, setPendingEmail] = useState("");
   const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Forgot password states
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -107,9 +111,39 @@ export default function Auth() {
 
   const handleBackToSignIn = () => {
     setShowEmailConfirmation(false);
+    setShowForgotPassword(false);
+    setResetEmailSent(false);
     setPendingEmail("");
     setMode("signin");
     setError("");
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!email) {
+      setError("Please enter your email address");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    setIsLoading(true);
+    const { error: resetError } = await resetPassword(email);
+    setIsLoading(false);
+
+    if (resetError) {
+      setError(resetError.message);
+      return;
+    }
+
+    setResetEmailSent(true);
+    setPendingEmail(email);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -149,25 +183,26 @@ export default function Auth() {
         return;
       }
 
-      const { error: signUpError } = await signUp(email, password, displayName, selectedRole);
+      const { error: signUpError, existingUser } = await signUp(email, password, displayName, selectedRole);
       
       if (signUpError) {
-        if (signUpError.message.includes("already registered")) {
+        if (signUpError.message.includes("already registered") || existingUser) {
           showFeedback({
             type: "warning",
-            title: "Account Exists",
-            message: "An account with this email already exists. Please sign in instead.",
+            title: "Account May Already Exist",
+            message: "If you already have an account, please sign in. Otherwise, check your email for a confirmation link.",
             primaryAction: {
-              label: "Sign In",
+              label: "Sign In Instead",
               onClick: () => {
                 closeFeedback();
                 setMode("signin");
               },
             },
           });
-        } else {
-          setError(signUpError.message);
+          setIsLoading(false);
+          return;
         }
+        setError(signUpError.message);
         setIsLoading(false);
         return;
       }
@@ -278,6 +313,118 @@ export default function Auth() {
                   Back to Sign In
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Forgot Password Screen
+  if (showForgotPassword) {
+    return (
+      <Layout showFooter={false}>
+        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
+          {/* Background Effects */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-primary/20 rounded-full blur-[100px]" />
+            <div className="absolute bottom-1/3 right-1/4 w-72 h-72 bg-accent/20 rounded-full blur-[100px]" />
+          </div>
+
+          <div className="w-full max-w-md relative z-10">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center gap-2 mb-4">
+                <div className="w-16 h-16 rounded-full gradient-accent flex items-center justify-center neon-glow-subtle">
+                  {resetEmailSent ? (
+                    <Mail className="w-8 h-8 text-foreground" />
+                  ) : (
+                    <KeyRound className="w-8 h-8 text-foreground" />
+                  )}
+                </div>
+              </div>
+              <h1 className="text-3xl font-bold text-foreground">
+                {resetEmailSent ? "Check Your Email" : "Reset Password"}
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                {resetEmailSent
+                  ? "We've sent a password reset link to"
+                  : "Enter your email to receive a reset link"}
+              </p>
+              {resetEmailSent && (
+                <p className="text-primary font-medium mt-1">{pendingEmail}</p>
+              )}
+            </div>
+
+            {/* Forgot Password Card */}
+            <div className="glass-card p-8">
+              {resetEmailSent ? (
+                <div className="text-center space-y-6">
+                  <div className="space-y-3">
+                    <p className="text-muted-foreground text-sm">
+                      Click the link in the email to reset your password.
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      Don't see it? Check your spam folder.
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={handleBackToSignIn}
+                    variant="outline"
+                    className="w-full border-glass-border hover:bg-muted/50"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back to Sign In
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="resetEmail" className="text-foreground">Email Address</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="resetEmail"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10 bg-muted/50 border-glass-border focus:border-primary"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    className="w-full gradient-accent neon-glow-subtle hover:neon-glow transition-all duration-300"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Send Reset Link"
+                    )}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full text-muted-foreground hover:text-foreground"
+                    onClick={handleBackToSignIn}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back to Sign In
+                  </Button>
+                </form>
+              )}
             </div>
           </div>
         </div>
@@ -474,9 +621,16 @@ export default function Auth() {
 
             {mode === "signin" && (
               <p className="text-center text-sm text-muted-foreground mt-4">
-                <a href="#" className="text-primary hover:underline">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError("");
+                    setShowForgotPassword(true);
+                  }}
+                  className="text-primary hover:underline"
+                >
                   Forgot your password?
-                </a>
+                </button>
               </p>
             )}
           </div>

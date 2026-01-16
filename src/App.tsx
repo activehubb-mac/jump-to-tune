@@ -8,6 +8,8 @@ import { FeedbackModal } from "@/components/ui/feedback-modal";
 import { GlobalAudioPlayer } from "@/components/audio/GlobalAudioPlayer";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
+import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
 import Browse from "./pages/Browse";
 import Artists from "./pages/Artists";
@@ -48,6 +50,8 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/auth/reset-password" element={<ResetPassword />} />
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/browse" element={<Browse />} />
                 <Route path="/artists" element={<Artists />} />
