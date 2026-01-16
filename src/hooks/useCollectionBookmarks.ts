@@ -38,7 +38,8 @@ export function useCollectionBookmarks() {
     queryFn: async () => {
       if (!user) return [];
 
-      const { data, error } = await supabase
+      // Step 1: Fetch bookmarks with track data (no profile join)
+      const { data: bookmarkData, error } = await supabase
         .from("collection_bookmarks")
         .select(`
           *,
@@ -52,19 +53,40 @@ export function useCollectionBookmarks() {
             genre,
             duration,
             editions_sold,
-            total_editions,
-            artist:profiles!tracks_artist_id_fkey(
-              id,
-              display_name,
-              avatar_url
-            )
+            total_editions
           )
         `)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Bookmark[];
+      if (!bookmarkData || bookmarkData.length === 0) return [];
+
+      // Step 2: Get unique artist IDs from tracks
+      const artistIds = [...new Set(
+        bookmarkData
+          .filter((b: any) => b.track?.artist_id)
+          .map((b: any) => b.track.artist_id)
+      )];
+
+      if (artistIds.length === 0) return bookmarkData as Bookmark[];
+
+      // Step 3: Fetch artist profiles from public view
+      const { data: artists } = await supabase
+        .from("profiles_public")
+        .select("id, display_name, avatar_url")
+        .in("id", artistIds);
+
+      // Step 4: Map artists to bookmarks
+      const artistMap = new Map(artists?.map((a) => [a.id, a]) || []);
+
+      return bookmarkData.map((bookmark: any) => ({
+        ...bookmark,
+        track: bookmark.track ? {
+          ...bookmark.track,
+          artist: artistMap.get(bookmark.track.artist_id) || null,
+        } : null,
+      })) as Bookmark[];
     },
     enabled: !!user,
   });

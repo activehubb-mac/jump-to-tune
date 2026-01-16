@@ -55,84 +55,65 @@ export function useTrendingTracks(limit: number = 6) {
         .slice(0, limit)
         .map(([trackId]) => trackId);
 
+      // Helper function to enrich tracks with artist data
+      const enrichWithArtists = async (tracks: any[]): Promise<TrendingTrack[]> => {
+        if (!tracks || tracks.length === 0) return [];
+
+        const artistIds = [...new Set(tracks.map((t) => t.artist_id).filter(Boolean))];
+        
+        const { data: artists } = await supabase
+          .from("profiles_public")
+          .select("id, display_name, avatar_url")
+          .in("id", artistIds);
+
+        const artistMap = new Map(artists?.map((a) => [a.id, a]) || []);
+
+        return tracks.map((track) => {
+          const artist = artistMap.get(track.artist_id);
+          return {
+            id: track.id,
+            title: track.title,
+            audio_url: track.audio_url,
+            cover_art_url: track.cover_art_url,
+            price: track.price,
+            artist_id: track.artist_id,
+            artist_name: artist?.display_name || null,
+            artist_avatar: artist?.avatar_url || null,
+            engagement_score: engagementMap.get(track.id) || 0,
+          };
+        });
+      };
+
       // If we have trending tracks, fetch their details
       if (sortedTrackIds.length > 0) {
         const { data: tracks, error: tracksError } = await supabase
           .from("tracks")
-          .select(`
-            id,
-            title,
-            audio_url,
-            cover_art_url,
-            price,
-            artist_id,
-            profiles!tracks_artist_id_fkey (
-              display_name,
-              avatar_url
-            )
-          `)
+          .select("id, title, audio_url, cover_art_url, price, artist_id")
           .in("id", sortedTrackIds)
           .eq("is_draft", false);
 
         if (tracksError) throw tracksError;
 
-        // Sort by engagement score and map to result format
+        // Sort by engagement score
         const trackMap = new Map(tracks?.map((t) => [t.id, t]));
-        
-        return sortedTrackIds
+        const sortedTracks = sortedTrackIds
           .filter((id) => trackMap.has(id))
-          .map((id) => {
-            const track = trackMap.get(id)!;
-            const profile = track.profiles as { display_name: string | null; avatar_url: string | null } | null;
-            return {
-              id: track.id,
-              title: track.title,
-              audio_url: track.audio_url,
-              cover_art_url: track.cover_art_url,
-              price: track.price,
-              artist_id: track.artist_id,
-              artist_name: profile?.display_name || null,
-              artist_avatar: profile?.avatar_url || null,
-              engagement_score: engagementMap.get(id) || 0,
-            };
-          });
+          .map((id) => trackMap.get(id)!);
+
+        return enrichWithArtists(sortedTracks);
       }
 
       // Fallback: Get most recent published tracks if no engagement data
       const { data: recentTracks, error: recentError } = await supabase
         .from("tracks")
-        .select(`
-          id,
-          title,
-          audio_url,
-          cover_art_url,
-          price,
-          artist_id,
-          profiles!tracks_artist_id_fkey (
-            display_name,
-            avatar_url
-          )
-        `)
+        .select("id, title, audio_url, cover_art_url, price, artist_id")
         .eq("is_draft", false)
         .order("created_at", { ascending: false })
         .limit(limit);
 
       if (recentError) throw recentError;
 
-      return (recentTracks || []).map((track) => {
-        const profile = track.profiles as { display_name: string | null; avatar_url: string | null } | null;
-        return {
-          id: track.id,
-          title: track.title,
-          audio_url: track.audio_url,
-          cover_art_url: track.cover_art_url,
-          price: track.price,
-          artist_id: track.artist_id,
-          artist_name: profile?.display_name || null,
-          artist_avatar: profile?.avatar_url || null,
-          engagement_score: 0,
-        };
-      });
+      return enrichWithArtists(recentTracks || []);
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

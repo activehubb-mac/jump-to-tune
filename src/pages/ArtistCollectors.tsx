@@ -77,10 +77,10 @@ function useArtistCollectors(artistId: string | undefined) {
         }
       });
 
-      // Get profile info for each user
+      // Get profile info for each user from public view
       const userIds = Array.from(userMap.keys());
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("id, display_name, avatar_url")
         .in("id", userIds);
 

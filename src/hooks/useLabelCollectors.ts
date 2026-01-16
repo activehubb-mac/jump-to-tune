@@ -62,18 +62,18 @@ export function useLabelCollectors(labelId: string | undefined) {
         }
       });
 
-      // Get profile info for each user
+      // Get profile info for each user from public view
       const userIds = Array.from(userMap.keys());
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("id, display_name, avatar_url")
         .in("id", userIds);
 
       // Combine data
       return profiles?.map((profile) => {
-        const userData = userMap.get(profile.id)!;
+        const userData = userMap.get(profile.id!)!;
         return {
-          id: profile.id,
+          id: profile.id!,
           display_name: profile.display_name,
           avatar_url: profile.avatar_url,
           ...userData,

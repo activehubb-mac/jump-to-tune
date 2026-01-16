@@ -24,22 +24,33 @@ export function useLabelInvites() {
     queryFn: async (): Promise<LabelInvite[]> => {
       if (!user?.id) return [];
 
-      const { data, error } = await supabase
+      // Step 1: Fetch roster entries without profile join
+      const { data: rosterData, error } = await supabase
         .from("label_roster")
-        .select(`
-          id,
-          label_id,
-          status,
-          joined_at,
-          label:profiles!label_roster_label_id_fkey(id, display_name, avatar_url)
-        `)
+        .select("id, label_id, status, joined_at")
         .eq("artist_id", user.id)
         .eq("status", "pending")
         .order("joined_at", { ascending: false });
 
       if (error) throw error;
+      if (!rosterData || rosterData.length === 0) return [];
 
-      return (data as unknown as LabelInvite[]) ?? [];
+      // Step 2: Get unique label IDs
+      const labelIds = [...new Set(rosterData.map((r) => r.label_id).filter(Boolean))];
+
+      // Step 3: Fetch label profiles from public view
+      const { data: labels } = await supabase
+        .from("profiles_public")
+        .select("id, display_name, avatar_url")
+        .in("id", labelIds);
+
+      // Step 4: Map labels to roster entries
+      const labelMap = new Map(labels?.map((l) => [l.id, l]) || []);
+
+      return rosterData.map((roster) => ({
+        ...roster,
+        label: labelMap.get(roster.label_id) || null,
+      }));
     },
     enabled: !!user?.id,
   });
