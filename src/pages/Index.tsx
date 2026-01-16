@@ -1,7 +1,8 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { Music, Disc3, Users, Building2, Headphones, Zap, TrendingUp, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History, ListPlus, Lock } from "lucide-react";
+import { Music, Disc3, Users, Building2, Headphones, Zap, TrendingUp, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History, ListPlus, Lock, Download } from "lucide-react";
+import { DownloadButton } from "@/components/download/DownloadButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRecommendedArtists } from "@/hooks/useRecommendedArtists";
 import { useFollow } from "@/hooks/useFollows";
@@ -742,6 +743,21 @@ export default function Index() {
                             <Lock className="w-4 h-4 text-white/70" />
                           )}
                         </button>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <DownloadButton
+                            track={{
+                              id: track.id,
+                              title: track.title,
+                              cover_art_url: track.cover_art_url,
+                              price: track.price,
+                              audio_url: track.audio_url,
+                              artist: { display_name: track.artist_name },
+                            }}
+                            variant="ghost"
+                            size="icon"
+                            className="w-10 h-10 rounded-full border border-white/30 text-white hover:bg-white/10"
+                          />
+                        </div>
                       </div>
                       <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-primary/90 text-xs font-medium text-primary-foreground">
                         NEW
@@ -857,6 +873,21 @@ export default function Index() {
                           <Lock className="w-4 h-4 text-white/70" />
                         )}
                       </button>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <DownloadButton
+                          track={{
+                            id: track.id,
+                            title: track.title,
+                            cover_art_url: track.cover_art_url,
+                            price: track.price,
+                            audio_url: track.audio_url,
+                            artist: { display_name: track.artist_name },
+                          }}
+                          variant="ghost"
+                          size="icon"
+                          className="w-10 h-10 rounded-full border border-white/30 text-white hover:bg-white/10"
+                        />
+                      </div>
                     </div>
                   </div>
                   <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
