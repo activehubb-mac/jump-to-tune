@@ -277,102 +277,82 @@ serve(async (req) => {
             if (userId && creditsCents > 0) {
               logStep("Processing credit purchase", { userId, creditsCents, feeCents });
 
-              // Get or create wallet
-              let { data: wallet } = await supabaseClient
-                .from("credit_wallets")
-                .select("*")
-                .eq("user_id", userId)
-                .single();
+              // ATOMIC: Add credits using atomic database function
+              // This prevents race conditions with concurrent webhook calls
+              const { data: addResult, error: addError } = await supabaseClient.rpc(
+                'add_credits_atomic',
+                { p_user_id: userId, p_amount_cents: creditsCents }
+              );
 
-              if (!wallet) {
-                const { data: newWallet, error: createError } = await supabaseClient
-                  .from("credit_wallets")
-                  .insert({ user_id: userId, balance_cents: 0 })
-                  .select()
-                  .single();
+              if (addError || !addResult?.success) {
+                logStep("Error adding credits atomically", { error: addError?.message || "Unknown" });
+              } else {
+                const previousBalance = addResult.previous_balance;
+                const newBalance = addResult.new_balance;
                 
-                if (createError) {
-                  logStep("Error creating wallet", { error: createError });
-                } else {
-                  wallet = newWallet;
-                }
-              }
+                logStep("Credits added atomically", { 
+                  previousBalance, 
+                  added: creditsCents, 
+                  newBalance 
+                });
 
-              if (wallet) {
-                // Add credits to wallet
-                const newBalance = wallet.balance_cents + creditsCents;
-                const { error: updateError } = await supabaseClient
-                  .from("credit_wallets")
-                  .update({ balance_cents: newBalance })
-                  .eq("user_id", userId);
-
-                if (updateError) {
-                  logStep("Error updating wallet balance", { error: updateError });
-                } else {
-                  logStep("Credits added to wallet", { 
-                    previousBalance: wallet.balance_cents, 
-                    added: creditsCents, 
-                    newBalance 
+                // Record transaction
+                await supabaseClient
+                  .from("credit_transactions")
+                  .insert({
+                    user_id: userId,
+                    type: "purchase",
+                    amount_cents: creditsCents,
+                    fee_cents: feeCents,
+                    stripe_payment_intent_id: session.payment_intent as string,
+                    description: `Added $${(creditsCents / 100).toFixed(2)} credits`,
                   });
+                
+                logStep("Credit transaction recorded");
 
-                  // Record transaction
-                  await supabaseClient
-                    .from("credit_transactions")
-                    .insert({
-                      user_id: userId,
-                      type: "purchase",
+                // Create notification for credit purchase
+                await supabaseClient
+                  .from("notifications")
+                  .insert({
+                    user_id: userId,
+                    type: "credit_purchase",
+                    title: "Credits Added!",
+                    message: `$${(creditsCents / 100).toFixed(2)} credits have been added to your wallet.`,
+                    metadata: {
                       amount_cents: creditsCents,
                       fee_cents: feeCents,
-                      stripe_payment_intent_id: session.payment_intent as string,
-                      description: `Added $${(creditsCents / 100).toFixed(2)} credits`,
-                    });
-                  
-                  logStep("Credit transaction recorded");
+                      new_balance: newBalance,
+                    },
+                  });
+                logStep("Credit purchase notification created");
 
-                  // Create notification for credit purchase
-                  await supabaseClient
-                    .from("notifications")
-                    .insert({
-                      user_id: userId,
-                      type: "credit_purchase",
-                      title: "Credits Added!",
-                      message: `$${(creditsCents / 100).toFixed(2)} credits have been added to your wallet.`,
-                      metadata: {
-                        amount_cents: creditsCents,
-                        fee_cents: feeCents,
-                        new_balance: newBalance,
+                // Send credit purchase email (non-blocking)
+                try {
+                  const emailPayload = {
+                    userId,
+                    amountCents: creditsCents,
+                    feeCents,
+                    newBalanceCents: newBalance,
+                  };
+
+                  fetch(
+                    `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-credit-email`,
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
                       },
-                    });
-                  logStep("Credit purchase notification created");
-
-                  // Send credit purchase email (non-blocking)
-                  try {
-                    const emailPayload = {
-                      userId,
-                      amountCents: creditsCents,
-                      feeCents,
-                      newBalanceCents: newBalance,
-                    };
-
-                    fetch(
-                      `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-credit-email`,
-                      {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-                        },
-                        body: JSON.stringify(emailPayload),
-                      }
-                    ).then(res => {
-                      if (!res.ok) logStep("Credit email failed", { status: res.status });
-                      else logStep("Credit email sent");
-                    }).catch(err => logStep("Credit email error", { error: err.message }));
-                  } catch (emailError) {
-                    logStep("Credit email error (non-blocking)", { 
-                      error: emailError instanceof Error ? emailError.message : "Unknown" 
-                    });
-                  }
+                      body: JSON.stringify(emailPayload),
+                    }
+                  ).then(res => {
+                    if (!res.ok) logStep("Credit email failed", { status: res.status });
+                    else logStep("Credit email sent");
+                  }).catch(err => logStep("Credit email error", { error: err.message }));
+                } catch (emailError) {
+                  logStep("Credit email error (non-blocking)", { 
+                    error: emailError instanceof Error ? emailError.message : "Unknown" 
+                  });
                 }
               }
             }
