@@ -66,6 +66,24 @@ export default function Index() {
     }
   }, [authLoading, user, role, profile, navigate]);
 
+  // Show loading spinner while checking onboarding status for Artists/Labels
+  const isCheckingOnboarding = !authLoading && user && profile === null;
+  const needsOnboardingRedirect = !authLoading && user && profile !== null && 
+    (role === "artist" || role === "label") && !profile.onboarding_completed;
+
+  if (authLoading || isCheckingOnboarding || needsOnboardingRedirect) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-10 h-10 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   const handleAddToQueue = (track: Parameters<typeof addToQueue>[0]) => {
     if (!canUseFeature("addToQueue")) {
       setShowPremiumModal(true);
