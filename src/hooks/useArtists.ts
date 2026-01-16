@@ -29,9 +29,9 @@ export function useArtists(options: { limit?: number; searchQuery?: string } = {
       
       if (artistIds.length === 0) return [];
 
-      // Get profiles for these artists
+      // Get public profiles for these artists (excludes sensitive Stripe fields)
       let profilesQuery = supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("*")
         .in("id", artistIds);
 

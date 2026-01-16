@@ -20,9 +20,9 @@ export function useArtistProfile(artistId: string | undefined) {
     queryFn: async (): Promise<ArtistProfile | null> => {
       if (!artistId) return null;
 
-      // Get profile
+      // Get public profile data (excludes sensitive Stripe fields)
       const { data: profile, error: profileError } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("*")
         .eq("id", artistId)
         .single();
