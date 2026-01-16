@@ -135,7 +135,9 @@ export default function TrackEdit() {
       queryClient.invalidateQueries({ queryKey: ["tracks"] });
       queryClient.invalidateQueries({ queryKey: ["track", id] });
       queryClient.invalidateQueries({ queryKey: ["artist-stats"] });
-      navigate("/artist/tracks");
+      queryClient.invalidateQueries({ queryKey: ["label-stats"] });
+      // Navigate back based on role - will be set after ownership check
+      navigate(role === "label" ? "/label/tracks" : "/artist/tracks");
     },
     onError: (error) => {
       console.error("Error updating track:", error);
@@ -183,8 +185,8 @@ export default function TrackEdit() {
     );
   }
 
-  // Not an artist
-  if (role !== "artist") {
+  // Not an artist or label
+  if (role !== "artist" && role !== "label") {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-24">
@@ -192,8 +194,8 @@ export default function TrackEdit() {
             <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-6">
               <AlertCircle className="w-10 h-10 text-muted-foreground" />
             </div>
-            <h1 className="text-3xl font-bold text-foreground mb-4">Artist Access Only</h1>
-            <p className="text-muted-foreground mb-8">This page is for artists only.</p>
+            <h1 className="text-3xl font-bold text-foreground mb-4">Creator Access Only</h1>
+            <p className="text-muted-foreground mb-8">This page is for artists and labels only.</p>
             <Button className="gradient-accent neon-glow-subtle" asChild>
               <Link to="/browse">Browse Music</Link>
             </Button>
@@ -203,8 +205,11 @@ export default function TrackEdit() {
     );
   }
 
-  // Check ownership
-  if (track && track.artist_id !== user.id) {
+  // Check ownership - artists own via artist_id, labels own via label_id
+  const isOwner = track && (track.artist_id === user.id || track.label_id === user.id);
+  const backLink = role === "label" ? "/label/tracks" : "/artist/tracks";
+  
+  if (track && !isOwner) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-24">
@@ -215,7 +220,7 @@ export default function TrackEdit() {
             <h1 className="text-3xl font-bold text-foreground mb-4">Access Denied</h1>
             <p className="text-muted-foreground mb-8">You can only edit your own tracks.</p>
             <Button className="gradient-accent neon-glow-subtle" asChild>
-              <Link to="/artist/tracks">Back to Your Tracks</Link>
+              <Link to={backLink}>Back to Your Tracks</Link>
             </Button>
           </div>
         </div>
@@ -240,7 +245,7 @@ export default function TrackEdit() {
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button variant="ghost" size="icon" asChild>
-            <Link to="/artist/tracks">
+            <Link to={backLink}>
               <ArrowLeft className="w-5 h-5" />
             </Link>
           </Button>
@@ -396,7 +401,7 @@ export default function TrackEdit() {
               type="button"
               variant="outline"
               className="flex-1"
-              onClick={() => navigate("/artist/tracks")}
+              onClick={() => navigate(backLink)}
             >
               Cancel
             </Button>
