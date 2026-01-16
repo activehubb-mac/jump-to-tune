@@ -29,9 +29,9 @@ export function useLabels(options: { limit?: number; searchQuery?: string } = {}
       
       if (labelIds.length === 0) return [];
 
-      // Get profiles for these labels
+      // Get public profiles for these labels (excludes sensitive Stripe fields)
       let profilesQuery = supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("*")
         .in("id", labelIds);
 
