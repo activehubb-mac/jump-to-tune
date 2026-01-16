@@ -344,6 +344,35 @@ serve(async (req) => {
                       },
                     });
                   logStep("Credit purchase notification created");
+
+                  // Send credit purchase email (non-blocking)
+                  try {
+                    const emailPayload = {
+                      userId,
+                      amountCents: creditsCents,
+                      feeCents,
+                      newBalanceCents: newBalance,
+                    };
+
+                    fetch(
+                      `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-credit-email`,
+                      {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                        },
+                        body: JSON.stringify(emailPayload),
+                      }
+                    ).then(res => {
+                      if (!res.ok) logStep("Credit email failed", { status: res.status });
+                      else logStep("Credit email sent");
+                    }).catch(err => logStep("Credit email error", { error: err.message }));
+                  } catch (emailError) {
+                    logStep("Credit email error (non-blocking)", { 
+                      error: emailError instanceof Error ? emailError.message : "Unknown" 
+                    });
+                  }
                 }
               }
             }
