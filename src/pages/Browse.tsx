@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock, Download } from "lucide-react";
+import { Search, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePublishedTracks } from "@/hooks/useTracks";
 import { formatPrice, formatEditions, formatCompactNumber } from "@/lib/formatters";
@@ -120,9 +120,9 @@ export default function Browse() {
           <p className="text-muted-foreground">Discover and collect exclusive tracks from talented artists</p>
         </div>
 
-        {/* Search & Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
+        {/* Search */}
+        <div className="mb-8">
+          <div className="relative max-w-xl">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               placeholder="Search tracks, artists, or genres..."
@@ -131,10 +131,6 @@ export default function Browse() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="border-glass-border hover:border-primary/50 h-12">
-            <Filter className="w-4 h-4 mr-2" />
-            Filters
-          </Button>
         </div>
 
         {/* Genre Pills */}
