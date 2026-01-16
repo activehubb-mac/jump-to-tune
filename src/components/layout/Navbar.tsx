@@ -250,6 +250,12 @@ export function Navbar() {
                       </div>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
+                        <Link to={`/profile/${user.id}`} className="flex items-center gap-2 cursor-pointer">
+                          <User className="w-4 h-4" />
+                          My Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to={getDashboardLink()} className="flex items-center gap-2 cursor-pointer">
                           <LayoutDashboard className="w-4 h-4" />
                           {role === "fan" ? "My Collection" : "Dashboard"}
@@ -447,6 +453,14 @@ export function Navbar() {
                         <SubscriptionCountdownChip />
                       </div>
                     </div>
+                    <Link
+                      to={`/profile/${user.id}`}
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+                    >
+                      <User className="w-5 h-5" />
+                      My Profile
+                    </Link>
                     <Link
                       to={getDashboardLink()}
                       onClick={() => setIsOpen(false)}

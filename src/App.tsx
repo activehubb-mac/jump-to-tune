@@ -16,6 +16,7 @@ import Artists from "./pages/Artists";
 import Labels from "./pages/Labels";
 import ArtistProfile from "./pages/ArtistProfile";
 import LabelProfile from "./pages/LabelProfile";
+import UserProfile from "./pages/UserProfile";
 import Collection from "./pages/Collection";
 import ArtistDashboard from "./pages/ArtistDashboard";
 import ArtistAnalytics from "./pages/ArtistAnalytics";
@@ -58,6 +59,7 @@ const App = () => (
                 <Route path="/labels" element={<Labels />} />
                 <Route path="/artist/:id" element={<ArtistProfile />} />
                 <Route path="/label/:id" element={<LabelProfile />} />
+                <Route path="/profile/:id" element={<UserProfile />} />
                 <Route path="/collection" element={<Collection />} />
                 <Route path="/artist/dashboard" element={<ArtistDashboard />} />
                 <Route path="/artist/analytics" element={<ArtistAnalytics />} />
