@@ -41,6 +41,7 @@ export interface AudioTrack {
   audio_url: string;
   cover_art_url: string | null;
   duration?: number | null;
+  price?: number;
   artist?: {
     id: string;
     display_name: string | null;

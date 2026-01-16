@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,6 +8,8 @@ import { useAudioKeyboardShortcuts } from "@/hooks/useAudioKeyboardShortcuts";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { Link } from "react-router-dom";
+import { DownloadButton } from "@/components/download/DownloadButton";
+import { usePurchases } from "@/hooks/usePurchases";
 import {
   DndContext,
   closestCenter,
@@ -137,6 +139,7 @@ export function GlobalAudioPlayer() {
   } = useAudioPlayer();
 
   const { canUseFeature } = useFeatureGate();
+  const { isOwned } = usePurchases();
   const [showQueue, setShowQueue] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumFeatureName, setPremiumFeatureName] = useState("");
@@ -512,8 +515,26 @@ export function GlobalAudioPlayer() {
               </Button>
             </div>
 
-            {/* Volume, Queue & Close */}
+            {/* Download, Queue, Volume & Close */}
             <div className="flex items-center gap-2">
+              {/* Download Button */}
+              {currentTrack && (
+                <DownloadButton
+                  track={{
+                    id: currentTrack.id,
+                    title: currentTrack.title,
+                    cover_art_url: currentTrack.cover_art_url,
+                    price: currentTrack.price || 0,
+                    audio_url: currentTrack.audio_url,
+                    artist: currentTrack.artist ? { display_name: currentTrack.artist.display_name } : undefined,
+                  }}
+                  isOwned={isOwned(currentTrack.id)}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                />
+              )}
+              
               <Button
                 variant="ghost"
                 size="icon"
