@@ -309,6 +309,7 @@ export default function Index() {
 
   return (
     <Layout>
+      <div className="animate-fade-in">
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Background Effects */}
@@ -895,6 +896,7 @@ export default function Index() {
           </div>
         </div>
       </section>
+      </div>
       <PremiumFeatureModal
         open={showPremiumModal}
         onOpenChange={setShowPremiumModal}
