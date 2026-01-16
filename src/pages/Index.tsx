@@ -1,6 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Music, Disc3, Users, Building2, Headphones, Zap, TrendingUp, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History, ListPlus, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRecommendedArtists } from "@/hooks/useRecommendedArtists";
@@ -12,7 +12,7 @@ import { useRecentlyPlayed } from "@/hooks/useRecentlyPlayed";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { formatCompactNumber } from "@/lib/formatters";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 const features = [
   {
@@ -45,7 +45,8 @@ const stats = [
 ];
 
 export default function Index() {
-  const { user, role, profile } = useAuth();
+  const { user, role, profile, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const { data: recommendedArtists, isLoading: recommendationsLoading } = useRecommendedArtists(6);
   const { data: trendingTracks, isLoading: trendingLoading } = useTrendingTracks(6);
   const { data: newReleases, isLoading: newReleasesLoading } = useNewReleases(6);
@@ -55,6 +56,15 @@ export default function Index() {
   const { playTrack, addToQueue } = useAudioPlayer();
   const { canUseFeature } = useFeatureGate();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+
+  // Redirect Artists/Labels with incomplete onboarding to /onboarding
+  useEffect(() => {
+    if (!authLoading && user && profile !== null) {
+      if ((role === "artist" || role === "label") && !profile.onboarding_completed) {
+        navigate("/onboarding");
+      }
+    }
+  }, [authLoading, user, role, profile, navigate]);
 
   const handleAddToQueue = (track: Parameters<typeof addToQueue>[0]) => {
     if (!canUseFeature("addToQueue")) {
