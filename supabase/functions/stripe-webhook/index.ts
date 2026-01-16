@@ -328,6 +328,22 @@ serve(async (req) => {
                     });
                   
                   logStep("Credit transaction recorded");
+
+                  // Create notification for credit purchase
+                  await supabaseClient
+                    .from("notifications")
+                    .insert({
+                      user_id: userId,
+                      type: "credit_purchase",
+                      title: "Credits Added!",
+                      message: `$${(creditsCents / 100).toFixed(2)} credits have been added to your wallet.`,
+                      metadata: {
+                        amount_cents: creditsCents,
+                        fee_cents: feeCents,
+                        new_balance: newBalance,
+                      },
+                    });
+                  logStep("Credit purchase notification created");
                 }
               }
             }
