@@ -12,17 +12,23 @@ interface Profile {
   onboarding_completed: boolean | null;
 }
 
+interface SignUpResult {
+  error: Error | null;
+  existingUser?: boolean;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
   role: AppRole | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, displayName: string, role: AppRole) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, displayName: string, role: AppRole) => Promise<SignUpResult>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   resendConfirmationEmail: (email: string) => Promise<{ error: Error | null }>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -108,8 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, displayName: string, selectedRole: AppRole) => {
-    const redirectUrl = `${window.location.origin}/`;
+  const signUp = async (email: string, password: string, displayName: string, selectedRole: AppRole): Promise<SignUpResult> => {
+    const redirectUrl = `${window.location.origin}/auth/callback`;
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -127,8 +133,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error };
     }
 
-    // Send welcome email (non-blocking)
-    if (data.user) {
+    // Check if user already exists (empty identities array indicates existing user)
+    // This happens when "Prevent user enumeration attacks" is enabled in Supabase
+    if (data.user && data.user.identities?.length === 0) {
+      return { 
+        error: new Error("User already registered"),
+        existingUser: true 
+      };
+    }
+
+    // Only send welcome email for genuinely new users
+    if (data.user && data.user.identities && data.user.identities.length > 0) {
       try {
         await supabase.functions.invoke("send-welcome-email", {
           body: {
@@ -163,7 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const resendConfirmationEmail = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `${window.location.origin}/auth/callback`;
     
     const { error } = await supabase.auth.resend({
       type: "signup",
@@ -171,6 +186,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: {
         emailRedirectTo: redirectUrl,
       },
+    });
+
+    return { error };
+  };
+
+  const resetPassword = async (email: string) => {
+    const redirectUrl = `${window.location.origin}/auth/reset-password`;
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectUrl,
     });
 
     return { error };
@@ -189,6 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         refreshProfile,
         resendConfirmationEmail,
+        resetPassword,
       }}
     >
       {children}
