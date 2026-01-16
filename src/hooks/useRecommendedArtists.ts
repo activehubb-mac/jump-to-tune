@@ -51,19 +51,12 @@ export function useRecommendedArtists(limit: number = 6) {
       }
 
       // Step 3: Find artists with matching genres (excluding followed artists and self)
-      const { data: matchingProfiles, error: matchingError } = await supabase
+      const excludeList = [...followedIds, user.id];
+      const { data: matchingGenreProfiles, error: matchingError } = await supabase
         .from("profile_genres")
-        .select(`
-          genre,
-          profile:profiles!inner (
-            id,
-            display_name,
-            avatar_url,
-            bio
-          )
-        `)
+        .select("genre, profile_id")
         .in("genre", genres)
-        .not("profile_id", "in", `(${[...followedIds, user.id].join(",")})`);
+        .not("profile_id", "in", `(${excludeList.join(",")})`);
 
       if (matchingError) throw matchingError;
 
@@ -78,52 +71,70 @@ export function useRecommendedArtists(limit: number = 6) {
       const artistIds = new Set(artistRoles?.map((r) => r.user_id) || []);
 
       // Group by profile and count matching genres
-      const profileMap = new Map<string, { profile: any; genres: Set<string> }>();
+      const profileGenreMap = new Map<string, Set<string>>();
       
-      matchingProfiles?.forEach((item: any) => {
-        if (!item.profile || !artistIds.has(item.profile.id)) return;
+      matchingGenreProfiles?.forEach((item) => {
+        if (!artistIds.has(item.profile_id)) return;
         
-        const profileId = item.profile.id;
-        if (!profileMap.has(profileId)) {
-          profileMap.set(profileId, { profile: item.profile, genres: new Set() });
+        if (!profileGenreMap.has(item.profile_id)) {
+          profileGenreMap.set(item.profile_id, new Set());
         }
-        profileMap.get(profileId)!.genres.add(item.genre);
+        profileGenreMap.get(item.profile_id)!.add(item.genre);
       });
 
-      // Convert to array and sort by number of matching genres
-      const candidates = Array.from(profileMap.entries())
-        .map(([_, { profile, genres }]) => ({
-          profile,
-          matchingGenres: Array.from(genres),
-          matchCount: genres.size,
+      // Sort by number of matching genres and get top candidates
+      const sortedCandidates = Array.from(profileGenreMap.entries())
+        .map(([profileId, genreSet]) => ({
+          profileId,
+          matchingGenres: Array.from(genreSet),
+          matchCount: genreSet.size,
         }))
         .sort((a, b) => b.matchCount - a.matchCount)
         .slice(0, limit);
 
-      // Step 5: Get track counts and follower counts
+      if (sortedCandidates.length === 0) {
+        return getPopularArtists(user.id, limit, followedIds);
+      }
+
+      // Step 5: Fetch profiles from public view
+      const candidateIds = sortedCandidates.map((c) => c.profileId);
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles_public")
+        .select("id, display_name, avatar_url, bio")
+        .in("id", candidateIds);
+
+      if (profilesError) throw profilesError;
+
+      const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+
+      // Step 6: Get track counts and follower counts
       const recommendations: RecommendedArtist[] = await Promise.all(
-        candidates.map(async ({ profile, matchingGenres }) => {
-          const { count: trackCount } = await supabase
-            .from("tracks")
-            .select("*", { count: "exact", head: true })
-            .eq("artist_id", profile.id)
-            .eq("is_draft", false);
+        sortedCandidates
+          .filter((c) => profileMap.has(c.profileId))
+          .map(async ({ profileId, matchingGenres }) => {
+            const profile = profileMap.get(profileId)!;
+            
+            const { count: trackCount } = await supabase
+              .from("tracks")
+              .select("*", { count: "exact", head: true })
+              .eq("artist_id", profileId)
+              .eq("is_draft", false);
 
-          const { count: followerCount } = await supabase
-            .from("follows")
-            .select("*", { count: "exact", head: true })
-            .eq("following_id", profile.id);
+            const { count: followerCount } = await supabase
+              .from("follows")
+              .select("*", { count: "exact", head: true })
+              .eq("following_id", profileId);
 
-          return {
-            id: profile.id,
-            display_name: profile.display_name,
-            avatar_url: profile.avatar_url,
-            bio: profile.bio,
-            matchingGenres,
-            trackCount: trackCount || 0,
-            followerCount: followerCount || 0,
-          };
-        })
+            return {
+              id: profile.id!,
+              display_name: profile.display_name,
+              avatar_url: profile.avatar_url,
+              bio: profile.bio,
+              matchingGenres,
+              trackCount: trackCount || 0,
+              followerCount: followerCount || 0,
+            };
+          })
       );
 
       // If not enough recommendations, fill with popular artists
@@ -161,9 +172,9 @@ async function getPopularArtists(
 
   if (filteredIds.length === 0) return [];
 
-  // Get profiles
+  // Get profiles from public view
   const { data: profiles, error: profilesError } = await supabase
-    .from("profiles")
+    .from("profiles_public")
     .select("id, display_name, avatar_url, bio")
     .in("id", filteredIds.slice(0, limit * 2)); // Get extra in case some have no tracks
 
@@ -188,7 +199,7 @@ async function getPopularArtists(
         .eq("following_id", profile.id);
 
       artistsWithStats.push({
-        id: profile.id,
+        id: profile.id!,
         display_name: profile.display_name,
         avatar_url: profile.avatar_url,
         bio: profile.bio,

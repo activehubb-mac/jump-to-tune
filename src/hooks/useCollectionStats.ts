@@ -22,7 +22,7 @@ interface OwnedTrack {
       id: string;
       display_name: string | null;
       avatar_url: string | null;
-    };
+    } | null;
   };
 }
 
@@ -73,7 +73,8 @@ export function useOwnedTracks(userId: string | undefined) {
     queryFn: async (): Promise<OwnedTrack[]> => {
       if (!userId) return [];
 
-      const { data, error } = await supabase
+      // Step 1: Fetch purchases with track data (no profile join)
+      const { data: purchases, error } = await supabase
         .from("purchases")
         .select(`
           id,
@@ -85,18 +86,45 @@ export function useOwnedTracks(userId: string | undefined) {
             title,
             cover_art_url,
             total_editions,
-            artist:profiles!tracks_artist_id_fkey (
-              id,
-              display_name,
-              avatar_url
-            )
+            artist_id
           )
         `)
         .eq("user_id", userId)
         .order("purchased_at", { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      if (!purchases || purchases.length === 0) return [];
+
+      // Step 2: Get unique artist IDs from tracks
+      const artistIds = [...new Set(
+        purchases
+          .filter((p: any) => p.track?.artist_id)
+          .map((p: any) => p.track.artist_id)
+      )];
+
+      if (artistIds.length === 0) {
+        return purchases.map((p: any) => ({
+          ...p,
+          track: p.track ? { ...p.track, artist: null } : null,
+        }));
+      }
+
+      // Step 3: Fetch artist profiles from public view
+      const { data: artists } = await supabase
+        .from("profiles_public")
+        .select("id, display_name, avatar_url")
+        .in("id", artistIds);
+
+      // Step 4: Map artists to purchases
+      const artistMap = new Map(artists?.map((a) => [a.id, a]) || []);
+
+      return purchases.map((purchase: any) => ({
+        ...purchase,
+        track: purchase.track ? {
+          ...purchase.track,
+          artist: artistMap.get(purchase.track.artist_id) || null,
+        } : null,
+      }));
     },
     enabled: !!userId,
   });

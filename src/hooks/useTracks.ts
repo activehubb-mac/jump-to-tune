@@ -21,7 +21,7 @@ interface Track {
     id: string;
     display_name: string | null;
     avatar_url: string | null;
-  };
+  } | null;
 }
 
 interface UseTracksOptions {
@@ -39,16 +39,10 @@ export function useTracks(options: UseTracksOptions = {}) {
   return useQuery({
     queryKey: ["tracks", options],
     queryFn: async (): Promise<Track[]> => {
+      // Step 1: Fetch tracks without profile join (RLS blocks profiles for other users)
       let query = supabase
         .from("tracks")
-        .select(`
-          *,
-          artist:profiles!tracks_artist_id_fkey (
-            id,
-            display_name,
-            avatar_url
-          )
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
       if (artistId) {
@@ -75,10 +69,27 @@ export function useTracks(options: UseTracksOptions = {}) {
         query = query.limit(limit);
       }
 
-      const { data, error } = await query;
+      const { data: tracks, error } = await query;
 
       if (error) throw error;
-      return data || [];
+      if (!tracks || tracks.length === 0) return [];
+
+      // Step 2: Get unique artist IDs
+      const artistIds = [...new Set(tracks.map((t) => t.artist_id).filter(Boolean))];
+
+      // Step 3: Fetch artist profiles from public view
+      const { data: artists } = await supabase
+        .from("profiles_public")
+        .select("id, display_name, avatar_url")
+        .in("id", artistIds);
+
+      // Step 4: Map artists to tracks
+      const artistMap = new Map(artists?.map((a) => [a.id, a]) || []);
+      
+      return tracks.map((track) => ({
+        ...track,
+        artist: artistMap.get(track.artist_id) || null,
+      }));
     },
   });
 }

@@ -38,15 +38,19 @@ export function useArtistSearch(searchQuery: string, excludeIds: string[] = []) 
 
       if (artistIds.length === 0) return [];
 
-      // Search profiles by display name
+      // Search profiles by display name using public view
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("id, display_name, avatar_url")
         .in("id", artistIds)
         .ilike("display_name", `%${debouncedQuery}%`)
         .limit(10);
 
-      return profiles ?? [];
+      return (profiles ?? []).map((p) => ({
+        id: p.id!,
+        display_name: p.display_name,
+        avatar_url: p.avatar_url,
+      }));
     },
     enabled: debouncedQuery.length >= 2,
   });

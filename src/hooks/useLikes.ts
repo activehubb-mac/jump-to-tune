@@ -113,7 +113,8 @@ export function useLikedTracks() {
     queryFn: async (): Promise<LikedTrack[]> => {
       if (!user) return [];
 
-      const { data, error } = await supabase
+      // Step 1: Fetch likes with track data (no profile join)
+      const { data: likes, error } = await supabase
         .from("likes")
         .select(`
           created_at,
@@ -126,32 +127,42 @@ export function useLikedTracks() {
             genre,
             price,
             is_draft,
-            artist:profiles!tracks_artist_id_fkey (
-              id,
-              display_name,
-              avatar_url
-            )
+            artist_id
           )
         `)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+      if (!likes || likes.length === 0) return [];
 
-      // Transform and filter out draft tracks
-      return (data || [])
-        .filter((like: any) => like.track && !like.track.is_draft)
-        .map((like: any) => ({
-          id: like.track.id,
-          title: like.track.title,
-          cover_art_url: like.track.cover_art_url,
-          audio_url: like.track.audio_url,
-          duration: like.track.duration,
-          genre: like.track.genre,
-          price: like.track.price,
-          artist: like.track.artist,
-          liked_at: like.created_at,
-        }));
+      // Filter out draft tracks
+      const validLikes = likes.filter((like: any) => like.track && !like.track.is_draft);
+      if (validLikes.length === 0) return [];
+
+      // Step 2: Get unique artist IDs
+      const artistIds = [...new Set(validLikes.map((l: any) => l.track.artist_id).filter(Boolean))];
+
+      // Step 3: Fetch artist profiles from public view
+      const { data: artists } = await supabase
+        .from("profiles_public")
+        .select("id, display_name, avatar_url")
+        .in("id", artistIds);
+
+      // Step 4: Map artists to tracks
+      const artistMap = new Map(artists?.map((a) => [a.id, a]) || []);
+
+      return validLikes.map((like: any) => ({
+        id: like.track.id,
+        title: like.track.title,
+        cover_art_url: like.track.cover_art_url,
+        audio_url: like.track.audio_url,
+        duration: like.track.duration,
+        genre: like.track.genre,
+        price: like.track.price,
+        artist: artistMap.get(like.track.artist_id) || null,
+        liked_at: like.created_at,
+      }));
     },
     enabled: !!user,
   });
