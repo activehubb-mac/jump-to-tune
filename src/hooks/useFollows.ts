@@ -8,6 +8,7 @@ interface FollowedArtist {
   avatar_url: string | null;
   bio: string | null;
   followed_at: string;
+  role: 'artist' | 'label' | 'fan' | null;
 }
 
 export function useFollowedArtists() {
@@ -18,31 +19,49 @@ export function useFollowedArtists() {
     queryFn: async (): Promise<FollowedArtist[]> => {
       if (!user) return [];
 
-      const { data, error } = await supabase
+      // Step 1: Fetch follows without profile join (avoids RLS issues)
+      const { data: follows, error } = await supabase
         .from("follows")
-        .select(`
-          created_at,
-          following:profiles!follows_following_id_fkey (
-            id,
-            display_name,
-            avatar_url,
-            bio
-          )
-        `)
+        .select("following_id, created_at")
         .eq("follower_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+      if (!follows || follows.length === 0) return [];
 
-      return (data || [])
-        .filter((follow: any) => follow.following)
-        .map((follow: any) => ({
-          id: follow.following.id,
-          display_name: follow.following.display_name,
-          avatar_url: follow.following.avatar_url,
-          bio: follow.following.bio,
-          followed_at: follow.created_at,
-        }));
+      // Step 2: Get unique following IDs
+      const followingIds = follows.map(f => f.following_id);
+
+      // Step 3: Fetch profiles from public view (bypasses RLS)
+      const { data: profiles } = await supabase
+        .from("profiles_public")
+        .select("id, display_name, avatar_url, bio")
+        .in("id", followingIds);
+
+      // Step 4: Fetch roles for these users
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", followingIds);
+
+      // Step 5: Build lookup maps
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const roleMap = new Map(roles?.map(r => [r.user_id, r.role]) || []);
+
+      // Step 6: Combine data preserving follow order
+      return follows
+        .map(follow => {
+          const profile = profileMap.get(follow.following_id);
+          return profile ? {
+            id: profile.id!,
+            display_name: profile.display_name,
+            avatar_url: profile.avatar_url,
+            bio: profile.bio,
+            followed_at: follow.created_at,
+            role: (roleMap.get(follow.following_id) as 'artist' | 'label' | 'fan') || null,
+          } : null;
+        })
+        .filter((item): item is FollowedArtist => item !== null);
     },
     enabled: !!user,
   });

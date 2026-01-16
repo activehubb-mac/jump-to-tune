@@ -9,7 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, Bookmark, X, Download, Crown } from "lucide-react";
+import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, Bookmark, X, Download, Crown, Building2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCollectionStats, useOwnedTracks } from "@/hooks/useCollectionStats";
@@ -659,7 +660,7 @@ export default function Collection() {
                 {followedArtists.map((artist) => (
                   <Link
                     key={artist.id}
-                    to={`/artist/${artist.id}`}
+                    to={artist.role === 'label' ? `/label/${artist.id}` : `/artist/${artist.id}`}
                     className="glass-card p-4 group hover:bg-primary/10 transition-all duration-300"
                   >
                     {/* Avatar */}
@@ -679,9 +680,18 @@ export default function Collection() {
 
                     {/* Artist Info */}
                     <div className="text-center">
-                      <h3 className="font-semibold text-foreground truncate">
-                        {artist.display_name || "Unknown Artist"}
-                      </h3>
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <h3 className="font-semibold text-foreground truncate">
+                          {artist.display_name || "Unknown"}
+                        </h3>
+                        {artist.role && (
+                          <Badge variant="outline" className="text-xs capitalize">
+                            {artist.role === 'label' && <Building2 className="w-3 h-3 mr-1" />}
+                            {artist.role === 'artist' && <Music className="w-3 h-3 mr-1" />}
+                            {artist.role}
+                          </Badge>
+                        )}
+                      </div>
                       {artist.bio && (
                         <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
                           {artist.bio}
