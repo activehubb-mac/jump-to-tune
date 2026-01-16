@@ -82,22 +82,26 @@ serve(async (req) => {
     const priceCents = Math.round(track.price * 100); // Convert dollars to cents
     logStep("Track found", { title: track.title, price_cents: priceCents });
 
-    // Get user's wallet
-    const { data: wallet, error: walletError } = await supabaseClient
-      .from("credit_wallets")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
+    // ATOMIC: Deduct credits from wallet using atomic database function
+    // This prevents race conditions where concurrent requests could double-spend
+    const { data: deductResult, error: deductError } = await supabaseClient.rpc(
+      'deduct_credits_atomic',
+      { p_user_id: userId, p_amount_cents: priceCents }
+    );
 
-    if (walletError || !wallet) {
-      throw new Error("Wallet not found");
+    if (deductError) {
+      logStep("Atomic deduction error", { error: deductError.message });
+      throw new Error("Failed to process payment");
     }
 
-    if (wallet.balance_cents < priceCents) {
+    if (!deductResult || deductResult.success === false) {
+      // Insufficient balance - return the current balance
+      const currentBalance = deductResult?.current_balance ?? 0;
+      logStep("Insufficient credits", { balance: currentBalance, required: priceCents });
       return new Response(
         JSON.stringify({ 
           error: "Insufficient credits",
-          balance_cents: wallet.balance_cents,
+          balance_cents: currentBalance,
           required_cents: priceCents,
         }),
         {
@@ -107,7 +111,13 @@ serve(async (req) => {
       );
     }
 
-    logStep("Wallet balance sufficient", { balance: wallet.balance_cents, price: priceCents });
+    const previousBalance = deductResult.previous_balance;
+    const newBalance = deductResult.new_balance;
+    logStep("Credits deducted atomically", { 
+      previous: previousBalance, 
+      deducted: priceCents, 
+      new_balance: newBalance 
+    });
 
     // Calculate revenue split
     const platformFeeCents = Math.ceil(priceCents * (PLATFORM_FEE_PERCENT / 100));
@@ -139,22 +149,15 @@ serve(async (req) => {
 
     // Check if editions are still available
     if (editionNumber > track.total_editions) {
+      // Refund credits since we already deducted them
+      await supabaseClient.rpc('add_credits_atomic', { 
+        p_user_id: userId, 
+        p_amount_cents: priceCents 
+      });
       throw new Error("All editions have been sold");
     }
 
-    // Start transaction: deduct credits, create purchase, record earnings
-    
-    // 1. Deduct credits from wallet
-    const { error: deductError } = await supabaseClient
-      .from("credit_wallets")
-      .update({ balance_cents: wallet.balance_cents - priceCents })
-      .eq("user_id", userId);
-
-    if (deductError) {
-      throw new Error("Failed to deduct credits");
-    }
-
-    // 2. Create purchase record
+    // Create purchase record
     const { data: purchase, error: purchaseError } = await supabaseClient
       .from("purchases")
       .insert({
@@ -168,15 +171,16 @@ serve(async (req) => {
       .single();
 
     if (purchaseError) {
-      // Rollback: restore credits
-      await supabaseClient
-        .from("credit_wallets")
-        .update({ balance_cents: wallet.balance_cents })
-        .eq("user_id", userId);
+      // Refund credits since purchase failed
+      await supabaseClient.rpc('add_credits_atomic', { 
+        p_user_id: userId, 
+        p_amount_cents: priceCents 
+      });
+      logStep("Purchase failed, credits refunded", { error: purchaseError.message });
       throw new Error("Failed to create purchase record");
     }
 
-    // 3. Record credit transaction
+    // Record credit transaction
     await supabaseClient
       .from("credit_transactions")
       .insert({
@@ -187,7 +191,7 @@ serve(async (req) => {
         description: `Purchased: ${track.title}`,
       });
 
-    // 4. Record earnings (to label if present, otherwise artist)
+    // Record earnings (to label if present, otherwise artist)
     const { data: earnings, error: earningsError } = await supabaseClient
       .from("artist_earnings")
       .insert({
@@ -205,7 +209,7 @@ serve(async (req) => {
       logStep("Warning: Failed to record earnings", { error: earningsError.message });
     }
 
-    // 5. Update track editions_sold count
+    // Update track editions_sold count
     await supabaseClient
       .from("tracks")
       .update({ editions_sold: editionNumber })
@@ -217,9 +221,7 @@ serve(async (req) => {
       earnings_id: earnings?.id,
     });
 
-    // 6. Create notifications for buyer and seller
-    const newBalance = wallet.balance_cents - priceCents;
-
+    // Create notifications for buyer and seller
     // Notification for buyer
     await supabaseClient
       .from("notifications")
@@ -325,7 +327,7 @@ serve(async (req) => {
       }
     }
 
-    // 7. If earnings recipient has Stripe Connect, initiate transfer
+    // If earnings recipient has Stripe Connect, log for payout
     if (earningsRecipient?.stripe_account_id && earningsRecipient?.stripe_payouts_enabled) {
       try {
         const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -346,7 +348,7 @@ serve(async (req) => {
       }
     }
 
-    // 7. Send purchase confirmation email (non-blocking)
+    // Send purchase confirmation email (non-blocking)
     try {
       const emailPayload = {
         userId,
@@ -395,7 +397,7 @@ serve(async (req) => {
           cover_art_url: track.cover_art_url,
           artist_name: track.artist?.display_name,
         },
-        new_balance_cents: wallet.balance_cents - priceCents,
+        new_balance_cents: newBalance,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

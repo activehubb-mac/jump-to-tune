@@ -707,6 +707,14 @@ export type Database = {
       }
     }
     Functions: {
+      add_credits_atomic: {
+        Args: { p_amount_cents: number; p_user_id: string }
+        Returns: Json
+      }
+      deduct_credits_atomic: {
+        Args: { p_amount_cents: number; p_user_id: string }
+        Returns: Json
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
