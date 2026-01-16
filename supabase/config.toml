@@ -47,3 +47,15 @@ verify_jwt = false
 
 [functions.send-payout-email]
 verify_jwt = false
+
+[functions.send-credit-email]
+verify_jwt = false
+
+[functions.send-sale-email]
+verify_jwt = false
+
+[functions.send-low-balance-email]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false

@@ -254,6 +254,40 @@ serve(async (req) => {
       });
     logStep("Seller notification created");
 
+    // Send sale email to artist/label (non-blocking)
+    try {
+      const saleEmailPayload = {
+        recipientId: earningsRecipientId,
+        recipientType: recipientType,
+        trackTitle: track.title,
+        trackId: track_id,
+        coverArtUrl: track.cover_art_url,
+        editionNumber,
+        totalEditions: track.total_editions,
+        grossAmountCents: priceCents,
+        earningsCents: artistPayoutCents,
+      };
+
+      fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-sale-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify(saleEmailPayload),
+        }
+      ).then(res => {
+        if (!res.ok) logStep("Sale email failed", { status: res.status });
+        else logStep("Sale email sent");
+      }).catch(err => logStep("Sale email error", { error: err.message }));
+    } catch (emailError) {
+      logStep("Sale email error (non-blocking)", { 
+        error: emailError instanceof Error ? emailError.message : "Unknown" 
+      });
+    }
+
     // Low balance warning notification
     const avgPurchaseCents = 200; // Default $2 threshold
     if (newBalance < avgPurchaseCents && newBalance > 0) {
@@ -267,6 +301,28 @@ serve(async (req) => {
           metadata: { balance_cents: newBalance },
         });
       logStep("Low balance notification created");
+
+      // Send low balance email (non-blocking)
+      try {
+        fetch(
+          `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-low-balance-email`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+            },
+            body: JSON.stringify({ userId, balanceCents: newBalance }),
+          }
+        ).then(res => {
+          if (!res.ok) logStep("Low balance email failed", { status: res.status });
+          else logStep("Low balance email sent");
+        }).catch(err => logStep("Low balance email error", { error: err.message }));
+      } catch (emailError) {
+        logStep("Low balance email error (non-blocking)", { 
+          error: emailError instanceof Error ? emailError.message : "Unknown" 
+        });
+      }
     }
 
     // 7. If earnings recipient has Stripe Connect, initiate transfer
