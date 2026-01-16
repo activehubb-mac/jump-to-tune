@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock } from "lucide-react";
+import { Search, Filter, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePublishedTracks } from "@/hooks/useTracks";
 import { formatPrice, formatEditions, formatCompactNumber } from "@/lib/formatters";
@@ -15,6 +15,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
+import { DownloadButton } from "@/components/download/DownloadButton";
+import { usePurchases } from "@/hooks/usePurchases";
 
 const genres = ["All", "Electronic", "Hip Hop", "R&B", "Pop", "Rock", "Jazz", "Classical", "Indie"];
 
@@ -28,6 +30,7 @@ export default function Browse() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const { user } = useAuth();
   const { showFeedback } = useFeedbackSafe();
+  const { isOwned } = usePurchases();
   
   const { data: tracks, isLoading } = usePublishedTracks({
     genre: selectedGenre,
@@ -238,6 +241,23 @@ export default function Browse() {
                         <Lock className="h-2 w-2 absolute -top-0.5 -right-0.5 text-primary" />
                       )}
                     </button>
+                    {/* Download Button */}
+                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <DownloadButton
+                        track={{
+                          id: track.id,
+                          title: track.title,
+                          cover_art_url: track.cover_art_url,
+                          price: track.price,
+                          audio_url: track.audio_url,
+                          artist: track.artist ? { display_name: track.artist.display_name } : undefined,
+                        }}
+                        isOwned={isOwned(track.id)}
+                        variant="ghost"
+                        size="icon"
+                        className="bg-background/50 backdrop-blur-sm hover:bg-background/80"
+                      />
+                    </div>
                   </div>
 
                   {/* Track Info */}

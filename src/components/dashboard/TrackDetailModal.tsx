@@ -9,6 +9,8 @@ import { Disc3, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { Slider } from "@/components/ui/slider";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
+import { DownloadButton } from "@/components/download/DownloadButton";
+import { usePurchases } from "@/hooks/usePurchases";
 
 interface Track {
   id: string;
@@ -58,6 +60,7 @@ export function TrackDetailModal({
     setVolume,
     toggleMute,
   } = useAudioPlayer();
+  const { isOwned } = usePurchases();
 
   // Check if this track is the currently playing track
   const isThisTrackPlaying = currentTrack?.id === track?.id;
@@ -153,6 +156,22 @@ export function TrackDetailModal({
               </p>
             </div>
           </div>
+
+          {/* Download/Purchase Button */}
+          <DownloadButton
+            track={{
+              id: track.id,
+              title: track.title,
+              cover_art_url: track.cover_art_url,
+              price: track.price,
+              audio_url: track.audio_url,
+              artist: track.artist ? { display_name: track.artist.display_name } : undefined,
+            }}
+            isOwned={isOwned(track.id)}
+            variant="default"
+            size="lg"
+            className="w-full gradient-accent neon-glow-subtle"
+          />
 
           {/* Audio Player */}
           <div className="w-full space-y-3 glass-card p-4 rounded-xl">
