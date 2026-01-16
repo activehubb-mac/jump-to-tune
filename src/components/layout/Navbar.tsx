@@ -8,6 +8,13 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -33,6 +40,7 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [showTopupModal, setShowTopupModal] = useState(false);
+  const [isMobileNotificationsOpen, setIsMobileNotificationsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, role, signOut, isLoading } = useAuth();
@@ -361,9 +369,77 @@ export function Navbar() {
                           <p className="text-sm text-muted-foreground capitalize">{role || "Fan"}</p>
                         </div>
                         {unreadCount > 0 && (
-                          <Badge variant="destructive" className="ml-auto">
-                            {unreadCount} new
-                          </Badge>
+                          <Sheet open={isMobileNotificationsOpen} onOpenChange={setIsMobileNotificationsOpen}>
+                            <SheetTrigger asChild>
+                              <Badge variant="destructive" className="ml-auto cursor-pointer">
+                                {unreadCount} new
+                              </Badge>
+                            </SheetTrigger>
+                            <SheetContent side="right" className="w-full sm:w-[400px] glass">
+                              <SheetHeader>
+                                <SheetTitle className="flex items-center justify-between">
+                                  <span>Notifications</span>
+                                  {unreadCount > 0 && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="text-xs"
+                                      onClick={() => {
+                                        markAllAsRead();
+                                      }}
+                                    >
+                                      <Check className="w-3 h-3 mr-1" />
+                                      Mark all read
+                                    </Button>
+                                  )}
+                                </SheetTitle>
+                              </SheetHeader>
+                              <ScrollArea className="h-[calc(100vh-120px)] mt-4">
+                                {notifications.length === 0 ? (
+                                  <div className="p-4 text-center text-muted-foreground">
+                                    <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                    <p className="text-sm">No notifications yet</p>
+                                  </div>
+                                ) : (
+                                  notifications.map((notification) => (
+                                    <div
+                                      key={notification.id}
+                                      className={cn(
+                                        "p-3 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors",
+                                        !notification.read && "bg-primary/5"
+                                      )}
+                                      onClick={() => {
+                                        if (!notification.read) markAsRead(notification.id);
+                                      }}
+                                    >
+                                      <div className="flex items-start gap-3">
+                                        <div className="mt-0.5">
+                                          {getNotificationIcon(notification)}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <p className={cn(
+                                            "text-sm",
+                                            !notification.read ? "font-medium text-foreground" : "text-muted-foreground"
+                                          )}>
+                                            {notification.title}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                                            {notification.message}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground/60 mt-1">
+                                            {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                                          </p>
+                                        </div>
+                                        {!notification.read && (
+                                          <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1" />
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))
+                                )}
+                              </ScrollArea>
+                            </SheetContent>
+                          </Sheet>
                         )}
                       </div>
                       {/* Mobile Subscription Countdown */}
