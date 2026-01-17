@@ -1,9 +1,11 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock, X } from "lucide-react";
+import { TrackCardSkeletonGrid } from "@/components/dashboard/TrackCardSkeleton";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { Link } from "react-router-dom";
 import { useInfinitePublishedTracks } from "@/hooks/useTracks";
 import { useBrowsePreferences } from "@/hooks/useBrowsePreferences";
@@ -278,9 +280,7 @@ export default function Browse() {
 
         {/* Track Grid */}
         {isLoading ? (
-          <div className="flex justify-center py-24">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
+          <TrackCardSkeletonGrid count={10} />
         ) : tracks && tracks.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {tracks.map((track) => {
@@ -480,6 +480,7 @@ export default function Browse() {
             </p>
           )}
         </div>
+        <ScrollToTop />
       </div>
     </Layout>
   );
