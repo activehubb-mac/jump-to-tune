@@ -97,11 +97,12 @@ export function Navbar() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-10 h-10 rounded-lg gradient-accent flex items-center justify-center neon-glow-subtle group-hover:neon-glow transition-all duration-300">
-                <Music className="w-6 h-6 text-foreground" />
-              </div>
-              <span className="text-xl font-bold text-gradient">JumTunes</span>
+            <Link to="/" className="flex items-center group">
+              <img 
+                src="/images/jumtunes-logo.png" 
+                alt="JumTunes" 
+                className="h-10 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
+              />
             </Link>
 
             {/* Desktop Navigation */}

@@ -444,13 +444,15 @@ export default function Auth() {
         <div className="w-full max-w-md relative z-10">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 mb-4">
-              <div className="w-12 h-12 rounded-xl gradient-accent flex items-center justify-center neon-glow-subtle">
-                <Music className="w-7 h-7 text-foreground" />
-              </div>
+            <div className="flex justify-center mb-4">
+              <img 
+                src="/images/jumtunes-logo.png" 
+                alt="JumTunes" 
+                className="h-14 w-auto object-contain"
+              />
             </div>
             <h1 className="text-3xl font-bold text-foreground">
-              {mode === "signin" ? "Welcome Back" : "Join JumTunes"}
+              {mode === "signin" ? "Welcome Back" : "Join Us"}
             </h1>
             <p className="text-muted-foreground mt-2">
               {mode === "signin"

@@ -8,11 +8,12 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg gradient-accent flex items-center justify-center">
-                <Music className="w-6 h-6 text-foreground" />
-              </div>
-              <span className="text-xl font-bold text-gradient">JumTunes</span>
+            <Link to="/" className="flex items-center">
+              <img 
+                src="/images/jumtunes-logo.png" 
+                alt="JumTunes" 
+                className="h-10 w-auto object-contain"
+              />
             </Link>
             <p className="text-muted-foreground text-sm">
               The future of music ownership. Collect, trade, and support your favorite artists.
