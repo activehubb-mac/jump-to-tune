@@ -67,30 +67,35 @@ export default function AuthCallback() {
     }
   }, [debugMode, isLoading, user, role, profile, targetRoute]);
 
-  // Send welcome email on successful verification (once)
+  // Send welcome email on successful verification - ONLY for fans
+  // Artists/Labels get their welcome email after completing onboarding
   useEffect(() => {
     if (!isLoading && user && !hasProcessedRef.current) {
       hasProcessedRef.current = true;
       
       const userRole = role || (user.user_metadata?.role as string) || "fan";
-      const displayName = profile?.display_name || user.user_metadata?.display_name || "";
       
-      // Send welcome email (fire and forget)
-      supabase.functions
-        .invoke("send-welcome-email", {
-          body: {
-            email: user.email,
-            displayName,
-            role: userRole,
-          },
-        })
-        .then(({ error }) => {
-          if (error) {
-            console.error("Failed to send welcome email:", error);
-          } else {
-            console.log("Welcome email sent successfully");
-          }
-        });
+      // Only send welcome email immediately for fans
+      // Artists/Labels receive it after onboarding completion
+      if (userRole === "fan") {
+        const displayName = profile?.display_name || user.user_metadata?.display_name || "";
+        
+        supabase.functions
+          .invoke("send-welcome-email", {
+            body: {
+              email: user.email,
+              displayName,
+              role: userRole,
+            },
+          })
+          .then(({ error }) => {
+            if (error) {
+              console.error("Failed to send welcome email:", error);
+            } else {
+              console.log("Welcome email sent successfully");
+            }
+          });
+      }
     }
   }, [isLoading, user, role, profile]);
 
