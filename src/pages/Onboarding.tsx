@@ -230,12 +230,16 @@ export default function Onboarding() {
           {/* Welcome Step */}
           {step === "welcome" && (
             <div className="text-center space-y-6">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full gradient-accent neon-glow">
-                <Sparkles className="w-10 h-10 text-foreground" />
+              <div className="flex justify-center">
+                <img 
+                  src="/images/jumtunes-logo.png" 
+                  alt="JumTunes" 
+                  className="h-16 w-auto object-contain"
+                />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-foreground mb-2">
-                  Welcome to JumTunes!
+                  Welcome!
                 </h1>
                 <p className="text-muted-foreground">
                   Let's set up your {role === "label" ? "label" : "artist"} profile so fans can discover you.
@@ -542,10 +546,11 @@ export default function Onboarding() {
 
       {/* Logo */}
       <div className="relative z-10 pb-8 flex justify-center">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Music className="w-5 h-5" />
-          <span className="font-semibold">JumTunes</span>
-        </div>
+        <img 
+          src="/images/jumtunes-logo.png" 
+          alt="JumTunes" 
+          className="h-8 w-auto object-contain opacity-60"
+        />
       </div>
     </div>
   );
