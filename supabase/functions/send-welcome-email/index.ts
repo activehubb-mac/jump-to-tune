@@ -4,6 +4,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
+const LOGO_URL = "https://jump-to-tune.lovable.app/images/jumtunes-logo.png";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -89,42 +91,44 @@ const handler = async (req: Request): Promise<Response> => {
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); padding: 40px 30px; border-radius: 12px 12px 0 0; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 32px;">🎵 JumTunes</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Own Your Music</p>
-          </div>
-          
-          <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-            <h2 style="color: #1f2937; margin-top: 0;">Hey ${userName}! 👋</h2>
-            
-            <p style="color: #4b5563; font-size: 16px;">
-              ${content.description}
-            </p>
-            
-            <div style="background: #f3f4f6; border-radius: 8px; padding: 20px; margin: 24px 0;">
-              <p style="color: #1f2937; font-weight: 600; margin: 0 0 12px 0;">Here's what you can do:</p>
-              <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
-                ${content.features.map(f => `<li style="margin-bottom: 8px;">${f}</li>`).join("")}
-              </ul>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 15px 10px; background-color: #f4f4f5;">
+          <div style="max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); padding: 24px 20px; border-radius: 12px 12px 0 0; text-align: center;">
+              <img src="${LOGO_URL}" alt="JumTunes" style="width: 180px; height: auto; display: block; margin: 0 auto;">
+              <p style="color: rgba(255,255,255,0.9); margin: 12px 0 0 0; font-size: 14px;">Own Your Music</p>
             </div>
             
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${content.ctaUrl}" 
-                 style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                ${content.cta}
-              </a>
+            <div style="background: #ffffff; padding: 24px 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+              <h2 style="color: #1f2937; margin-top: 0; font-size: 22px;">Hey ${userName}! 👋</h2>
+              
+              <p style="color: #4b5563; font-size: 16px;">
+                ${content.description}
+              </p>
+              
+              <div style="background: #f3f4f6; border-radius: 8px; padding: 16px; margin: 24px 0;">
+                <p style="color: #1f2937; font-weight: 600; margin: 0 0 12px 0;">Here's what you can do:</p>
+                <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
+                  ${content.features.map(f => `<li style="margin-bottom: 8px;">${f}</li>`).join("")}
+                </ul>
+              </div>
+              
+              <div style="text-align: center; margin: 24px 0;">
+                <a href="${content.ctaUrl}" 
+                   style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                  ${content.cta}
+                </a>
+              </div>
+              
+              <p style="color: #6b7280; font-size: 14px; text-align: center;">
+                Questions? Just reply to this email - we're here to help!
+              </p>
+              
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+              
+              <p style="color: #9ca3af; font-size: 12px; text-align: center;">
+                © ${new Date().getFullYear()} JumTunes. All rights reserved.
+              </p>
             </div>
-            
-            <p style="color: #6b7280; font-size: 14px; text-align: center;">
-              Questions? Just reply to this email - we're here to help!
-            </p>
-            
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-            
-            <p style="color: #9ca3af; font-size: 12px; text-align: center;">
-              © ${new Date().getFullYear()} JumTunes. All rights reserved.
-            </p>
           </div>
         </body>
         </html>

@@ -5,6 +5,8 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const hookSecret = Deno.env.get("SEND_EMAIL_HOOK_SECRET") as string;
 
+const LOGO_URL = "https://jump-to-tune.lovable.app/images/jumtunes-logo.png";
+
 interface AuthEmailPayload {
   user: {
     id: string;
@@ -116,16 +118,14 @@ const generateEmailHtml = (content: ReturnType<typeof getEmailContent>) => {
       <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;">
           <tr>
-            <td align="center" style="padding: 40px 20px;">
+            <td align="center" style="padding: 15px 10px;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                 
-                <!-- Header -->
+                <!-- Header with Logo -->
                 <tr>
-                  <td style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%); padding: 32px 40px; text-align: center;">
-                    <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">
-                      🎵 JumTunes
-                    </h1>
-                    <p style="margin: 8px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">
+                  <td style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%); padding: 24px 20px; text-align: center;">
+                    <img src="${LOGO_URL}" alt="JumTunes" style="width: 180px; height: auto; display: block; margin: 0 auto;">
+                    <p style="margin: 12px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">
                       Own Your Music
                     </p>
                   </td>
@@ -133,8 +133,8 @@ const generateEmailHtml = (content: ReturnType<typeof getEmailContent>) => {
                 
                 <!-- Content -->
                 <tr>
-                  <td style="padding: 40px;">
-                    <h2 style="margin: 0 0 16px 0; color: #1a1a2e; font-size: 24px; font-weight: 600;">
+                  <td style="padding: 24px 20px;">
+                    <h2 style="margin: 0 0 16px 0; color: #1a1a2e; font-size: 22px; font-weight: 600;">
                       ${content.heading}
                     </h2>
                     <p style="margin: 0 0 16px 0; color: #1a1a2e; font-size: 16px; line-height: 1.5;">
@@ -165,7 +165,7 @@ const generateEmailHtml = (content: ReturnType<typeof getEmailContent>) => {
                 
                 <!-- Footer -->
                 <tr>
-                  <td style="background-color: #f8f5ff; padding: 24px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <td style="background-color: #f8f5ff; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
                     <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px;">
                       © ${new Date().getFullYear()} JumTunes. All rights reserved.
                     </p>
