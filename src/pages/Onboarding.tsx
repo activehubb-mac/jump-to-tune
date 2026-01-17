@@ -234,7 +234,7 @@ export default function Onboarding() {
                 <img 
                   src="/images/jumtunes-logo.png" 
                   alt="JumTunes" 
-                  className="h-16 w-auto object-contain"
+                  className="h-64 w-auto object-contain"
                 />
               </div>
               <div>
@@ -549,7 +549,7 @@ export default function Onboarding() {
         <img 
           src="/images/jumtunes-logo.png" 
           alt="JumTunes" 
-          className="h-8 w-auto object-contain opacity-60"
+          className="h-32 w-auto object-contain opacity-60"
         />
       </div>
     </div>

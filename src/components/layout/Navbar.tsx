@@ -101,7 +101,7 @@ export function Navbar() {
               <img 
                 src="/images/jumtunes-logo.png" 
                 alt="JumTunes" 
-                className="h-10 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
+                className="h-40 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
               />
             </Link>
 

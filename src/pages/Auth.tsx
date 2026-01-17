@@ -448,7 +448,7 @@ export default function Auth() {
               <img 
                 src="/images/jumtunes-logo.png" 
                 alt="JumTunes" 
-                className="h-14 w-auto object-contain"
+                className="h-56 w-auto object-contain"
               />
             </div>
             <h1 className="text-3xl font-bold text-foreground">

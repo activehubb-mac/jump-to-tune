@@ -12,7 +12,7 @@ export function Footer() {
               <img 
                 src="/images/jumtunes-logo.png" 
                 alt="JumTunes" 
-                className="h-10 w-auto object-contain"
+                className="h-40 w-auto object-contain"
               />
             </Link>
             <p className="text-muted-foreground text-sm">
