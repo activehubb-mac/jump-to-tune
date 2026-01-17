@@ -4,6 +4,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
+const LOGO_URL = "https://jump-to-tune.lovable.app/images/jumtunes-logo.png";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -71,63 +73,65 @@ const handler = async (req: Request): Promise<Response> => {
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">🎵 JumTunes</h1>
-          </div>
-          
-          <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-            <div style="text-align: center; margin-bottom: 24px;">
-              <span style="font-size: 48px;">💰</span>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 15px 10px; background-color: #f4f4f5;">
+          <div style="max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); padding: 24px 20px; border-radius: 12px 12px 0 0; text-align: center;">
+              <img src="${LOGO_URL}" alt="JumTunes" style="width: 180px; height: auto; display: block; margin: 0 auto;">
             </div>
             
-            <h2 style="color: #1f2937; margin-top: 0; text-align: center;">
-              Credits Added, ${userName}!
-            </h2>
-            
-            <p style="color: #4b5563; font-size: 16px; text-align: center;">
-              Your wallet has been topped up and you're ready to collect more music.
-            </p>
-            
-            <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
-              <p style="margin: 0; color: rgba(255,255,255,0.8); font-size: 14px;">Credits Added</p>
-              <p style="margin: 8px 0 0 0; color: white; font-size: 36px; font-weight: 700;">$${creditAmount}</p>
+            <div style="background: #ffffff; padding: 24px 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <span style="font-size: 48px;">💰</span>
+              </div>
+              
+              <h2 style="color: #1f2937; margin-top: 0; text-align: center; font-size: 22px;">
+                Credits Added, ${userName}!
+              </h2>
+              
+              <p style="color: #4b5563; font-size: 16px; text-align: center;">
+                Your wallet has been topped up and you're ready to collect more music.
+              </p>
+              
+              <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
+                <p style="margin: 0; color: rgba(255,255,255,0.8); font-size: 14px;">Credits Added</p>
+                <p style="margin: 8px 0 0 0; color: white; font-size: 32px; font-weight: 700;">$${creditAmount}</p>
+              </div>
+              
+              <div style="background: #f3f4f6; border-radius: 8px; padding: 16px; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="color: #6b7280; padding: 4px 0;">Credits</td>
+                    <td style="color: #1f2937; text-align: right; font-weight: 500;">$${creditAmount}</td>
+                  </tr>
+                  <tr>
+                    <td style="color: #6b7280; padding: 4px 0;">Processing Fee (1%)</td>
+                    <td style="color: #6b7280; text-align: right;">$${feeAmount}</td>
+                  </tr>
+                  <tr style="border-top: 1px solid #e5e7eb;">
+                    <td style="color: #1f2937; padding: 8px 0 0 0; font-weight: 600;">Total Charged</td>
+                    <td style="color: #1f2937; text-align: right; font-weight: 600; padding: 8px 0 0 0;">$${totalPaid}</td>
+                  </tr>
+                </table>
+              </div>
+              
+              <div style="background: #f9fafb; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;">
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">New Wallet Balance</p>
+                <p style="margin: 4px 0 0 0; color: #7c3aed; font-size: 24px; font-weight: 700;">$${newBalance}</p>
+              </div>
+              
+              <div style="text-align: center; margin: 24px 0;">
+                <a href="https://jump-to-tune.lovable.app/browse" 
+                   style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                  Browse Music
+                </a>
+              </div>
+              
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+              
+              <p style="color: #9ca3af; font-size: 12px; text-align: center;">
+                © ${new Date().getFullYear()} JumTunes. All rights reserved.
+              </p>
             </div>
-            
-            <div style="background: #f3f4f6; border-radius: 8px; padding: 16px; margin: 24px 0;">
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="color: #6b7280; padding: 4px 0;">Credits</td>
-                  <td style="color: #1f2937; text-align: right; font-weight: 500;">$${creditAmount}</td>
-                </tr>
-                <tr>
-                  <td style="color: #6b7280; padding: 4px 0;">Processing Fee (1%)</td>
-                  <td style="color: #6b7280; text-align: right;">$${feeAmount}</td>
-                </tr>
-                <tr style="border-top: 1px solid #e5e7eb;">
-                  <td style="color: #1f2937; padding: 8px 0 0 0; font-weight: 600;">Total Charged</td>
-                  <td style="color: #1f2937; text-align: right; font-weight: 600; padding: 8px 0 0 0;">$${totalPaid}</td>
-                </tr>
-              </table>
-            </div>
-            
-            <div style="background: #f9fafb; border-radius: 8px; padding: 16px; margin: 24px 0; text-align: center;">
-              <p style="margin: 0; color: #6b7280; font-size: 14px;">New Wallet Balance</p>
-              <p style="margin: 4px 0 0 0; color: #7c3aed; font-size: 24px; font-weight: 700;">$${newBalance}</p>
-            </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="https://jump-to-tune.lovable.app/browse" 
-                 style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                Browse Music
-              </a>
-            </div>
-            
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-            
-            <p style="color: #9ca3af; font-size: 12px; text-align: center;">
-              © ${new Date().getFullYear()} JumTunes. All rights reserved.
-            </p>
           </div>
         </body>
         </html>
