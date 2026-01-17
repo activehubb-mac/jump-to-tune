@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock } from "lucide-react";
 import { useArtistProfile } from "@/hooks/useArtistProfile";
 import { useTracks } from "@/hooks/useTracks";
+import { useFeaturedOnTracks } from "@/hooks/useFeaturedOnTracks";
 import { useFollow } from "@/hooks/useFollows";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
@@ -12,11 +13,13 @@ import { formatPrice, formatEditions, formatCompactNumber } from "@/lib/formatte
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
+import { FeaturedOnCarousel } from "@/components/artist/FeaturedOnCarousel";
 
 export default function ArtistProfile() {
   const { id } = useParams();
   const { data: artist, isLoading: profileLoading } = useArtistProfile(id);
   const { data: tracks, isLoading: tracksLoading } = useTracks({ artistId: id, publishedOnly: true });
+  const { data: featuredOnTracks } = useFeaturedOnTracks(id);
   const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
   const { isFollowing, toggleFollow, isToggling } = useFollow();
   const { user } = useAuth();
@@ -118,6 +121,14 @@ export default function ArtistProfile() {
             </div>
           </div>
         </div>
+
+        {/* Featured On Carousel */}
+        {featuredOnTracks && featuredOnTracks.length > 0 && (
+          <FeaturedOnCarousel
+            tracks={featuredOnTracks}
+            featuredArtistName={artist.display_name || "this artist"}
+          />
+        )}
 
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
