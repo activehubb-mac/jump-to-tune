@@ -341,8 +341,17 @@ export default function Index() {
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
+            {/* Brand Logo */}
+            <div className="flex justify-center mb-8">
+              <img 
+                src="/images/jumtunes-logo.png" 
+                alt="JumTunes" 
+                className="h-48 md:h-64 w-auto object-contain animate-float"
+              />
+            </div>
+
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-8 animate-float">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-8">
               <Zap className="w-4 h-4 text-accent" />
               <span className="text-sm text-muted-foreground">{heroContent.badge}</span>
             </div>
@@ -360,16 +369,6 @@ export default function Index() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {heroContent.ctas}
-            </div>
-
-            {/* Animated Music Icon */}
-            <div className="mt-16 flex justify-center">
-              <div className="relative">
-                <div className="w-32 h-32 rounded-full gradient-primary flex items-center justify-center animate-float neon-glow">
-                  <Disc3 className="w-16 h-16 text-foreground animate-spin" style={{ animationDuration: "8s" }} />
-                </div>
-                <div className="absolute -inset-4 rounded-full border border-primary/30 animate-ping" style={{ animationDuration: "2s" }} />
-              </div>
             </div>
           </div>
         </div>
