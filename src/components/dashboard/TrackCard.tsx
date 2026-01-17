@@ -20,12 +20,17 @@ interface TrackCardProps {
     editions_sold: number;
     total_editions: number;
     genre?: string | null;
+    moods?: string[] | null;
     duration?: number | null;
     is_explicit?: boolean;
     artist?: {
       id: string;
       display_name: string | null;
     };
+    featuredArtists?: {
+      id: string;
+      display_name: string | null;
+    }[];
   };
   showArtist?: boolean;
   showActions?: boolean;
@@ -196,10 +201,34 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
                 onClick={(e) => e.stopPropagation()}
               >
                 {track.artist.display_name || "Unknown Artist"}
+                {track.featuredArtists && track.featuredArtists.length > 0 && (
+                  <span className="text-muted-foreground/70">
+                    {" feat. "}
+                    {track.featuredArtists.map((a) => a.display_name).join(", ")}
+                  </span>
+                )}
               </Link>
             )}
             {!showArtist && track.genre && (
               <p className="text-sm text-muted-foreground truncate">{track.genre}</p>
+            )}
+            {/* Mood Tags */}
+            {track.moods && track.moods.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {track.moods.slice(0, 3).map((mood) => (
+                  <span
+                    key={mood}
+                    className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/50 text-accent-foreground/80"
+                  >
+                    {mood}
+                  </span>
+                ))}
+                {track.moods.length > 3 && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    +{track.moods.length - 3}
+                  </span>
+                )}
+              </div>
             )}
             <div className="flex items-center justify-between mt-2">
               <span className="text-sm font-medium text-primary">{formatPrice(track.price)}</span>

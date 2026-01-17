@@ -1,11 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+interface FeaturedArtist {
+  id: string;
+  display_name: string | null;
+}
+
 interface Track {
   id: string;
   title: string;
   description: string | null;
   genre: string | null;
+  moods: string[] | null;
+  is_explicit: boolean | null;
   price: number;
   total_editions: number;
   editions_sold: number;
@@ -22,6 +29,7 @@ interface Track {
     display_name: string | null;
     avatar_url: string | null;
   } | null;
+  featuredArtists?: FeaturedArtist[];
 }
 
 interface UseTracksOptions {
@@ -76,19 +84,49 @@ export function useTracks(options: UseTracksOptions = {}) {
 
       // Step 2: Get unique artist IDs
       const artistIds = [...new Set(tracks.map((t) => t.artist_id).filter(Boolean))];
+      const trackIds = tracks.map((t) => t.id);
 
-      // Step 3: Fetch artist profiles from public view
-      const { data: artists } = await supabase
-        .from("profiles_public")
-        .select("id, display_name, avatar_url")
-        .in("id", artistIds);
+      // Step 3: Fetch artist profiles and track_features in parallel
+      const [artistsResult, featuresResult] = await Promise.all([
+        supabase
+          .from("profiles_public")
+          .select("id, display_name, avatar_url")
+          .in("id", artistIds),
+        supabase
+          .from("track_features")
+          .select("track_id, artist_id")
+          .in("track_id", trackIds),
+      ]);
 
-      // Step 4: Map artists to tracks
-      const artistMap = new Map(artists?.map((a) => [a.id, a]) || []);
+      const artists = artistsResult.data || [];
+      const features = featuresResult.data || [];
+
+      // Step 4: Get unique featured artist IDs
+      const featuredArtistIds = [...new Set(features.map((f) => f.artist_id))];
+      let featuredArtistsMap = new Map<string, { id: string; display_name: string | null }>();
+      
+      if (featuredArtistIds.length > 0) {
+        const { data: featuredProfiles } = await supabase
+          .from("profiles_public")
+          .select("id, display_name")
+          .in("id", featuredArtistIds);
+        
+        featuredArtistsMap = new Map(featuredProfiles?.map((a) => [a.id!, { id: a.id!, display_name: a.display_name }]) || []);
+      }
+
+      // Step 5: Map artists and features to tracks
+      const artistMap = new Map(artists.map((a) => [a.id, a]));
+      const featuresByTrack = features.reduce((acc, f) => {
+        if (!acc[f.track_id]) acc[f.track_id] = [];
+        const artist = featuredArtistsMap.get(f.artist_id);
+        if (artist) acc[f.track_id].push(artist);
+        return acc;
+      }, {} as Record<string, FeaturedArtist[]>);
       
       return tracks.map((track) => ({
         ...track,
         artist: artistMap.get(track.artist_id) || null,
+        featuredArtists: featuresByTrack[track.id] || [],
       }));
     },
   });
