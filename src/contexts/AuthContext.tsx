@@ -155,23 +155,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
     }
 
-    // Only send welcome email for genuinely new users
-    if (data.user && data.user.identities && data.user.identities.length > 0) {
-      try {
-        await supabase.functions.invoke("send-welcome-email", {
-          body: {
-            userId: data.user.id,
-            email,
-            displayName,
-            role: selectedRole,
-          },
-        });
-      } catch (emailError) {
-        console.error("Failed to send welcome email:", emailError);
-        // Non-blocking - don't fail signup
-      }
-    }
-
     return { error: null };
   };
 
