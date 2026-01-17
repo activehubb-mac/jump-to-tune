@@ -1,9 +1,22 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
+import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0?bundle";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-const hookSecret = Deno.env.get("SEND_EMAIL_HOOK_SECRET") as string;
+
+// Get the full secret and strip v1, and whsec_ prefixes
+// The Webhook library expects raw Base64 only, not the prefixed format from Supabase
+const fullSecret = Deno.env.get("SEND_EMAIL_HOOK_SECRET") || "";
+const hookSecret = fullSecret
+  .replace("v1,", "")
+  .replace("whsec_", "");
+
+console.log("Hook secret processing:", {
+  originalLength: fullSecret.length,
+  cleanedLength: hookSecret.length,
+  hasV1Prefix: fullSecret.includes("v1,"),
+  hasWhsecPrefix: fullSecret.includes("whsec_")
+});
 
 const LOGO_URL = "https://jump-to-tune.lovable.app/images/jumtunes-logo.png";
 
@@ -195,6 +208,13 @@ const handler = async (req: Request): Promise<Response> => {
   let data: AuthEmailPayload;
   
   try {
+    if (!hookSecret) {
+      console.error("SEND_EMAIL_HOOK_SECRET is empty or not configured");
+      return new Response(
+        JSON.stringify({ error: { http_code: 500, message: "Hook secret not configured" } }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
     const wh = new Webhook(hookSecret);
     data = wh.verify(payload, headers) as AuthEmailPayload;
   } catch (error) {
