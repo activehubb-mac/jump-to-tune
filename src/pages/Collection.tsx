@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, Bookmark, X, Download, Crown, Building2, PlayCircle } from "lucide-react";
+import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, Bookmark, X, Download, Crown, Building2, PlayCircle, Shuffle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -562,25 +562,81 @@ export default function Collection() {
               </div>
             ) : sortedOwnedTracks.length > 0 ? (
               <div>
-                <div className="flex justify-between items-center mb-4">
-                  <Button
-                    onClick={() => {
-                      if (sortedOwnedTracks.length > 0) {
-                        // Clear queue and add all owned tracks
-                        clearQueue();
-                        const firstTrack = sortedOwnedTracks[0];
-                        if (firstTrack.track) {
-                          playTrack({
-                            id: firstTrack.track.id,
-                            title: firstTrack.track.title,
-                            audio_url: firstTrack.track.audio_url,
-                            cover_art_url: firstTrack.track.cover_art_url,
-                            duration: firstTrack.track.duration,
-                            artist: firstTrack.track.artist,
+                <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      onClick={() => {
+                        if (sortedOwnedTracks.length > 0) {
+                          clearQueue();
+                          const firstTrack = sortedOwnedTracks[0];
+                          if (firstTrack.track) {
+                            playTrack({
+                              id: firstTrack.track.id,
+                              title: firstTrack.track.title,
+                              audio_url: firstTrack.track.audio_url,
+                              cover_art_url: firstTrack.track.cover_art_url,
+                              duration: firstTrack.track.duration,
+                              artist: firstTrack.track.artist,
+                            });
+                          }
+                          sortedOwnedTracks.slice(1).forEach((purchase) => {
+                            if (purchase.track) {
+                              addToQueue({
+                                id: purchase.track.id,
+                                title: purchase.track.title,
+                                audio_url: purchase.track.audio_url,
+                                cover_art_url: purchase.track.cover_art_url,
+                                duration: purchase.track.duration,
+                                artist: purchase.track.artist,
+                              });
+                            }
                           });
                         }
-                        // Add remaining tracks to queue
-                        sortedOwnedTracks.slice(1).forEach((purchase) => {
+                      }}
+                      className="gradient-accent neon-glow-subtle"
+                    >
+                      <PlayCircle className="w-4 h-4 mr-2" />
+                      Play All
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (sortedOwnedTracks.length > 0) {
+                          clearQueue();
+                          const shuffled = [...sortedOwnedTracks].sort(() => Math.random() - 0.5);
+                          const firstTrack = shuffled[0];
+                          if (firstTrack.track) {
+                            playTrack({
+                              id: firstTrack.track.id,
+                              title: firstTrack.track.title,
+                              audio_url: firstTrack.track.audio_url,
+                              cover_art_url: firstTrack.track.cover_art_url,
+                              duration: firstTrack.track.duration,
+                              artist: firstTrack.track.artist,
+                            });
+                          }
+                          shuffled.slice(1).forEach((purchase) => {
+                            if (purchase.track) {
+                              addToQueue({
+                                id: purchase.track.id,
+                                title: purchase.track.title,
+                                audio_url: purchase.track.audio_url,
+                                cover_art_url: purchase.track.cover_art_url,
+                                duration: purchase.track.duration,
+                                artist: purchase.track.artist,
+                              });
+                            }
+                          });
+                        }
+                      }}
+                    >
+                      <Shuffle className="w-4 h-4 mr-2" />
+                      Shuffle
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        sortedOwnedTracks.forEach((purchase) => {
                           if (purchase.track) {
                             addToQueue({
                               id: purchase.track.id,
@@ -592,13 +648,12 @@ export default function Collection() {
                             });
                           }
                         });
-                      }
-                    }}
-                    className="gradient-accent neon-glow-subtle"
-                  >
-                    <PlayCircle className="w-4 h-4 mr-2" />
-                    Play All ({sortedOwnedTracks.length})
-                  </Button>
+                      }}
+                    >
+                      <ListPlus className="w-4 h-4 mr-2" />
+                      Queue All
+                    </Button>
+                  </div>
                   <SortSelect value={ownedSort} onChange={setOwnedSort} />
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
