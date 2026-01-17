@@ -23,6 +23,7 @@ import { DownloadButton } from "@/components/download/DownloadButton";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { usePurchases } from "@/hooks/usePurchases";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 
 type SortOption = "recent" | "title" | "artist" | "price";
 
@@ -44,6 +45,7 @@ export default function Collection() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumFeatureName, setPremiumFeatureName] = useState("");
   const { isOwned } = usePurchases();
+  const { showFeedback } = useFeedbackSafe();
 
   // Sort liked tracks - must be called before any early returns
   const sortedLikedTracks = useMemo(() => {
@@ -309,7 +311,105 @@ export default function Collection() {
               </div>
             ) : sortedLikedTracks.length > 0 ? (
               <div>
-                <div className="flex justify-end mb-4">
+                <div className="flex justify-between items-center gap-3 mb-4">
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                    <Button
+                      onClick={() => {
+                        if (sortedLikedTracks.length > 0) {
+                          clearQueue();
+                          const firstTrack = sortedLikedTracks[0];
+                          playTrack({
+                            id: firstTrack.id,
+                            title: firstTrack.title,
+                            audio_url: firstTrack.audio_url,
+                            cover_art_url: firstTrack.cover_art_url,
+                            duration: firstTrack.duration,
+                            artist: firstTrack.artist,
+                          });
+                          sortedLikedTracks.slice(1).forEach((track) => {
+                            addToQueue({
+                              id: track.id,
+                              title: track.title,
+                              audio_url: track.audio_url,
+                              cover_art_url: track.cover_art_url,
+                              duration: track.duration,
+                              artist: track.artist,
+                            });
+                          });
+                          showFeedback({
+                            type: "success",
+                            title: "Now Playing",
+                            message: `Playing ${sortedLikedTracks.length} liked tracks`,
+                          });
+                        }
+                      }}
+                      className="gradient-accent neon-glow-subtle whitespace-nowrap flex-shrink-0"
+                    >
+                      <PlayCircle className="w-4 h-4 mr-2" />
+                      Play All
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="whitespace-nowrap flex-shrink-0"
+                      onClick={() => {
+                        if (sortedLikedTracks.length > 0) {
+                          clearQueue();
+                          const shuffled = [...sortedLikedTracks].sort(() => Math.random() - 0.5);
+                          const firstTrack = shuffled[0];
+                          playTrack({
+                            id: firstTrack.id,
+                            title: firstTrack.title,
+                            audio_url: firstTrack.audio_url,
+                            cover_art_url: firstTrack.cover_art_url,
+                            duration: firstTrack.duration,
+                            artist: firstTrack.artist,
+                          });
+                          shuffled.slice(1).forEach((track) => {
+                            addToQueue({
+                              id: track.id,
+                              title: track.title,
+                              audio_url: track.audio_url,
+                              cover_art_url: track.cover_art_url,
+                              duration: track.duration,
+                              artist: track.artist,
+                            });
+                          });
+                          showFeedback({
+                            type: "success",
+                            title: "Shuffle Play",
+                            message: `Playing ${sortedLikedTracks.length} tracks shuffled`,
+                          });
+                        }
+                      }}
+                    >
+                      <Shuffle className="w-4 h-4 mr-2" />
+                      Shuffle
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="whitespace-nowrap flex-shrink-0"
+                      onClick={() => {
+                        sortedLikedTracks.forEach((track) => {
+                          addToQueue({
+                            id: track.id,
+                            title: track.title,
+                            audio_url: track.audio_url,
+                            cover_art_url: track.cover_art_url,
+                            duration: track.duration,
+                            artist: track.artist,
+                          });
+                        });
+                        showFeedback({
+                          type: "success",
+                          title: "Added to Queue",
+                          message: `${sortedLikedTracks.length} liked tracks added to queue`,
+                        });
+                      }}
+                    >
+                      <ListPlus className="w-4 h-4 mr-2" />
+                      Queue All
+                    </Button>
+                  </div>
                   <SortSelect value={likedSort} onChange={setLikedSort} />
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -562,8 +662,8 @@ export default function Collection() {
               </div>
             ) : sortedOwnedTracks.length > 0 ? (
               <div>
-                <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
-                  <div className="flex flex-wrap gap-2">
+                <div className="flex justify-between items-center gap-3 mb-4">
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                     <Button
                       onClick={() => {
                         if (sortedOwnedTracks.length > 0) {
@@ -591,15 +691,21 @@ export default function Collection() {
                               });
                             }
                           });
+                          showFeedback({
+                            type: "success",
+                            title: "Now Playing",
+                            message: `Playing ${sortedOwnedTracks.length} owned tracks`,
+                          });
                         }
                       }}
-                      className="gradient-accent neon-glow-subtle"
+                      className="gradient-accent neon-glow-subtle whitespace-nowrap flex-shrink-0"
                     >
                       <PlayCircle className="w-4 h-4 mr-2" />
                       Play All
                     </Button>
                     <Button
                       variant="outline"
+                      className="whitespace-nowrap flex-shrink-0"
                       onClick={() => {
                         if (sortedOwnedTracks.length > 0) {
                           clearQueue();
@@ -627,6 +733,11 @@ export default function Collection() {
                               });
                             }
                           });
+                          showFeedback({
+                            type: "success",
+                            title: "Shuffle Play",
+                            message: `Playing ${sortedOwnedTracks.length} tracks shuffled`,
+                          });
                         }
                       }}
                     >
@@ -635,6 +746,7 @@ export default function Collection() {
                     </Button>
                     <Button
                       variant="secondary"
+                      className="whitespace-nowrap flex-shrink-0"
                       onClick={() => {
                         sortedOwnedTracks.forEach((purchase) => {
                           if (purchase.track) {
@@ -647,6 +759,11 @@ export default function Collection() {
                               artist: purchase.track.artist,
                             });
                           }
+                        });
+                        showFeedback({
+                          type: "success",
+                          title: "Added to Queue",
+                          message: `${sortedOwnedTracks.length} owned tracks added to queue`,
                         });
                       }}
                     >
