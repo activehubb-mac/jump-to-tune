@@ -6,7 +6,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Crown, Shuffle, Repeat, ListMusic, Bookmark, ArrowUpDown, Check } from "lucide-react";
+import { Crown, Shuffle, Repeat, ListMusic, ArrowUpDown, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSubscription } from "@/hooks/useSubscription";
 
@@ -20,7 +20,6 @@ const premiumFeatures = [
   { icon: ListMusic, label: "Queue management & Add to Queue" },
   { icon: Shuffle, label: "Shuffle mode" },
   { icon: Repeat, label: "Repeat modes (All, One)" },
-  { icon: Bookmark, label: "Bookmark tracks for streaming" },
   { icon: ArrowUpDown, label: "Collection sorting" },
 ];
 

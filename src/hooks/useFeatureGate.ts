@@ -6,7 +6,6 @@ export type PremiumFeature =
   | "addToQueue"
   | "shuffle"
   | "repeat"
-  | "bookmark"
   | "sorting"
   | "queuePanel";
 
