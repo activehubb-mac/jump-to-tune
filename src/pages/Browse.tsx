@@ -8,6 +8,7 @@ import { Search, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMin
 import { TrackCardSkeletonGrid } from "@/components/dashboard/TrackCardSkeleton";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { RecentlyViewedSection } from "@/components/browse/RecentlyViewedSection";
+import { HeroCarousel } from "@/components/browse/HeroCarousel";
 import { Link } from "react-router-dom";
 import { useInfinitePublishedTracks } from "@/hooks/useTracks";
 import { useBrowsePreferences } from "@/hooks/useBrowsePreferences";
@@ -205,6 +206,9 @@ export default function Browse() {
       )}
       
       <div className="container mx-auto px-4 py-8">
+        {/* Hero Carousel */}
+        <HeroCarousel />
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">Browse Music</h1>
