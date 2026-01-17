@@ -72,24 +72,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    let isMounted = true;
 
-        // Defer Supabase calls with setTimeout to prevent deadlock
-        if (session?.user) {
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-            fetchRole(session.user.id);
-          }, 0);
-        } else {
+    // Set up auth state listener FIRST (before getSession)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        // Only synchronous state updates inside callback - no Supabase calls!
+        if (!isMounted) return;
+        
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        if (event === "SIGNED_OUT") {
           setProfile(null);
           setRole(null);
         }
 
-        if (event === "SIGNED_OUT") {
+        // Defer ALL Supabase calls with setTimeout to prevent auth deadlock
+        if (currentSession?.user) {
+          const userId = currentSession.user.id;
+          setTimeout(() => {
+            if (isMounted) {
+              fetchProfile(userId);
+              fetchRole(userId);
+            }
+          }, 0);
+        } else {
           setProfile(null);
           setRole(null);
         }
@@ -98,20 +106,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // THEN check for existing session (after listener is set up)
+    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+      if (!isMounted) return;
+      
+      setSession(existingSession);
+      setUser(existingSession?.user ?? null);
 
-      if (session?.user) {
-        fetchProfile(session.user.id);
-        fetchRole(session.user.id);
+      if (existingSession?.user) {
+        fetchProfile(existingSession.user.id);
+        fetchRole(existingSession.user.id);
       }
 
       setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, displayName: string, selectedRole: AppRole): Promise<SignUpResult> => {
