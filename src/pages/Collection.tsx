@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, Bookmark, X, Download, Crown, Building2 } from "lucide-react";
+import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, Bookmark, X, Download, Crown, Building2, PlayCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,6 +22,7 @@ import { formatPrice } from "@/lib/formatters";
 import { DownloadButton } from "@/components/download/DownloadButton";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
+import { usePurchases } from "@/hooks/usePurchases";
 
 type SortOption = "recent" | "title" | "artist" | "price";
 
@@ -38,10 +39,11 @@ export default function Collection() {
   const { bookmarks, isLoading: bookmarksLoading, removeBookmark } = useCollectionBookmarks();
   const { toggleLike } = useLikes();
   const { toggleFollow } = useFollow();
-  const { playTrack, addToQueue } = useAudioPlayer();
+  const { playTrack, addToQueue, clearQueue } = useAudioPlayer();
   const { canUseFeature } = useFeatureGate();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumFeatureName, setPremiumFeatureName] = useState("");
+  const { isOwned } = usePurchases();
 
   // Sort liked tracks - must be called before any early returns
   const sortedLikedTracks = useMemo(() => {
@@ -376,19 +378,26 @@ export default function Collection() {
                         <span className="text-sm font-medium text-primary">
                           {formatPrice(track.price)}
                         </span>
-                        <DownloadButton
-                          track={{
-                            id: track.id,
-                            title: track.title,
-                            price: track.price,
-                            audio_url: track.audio_url,
-                            cover_art_url: track.cover_art_url,
-                            artist: track.artist,
-                          }}
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs"
-                        />
+                        {isOwned(track.id) ? (
+                          <Badge variant="secondary" className="text-xs">
+                            <Disc3 className="w-3 h-3 mr-1" />
+                            Owned
+                          </Badge>
+                        ) : (
+                          <DownloadButton
+                            track={{
+                              id: track.id,
+                              title: track.title,
+                              price: track.price,
+                              audio_url: track.audio_url,
+                              cover_art_url: track.cover_art_url,
+                              artist: track.artist,
+                            }}
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs"
+                          />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -505,19 +514,26 @@ export default function Collection() {
                             {formatPrice(bookmark.track?.price || 0)}
                           </span>
                           {bookmark.track && (
-                            <DownloadButton
-                              track={{
-                                id: bookmark.track.id,
-                                title: bookmark.track.title,
-                                price: bookmark.track.price,
-                                audio_url: bookmark.track.audio_url,
-                                cover_art_url: bookmark.track.cover_art_url,
-                                artist: bookmark.track.artist,
-                              }}
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs"
-                            />
+                            isOwned(bookmark.track.id) ? (
+                              <Badge variant="secondary" className="text-xs">
+                                <Disc3 className="w-3 h-3 mr-1" />
+                                Owned
+                              </Badge>
+                            ) : (
+                              <DownloadButton
+                                track={{
+                                  id: bookmark.track.id,
+                                  title: bookmark.track.title,
+                                  price: bookmark.track.price,
+                                  audio_url: bookmark.track.audio_url,
+                                  cover_art_url: bookmark.track.cover_art_url,
+                                  artist: bookmark.track.artist,
+                                }}
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs"
+                              />
+                            )
                           )}
                         </div>
                       </div>
@@ -546,7 +562,43 @@ export default function Collection() {
               </div>
             ) : sortedOwnedTracks.length > 0 ? (
               <div>
-                <div className="flex justify-end mb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <Button
+                    onClick={() => {
+                      if (sortedOwnedTracks.length > 0) {
+                        // Clear queue and add all owned tracks
+                        clearQueue();
+                        const firstTrack = sortedOwnedTracks[0];
+                        if (firstTrack.track) {
+                          playTrack({
+                            id: firstTrack.track.id,
+                            title: firstTrack.track.title,
+                            audio_url: firstTrack.track.audio_url,
+                            cover_art_url: firstTrack.track.cover_art_url,
+                            duration: firstTrack.track.duration,
+                            artist: firstTrack.track.artist,
+                          });
+                        }
+                        // Add remaining tracks to queue
+                        sortedOwnedTracks.slice(1).forEach((purchase) => {
+                          if (purchase.track) {
+                            addToQueue({
+                              id: purchase.track.id,
+                              title: purchase.track.title,
+                              audio_url: purchase.track.audio_url,
+                              cover_art_url: purchase.track.cover_art_url,
+                              duration: purchase.track.duration,
+                              artist: purchase.track.artist,
+                            });
+                          }
+                        });
+                      }
+                    }}
+                    className="gradient-accent neon-glow-subtle"
+                  >
+                    <PlayCircle className="w-4 h-4 mr-2" />
+                    Play All ({sortedOwnedTracks.length})
+                  </Button>
                   <SortSelect value={ownedSort} onChange={setOwnedSort} />
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
