@@ -30,24 +30,32 @@ export const ArtistSelector = ({ value, onChange, disabled }: ArtistSelectorProp
 
       setIsLoading(true);
       
-      const { data, error } = await supabase
+      // First get artist IDs from roster
+      const { data: rosterData, error: rosterError } = await supabase
         .from('label_roster')
-        .select(`
-          artist_id,
-          profiles!label_roster_artist_id_fkey (
-            id,
-            display_name,
-            avatar_url
-          )
-        `)
+        .select('artist_id')
         .eq('label_id', user.id)
         .eq('status', 'active');
 
-      if (!error && data) {
-        const rosterArtists = data
-          .map((item) => item.profiles as unknown as Artist)
-          .filter((profile): profile is Artist => profile !== null);
-        setArtists(rosterArtists);
+      if (rosterError || !rosterData || rosterData.length === 0) {
+        setArtists([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Then fetch profiles from profiles_public view
+      const artistIds = rosterData.map((r) => r.artist_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles_public')
+        .select('id, display_name, avatar_url')
+        .in('id', artistIds);
+
+      if (!profilesError && profilesData) {
+        setArtists(profilesData.map((p) => ({
+          id: p.id!,
+          display_name: p.display_name,
+          avatar_url: p.avatar_url,
+        })));
       }
       
       setIsLoading(false);
