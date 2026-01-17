@@ -346,7 +346,7 @@ export default function Index() {
               <img 
                 src="/images/jumtunes-logo.png" 
                 alt="JumTunes" 
-                className="h-80 md:h-[28rem] w-auto object-contain"
+                className="h-32 md:h-48 w-auto object-contain"
               />
             </div>
 
