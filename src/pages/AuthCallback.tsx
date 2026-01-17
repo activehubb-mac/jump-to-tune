@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,16 +10,18 @@ export default function AuthCallback() {
   const navigate = useNavigate();
   const { user, role, profile, isLoading } = useAuth();
   const [status, setStatus] = useState<CallbackStatus>("verifying");
-  const [hasRedirected, setHasRedirected] = useState(false);
+
+  // IMPORTANT: useRef (not state) to avoid re-running the effect and clearing timers
+  const hasRedirectedRef = useRef(false);
 
   useEffect(() => {
     // Wait for auth to settle and prevent double redirects
-    if (!isLoading && user && !hasRedirected) {
+    if (!isLoading && user && !hasRedirectedRef.current) {
       setStatus("success");
-      setHasRedirected(true);
-      
+      hasRedirectedRef.current = true;
+
       // Brief delay to show success message
-      const timer = setTimeout(() => {
+      const timer = window.setTimeout(() => {
         // Use user metadata role as fallback - always available from signup
         const userRole = role || (user.user_metadata?.role as string) || "fan";
 
@@ -33,23 +35,23 @@ export default function AuthCallback() {
         }
       }, 1500);
 
-      return () => clearTimeout(timer);
+      return () => window.clearTimeout(timer);
     }
 
     // Handle case where user is not authenticated after a timeout
     if (!isLoading && !user) {
-      const timer = setTimeout(() => {
+      const timer = window.setTimeout(() => {
         if (!user) {
           setStatus("error");
-          setTimeout(() => {
+          window.setTimeout(() => {
             navigate("/auth", { replace: true });
           }, 2000);
         }
       }, 3000);
 
-      return () => clearTimeout(timer);
+      return () => window.clearTimeout(timer);
     }
-  }, [isLoading, user, role, profile, navigate, hasRedirected]);
+  }, [isLoading, user, role, profile, navigate]);
 
   return (
     <Layout showFooter={false}>
