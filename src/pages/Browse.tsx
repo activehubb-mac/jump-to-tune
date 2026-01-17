@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,9 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock, X } from "lucide-react";
 import { TrackCardSkeletonGrid } from "@/components/dashboard/TrackCardSkeleton";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
+import { RecentlyViewedSection } from "@/components/browse/RecentlyViewedSection";
 import { Link } from "react-router-dom";
 import { useInfinitePublishedTracks } from "@/hooks/useTracks";
 import { useBrowsePreferences } from "@/hooks/useBrowsePreferences";
+import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { formatPrice, formatEditions, formatCompactNumber } from "@/lib/formatters";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useLikes } from "@/hooks/useLikes";
@@ -21,6 +24,7 @@ import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { DownloadButton } from "@/components/download/DownloadButton";
 import { usePurchases } from "@/hooks/usePurchases";
+import { TrackDetailModal } from "@/components/dashboard/TrackDetailModal";
 
 const genres = ["All", "Electronic", "Hip Hop", "R&B", "Pop", "Rock", "Jazz", "Classical", "Indie"];
 const moods = ["All", "Chill", "Energetic", "Dark", "Uplifting", "Melancholic", "Romantic", "Aggressive", "Dreamy", "Funky"];
@@ -48,6 +52,7 @@ export default function Browse() {
   } = useBrowsePreferences();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTrack, setSelectedTrack] = useState<typeof tracks[number] | null>(null);
   const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
   const { isLiked, toggleLike } = useLikes();
   const { isFollowing, toggleFollow } = useFollow();
@@ -56,6 +61,7 @@ export default function Browse() {
   const { user } = useAuth();
   const { showFeedback } = useFeedbackSafe();
   const { isOwned } = usePurchases();
+  const { addToRecentlyViewed } = useRecentlyViewed();
 
   const loadMoreRef = useRef<HTMLDivElement>(null);
   
@@ -164,6 +170,19 @@ export default function Browse() {
     });
   };
 
+  // Handle track click to open detail modal and add to recently viewed
+  const handleTrackClick = (track: typeof tracks[number]) => {
+    setSelectedTrack(track);
+    addToRecentlyViewed({
+      id: track.id,
+      title: track.title,
+      cover_art_url: track.cover_art_url,
+      artist_id: track.artist?.id || "",
+      artist_name: track.artist?.display_name || "Unknown Artist",
+      price: track.price,
+    });
+  };
+
   return (
     <Layout>
       <PremiumFeatureModal
@@ -171,12 +190,37 @@ export default function Browse() {
         onOpenChange={setShowPremiumModal}
         feature="Add to Queue"
       />
+      
+      {/* Track Detail Modal */}
+      {selectedTrack && (
+        <TrackDetailModal
+          track={{
+            ...selectedTrack,
+            editions_sold: selectedTrack.editions_sold,
+            total_editions: selectedTrack.total_editions,
+          }}
+          open={!!selectedTrack}
+          onOpenChange={(open) => !open && setSelectedTrack(null)}
+        />
+      )}
+      
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">Browse Music</h1>
           <p className="text-muted-foreground">Discover and collect exclusive tracks from talented artists</p>
         </div>
+
+        {/* Recently Viewed Section */}
+        <RecentlyViewedSection
+          onTrackClick={(viewedTrack) => {
+            // Find full track data or just open with basic info
+            const fullTrack = tracks.find((t) => t.id === viewedTrack.id);
+            if (fullTrack) {
+              handleTrackClick(fullTrack);
+            }
+          }}
+        />
 
         {/* Search */}
         <div className="mb-8">
@@ -282,19 +326,31 @@ export default function Browse() {
         {isLoading ? (
           <TrackCardSkeletonGrid count={10} />
         ) : tracks && tracks.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {tracks.map((track) => {
-              const artistId = track.artist?.id;
-              const artistName = track.artist?.display_name || "Unknown Artist";
-              const following = artistId ? isFollowing(artistId) : false;
-              const isOwnTrack = user?.id === artistId;
-              const artistFollowers = artistId ? followerCounts[artistId] || 0 : 0;
+          <motion.div
+            key={`${selectedGenre}-${selectedMood}-${sortBy}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
+          >
+            <AnimatePresence mode="popLayout">
+              {tracks.map((track, index) => {
+                const artistId = track.artist?.id;
+                const artistName = track.artist?.display_name || "Unknown Artist";
+                const following = artistId ? isFollowing(artistId) : false;
+                const isOwnTrack = user?.id === artistId;
+                const artistFollowers = artistId ? followerCounts[artistId] || 0 : 0;
 
-              return (
-                <div
-                  key={track.id}
-                  className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
-                >
+                return (
+                  <motion.div
+                    key={track.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ delay: Math.min(index * 0.03, 0.3) }}
+                    className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
+                    onClick={() => handleTrackClick(track)}
+                  >
                   {/* Album Art */}
                   <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">
                     {track.cover_art_url ? (
@@ -451,10 +507,11 @@ export default function Browse() {
                       </span>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </motion.div>
         ) : (
           <div className="text-center py-24">
             <Disc3 className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
