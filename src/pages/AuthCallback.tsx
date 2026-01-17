@@ -14,18 +14,22 @@ export default function AuthCallback() {
 
   useEffect(() => {
     // Wait for auth to settle and prevent double redirects
-    if (!isLoading && user && profile !== null && !hasRedirected) {
+    if (!isLoading && user && !hasRedirected) {
       setStatus("success");
       setHasRedirected(true);
       
       // Brief delay to show success message
       const timer = setTimeout(() => {
-        if (role === "fan") {
+        // Use user metadata role as fallback - always available from signup
+        const userRole = role || (user.user_metadata?.role as string) || "fan";
+
+        if (userRole === "fan") {
           navigate("/", { replace: true });
-        } else if (!profile.onboarding_completed) {
+        } else if (!profile?.onboarding_completed) {
+          // If profile is null or onboarding not completed, go to onboarding
           navigate("/onboarding", { replace: true });
         } else {
-          navigate(role === "artist" ? "/artist/dashboard" : "/label/dashboard", { replace: true });
+          navigate(userRole === "artist" ? "/artist/dashboard" : "/label/dashboard", { replace: true });
         }
       }, 1500);
 
