@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { useConfetti } from "@/hooks/useConfetti";
 
 type CallbackStatus = "verifying" | "success" | "error";
 
@@ -14,6 +15,7 @@ export default function AuthCallback() {
   const { user, role, profile, isLoading } = useAuth();
   const [status, setStatus] = useState<CallbackStatus>("verifying");
   const [showContinueButton, setShowContinueButton] = useState(false);
+  const { fireConfetti } = useConfetti();
 
   // IMPORTANT: useRef (not state) to avoid re-running the effect and clearing timers
   const hasRedirectedRef = useRef(false);
@@ -58,6 +60,9 @@ export default function AuthCallback() {
     if (!isLoading && user && !hasRedirectedRef.current) {
       setStatus("success");
       hasRedirectedRef.current = true;
+
+      // Fire celebratory confetti!
+      fireConfetti();
 
       // Show toast notification
       toast({
