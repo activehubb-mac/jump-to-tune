@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { useConfetti } from "@/hooks/useConfetti";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
@@ -12,12 +13,21 @@ import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 
 type CallbackStatus = "verifying" | "success" | "error";
 
+// Analytics logging for redirect failures
+const logRedirectEvent = (event: string, data: Record<string, unknown>) => {
+  console.log(`[AuthCallback Analytics] ${event}`, data);
+  
+  // Future: Send to analytics service
+  // analytics.track(event, data);
+};
+
 export default function AuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, role, profile, isLoading } = useAuth();
   const [status, setStatus] = useState<CallbackStatus>("verifying");
   const [showContinueButton, setShowContinueButton] = useState(false);
+  const [redirectProgress, setRedirectProgress] = useState(0);
   const { fireConfetti } = useConfetti();
   
   // Onboarding tour state
@@ -31,6 +41,7 @@ export default function AuthCallback() {
   // IMPORTANT: useRef (not state) to avoid re-running the effect and clearing timers
   const hasRedirectedRef = useRef(false);
   const hasProcessedRef = useRef(false);
+  const redirectStartTimeRef = useRef<number | null>(null);
 
   // Debug mode via ?debug=1
   const debugMode = searchParams.get("debug") === "1";
@@ -99,12 +110,30 @@ export default function AuthCallback() {
     }
   }, [isLoading, user, role, profile]);
 
+  // Progress bar animation during redirect
+  useEffect(() => {
+    if (status === "success" && !showContinueButton) {
+      const interval = setInterval(() => {
+        setRedirectProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return prev + 4; // ~2.5 seconds to complete
+        });
+      }, 100);
+
+      return () => clearInterval(interval);
+    }
+  }, [status, showContinueButton]);
+
   // Main redirect logic
   useEffect(() => {
     // Wait for auth to settle and prevent double redirects
     if (!isLoading && user && !hasRedirectedRef.current) {
       setStatus("success");
       hasRedirectedRef.current = true;
+      redirectStartTimeRef.current = Date.now();
 
       // Fire celebratory confetti!
       fireConfetti();
@@ -118,6 +147,12 @@ export default function AuthCallback() {
       // For fans, pass tour trigger via URL param to Index page
       const userRole = role || (user.user_metadata?.role as string) || "fan";
       const redirectWithTour = userRole === "fan" ? "/?tour=1" : targetRoute;
+
+      logRedirectEvent("redirect_initiated", {
+        userId: user.id,
+        role: userRole,
+        targetRoute: redirectWithTour,
+      });
 
       if (debugMode) {
         console.log("[AuthCallback Debug] Scheduling redirect to:", redirectWithTour);
@@ -140,6 +175,9 @@ export default function AuthCallback() {
       const timer = window.setTimeout(() => {
         if (!user) {
           setStatus("error");
+          logRedirectEvent("verification_failed", {
+            reason: "no_user_after_timeout",
+          });
           window.setTimeout(() => {
             navigate("/auth", { replace: true });
           }, 2000);
@@ -155,13 +193,31 @@ export default function AuthCallback() {
     if (status === "success") {
       const fallbackTimer = window.setTimeout(() => {
         setShowContinueButton(true);
+        
+        // Log redirect failure when fallback button appears
+        const duration = redirectStartTimeRef.current 
+          ? Date.now() - redirectStartTimeRef.current 
+          : null;
+        
+        logRedirectEvent("redirect_failed", {
+          userId: user?.id,
+          role: role || user?.user_metadata?.role || "fan",
+          targetRoute,
+          durationMs: duration,
+          userAgent: navigator.userAgent,
+        });
       }, 3000);
 
       return () => window.clearTimeout(fallbackTimer);
     }
-  }, [status]);
+  }, [status, user, role, targetRoute]);
 
   const handleContinue = () => {
+    logRedirectEvent("manual_continue_clicked", {
+      userId: user?.id,
+      targetRoute,
+    });
+    
     if (targetRoute) {
       navigate(targetRoute, { replace: true });
     } else {
@@ -188,16 +244,23 @@ export default function AuthCallback() {
           )}
           
           {status === "success" && (
-            <div className="glass-card p-12 space-y-4">
+            <div className="glass-card p-12 space-y-4 min-w-[320px]">
               <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
                 <CheckCircle className="w-10 h-10 text-green-500" />
               </div>
               <h2 className="text-xl font-semibold text-foreground">Email Verified!</h2>
-              <p className="text-muted-foreground">Redirecting you now...</p>
+              
+              {/* Progress bar during redirect */}
+              {!showContinueButton && (
+                <div className="space-y-2">
+                  <p className="text-muted-foreground">Redirecting you now...</p>
+                  <Progress value={redirectProgress} className="h-1.5 w-full" />
+                </div>
+              )}
               
               {/* Fallback continue button */}
               {showContinueButton && (
-                <div className="pt-4 space-y-2">
+                <div className="pt-2 space-y-3">
                   <p className="text-sm text-muted-foreground">
                     Not redirecting automatically?
                   </p>
@@ -214,6 +277,7 @@ export default function AuthCallback() {
                   <p><strong>Profile:</strong> {profile ? "loaded" : "null"}</p>
                   <p><strong>Onboarding:</strong> {String(profile?.onboarding_completed)}</p>
                   <p><strong>Target:</strong> {targetRoute}</p>
+                  <p><strong>Progress:</strong> {redirectProgress}%</p>
                 </div>
               )}
             </div>
