@@ -99,6 +99,7 @@ export default function AuthCallback() {
     }
   }, [isLoading, user, role, profile]);
 
+  // Main redirect logic
   useEffect(() => {
     // Wait for auth to settle and prevent double redirects
     if (!isLoading && user && !hasRedirectedRef.current) {
@@ -129,14 +130,8 @@ export default function AuthCallback() {
         }
       }, 1500);
 
-      // Show continue button after 3s as fallback
-      const fallbackTimer = window.setTimeout(() => {
-        setShowContinueButton(true);
-      }, 3000);
-
       return () => {
         window.clearTimeout(redirectTimer);
-        window.clearTimeout(fallbackTimer);
       };
     }
 
@@ -153,7 +148,18 @@ export default function AuthCallback() {
 
       return () => window.clearTimeout(timer);
     }
-  }, [isLoading, user, targetRoute, navigate, debugMode, role, triggerTourForNewUser]);
+  }, [isLoading, user, targetRoute, navigate, debugMode, role, fireConfetti]);
+
+  // Separate fallback timer - always runs when status is "success"
+  useEffect(() => {
+    if (status === "success") {
+      const fallbackTimer = window.setTimeout(() => {
+        setShowContinueButton(true);
+      }, 3000);
+
+      return () => window.clearTimeout(fallbackTimer);
+    }
+  }, [status]);
 
   const handleContinue = () => {
     if (targetRoute) {
