@@ -1,6 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Music, Disc3, Users, Building2, Headphones, Zap, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History, ListPlus, Lock } from "lucide-react";
 import { DownloadButton } from "@/components/download/DownloadButton";
 import { TrendingCarousel } from "@/components/home/TrendingCarousel";
@@ -15,6 +15,8 @@ import { formatCompactNumber } from "@/lib/formatters";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { useState, useEffect } from "react";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
+import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 const features = [
   {
     icon: Disc3,
@@ -48,6 +50,7 @@ const stats = [
 export default function Index() {
   const { user, role, profile, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data: recommendedArtists, isLoading: recommendationsLoading } = useRecommendedArtists(6);
   const { data: newReleases, isLoading: newReleasesLoading } = useNewReleases(6);
   const { recentlyPlayed } = useRecentlyPlayed(6);
@@ -56,6 +59,23 @@ export default function Index() {
   const { playTrack, addToQueue } = useAudioPlayer();
   const { canUseFeature } = useFeatureGate();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+
+  // Onboarding tour for fans
+  const {
+    showTour,
+    setShowTour,
+    completeTour,
+    triggerTourForNewUser,
+  } = useOnboardingTour(user?.id);
+
+  // Check for tour trigger from auth callback
+  useEffect(() => {
+    if (searchParams.get("tour") === "1" && user && role === "fan") {
+      triggerTourForNewUser();
+      // Clean up URL
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [searchParams, user, role, triggerTourForNewUser]);
 
   // Redirect Artists/Labels with incomplete onboarding to /onboarding
   useEffect(() => {
@@ -797,6 +817,16 @@ export default function Index() {
         onOpenChange={setShowPremiumModal}
         feature="Add to Queue"
       />
+
+      {/* Onboarding Tour for Fans */}
+      {user && role === "fan" && (
+        <OnboardingTour
+          open={showTour}
+          onOpenChange={setShowTour}
+          role="fan"
+          onComplete={completeTour}
+        />
+      )}
     </Layout>
   );
 }

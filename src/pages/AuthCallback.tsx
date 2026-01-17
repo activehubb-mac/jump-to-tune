@@ -2,10 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { useConfetti } from "@/hooks/useConfetti";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
+import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 
 type CallbackStatus = "verifying" | "success" | "error";
 
@@ -16,9 +19,18 @@ export default function AuthCallback() {
   const [status, setStatus] = useState<CallbackStatus>("verifying");
   const [showContinueButton, setShowContinueButton] = useState(false);
   const { fireConfetti } = useConfetti();
+  
+  // Onboarding tour state
+  const {
+    showTour,
+    setShowTour,
+    completeTour,
+    triggerTourForNewUser,
+  } = useOnboardingTour(user?.id);
 
   // IMPORTANT: useRef (not state) to avoid re-running the effect and clearing timers
   const hasRedirectedRef = useRef(false);
+  const hasProcessedRef = useRef(false);
 
   // Debug mode via ?debug=1
   const debugMode = searchParams.get("debug") === "1";
@@ -55,6 +67,33 @@ export default function AuthCallback() {
     }
   }, [debugMode, isLoading, user, role, profile, targetRoute]);
 
+  // Send welcome email on successful verification (once)
+  useEffect(() => {
+    if (!isLoading && user && !hasProcessedRef.current) {
+      hasProcessedRef.current = true;
+      
+      const userRole = role || (user.user_metadata?.role as string) || "fan";
+      const displayName = profile?.display_name || user.user_metadata?.display_name || "";
+      
+      // Send welcome email (fire and forget)
+      supabase.functions
+        .invoke("send-welcome-email", {
+          body: {
+            email: user.email,
+            displayName,
+            role: userRole,
+          },
+        })
+        .then(({ error }) => {
+          if (error) {
+            console.error("Failed to send welcome email:", error);
+          } else {
+            console.log("Welcome email sent successfully");
+          }
+        });
+    }
+  }, [isLoading, user, role, profile]);
+
   useEffect(() => {
     // Wait for auth to settle and prevent double redirects
     if (!isLoading && user && !hasRedirectedRef.current) {
@@ -70,14 +109,18 @@ export default function AuthCallback() {
         description: "Welcome to JumTunes. Redirecting you now...",
       });
 
+      // For fans, pass tour trigger via URL param to Index page
+      const userRole = role || (user.user_metadata?.role as string) || "fan";
+      const redirectWithTour = userRole === "fan" ? "/?tour=1" : targetRoute;
+
       if (debugMode) {
-        console.log("[AuthCallback Debug] Scheduling redirect to:", targetRoute);
+        console.log("[AuthCallback Debug] Scheduling redirect to:", redirectWithTour);
       }
 
       // Brief delay to show success message
       const redirectTimer = window.setTimeout(() => {
-        if (targetRoute) {
-          navigate(targetRoute, { replace: true });
+        if (redirectWithTour) {
+          navigate(redirectWithTour, { replace: true });
         }
       }, 1500);
 
@@ -105,7 +148,7 @@ export default function AuthCallback() {
 
       return () => window.clearTimeout(timer);
     }
-  }, [isLoading, user, targetRoute, navigate, debugMode]);
+  }, [isLoading, user, targetRoute, navigate, debugMode, role, triggerTourForNewUser]);
 
   const handleContinue = () => {
     if (targetRoute) {
@@ -176,6 +219,14 @@ export default function AuthCallback() {
           )}
         </div>
       </div>
+
+      {/* Onboarding Tour Modal */}
+      <OnboardingTour
+        open={showTour}
+        onOpenChange={setShowTour}
+        role={(role || (user?.user_metadata?.role as "fan" | "artist" | "label") || "fan")}
+        onComplete={completeTour}
+      />
     </Layout>
   );
 }
