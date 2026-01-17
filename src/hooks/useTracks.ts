@@ -37,12 +37,13 @@ interface UseTracksOptions {
   labelId?: string;
   publishedOnly?: boolean;
   genre?: string;
+  mood?: string;
   limit?: number;
   searchQuery?: string;
 }
 
 export function useTracks(options: UseTracksOptions = {}) {
-  const { artistId, labelId, publishedOnly = false, genre, limit, searchQuery } = options;
+  const { artistId, labelId, publishedOnly = false, genre, mood, limit, searchQuery } = options;
 
   return useQuery({
     queryKey: ["tracks", options],
@@ -67,6 +68,10 @@ export function useTracks(options: UseTracksOptions = {}) {
 
       if (genre && genre !== "All") {
         query = query.eq("genre", genre);
+      }
+
+      if (mood && mood !== "All") {
+        query = query.contains("moods", [mood]);
       }
 
       if (searchQuery) {
