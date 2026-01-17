@@ -24,6 +24,11 @@ import { CoverArtUpload } from "@/components/upload/CoverArtUpload";
 import { KaraokeSection } from "@/components/upload/KaraokeSection";
 import { ArtistSelector } from "@/components/upload/ArtistSelector";
 import { InfoTooltip } from "@/components/upload/InfoTooltip";
+import MoodTagsInput from "@/components/upload/MoodTagsInput";
+import CreditsSection, { TrackCredits } from "@/components/upload/CreditsSection";
+import FeatureArtistsSelector from "@/components/upload/FeatureArtistsSelector";
+import RightsConfirmation from "@/components/upload/RightsConfirmation";
+import ExplicitToggle from "@/components/upload/ExplicitToggle";
 import {
   Form,
   FormControl,
@@ -67,6 +72,12 @@ const uploadFormSchema = z.object({
 
 type UploadFormValues = z.infer<typeof uploadFormSchema>;
 
+interface FeatureArtist {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+}
+
 export default function Upload() {
   const navigate = useNavigate();
   const { user, role, profile, isLoading } = useAuth();
@@ -82,6 +93,20 @@ export default function Upload() {
   const [karaokeEnabled, setKaraokeEnabled] = useState(false);
   const [instrumentalFile, setInstrumentalFile] = useState<File | null>(null);
   const [lyrics, setLyrics] = useState("");
+
+  // New fields
+  const [moods, setMoods] = useState<string[]>([]);
+  const [isExplicit, setIsExplicit] = useState(false);
+  const [featureArtists, setFeatureArtists] = useState<FeatureArtist[]>([]);
+  const [credits, setCredits] = useState<TrackCredits>({
+    writers: [],
+    composers: [],
+    producers: [],
+    engineers: [],
+    displayLabelName: "",
+  });
+  const [rightsConfirmed, setRightsConfirmed] = useState(false);
+  const [rightsError, setRightsError] = useState<string | undefined>();
 
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadFormSchema),
@@ -193,6 +218,13 @@ export default function Upload() {
       return;
     }
 
+    // Only require rights confirmation for publishing
+    if (!isDraft && !rightsConfirmed) {
+      setRightsError("You must confirm you have the rights to publish this music");
+      return;
+    }
+    setRightsError(undefined);
+
     const result = await uploadTrack(
       {
         title: values.title,
@@ -201,6 +233,9 @@ export default function Upload() {
         price: values.price,
         totalEditions: values.totalEditions,
         artistId: values.artistId,
+        moods,
+        isExplicit,
+        displayLabelName: credits.displayLabelName || undefined,
       },
       audioFile,
       coverFile,
@@ -209,6 +244,13 @@ export default function Upload() {
         instrumentalFile,
         lyrics,
       },
+      {
+        writers: credits.writers,
+        composers: credits.composers,
+        producers: credits.producers,
+        engineers: credits.engineers,
+      },
+      featureArtists.map((a) => a.id),
       isDraft
     );
 
@@ -282,6 +324,8 @@ export default function Upload() {
 
             {/* Track Details */}
             <div className="glass-card p-6 space-y-6">
+              <h2 className="text-lg font-semibold text-foreground">Track Details</h2>
+
               <div className="grid md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -337,6 +381,16 @@ export default function Upload() {
                 />
               </div>
 
+              {/* Feature Artists */}
+              <FeatureArtistsSelector
+                selectedArtists={featureArtists}
+                onChange={setFeatureArtists}
+                excludeArtistId={form.watch("artistId") || user?.id}
+              />
+
+              {/* Moods */}
+              <MoodTagsInput moods={moods} onChange={setMoods} />
+
               <FormField
                 control={form.control}
                 name="description"
@@ -359,7 +413,16 @@ export default function Upload() {
                 )}
               />
 
-              {/* Pricing */}
+              {/* Explicit Toggle */}
+              <ExplicitToggle isExplicit={isExplicit} onChange={setIsExplicit} />
+            </div>
+
+            {/* Credits Section */}
+            <CreditsSection credits={credits} onChange={setCredits} />
+
+            {/* Pricing */}
+            <div className="glass-card p-6 space-y-6">
+              <h2 className="text-lg font-semibold text-foreground">Pricing & Access</h2>
               <div className="grid md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -421,6 +484,13 @@ export default function Upload() {
               lyrics={lyrics}
               onLyricsChange={setLyrics}
               disabled={isUploading}
+            />
+
+            {/* Rights Confirmation */}
+            <RightsConfirmation
+              checked={rightsConfirmed}
+              onChange={setRightsConfirmed}
+              error={rightsError}
             />
 
             {/* Submit Buttons */}

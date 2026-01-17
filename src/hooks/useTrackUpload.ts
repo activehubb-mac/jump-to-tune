@@ -10,12 +10,22 @@ export interface TrackFormData {
   price: number;
   totalEditions: number;
   artistId?: string; // For labels uploading on behalf of artists
+  moods?: string[];
+  isExplicit?: boolean;
+  displayLabelName?: string;
 }
 
 export interface KaraokeData {
   enabled: boolean;
   instrumentalFile: File | null;
   lyrics: string;
+}
+
+export interface TrackCreditsData {
+  writers: string[];
+  composers: string[];
+  producers: string[];
+  engineers: string[];
 }
 
 export interface UploadProgress {
@@ -32,6 +42,8 @@ interface UseTrackUploadReturn {
     audioFile: File,
     coverFile: File | null,
     karaokeData: KaraokeData,
+    creditsData: TrackCreditsData,
+    featureArtistIds: string[],
     isDraft: boolean
   ) => Promise<{ success: boolean; trackId?: string; error?: string }>;
 }
@@ -77,6 +89,8 @@ export const useTrackUpload = (): UseTrackUploadReturn => {
     audioFile: File,
     coverFile: File | null,
     karaokeData: KaraokeData,
+    creditsData: TrackCreditsData,
+    featureArtistIds: string[],
     isDraft: boolean
   ): Promise<{ success: boolean; trackId?: string; error?: string }> => {
     if (!user) {
@@ -137,7 +151,7 @@ export const useTrackUpload = (): UseTrackUploadReturn => {
       const artistId = isLabel && formData.artistId ? formData.artistId : user.id;
       const labelId = isLabel ? user.id : null;
 
-      // Insert track record
+      // Insert track record with new fields
       const { data: track, error: trackError } = await supabase
         .from('tracks')
         .insert({
@@ -153,6 +167,9 @@ export const useTrackUpload = (): UseTrackUploadReturn => {
           duration,
           is_draft: isDraft,
           has_karaoke: karaokeData.enabled && !!instrumentalUrl,
+          moods: formData.moods || [],
+          is_explicit: formData.isExplicit || false,
+          display_label_name: formData.displayLabelName || null,
         })
         .select('id')
         .single();
@@ -173,6 +190,50 @@ export const useTrackUpload = (): UseTrackUploadReturn => {
 
         if (karaokeError) {
           console.error('Failed to save karaoke data:', karaokeError);
+        }
+      }
+
+      // Insert track credits
+      if (track) {
+        const creditsToInsert: Array<{ track_id: string; role: string; name: string }> = [];
+        
+        creditsData.writers.forEach((name) => {
+          creditsToInsert.push({ track_id: track.id, role: 'writer', name });
+        });
+        creditsData.composers.forEach((name) => {
+          creditsToInsert.push({ track_id: track.id, role: 'composer', name });
+        });
+        creditsData.producers.forEach((name) => {
+          creditsToInsert.push({ track_id: track.id, role: 'producer', name });
+        });
+        creditsData.engineers.forEach((name) => {
+          creditsToInsert.push({ track_id: track.id, role: 'engineer', name });
+        });
+
+        if (creditsToInsert.length > 0) {
+          const { error: creditsError } = await supabase
+            .from('track_credits')
+            .insert(creditsToInsert);
+
+          if (creditsError) {
+            console.error('Failed to save track credits:', creditsError);
+          }
+        }
+      }
+
+      // Insert feature artists
+      if (track && featureArtistIds.length > 0) {
+        const featuresToInsert = featureArtistIds.map((artistId) => ({
+          track_id: track.id,
+          artist_id: artistId,
+        }));
+
+        const { error: featuresError } = await supabase
+          .from('track_features')
+          .insert(featuresToInsert);
+
+        if (featuresError) {
+          console.error('Failed to save feature artists:', featuresError);
         }
       }
 

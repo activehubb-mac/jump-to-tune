@@ -18,20 +18,39 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import MoodTagsInput from "@/components/upload/MoodTagsInput";
+import CreditsSection, { TrackCredits } from "@/components/upload/CreditsSection";
+import FeatureArtistsSelector from "@/components/upload/FeatureArtistsSelector";
+import ExplicitToggle from "@/components/upload/ExplicitToggle";
 
 const GENRES = [
-  "Hip Hop",
-  "R&B",
-  "Pop",
   "Electronic",
+  "Hip Hop",
+  "Pop",
+  "R&B",
   "Rock",
   "Jazz",
   "Classical",
   "Country",
   "Reggae",
   "Latin",
-  "Other",
+  "Afrobeat",
+  "Indie",
+  "Alternative",
+  "Dance",
+  "House",
+  "Techno",
+  "Ambient",
+  "Soul",
+  "Folk",
+  "Metal",
 ];
+
+interface FeatureArtist {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+}
 
 export default function TrackEdit() {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +59,7 @@ export default function TrackEdit() {
   const queryClient = useQueryClient();
   const { showFeedback } = useFeedbackSafe();
 
+  // Basic fields
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [genre, setGenre] = useState("");
@@ -48,6 +68,18 @@ export default function TrackEdit() {
   const [isDraft, setIsDraft] = useState(true);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+
+  // New fields
+  const [moods, setMoods] = useState<string[]>([]);
+  const [isExplicit, setIsExplicit] = useState(false);
+  const [featureArtists, setFeatureArtists] = useState<FeatureArtist[]>([]);
+  const [credits, setCredits] = useState<TrackCredits>({
+    writers: [],
+    composers: [],
+    producers: [],
+    engineers: [],
+    displayLabelName: "",
+  });
 
   // Fetch track data
   const { data: track, isLoading: trackLoading } = useQuery({
@@ -67,6 +99,53 @@ export default function TrackEdit() {
     enabled: !!id,
   });
 
+  // Fetch track credits
+  const { data: trackCredits } = useQuery({
+    queryKey: ["track-credits", id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data, error } = await supabase
+        .from("track_credits")
+        .select("*")
+        .eq("track_id", id);
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!id,
+  });
+
+  // Fetch track features
+  const { data: trackFeatures } = useQuery({
+    queryKey: ["track-features", id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data, error } = await supabase
+        .from("track_features")
+        .select("artist_id")
+        .eq("track_id", id);
+
+      if (error) throw error;
+
+      // Get artist profiles
+      if (data && data.length > 0) {
+        const artistIds = data.map((f) => f.artist_id);
+        const { data: profiles } = await supabase
+          .from("profiles_public")
+          .select("id, display_name, avatar_url")
+          .in("id", artistIds);
+
+        return (profiles || []).map((p) => ({
+          id: p.id!,
+          display_name: p.display_name || "Unknown",
+          avatar_url: p.avatar_url,
+        }));
+      }
+      return [];
+    },
+    enabled: !!id,
+  });
+
   // Populate form when track loads
   useEffect(() => {
     if (track) {
@@ -77,8 +156,39 @@ export default function TrackEdit() {
       setTotalEditions(track.total_editions.toString());
       setIsDraft(track.is_draft ?? true);
       setCoverPreview(track.cover_art_url);
+      setMoods(track.moods || []);
+      setIsExplicit(track.is_explicit || false);
+      setCredits((prev) => ({
+        ...prev,
+        displayLabelName: track.display_label_name || "",
+      }));
     }
   }, [track]);
+
+  // Populate credits when loaded
+  useEffect(() => {
+    if (trackCredits) {
+      const writers = trackCredits.filter((c) => c.role === "writer").map((c) => c.name);
+      const composers = trackCredits.filter((c) => c.role === "composer").map((c) => c.name);
+      const producers = trackCredits.filter((c) => c.role === "producer").map((c) => c.name);
+      const engineers = trackCredits.filter((c) => c.role === "engineer").map((c) => c.name);
+
+      setCredits((prev) => ({
+        ...prev,
+        writers,
+        composers,
+        producers,
+        engineers,
+      }));
+    }
+  }, [trackCredits]);
+
+  // Populate features when loaded
+  useEffect(() => {
+    if (trackFeatures) {
+      setFeatureArtists(trackFeatures);
+    }
+  }, [trackFeatures]);
 
   // Handle cover image change
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,6 +224,7 @@ export default function TrackEdit() {
         coverUrl = urlData.publicUrl;
       }
 
+      // Update track with new fields
       const { error } = await supabase
         .from("tracks")
         .update({
@@ -124,19 +235,49 @@ export default function TrackEdit() {
           total_editions: parseInt(totalEditions) || 100,
           is_draft: isDraft,
           cover_art_url: coverUrl,
+          moods: moods,
+          is_explicit: isExplicit,
+          display_label_name: credits.displayLabelName || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", id);
 
       if (error) throw error;
+
+      // Delete existing credits and insert new ones
+      await supabase.from("track_credits").delete().eq("track_id", id);
+
+      const creditsToInsert: Array<{ track_id: string; role: string; name: string }> = [];
+      credits.writers.forEach((name) => creditsToInsert.push({ track_id: id, role: "writer", name }));
+      credits.composers.forEach((name) => creditsToInsert.push({ track_id: id, role: "composer", name }));
+      credits.producers.forEach((name) => creditsToInsert.push({ track_id: id, role: "producer", name }));
+      credits.engineers.forEach((name) => creditsToInsert.push({ track_id: id, role: "engineer", name }));
+
+      if (creditsToInsert.length > 0) {
+        const { error: creditsError } = await supabase.from("track_credits").insert(creditsToInsert);
+        if (creditsError) console.error("Failed to save credits:", creditsError);
+      }
+
+      // Delete existing features and insert new ones
+      await supabase.from("track_features").delete().eq("track_id", id);
+
+      if (featureArtists.length > 0) {
+        const featuresToInsert = featureArtists.map((a) => ({
+          track_id: id,
+          artist_id: a.id,
+        }));
+        const { error: featuresError } = await supabase.from("track_features").insert(featuresToInsert);
+        if (featuresError) console.error("Failed to save features:", featuresError);
+      }
     },
     onSuccess: () => {
       showFeedback({ type: "success", title: "Track Updated", message: "Track updated successfully!" });
       queryClient.invalidateQueries({ queryKey: ["tracks"] });
       queryClient.invalidateQueries({ queryKey: ["track", id] });
+      queryClient.invalidateQueries({ queryKey: ["track-credits", id] });
+      queryClient.invalidateQueries({ queryKey: ["track-features", id] });
       queryClient.invalidateQueries({ queryKey: ["artist-stats"] });
       queryClient.invalidateQueries({ queryKey: ["label-stats"] });
-      // Navigate back based on role - will be set after ownership check
       navigate(role === "label" ? "/label/tracks" : "/artist/tracks");
     },
     onError: (error) => {
@@ -298,16 +439,45 @@ export default function TrackEdit() {
 
           {/* Basic Info */}
           <div className="glass-card p-6 space-y-4">
-            <div>
-              <Label htmlFor="title">Title *</Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Track title"
-                className="mt-1"
-              />
+            <h2 className="text-lg font-semibold text-foreground">Track Details</h2>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="title">Title *</Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Track title"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="genre">Genre</Label>
+                <Select value={genre} onValueChange={setGenre}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select genre" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GENRES.map((g) => (
+                      <SelectItem key={g} value={g}>
+                        {g}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+
+            {/* Feature Artists */}
+            <FeatureArtistsSelector
+              selectedArtists={featureArtists}
+              onChange={setFeatureArtists}
+              excludeArtistId={track?.artist_id}
+            />
+
+            {/* Moods */}
+            <MoodTagsInput moods={moods} onChange={setMoods} />
 
             <div>
               <Label htmlFor="description">Description</Label>
@@ -321,25 +491,16 @@ export default function TrackEdit() {
               />
             </div>
 
-            <div>
-              <Label htmlFor="genre">Genre</Label>
-              <Select value={genre} onValueChange={setGenre}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select genre" />
-                </SelectTrigger>
-                <SelectContent>
-                  {GENRES.map((g) => (
-                    <SelectItem key={g} value={g}>
-                      {g}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Explicit Toggle */}
+            <ExplicitToggle isExplicit={isExplicit} onChange={setIsExplicit} />
           </div>
+
+          {/* Credits Section */}
+          <CreditsSection credits={credits} onChange={setCredits} />
 
           {/* Pricing */}
           <div className="glass-card p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-foreground">Pricing & Access</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="price">Price (USD)</Label>
