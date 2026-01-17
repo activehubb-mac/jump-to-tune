@@ -19,9 +19,11 @@ import { DownloadButton } from "@/components/download/DownloadButton";
 import { usePurchases } from "@/hooks/usePurchases";
 
 const genres = ["All", "Electronic", "Hip Hop", "R&B", "Pop", "Rock", "Jazz", "Classical", "Indie"];
+const moods = ["All", "Chill", "Energetic", "Dark", "Uplifting", "Melancholic", "Romantic", "Aggressive", "Dreamy", "Funky"];
 
 export default function Browse() {
   const [selectedGenre, setSelectedGenre] = useState("All");
+  const [selectedMood, setSelectedMood] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
   const { isLiked, toggleLike } = useLikes();
@@ -34,6 +36,7 @@ export default function Browse() {
   
   const { data: tracks, isLoading } = usePublishedTracks({
     genre: selectedGenre,
+    mood: selectedMood,
     searchQuery: searchQuery || undefined,
   });
 
@@ -134,20 +137,43 @@ export default function Browse() {
         </div>
 
         {/* Genre Pills */}
-        <div className="flex flex-wrap gap-2 mb-8">
-          {genres.map((genre) => (
-            <button
-              key={genre}
-              onClick={() => setSelectedGenre(genre)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                selectedGenre === genre
-                  ? "bg-primary text-primary-foreground neon-glow-subtle"
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              {genre}
-            </button>
-          ))}
+        <div className="mb-4">
+          <h3 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Genre</h3>
+          <div className="flex flex-wrap gap-2">
+            {genres.map((genre) => (
+              <button
+                key={genre}
+                onClick={() => setSelectedGenre(genre)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedGenre === genre
+                    ? "bg-primary text-primary-foreground neon-glow-subtle"
+                    : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                {genre}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Mood Pills */}
+        <div className="mb-8">
+          <h3 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Mood</h3>
+          <div className="flex flex-wrap gap-2">
+            {moods.map((mood) => (
+              <button
+                key={mood}
+                onClick={() => setSelectedMood(mood)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  selectedMood === mood
+                    ? "bg-accent text-accent-foreground ring-2 ring-accent ring-offset-2 ring-offset-background"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                }`}
+              >
+                {mood}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Track Grid */}
