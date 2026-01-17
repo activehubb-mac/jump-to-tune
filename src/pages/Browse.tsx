@@ -266,6 +266,12 @@ export default function Browse() {
                         onClick={(e) => e.stopPropagation()}
                       >
                         {artistName}
+                        {track.featuredArtists && track.featuredArtists.length > 0 && (
+                          <span className="text-muted-foreground/70">
+                            {" feat. "}
+                            {track.featuredArtists.map((a) => a.display_name).join(", ")}
+                          </span>
+                        )}
                       </Link>
                       {artistId && !isOwnTrack && (
                         <button
@@ -292,6 +298,24 @@ export default function Browse() {
                       <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                         <Users className="w-3 h-3" />
                         <span>{formatCompactNumber(artistFollowers)} fans</span>
+                      </div>
+                    )}
+                    {/* Mood Tags */}
+                    {track.moods && track.moods.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {track.moods.slice(0, 3).map((mood) => (
+                          <span
+                            key={mood}
+                            className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/50 text-accent-foreground/80"
+                          >
+                            {mood}
+                          </span>
+                        ))}
+                        {track.moods.length > 3 && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                            +{track.moods.length - 3}
+                          </span>
+                        )}
                       </div>
                     )}
                     <div className="flex items-center justify-between mt-2">
