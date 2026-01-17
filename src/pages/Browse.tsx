@@ -1,11 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import { usePublishedTracks } from "@/hooks/useTracks";
+import { useInfinitePublishedTracks } from "@/hooks/useTracks";
+import { useBrowsePreferences } from "@/hooks/useBrowsePreferences";
 import { formatPrice, formatEditions, formatCompactNumber } from "@/lib/formatters";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useLikes } from "@/hooks/useLikes";
@@ -33,9 +34,17 @@ const sortOptions: { value: SortOption; label: string }[] = [
 ];
 
 export default function Browse() {
-  const [selectedGenre, setSelectedGenre] = useState("All");
-  const [selectedMood, setSelectedMood] = useState("All");
-  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const {
+    genre: selectedGenre,
+    mood: selectedMood,
+    sortBy,
+    setGenre: setSelectedGenre,
+    setMood: setSelectedMood,
+    setSortBy,
+    clearFilters,
+    hasActiveFilters,
+  } = useBrowsePreferences();
+
   const [searchQuery, setSearchQuery] = useState("");
   const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
   const { isLiked, toggleLike } = useLikes();
@@ -46,23 +55,47 @@ export default function Browse() {
   const { showFeedback } = useFeedbackSafe();
   const { isOwned } = usePurchases();
 
-  const hasActiveFilters = selectedGenre !== "All" || selectedMood !== "All";
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   
-  const clearFilters = () => {
-    setSelectedGenre("All");
-    setSelectedMood("All");
-  };
-  
-  const { data: tracks, isLoading } = usePublishedTracks({
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfinitePublishedTracks({
     genre: selectedGenre,
     mood: selectedMood,
     sortBy,
     searchQuery: searchQuery || undefined,
   });
 
-  const trackIds = useMemo(() => tracks?.map((t) => t.id) || [], [tracks]);
+  // Flatten pages into single tracks array
+  const tracks = useMemo(() => {
+    return data?.pages.flatMap((page) => page.tracks) || [];
+  }, [data]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  const trackIds = useMemo(() => tracks.map((t) => t.id), [tracks]);
   const artistIds = useMemo(() => {
-    const ids = tracks?.map((t) => t.artist?.id).filter(Boolean) as string[] || [];
+    const ids = tracks.map((t) => t.artist?.id).filter(Boolean) as string[];
     return [...new Set(ids)];
   }, [tracks]);
   
@@ -434,14 +467,19 @@ export default function Browse() {
           </div>
         )}
 
-        {/* Load More */}
-        {tracks && tracks.length > 0 && (
-          <div className="text-center mt-12">
-            <Button variant="outline" className="border-glass-border hover:border-primary/50 px-8">
-              Load More
-            </Button>
-          </div>
-        )}
+        {/* Infinite Scroll Trigger */}
+        <div ref={loadMoreRef} className="py-8">
+          {isFetchingNextPage && (
+            <div className="flex justify-center">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          )}
+          {!hasNextPage && tracks.length > 0 && (
+            <p className="text-center text-sm text-muted-foreground">
+              You've reached the end
+            </p>
+          )}
+        </div>
       </div>
     </Layout>
   );
