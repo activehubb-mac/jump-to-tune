@@ -9,14 +9,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, Bookmark, X, Download, Crown, Building2, PlayCircle, Shuffle } from "lucide-react";
+import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, X, Download, Crown, Building2, PlayCircle, Shuffle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCollectionStats, useOwnedTracks } from "@/hooks/useCollectionStats";
 import { useLikedTracks, useLikes } from "@/hooks/useLikes";
 import { useFollowedArtists, useFollow } from "@/hooks/useFollows";
-import { useCollectionBookmarks } from "@/hooks/useCollectionBookmarks";
+
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { formatPrice } from "@/lib/formatters";
 import { DownloadButton } from "@/components/download/DownloadButton";
@@ -31,13 +31,13 @@ export default function Collection() {
   const [activeTab, setActiveTab] = useState("liked");
   const [likedSort, setLikedSort] = useState<SortOption>("recent");
   const [ownedSort, setOwnedSort] = useState<SortOption>("recent");
-  const [bookmarkedSort, setBookmarkedSort] = useState<SortOption>("recent");
+  
   const { user, profile, isLoading } = useAuth();
   const { data: stats, isLoading: statsLoading } = useCollectionStats(user?.id);
   const { data: ownedTracks, isLoading: tracksLoading } = useOwnedTracks(user?.id);
   const { data: likedTracks, isLoading: likedLoading } = useLikedTracks();
   const { data: followedArtists, isLoading: followingLoading } = useFollowedArtists();
-  const { bookmarks, isLoading: bookmarksLoading, removeBookmark } = useCollectionBookmarks();
+  
   const { toggleLike } = useLikes();
   const { toggleFollow } = useFollow();
   const { playTrack, addToQueue, clearQueue } = useAudioPlayer();
@@ -87,26 +87,6 @@ export default function Collection() {
     }
   }, [ownedTracks, ownedSort]);
 
-  // Sort bookmarked tracks - must be called before any early returns
-  const sortedBookmarks = useMemo(() => {
-    if (!bookmarks) return [];
-    const sorted = [...bookmarks];
-    switch (bookmarkedSort) {
-      case "title":
-        return sorted.sort((a, b) => 
-          (a.track?.title || "").localeCompare(b.track?.title || "")
-        );
-      case "artist":
-        return sorted.sort((a, b) => 
-          (a.track?.artist?.display_name || "").localeCompare(b.track?.artist?.display_name || "")
-        );
-      case "price":
-        return sorted.sort((a, b) => (b.track?.price || 0) - (a.track?.price || 0));
-      case "recent":
-      default:
-        return sorted; // Already sorted by most recent from hook
-    }
-  }, [bookmarks, bookmarkedSort]);
 
   if (isLoading) {
     return (
@@ -259,27 +239,13 @@ export default function Collection() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-3xl grid-cols-4 mb-8">
+          <TabsList className="grid w-full max-w-2xl grid-cols-3 mb-8">
             <TabsTrigger value="liked" className="flex items-center gap-2">
               <Heart className="w-4 h-4" />
               <span className="hidden sm:inline">Liked</span>
               {likedTracks && likedTracks.length > 0 && (
                 <span className="text-xs bg-primary/20 px-2 py-0.5 rounded-full">
                   {likedTracks.length}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="bookmarked" 
-              className="flex items-center gap-2"
-              disabled={!canUseFeature("bookmark")}
-            >
-              <Bookmark className="w-4 h-4" />
-              <span className="hidden sm:inline">Bookmarked</span>
-              {!canUseFeature("bookmark") && <Lock className="w-3 h-3 text-primary" />}
-              {bookmarks && bookmarks.length > 0 && (
-                <span className="text-xs bg-primary/20 px-2 py-0.5 rounded-full">
-                  {bookmarks.length}
                 </span>
               )}
             </TabsTrigger>
@@ -510,143 +476,6 @@ export default function Collection() {
                 <h2 className="text-xl font-semibold text-foreground mb-2">No liked tracks yet</h2>
                 <p className="text-muted-foreground mb-6">
                   Browse music and click the heart to save your favorites!
-                </p>
-                <Button variant="outline" asChild>
-                  <Link to="/browse">Browse Music</Link>
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Bookmarked Tracks Tab */}
-          <TabsContent value="bookmarked">
-            {bookmarksLoading ? (
-              <div className="glass-card p-12 flex justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            ) : sortedBookmarks.length > 0 ? (
-              <div>
-                <div className="flex justify-end mb-4">
-                  <SortSelect value={bookmarkedSort} onChange={setBookmarkedSort} />
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {sortedBookmarks.map((bookmark) => (
-                    <div
-                      key={bookmark.id}
-                      className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
-                      onClick={() => {
-                        if (bookmark.track) {
-                          playTrack({
-                            id: bookmark.track.id,
-                            title: bookmark.track.title,
-                            audio_url: bookmark.track.audio_url,
-                            cover_art_url: bookmark.track.cover_art_url,
-                            duration: bookmark.track.duration,
-                            artist: bookmark.track.artist,
-                          });
-                        }
-                      }}
-                    >
-                      {/* Album Art */}
-                      <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">
-                        {bookmark.track?.cover_art_url ? (
-                          <img
-                            src={bookmark.track.cover_art_url}
-                            alt={bookmark.track.title}
-                            className="absolute inset-0 w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <Disc3 className="w-16 h-16 text-muted-foreground/50" />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-background/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <Button size="icon" className="rounded-full gradient-accent neon-glow w-10 h-10">
-                            <Play className="w-4 h-4 ml-0.5" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="rounded-full w-10 h-10 border-glass-border/50 hover:border-primary/50"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (bookmark.track) {
-                                addToQueue({
-                                  id: bookmark.track.id,
-                                  title: bookmark.track.title,
-                                  audio_url: bookmark.track.audio_url,
-                                  cover_art_url: bookmark.track.cover_art_url,
-                                  duration: bookmark.track.duration,
-                                  artist: bookmark.track.artist,
-                                });
-                              }
-                            }}
-                            title="Add to queue"
-                          >
-                            <ListPlus className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        {/* Remove Bookmark Button */}
-                        <button
-                          className="absolute top-2 right-2 p-2 rounded-full bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeBookmark(bookmark.track_id);
-                          }}
-                          title="Remove from bookmarks"
-                        >
-                          <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
-                        </button>
-                      </div>
-
-                      {/* Track Info */}
-                      <div>
-                        <h3 className="font-semibold text-foreground truncate">{bookmark.track?.title}</h3>
-                        <Link
-                          to={`/artist/${bookmark.track?.artist?.id}`}
-                          className="text-sm text-muted-foreground truncate hover:text-primary transition-colors block"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {bookmark.track?.artist?.display_name || "Unknown Artist"}
-                        </Link>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-sm font-medium text-primary">
-                            {formatPrice(bookmark.track?.price || 0)}
-                          </span>
-                          {bookmark.track && (
-                            isOwned(bookmark.track.id) ? (
-                              <Badge variant="secondary" className="text-xs">
-                                <Disc3 className="w-3 h-3 mr-1" />
-                                Owned
-                              </Badge>
-                            ) : (
-                              <DownloadButton
-                                track={{
-                                  id: bookmark.track.id,
-                                  title: bookmark.track.title,
-                                  price: bookmark.track.price,
-                                  audio_url: bookmark.track.audio_url,
-                                  cover_art_url: bookmark.track.cover_art_url,
-                                  artist: bookmark.track.artist,
-                                }}
-                                size="sm"
-                                variant="outline"
-                                className="h-7 text-xs"
-                              />
-                            )
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="glass-card p-12 text-center">
-                <Bookmark className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
-                <h2 className="text-xl font-semibold text-foreground mb-2">No bookmarked tracks</h2>
-                <p className="text-muted-foreground mb-6">
-                  Bookmark tracks to save them for streaming later!
                 </p>
                 <Button variant="outline" asChild>
                   <Link to="/browse">Browse Music</Link>
