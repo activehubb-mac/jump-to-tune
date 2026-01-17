@@ -4,6 +4,7 @@ import { Layout } from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 type CallbackStatus = "verifying" | "success" | "error";
 
@@ -57,6 +58,12 @@ export default function AuthCallback() {
     if (!isLoading && user && !hasRedirectedRef.current) {
       setStatus("success");
       hasRedirectedRef.current = true;
+
+      // Show toast notification
+      toast({
+        title: "Email Verified! ✓",
+        description: "Welcome to JumTunes. Redirecting you now...",
+      });
 
       if (debugMode) {
         console.log("[AuthCallback Debug] Scheduling redirect to:", targetRoute);
