@@ -525,6 +525,67 @@ export type Database = {
           },
         ]
       }
+      track_credits: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          role: string
+          track_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          role: string
+          track_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          role?: string
+          track_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "track_credits_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      track_features: {
+        Row: {
+          artist_id: string
+          created_at: string
+          id: string
+          track_id: string
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          id?: string
+          track_id: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          id?: string
+          track_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "track_features_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       track_karaoke: {
         Row: {
           created_at: string
@@ -564,13 +625,16 @@ export type Database = {
           cover_art_url: string | null
           created_at: string
           description: string | null
+          display_label_name: string | null
           duration: number | null
           editions_sold: number
           genre: string | null
           has_karaoke: boolean | null
           id: string
           is_draft: boolean | null
+          is_explicit: boolean | null
           label_id: string | null
+          moods: string[] | null
           price: number
           title: string
           total_editions: number
@@ -582,13 +646,16 @@ export type Database = {
           cover_art_url?: string | null
           created_at?: string
           description?: string | null
+          display_label_name?: string | null
           duration?: number | null
           editions_sold?: number
           genre?: string | null
           has_karaoke?: boolean | null
           id?: string
           is_draft?: boolean | null
+          is_explicit?: boolean | null
           label_id?: string | null
+          moods?: string[] | null
           price?: number
           title: string
           total_editions?: number
@@ -600,13 +667,16 @@ export type Database = {
           cover_art_url?: string | null
           created_at?: string
           description?: string | null
+          display_label_name?: string | null
           duration?: number | null
           editions_sold?: number
           genre?: string | null
           has_karaoke?: boolean | null
           id?: string
           is_draft?: boolean | null
+          is_explicit?: boolean | null
           label_id?: string | null
+          moods?: string[] | null
           price?: number
           title?: string
           total_editions?: number

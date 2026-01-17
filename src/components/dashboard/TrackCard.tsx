@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Disc3, Edit, Trash2, Play, Pause, ListPlus, Lock } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { DownloadButton } from "@/components/download/DownloadButton";
@@ -20,6 +21,7 @@ interface TrackCardProps {
     total_editions: number;
     genre?: string | null;
     duration?: number | null;
+    is_explicit?: boolean;
     artist?: {
       id: string;
       display_name: string | null;
@@ -107,6 +109,16 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
               <div className="absolute inset-0 flex items-center justify-center">
                 <Disc3 className="w-16 h-16 text-muted-foreground/50" />
               </div>
+            )}
+
+            {/* Explicit Badge */}
+            {track.is_explicit && (
+              <Badge 
+                variant="destructive" 
+                className="absolute top-2 left-2 text-[10px] px-1.5 py-0 h-5"
+              >
+                E
+              </Badge>
             )}
 
             {/* Play overlay for fan-facing cards */}

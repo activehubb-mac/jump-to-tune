@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -5,12 +6,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Disc3, Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Disc3, Play, Pause, Volume2, VolumeX, Users, Mic2 } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { Slider } from "@/components/ui/slider";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { DownloadButton } from "@/components/download/DownloadButton";
 import { usePurchases } from "@/hooks/usePurchases";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Track {
   id: string;
@@ -23,6 +28,8 @@ interface Track {
   total_editions: number;
   genre?: string | null;
   duration?: number | null;
+  moods?: string[];
+  is_explicit?: boolean;
   artist?: {
     id: string;
     display_name: string | null;
@@ -62,6 +69,48 @@ export function TrackDetailModal({
   } = useAudioPlayer();
   const { isOwned } = usePurchases();
 
+  // Fetch track credits
+  const { data: trackCredits } = useQuery({
+    queryKey: ["track-credits", track?.id],
+    queryFn: async () => {
+      if (!track?.id) return [];
+      const { data, error } = await supabase
+        .from("track_credits")
+        .select("*")
+        .eq("track_id", track.id);
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!track?.id && open,
+  });
+
+  // Fetch feature artists
+  const { data: featureArtists } = useQuery({
+    queryKey: ["track-features", track?.id],
+    queryFn: async () => {
+      if (!track?.id) return [];
+      const { data, error } = await supabase
+        .from("track_features")
+        .select("artist_id")
+        .eq("track_id", track.id);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const artistIds = data.map((f) => f.artist_id);
+        const { data: profiles } = await supabase
+          .from("profiles_public")
+          .select("id, display_name, avatar_url")
+          .in("id", artistIds);
+
+        return profiles || [];
+      }
+      return [];
+    },
+    enabled: !!track?.id && open,
+  });
+
   // Check if this track is the currently playing track
   const isThisTrackPlaying = currentTrack?.id === track?.id;
   const displayDuration = isThisTrackPlaying ? duration : (track?.duration || 0);
@@ -97,9 +146,21 @@ export function TrackDetailModal({
 
   if (!track) return null;
 
+  // Group credits by role
+  const creditsByRole: Record<string, string[]> = {};
+  trackCredits?.forEach((credit) => {
+    if (!creditsByRole[credit.role]) {
+      creditsByRole[credit.role] = [];
+    }
+    creditsByRole[credit.role].push(credit.name);
+  });
+
+  const hasCredits = trackCredits && trackCredits.length > 0;
+  const hasFeatures = featureArtists && featureArtists.length > 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="sr-only">{track.title}</DialogTitle>
         </DialogHeader>
@@ -118,21 +179,68 @@ export function TrackDetailModal({
                 <Disc3 className="w-24 h-24 text-muted-foreground/50" />
               </div>
             )}
+            {/* Explicit Badge */}
+            {track.is_explicit && (
+              <Badge 
+                variant="destructive" 
+                className="absolute top-3 left-3 text-xs"
+              >
+                Explicit
+              </Badge>
+            )}
           </div>
 
           {/* Track Info */}
           <div className="text-center w-full">
             <h2 className="text-2xl font-bold text-foreground mb-1">{track.title}</h2>
             {track.artist && (
-              <p className="text-muted-foreground">
+              <Link 
+                to={`/artist/${track.artist.id}`}
+                className="text-muted-foreground hover:text-primary transition-colors"
+                onClick={() => onOpenChange(false)}
+              >
                 {track.artist.display_name || "Unknown Artist"}
-              </p>
+              </Link>
             )}
-            {track.genre && (
-              <span className="inline-block mt-2 px-3 py-1 text-xs rounded-full bg-primary/20 text-primary">
-                {track.genre}
-              </span>
+            
+            {/* Feature Artists */}
+            {hasFeatures && (
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <Users className="h-3 w-3 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">feat.</span>
+                <div className="flex items-center gap-1">
+                  {featureArtists.map((artist, index) => (
+                    <span key={artist.id}>
+                      <Link
+                        to={`/artist/${artist.id}`}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                        onClick={() => onOpenChange(false)}
+                      >
+                        {artist.display_name}
+                      </Link>
+                      {index < featureArtists.length - 1 && ", "}
+                    </span>
+                  ))}
+                </div>
+              </div>
             )}
+
+            {/* Genre & Moods */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
+              {track.genre && (
+                <span className="px-3 py-1 text-xs rounded-full bg-primary/20 text-primary">
+                  {track.genre}
+                </span>
+              )}
+              {track.moods?.map((mood) => (
+                <span 
+                  key={mood}
+                  className="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground"
+                >
+                  {mood}
+                </span>
+              ))}
+            </div>
           </div>
 
           {/* Description */}
@@ -140,6 +248,24 @@ export function TrackDetailModal({
             <p className="text-sm text-muted-foreground text-center max-w-md">
               {track.description}
             </p>
+          )}
+
+          {/* Credits */}
+          {hasCredits && (
+            <div className="w-full glass-card p-4 rounded-lg space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Mic2 className="h-4 w-4" />
+                Credits
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                {Object.entries(creditsByRole).map(([role, names]) => (
+                  <div key={role}>
+                    <span className="text-muted-foreground capitalize">{role}s:</span>{" "}
+                    <span className="text-foreground">{names.join(", ")}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Price & Editions */}
