@@ -342,11 +342,15 @@ export default function Index() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             {/* Brand Logo */}
-            <div className="flex justify-center mb-4">
+            <div className="flex justify-center mb-4 relative">
+              {/* Glow effect */}
+              <div className="absolute inset-0 flex justify-center items-center">
+                <div className="w-40 h-40 md:w-60 md:h-60 bg-primary/40 rounded-full blur-[80px]" />
+              </div>
               <img 
                 src="/images/jumtunes-logo.png" 
                 alt="JumTunes" 
-                className="h-32 md:h-48 w-auto object-contain"
+                className="h-40 md:h-60 w-auto object-contain relative z-10"
               />
             </div>
 
