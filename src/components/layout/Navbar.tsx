@@ -97,7 +97,7 @@ export function Navbar() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center group">
+            <Link to="/" className="flex items-center group pt-4">
               <img 
                 src="/images/jumtunes-logo.png" 
                 alt="JumTunes" 
