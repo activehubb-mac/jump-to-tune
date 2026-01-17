@@ -342,27 +342,27 @@ export default function Index() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             {/* Brand Logo */}
-            <div className="flex justify-center mb-8">
+            <div className="flex justify-center mb-4">
               <img 
                 src="/images/jumtunes-logo.png" 
                 alt="JumTunes" 
-                className="h-48 md:h-64 w-auto object-contain animate-float"
+                className="h-80 md:h-[28rem] w-auto object-contain"
               />
             </div>
 
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-4">
               <Zap className="w-4 h-4 text-accent" />
               <span className="text-sm text-muted-foreground">{heroContent.badge}</span>
             </div>
 
             {/* Main Heading */}
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+            <h1 className="text-5xl md:text-7xl font-bold mb-4 leading-tight">
               {heroContent.heading}
             </h1>
 
             {/* Subheading */}
-            <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground mb-6 max-w-2xl mx-auto">
               {heroContent.subheading}
             </p>
 
