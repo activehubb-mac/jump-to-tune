@@ -137,6 +137,23 @@ export default function Onboarding() {
         }
       }
 
+      // Send welcome email after onboarding is complete (fire and forget)
+      supabase.functions
+        .invoke("send-welcome-email", {
+          body: {
+            email: user.email,
+            displayName: displayName.trim() || user.user_metadata?.display_name || "",
+            role: role || "artist",
+          },
+        })
+        .then(({ error }) => {
+          if (error) {
+            console.error("Failed to send welcome email:", error);
+          } else {
+            console.log("Welcome email sent successfully after onboarding");
+          }
+        });
+
       await refreshProfile();
       setStep("complete");
     } catch (error) {
