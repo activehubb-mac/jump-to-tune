@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePublishedTracks } from "@/hooks/useTracks";
 import { formatPrice, formatEditions, formatCompactNumber } from "@/lib/formatters";
@@ -21,9 +22,20 @@ import { usePurchases } from "@/hooks/usePurchases";
 const genres = ["All", "Electronic", "Hip Hop", "R&B", "Pop", "Rock", "Jazz", "Classical", "Indie"];
 const moods = ["All", "Chill", "Energetic", "Dark", "Uplifting", "Melancholic", "Romantic", "Aggressive", "Dreamy", "Funky"];
 
+type SortOption = "newest" | "oldest" | "popular" | "price_low" | "price_high";
+
+const sortOptions: { value: SortOption; label: string }[] = [
+  { value: "newest", label: "Newest First" },
+  { value: "oldest", label: "Oldest First" },
+  { value: "popular", label: "Most Popular" },
+  { value: "price_low", label: "Price: Low to High" },
+  { value: "price_high", label: "Price: High to Low" },
+];
+
 export default function Browse() {
   const [selectedGenre, setSelectedGenre] = useState("All");
   const [selectedMood, setSelectedMood] = useState("All");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [searchQuery, setSearchQuery] = useState("");
   const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
   const { isLiked, toggleLike } = useLikes();
@@ -33,10 +45,18 @@ export default function Browse() {
   const { user } = useAuth();
   const { showFeedback } = useFeedbackSafe();
   const { isOwned } = usePurchases();
+
+  const hasActiveFilters = selectedGenre !== "All" || selectedMood !== "All";
+  
+  const clearFilters = () => {
+    setSelectedGenre("All");
+    setSelectedMood("All");
+  };
   
   const { data: tracks, isLoading } = usePublishedTracks({
     genre: selectedGenre,
     mood: selectedMood,
+    sortBy,
     searchQuery: searchQuery || undefined,
   });
 
@@ -157,7 +177,7 @@ export default function Browse() {
         </div>
 
         {/* Mood Pills */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h3 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Mood</h3>
           <div className="flex flex-wrap gap-2">
             {moods.map((mood) => (
@@ -173,6 +193,53 @@ export default function Browse() {
                 {mood}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Sort & Clear Filters Row */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4 mr-1" />
+                Clear filters
+              </Button>
+            )}
+            {(selectedGenre !== "All" || selectedMood !== "All") && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                {selectedGenre !== "All" && (
+                  <span className="px-2 py-1 rounded-md bg-primary/10 text-primary text-xs">
+                    {selectedGenre}
+                  </span>
+                )}
+                {selectedMood !== "All" && (
+                  <span className="px-2 py-1 rounded-md bg-accent/50 text-accent-foreground text-xs">
+                    {selectedMood}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Sort by:</span>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+              <SelectTrigger className="w-[180px] bg-muted/50 border-glass-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {sortOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

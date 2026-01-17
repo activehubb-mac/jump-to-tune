@@ -32,6 +32,8 @@ interface Track {
   featuredArtists?: FeaturedArtist[];
 }
 
+type SortOption = "newest" | "oldest" | "popular" | "price_low" | "price_high";
+
 interface UseTracksOptions {
   artistId?: string;
   labelId?: string;
@@ -40,10 +42,11 @@ interface UseTracksOptions {
   mood?: string;
   limit?: number;
   searchQuery?: string;
+  sortBy?: SortOption;
 }
 
 export function useTracks(options: UseTracksOptions = {}) {
-  const { artistId, labelId, publishedOnly = false, genre, mood, limit, searchQuery } = options;
+  const { artistId, labelId, publishedOnly = false, genre, mood, limit, searchQuery, sortBy = "newest" } = options;
 
   return useQuery({
     queryKey: ["tracks", options],
@@ -51,8 +54,27 @@ export function useTracks(options: UseTracksOptions = {}) {
       // Step 1: Fetch tracks without profile join (RLS blocks profiles for other users)
       let query = supabase
         .from("tracks")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*");
+
+      // Apply sorting
+      switch (sortBy) {
+        case "oldest":
+          query = query.order("created_at", { ascending: true });
+          break;
+        case "popular":
+          query = query.order("editions_sold", { ascending: false });
+          break;
+        case "price_low":
+          query = query.order("price", { ascending: true });
+          break;
+        case "price_high":
+          query = query.order("price", { ascending: false });
+          break;
+        case "newest":
+        default:
+          query = query.order("created_at", { ascending: false });
+          break;
+      }
 
       if (artistId) {
         query = query.eq("artist_id", artistId);
