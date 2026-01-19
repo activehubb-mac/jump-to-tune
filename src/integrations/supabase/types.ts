@@ -765,6 +765,7 @@ export type Database = {
           is_explicit: boolean | null
           label_id: string | null
           moods: string[] | null
+          preview_duration: number
           price: number
           title: string
           total_editions: number
@@ -788,6 +789,7 @@ export type Database = {
           is_explicit?: boolean | null
           label_id?: string | null
           moods?: string[] | null
+          preview_duration?: number
           price?: number
           title: string
           total_editions?: number
@@ -811,6 +813,7 @@ export type Database = {
           is_explicit?: boolean | null
           label_id?: string | null
           moods?: string[] | null
+          preview_duration?: number
           price?: number
           title?: string
           total_editions?: number

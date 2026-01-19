@@ -36,8 +36,6 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 
-const PREVIEW_LIMIT_SECONDS = 30;
-
 function formatTime(seconds: number): string {
   if (!seconds || isNaN(seconds)) return "0:00";
   const mins = Math.floor(seconds / 60);
@@ -137,6 +135,7 @@ export function GlobalAudioPlayer() {
     showLyrics,
     isPreviewMode,
     previewTimeRemaining,
+    currentPreviewLimit,
     showPreviewEndedModal,
     togglePlayPause,
     seek,
@@ -625,7 +624,7 @@ export function GlobalAudioPlayer() {
                     <UrlWaveformVisualizer
                       audioUrl={currentTrack.audio_url.startsWith('http') ? currentTrack.audio_url : `https://ezamzkycxqrstuznqaha.supabase.co/storage/v1/object/public/tracks/${currentTrack.audio_url}`}
                       currentTime={currentTime}
-                      duration={isPreviewMode ? PREVIEW_LIMIT_SECONDS : duration}
+                      duration={isPreviewMode ? currentPreviewLimit : duration}
                       onSeek={seek}
                       className="flex-1 h-8"
                     />
@@ -633,7 +632,7 @@ export function GlobalAudioPlayer() {
                     {isPreviewMode && duration > 0 && (
                       <div 
                         className="absolute top-0 bottom-0 w-0.5 bg-amber-500 pointer-events-none"
-                        style={{ left: `${(PREVIEW_LIMIT_SECONDS / duration) * 100}%` }}
+                        style={{ left: `${(currentPreviewLimit / duration) * 100}%` }}
                       />
                     )}
                   </div>
@@ -641,23 +640,23 @@ export function GlobalAudioPlayer() {
                   <div className="relative flex-1">
                     <Slider
                       value={[currentTime]}
-                      max={isPreviewMode ? PREVIEW_LIMIT_SECONDS : (duration || 100)}
+                      max={isPreviewMode ? currentPreviewLimit : (duration || 100)}
                       step={0.1}
                       onValueChange={handleSeek}
                       className="flex-1 cursor-pointer"
                     />
                     {/* Preview limit marker */}
-                    {isPreviewMode && duration > PREVIEW_LIMIT_SECONDS && (
+                    {isPreviewMode && duration > currentPreviewLimit && (
                       <div 
                         className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-amber-500 pointer-events-none rounded-full"
-                        style={{ left: `${(PREVIEW_LIMIT_SECONDS / duration) * 100}%` }}
+                        style={{ left: `${(currentPreviewLimit / duration) * 100}%` }}
                       />
                     )}
                   </div>
                 )}
                 
                 <span className="text-xs text-muted-foreground w-10">
-                  {isPreviewMode ? formatTime(PREVIEW_LIMIT_SECONDS) : formatTime(duration)}
+                  {isPreviewMode ? formatTime(currentPreviewLimit) : formatTime(duration)}
                 </span>
                 
                 <Tooltip>
@@ -861,23 +860,23 @@ export function GlobalAudioPlayer() {
             <div className="relative">
               <Slider
                 value={[currentTime]}
-                max={isPreviewMode ? PREVIEW_LIMIT_SECONDS : (duration || 100)}
+                max={isPreviewMode ? currentPreviewLimit : (duration || 100)}
                 step={0.1}
                 onValueChange={handleSeek}
                 className="w-full"
               />
               {/* Preview limit marker */}
-              {isPreviewMode && duration > PREVIEW_LIMIT_SECONDS && (
+              {isPreviewMode && duration > currentPreviewLimit && (
                 <div 
                   className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-amber-500 pointer-events-none rounded-full"
-                  style={{ left: `${(PREVIEW_LIMIT_SECONDS / duration) * 100}%` }}
+                  style={{ left: `${(currentPreviewLimit / duration) * 100}%` }}
                 />
               )}
             </div>
             <div className="flex justify-between mt-1">
               <span className="text-xs text-muted-foreground">{formatTime(currentTime)}</span>
               <span className="text-xs text-muted-foreground">
-                {isPreviewMode ? formatTime(PREVIEW_LIMIT_SECONDS) : formatTime(duration)}
+                {isPreviewMode ? formatTime(currentPreviewLimit) : formatTime(duration)}
               </span>
             </div>
           </div>

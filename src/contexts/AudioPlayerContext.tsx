@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const RECENTLY_PLAYED_KEY = "jumtunes_recently_played";
 const MAX_RECENTLY_PLAYED = 20;
-const PREVIEW_LIMIT_SECONDS = 30;
+const DEFAULT_PREVIEW_LIMIT_SECONDS = 30;
 
 // Helper to save recently played track
 const saveToRecentlyPlayed = (track: { 
@@ -45,6 +45,7 @@ export interface AudioTrack {
   duration?: number | null;
   price?: number;
   has_karaoke?: boolean | null;
+  preview_duration?: number;
   artist?: {
     id: string;
     display_name: string | null;
@@ -70,6 +71,7 @@ interface AudioPlayerContextType {
   showLyrics: boolean;
   isPreviewMode: boolean;
   previewTimeRemaining: number;
+  currentPreviewLimit: number;
   showPreviewEndedModal: boolean;
   playTrack: (track: AudioTrack) => void;
   togglePlayPause: () => void;
@@ -169,8 +171,11 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     }
   }, [currentTrack?.id]);
 
+  // Get current preview limit from track or use default
+  const currentPreviewLimit = currentTrack?.preview_duration || DEFAULT_PREVIEW_LIMIT_SECONDS;
+
   const previewTimeRemaining = isPreviewMode 
-    ? Math.max(0, PREVIEW_LIMIT_SECONDS - currentTime)
+    ? Math.max(0, currentPreviewLimit - currentTime)
     : 0;
 
   const ensureAudioElement = useCallback(() => {
@@ -223,9 +228,10 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     if (!isPreviewMode || !audioRef.current) return;
 
     const audio = audioRef.current;
+    const previewLimit = currentTrack?.preview_duration || DEFAULT_PREVIEW_LIMIT_SECONDS;
     
     const checkPreviewLimit = () => {
-      if (audio.currentTime >= PREVIEW_LIMIT_SECONDS) {
+      if (audio.currentTime >= previewLimit) {
         audio.pause();
         audio.currentTime = 0;
         setCurrentTime(0);
@@ -235,7 +241,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
     audio.addEventListener("timeupdate", checkPreviewLimit);
     return () => audio.removeEventListener("timeupdate", checkPreviewLimit);
-  }, [isPreviewMode]);
+  }, [isPreviewMode, currentTrack?.preview_duration]);
 
   const getAudioUrl = useCallback((url: string) => {
     if (url.startsWith("http")) {
@@ -256,16 +262,18 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
     let audioUrl = track.audio_url;
     let hasKaraoke = track.has_karaoke;
+    let previewDuration = track.preview_duration;
 
     // Hydrate missing fields (some callers only pass a subset of track fields)
     const needsAudioUrl = !audioUrl || audioUrl.trim() === "";
     const needsHasKaraoke = hasKaraoke === undefined || hasKaraoke === null;
+    const needsPreviewDuration = previewDuration === undefined;
 
-    if (needsAudioUrl || needsHasKaraoke) {
+    if (needsAudioUrl || needsHasKaraoke || needsPreviewDuration) {
       try {
         const { data, error } = await supabase
           .from("tracks")
-          .select("audio_url, has_karaoke")
+          .select("audio_url, has_karaoke, preview_duration")
           .eq("id", track.id)
           .maybeSingle();
 
@@ -287,6 +295,10 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         if (needsHasKaraoke) {
           hasKaraoke = data?.has_karaoke ?? null;
         }
+
+        if (needsPreviewDuration) {
+          previewDuration = data?.preview_duration ?? DEFAULT_PREVIEW_LIMIT_SECONDS;
+        }
       } catch (e) {
         console.error("Error hydrating track:", e);
         setIsBuffering(false);
@@ -298,6 +310,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       ...track,
       audio_url: audioUrl,
       has_karaoke: hasKaraoke,
+      preview_duration: previewDuration || DEFAULT_PREVIEW_LIMIT_SECONDS,
     };
 
     setCurrentTrack(hydratedTrack);
@@ -468,15 +481,16 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
   const seek = useCallback((time: number) => {
     const audio = ensureAudioElement();
+    const previewLimit = currentTrack?.preview_duration || DEFAULT_PREVIEW_LIMIT_SECONDS;
     
     // In preview mode, prevent seeking past the limit
-    if (isPreviewMode && time >= PREVIEW_LIMIT_SECONDS) {
-      time = PREVIEW_LIMIT_SECONDS - 0.5;
+    if (isPreviewMode && time >= previewLimit) {
+      time = previewLimit - 0.5;
     }
     
     audio.currentTime = time;
     setCurrentTime(time);
-  }, [ensureAudioElement, isPreviewMode]);
+  }, [ensureAudioElement, isPreviewMode, currentTrack?.preview_duration]);
 
   const setVolume = useCallback((level: number) => {
     const audio = ensureAudioElement();
@@ -596,7 +610,8 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       });
 
       // Restore position (respect preview limit)
-      const targetTime = isPreviewMode ? Math.min(currentPos, PREVIEW_LIMIT_SECONDS - 0.5) : currentPos;
+      const previewLimit = currentTrack?.preview_duration || DEFAULT_PREVIEW_LIMIT_SECONDS;
+      const targetTime = isPreviewMode ? Math.min(currentPos, previewLimit - 0.5) : currentPos;
       audio.currentTime = targetTime;
       
       if (wasPlaying) {
@@ -685,6 +700,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         showLyrics,
         isPreviewMode,
         previewTimeRemaining,
+        currentPreviewLimit,
         showPreviewEndedModal,
         playTrack,
         togglePlayPause,
@@ -731,6 +747,7 @@ const defaultAudioPlayerContext: AudioPlayerContextType = {
   showLyrics: false,
   isPreviewMode: false,
   previewTimeRemaining: 0,
+  currentPreviewLimit: 30,
   showPreviewEndedModal: false,
   playTrack: () => {},
   togglePlayPause: () => {},
