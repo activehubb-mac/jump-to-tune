@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Disc3, Play, Pause, Users, Music } from "lucide-react";
+import { Disc3, Play, Pause, Users, Music, Mic2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Carousel,
@@ -35,6 +35,7 @@ export function HeroCarousel() {
       artist_id: track.artist_id,
       audio_url: track.audio_url,
       price: track.price,
+      has_karaoke: track.has_karaoke,
     })) || []),
     ...(user && recommendedArtists?.slice(0, 3).map((artist) => ({
       type: "artist" as const,
@@ -106,9 +107,17 @@ export function HeroCarousel() {
                     <div className="absolute bottom-0 left-0 right-0 p-5">
                       <div className="flex items-end justify-between">
                         <div className="flex-1 min-w-0">
-                          <span className="inline-block px-2 py-0.5 rounded-full bg-accent/80 text-accent-foreground text-xs font-medium mb-2">
-                            Trending
-                          </span>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="inline-block px-2 py-0.5 rounded-full bg-accent/80 text-accent-foreground text-xs font-medium">
+                              Trending
+                            </span>
+                            {item.has_karaoke && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/80 text-primary-foreground text-xs font-medium">
+                                <Mic2 className="w-3 h-3" />
+                                Sing-along
+                              </span>
+                            )}
+                          </div>
                           <h3 className="text-xl font-bold text-foreground truncate">
                             {item.title}
                           </h3>
