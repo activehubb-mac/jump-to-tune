@@ -42,6 +42,7 @@ export interface AudioTrack {
   cover_art_url: string | null;
   duration?: number | null;
   price?: number;
+  has_karaoke?: boolean | null;
   artist?: {
     id: string;
     display_name: string | null;
@@ -63,6 +64,8 @@ interface AudioPlayerContextType {
   queueIndex: number;
   isShuffled: boolean;
   repeatMode: RepeatMode;
+  isKaraokeMode: boolean;
+  showLyrics: boolean;
   playTrack: (track: AudioTrack) => void;
   togglePlayPause: () => void;
   seek: (time: number) => void;
@@ -77,6 +80,9 @@ interface AudioPlayerContextType {
   toggleShuffle: () => void;
   cycleRepeatMode: () => void;
   reorderQueue: (fromIndex: number, toIndex: number) => void;
+  toggleKaraokeMode: () => void;
+  toggleShowLyrics: () => void;
+  setInstrumentalUrl: (url: string | null) => void;
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined);
@@ -96,6 +102,10 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const [isShuffled, setIsShuffled] = useState(false);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>("off");
   const [originalQueue, setOriginalQueue] = useState<AudioTrack[]>([]);
+  const [isKaraokeMode, setIsKaraokeMode] = useState(false);
+  const [showLyrics, setShowLyrics] = useState(false);
+  const [instrumentalUrl, setInstrumentalUrlState] = useState<string | null>(null);
+  const [originalAudioUrl, setOriginalAudioUrl] = useState<string | null>(null);
 
   const ensureAudioElement = useCallback(() => {
     if (audioRef.current) return audioRef.current;
@@ -416,6 +426,44 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     });
   }, []);
 
+  const toggleKaraokeMode = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || !currentTrack) return;
+
+    const currentPos = audio.currentTime;
+    const wasPlaying = !audio.paused;
+
+    setIsKaraokeMode(prev => {
+      const newMode = !prev;
+      
+      if (newMode && instrumentalUrl) {
+        // Switch to instrumental
+        setOriginalAudioUrl(audio.src);
+        audio.src = instrumentalUrl;
+      } else if (!newMode && originalAudioUrl) {
+        // Switch back to original
+        audio.src = originalAudioUrl;
+      }
+
+      // Restore position and playback state
+      audio.load();
+      audio.currentTime = currentPos;
+      if (wasPlaying) {
+        audio.play().catch(console.error);
+      }
+
+      return newMode;
+    });
+  }, [currentTrack, instrumentalUrl, originalAudioUrl]);
+
+  const toggleShowLyrics = useCallback(() => {
+    setShowLyrics(prev => !prev);
+  }, []);
+
+  const setInstrumentalUrl = useCallback((url: string | null) => {
+    setInstrumentalUrlState(url);
+  }, []);
+
   const closePlayer = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
@@ -432,6 +480,10 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     setIsShuffled(false);
     setRepeatMode("off");
     setOriginalQueue([]);
+    setIsKaraokeMode(false);
+    setShowLyrics(false);
+    setInstrumentalUrlState(null);
+    setOriginalAudioUrl(null);
   }, []);
 
   return (
@@ -449,6 +501,8 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         queueIndex,
         isShuffled,
         repeatMode,
+        isKaraokeMode,
+        showLyrics,
         playTrack,
         togglePlayPause,
         seek,
@@ -463,6 +517,9 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         toggleShuffle,
         cycleRepeatMode,
         reorderQueue,
+        toggleKaraokeMode,
+        toggleShowLyrics,
+        setInstrumentalUrl,
       }}
     >
       {children}
@@ -484,6 +541,8 @@ const defaultAudioPlayerContext: AudioPlayerContextType = {
   queueIndex: -1,
   isShuffled: false,
   repeatMode: "off",
+  isKaraokeMode: false,
+  showLyrics: false,
   playTrack: () => {},
   togglePlayPause: () => {},
   seek: () => {},
@@ -498,6 +557,9 @@ const defaultAudioPlayerContext: AudioPlayerContextType = {
   toggleShuffle: () => {},
   cycleRepeatMode: () => {},
   reorderQueue: () => {},
+  toggleKaraokeMode: () => {},
+  toggleShowLyrics: () => {},
+  setInstrumentalUrl: () => {},
 };
 
 export function useAudioPlayer() {

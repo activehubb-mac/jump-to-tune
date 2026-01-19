@@ -1,11 +1,13 @@
 import { useState, useRef, useCallback } from 'react';
-import { Mic, Music, X, Info } from 'lucide-react';
+import { Mic, Music, X, Info, FileText, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { isValidAudioFile, formatFileSize } from '@/lib/audioUtils';
+import { isValidLRC } from '@/lib/lrcParser';
 import { cn } from '@/lib/utils';
 
 interface KaraokeSectionProps {
@@ -29,7 +31,9 @@ export const KaraokeSection = ({
 }: KaraokeSectionProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lyricsTab, setLyricsTab] = useState<'plain' | 'lrc'>('plain');
   const inputRef = useRef<HTMLInputElement>(null);
+  const lrcInputRef = useRef<HTMLInputElement>(null);
 
   const processFile = useCallback((file: File) => {
     setError(null);
@@ -71,6 +75,29 @@ export const KaraokeSection = ({
       inputRef.current.value = '';
     }
   };
+
+  const handleLrcFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      if (isValidLRC(text)) {
+        onLyricsChange(text);
+        setLyricsTab('lrc');
+      } else {
+        setError('Invalid LRC file. Please upload a valid .lrc file with timestamps.');
+      }
+    } catch (err) {
+      setError('Failed to read LRC file.');
+    }
+    
+    if (lrcInputRef.current) {
+      lrcInputRef.current.value = '';
+    }
+  };
+
+  const lrcDetected = isValidLRC(lyrics);
 
   return (
     <div className="glass-card p-6 space-y-6">
@@ -182,31 +209,101 @@ export const KaraokeSection = ({
 
           {/* Lyrics */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="lyrics" className="text-foreground">Lyrics</Label>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="w-4 h-4 text-muted-foreground cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p>Add your song lyrics so fans can follow along. Include verse/chorus markers for better readability.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="lyrics" className="text-foreground">Lyrics</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Add your song lyrics. For synchronized karaoke, use LRC format with timestamps like [00:15.00]Lyrics here.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                {lrcDetected && (
+                  <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                    LRC Synced
+                  </span>
+                )}
+              </div>
+              
+              {/* LRC Upload Button */}
+              <div className="flex items-center gap-2">
+                <input
+                  ref={lrcInputRef}
+                  type="file"
+                  accept=".lrc,.txt"
+                  onChange={handleLrcFileChange}
+                  className="hidden"
+                  disabled={disabled}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => lrcInputRef.current?.click()}
+                  disabled={disabled}
+                  className="h-7 text-xs"
+                >
+                  <Upload className="w-3 h-3 mr-1" />
+                  Import LRC
+                </Button>
+              </div>
             </div>
-            <Textarea
-              id="lyrics"
-              value={lyrics}
-              onChange={(e) => onLyricsChange(e.target.value)}
-              placeholder="[Verse 1]&#10;Add your lyrics here...&#10;&#10;[Chorus]&#10;..."
-              rows={8}
-              className="bg-muted/50 border-glass-border focus:border-accent resize-none font-mono text-sm"
-              disabled={disabled}
-            />
-            <p className="text-xs text-muted-foreground text-right">
-              {lyrics.length} characters
-            </p>
+
+            <Tabs value={lyricsTab} onValueChange={(v) => setLyricsTab(v as 'plain' | 'lrc')}>
+              <TabsList className="h-8">
+                <TabsTrigger value="plain" className="text-xs h-6">Plain Text</TabsTrigger>
+                <TabsTrigger value="lrc" className="text-xs h-6">LRC Format</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="plain" className="mt-2">
+                <Textarea
+                  id="lyrics"
+                  value={lyrics}
+                  onChange={(e) => onLyricsChange(e.target.value)}
+                  placeholder="[Verse 1]&#10;Add your lyrics here...&#10;&#10;[Chorus]&#10;..."
+                  rows={8}
+                  className="bg-muted/50 border-glass-border focus:border-accent resize-none font-mono text-sm"
+                  disabled={disabled}
+                />
+              </TabsContent>
+              
+              <TabsContent value="lrc" className="mt-2 space-y-2">
+                <div className="p-3 bg-muted/30 rounded-lg border border-glass-border">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    <strong>LRC Format Example:</strong>
+                  </p>
+                  <pre className="text-xs text-muted-foreground font-mono whitespace-pre-wrap">
+{`[ti:Song Title]
+[ar:Artist Name]
+[00:15.00]First line of lyrics
+[00:20.50]Second line of lyrics
+[00:25.00]Third line of lyrics`}
+                  </pre>
+                </div>
+                <Textarea
+                  id="lyrics-lrc"
+                  value={lyrics}
+                  onChange={(e) => onLyricsChange(e.target.value)}
+                  placeholder="[00:00.00]Start of your lyrics..."
+                  rows={8}
+                  className="bg-muted/50 border-glass-border focus:border-accent resize-none font-mono text-sm"
+                  disabled={disabled}
+                />
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>
+                {lrcDetected 
+                  ? "✓ Synchronized lyrics detected - lyrics will scroll with the music" 
+                  : "Tip: Use LRC format for synchronized lyrics display"}
+              </span>
+              <span>{lyrics.length} characters</span>
+            </div>
           </div>
         </div>
       )}

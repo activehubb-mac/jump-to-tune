@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,6 +7,8 @@ import { useAudioPlayer, AudioTrack } from "@/contexts/AudioPlayerContext";
 import { useAudioKeyboardShortcuts } from "@/hooks/useAudioKeyboardShortcuts";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
+import { KaraokeLyricsPanel } from "@/components/audio/KaraokeLyricsPanel";
+import { useKaraokeData, getInstrumentalUrl } from "@/hooks/useKaraokeData";
 import { Link } from "react-router-dom";
 import { DownloadButton } from "@/components/download/DownloadButton";
 import { usePurchases } from "@/hooks/usePurchases";
@@ -27,6 +29,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { cn } from "@/lib/utils";
 
 function formatTime(seconds: number): string {
   if (!seconds || isNaN(seconds)) return "0:00";
@@ -123,6 +126,8 @@ export function GlobalAudioPlayer() {
     queueIndex,
     isShuffled,
     repeatMode,
+    isKaraokeMode,
+    showLyrics,
     togglePlayPause,
     seek,
     setVolume,
@@ -136,6 +141,9 @@ export function GlobalAudioPlayer() {
     clearQueue,
     playTrack,
     reorderQueue,
+    toggleKaraokeMode,
+    toggleShowLyrics,
+    setInstrumentalUrl,
   } = useAudioPlayer();
 
   const { canUseFeature } = useFeatureGate();
@@ -143,6 +151,20 @@ export function GlobalAudioPlayer() {
   const [showQueue, setShowQueue] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumFeatureName, setPremiumFeatureName] = useState("");
+
+  // Fetch karaoke data for current track
+  const { data: karaokeData } = useKaraokeData(
+    currentTrack?.has_karaoke ? currentTrack.id : null
+  );
+
+  // Update instrumental URL when karaoke data loads
+  useEffect(() => {
+    if (karaokeData?.instrumental_url) {
+      setInstrumentalUrl(getInstrumentalUrl(karaokeData.instrumental_url));
+    } else {
+      setInstrumentalUrl(null);
+    }
+  }, [karaokeData, setInstrumentalUrl]);
 
   // Enable keyboard shortcuts
   useAudioKeyboardShortcuts();
@@ -222,6 +244,8 @@ export function GlobalAudioPlayer() {
   const canShuffle = canUseFeature("shuffle");
   const canRepeat = canUseFeature("repeat");
 
+  const hasKaraoke = currentTrack?.has_karaoke && karaokeData;
+
   return (
     <>
       {/* Premium Feature Modal */}
@@ -230,6 +254,20 @@ export function GlobalAudioPlayer() {
         onOpenChange={setShowPremiumModal}
         feature={premiumFeatureName}
       />
+
+      {/* Karaoke Lyrics Panel */}
+      {showLyrics && currentTrack && (
+        <KaraokeLyricsPanel
+          lyrics={karaokeData?.lyrics || null}
+          currentTime={currentTime}
+          duration={duration}
+          isKaraokeActive={isKaraokeMode}
+          onClose={toggleShowLyrics}
+          onSeek={seek}
+          trackTitle={currentTrack.title}
+          artistName={currentTrack.artist?.display_name || undefined}
+        />
+      )}
 
       {/* Queue Panel */}
       {showQueue && canAccessQueue && (
@@ -515,8 +553,47 @@ export function GlobalAudioPlayer() {
               </Button>
             </div>
 
-            {/* Download, Queue, Volume & Close */}
+            {/* Karaoke, Download, Queue, Volume & Close */}
             <div className="flex items-center gap-2">
+              {/* Karaoke/Lyrics Button - only show if track has karaoke */}
+              {hasKaraoke && (
+                <>
+                  {/* Lyrics Toggle */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-8 w-8",
+                      showLyrics ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                    )}
+                    onClick={toggleShowLyrics}
+                    title="Toggle lyrics"
+                  >
+                    <Mic className="h-4 w-4" />
+                  </Button>
+
+                  {/* Karaoke Mode Toggle */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-8 w-8 hidden md:flex",
+                      isKaraokeMode 
+                        ? "text-primary bg-primary/10" 
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                    onClick={toggleKaraokeMode}
+                    title={isKaraokeMode ? "Switch to original" : "Switch to instrumental (karaoke)"}
+                  >
+                    {isKaraokeMode ? (
+                      <MicOff className="h-4 w-4" />
+                    ) : (
+                      <Mic className="h-4 w-4" />
+                    )}
+                  </Button>
+                </>
+              )}
+
               {/* Download Button */}
               {currentTrack && (
                 <DownloadButton
