@@ -856,7 +856,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "fan" | "artist" | "label"
+      app_role: "fan" | "artist" | "label" | "admin"
       credit_transaction_type: "purchase" | "spend" | "refund"
       earnings_status: "pending" | "paid" | "failed"
       subscription_status: "trialing" | "active" | "canceled" | "past_due"
@@ -987,7 +987,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["fan", "artist", "label"],
+      app_role: ["fan", "artist", "label", "admin"],
       credit_transaction_type: ["purchase", "spend", "refund"],
       earnings_status: ["pending", "paid", "failed"],
       subscription_status: ["trialing", "active", "canceled", "past_due"],
