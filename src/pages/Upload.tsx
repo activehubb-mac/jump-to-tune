@@ -69,6 +69,7 @@ const uploadFormSchema = z.object({
   price: z.coerce.number().min(0, "Price cannot be negative"),
   totalEditions: z.coerce.number().min(1, "At least 1 edition required").max(10000, "Maximum 10,000 editions"),
   artistId: z.string().optional(),
+  previewDuration: z.coerce.number().min(15).max(60).default(30),
 });
 
 type UploadFormValues = z.infer<typeof uploadFormSchema>;
@@ -238,6 +239,7 @@ export default function Upload() {
         moods,
         isExplicit,
         displayLabelName: credits.displayLabelName || undefined,
+        previewDuration: values.previewDuration,
       },
       audioFile,
       coverFile,
@@ -483,6 +485,38 @@ export default function Upload() {
                   )}
                 />
               </div>
+
+              {/* Preview Duration */}
+              <FormField
+                control={form.control}
+                name="previewDuration"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      Preview Duration
+                      <InfoTooltip content="How much of your track fans can sample before purchasing. Shorter previews create urgency, longer previews let fans appreciate more of the music." />
+                    </FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      defaultValue={String(field.value || 30)}
+                      disabled={isUploading}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-muted/50 border-glass-border focus:border-primary">
+                          <SelectValue placeholder="Select preview duration" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="15">15 seconds</SelectItem>
+                        <SelectItem value="30">30 seconds (default)</SelectItem>
+                        <SelectItem value="45">45 seconds</SelectItem>
+                        <SelectItem value="60">60 seconds</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Karaoke Section */}

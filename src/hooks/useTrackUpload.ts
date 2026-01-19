@@ -13,6 +13,7 @@ export interface TrackFormData {
   moods?: string[];
   isExplicit?: boolean;
   displayLabelName?: string;
+  previewDuration?: number;
 }
 
 export interface KaraokeData {
@@ -170,6 +171,7 @@ export const useTrackUpload = (): UseTrackUploadReturn => {
           moods: formData.moods || [],
           is_explicit: formData.isExplicit || false,
           display_label_name: formData.displayLabelName || null,
+          preview_duration: formData.previewDuration || 30,
         })
         .select('id')
         .single();

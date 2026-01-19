@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Disc3, Edit, Trash2, Play, Pause, ListPlus, Lock, Mic2, CheckCircle } from "lucide-react";
+import { Disc3, Edit, Trash2, Play, Pause, ListPlus, Lock, Mic2, CheckCircle, Eye } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { DownloadButton } from "@/components/download/DownloadButton";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
+import { usePurchases } from "@/hooks/usePurchases";
 
 interface TrackCardProps {
   track: {
@@ -24,6 +25,7 @@ interface TrackCardProps {
     duration?: number | null;
     is_explicit?: boolean;
     has_karaoke?: boolean;
+    preview_duration?: number;
     artist?: {
       id: string;
       display_name: string | null;
@@ -57,9 +59,12 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
   ) {
     const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
     const { canUseFeature } = useFeatureGate();
+    const { isOwned } = usePurchases();
     const [showPremiumModal, setShowPremiumModal] = useState(false);
     
     const isCurrentTrack = currentTrack?.id === track.id;
+    const userOwnsTrack = isOwned(track.id);
+    const previewDuration = track.preview_duration || 30;
     
     const handlePlay = (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -119,7 +124,18 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
             )}
 
             {/* Badges - Top Left */}
-            <div className="absolute top-2 left-2 flex gap-1">
+            <div className="absolute top-2 left-2 flex gap-1 flex-wrap max-w-[calc(100%-3rem)]">
+              {/* Preview badge - only show for non-owners */}
+              {showPlayButton && !userOwnsTrack && (
+                <Badge 
+                  variant="outline"
+                  className="text-[10px] px-1.5 py-0 h-5 border-amber-500/50 bg-amber-500/10 text-amber-500 gap-0.5"
+                  title={`${previewDuration}s preview available`}
+                >
+                  <Eye className="w-2.5 h-2.5" />
+                  {previewDuration}s
+                </Badge>
+              )}
               {track.is_explicit && (
                 <Badge 
                   variant="destructive" 
