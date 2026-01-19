@@ -121,6 +121,19 @@ export function UrlWaveformVisualizer({
   // Draw the waveform using requestAnimationFrame for smooth animation
   const progressRef = useRef(0);
   const animationRef = useRef<number>();
+  
+  // Helper to resolve CSS variable colors to actual RGB values
+  const getComputedColor = useCallback((cssColor: string): string => {
+    if (!cssColor.includes('var(')) return cssColor;
+    
+    // Create a temp element to compute the color
+    const temp = document.createElement('div');
+    temp.style.color = cssColor;
+    document.body.appendChild(temp);
+    const computed = getComputedStyle(temp).color;
+    document.body.removeChild(temp);
+    return computed;
+  }, []);
 
   const drawWaveform = useCallback(() => {
     const canvas = canvasRef.current;
@@ -133,6 +146,10 @@ export function UrlWaveformVisualizer({
     // Set canvas size
     const rect = container.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
+    
+    // Resolve CSS variable colors
+    const resolvedProgressColor = getComputedColor(progressColor);
+    const resolvedBarColor = getComputedColor(barColor);
     
     const dpr = window.devicePixelRatio || 1;
     canvas.width = rect.width * dpr;
@@ -175,25 +192,25 @@ export function UrlWaveformVisualizer({
       const isPartiallyPlayed = x < progressPosition && x + actualBarWidth > progressPosition;
 
       if (isPlayed) {
-        ctx.fillStyle = progressColor;
+        ctx.fillStyle = resolvedProgressColor;
         ctx.beginPath();
         ctx.roundRect(x, y, actualBarWidth, barHeight, 1);
         ctx.fill();
       } else if (isPartiallyPlayed) {
         // Draw the played portion
         const playedWidth = progressPosition - x;
-        ctx.fillStyle = progressColor;
+        ctx.fillStyle = resolvedProgressColor;
         ctx.beginPath();
         ctx.roundRect(x, y, playedWidth, barHeight, 1);
         ctx.fill();
         
         // Draw the unplayed portion
-        ctx.fillStyle = barColor;
+        ctx.fillStyle = resolvedBarColor;
         ctx.beginPath();
         ctx.roundRect(x + playedWidth, y, actualBarWidth - playedWidth, barHeight, 1);
         ctx.fill();
       } else {
-        ctx.fillStyle = barColor;
+        ctx.fillStyle = resolvedBarColor;
         ctx.beginPath();
         ctx.roundRect(x, y, actualBarWidth, barHeight, 1);
         ctx.fill();
@@ -202,7 +219,7 @@ export function UrlWaveformVisualizer({
 
     // Draw hover indicator
     if (hoverPosition !== null) {
-      ctx.strokeStyle = 'hsl(var(--foreground) / 0.4)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
       ctx.lineWidth = 1;
       ctx.setLineDash([3, 3]);
       ctx.beginPath();
@@ -214,9 +231,10 @@ export function UrlWaveformVisualizer({
 
     // Draw animated playhead glow
     if (progressPosition > 0) {
-      // Glow effect
+      // Glow effect - extract RGB from resolved color for alpha manipulation
+      const glowColor = resolvedProgressColor.replace('rgb(', 'rgba(').replace(')', ', 0.5)');
       const gradient = ctx.createRadialGradient(progressPosition, height / 2, 0, progressPosition, height / 2, 8);
-      gradient.addColorStop(0, progressColor.replace(')', ' / 0.6)').replace('hsl(', 'hsla('));
+      gradient.addColorStop(0, glowColor);
       gradient.addColorStop(1, 'transparent');
       ctx.fillStyle = gradient;
       ctx.beginPath();
@@ -224,12 +242,12 @@ export function UrlWaveformVisualizer({
       ctx.fill();
       
       // Playhead dot
-      ctx.fillStyle = progressColor;
+      ctx.fillStyle = resolvedProgressColor;
       ctx.beginPath();
       ctx.arc(progressPosition, height / 2, 4, 0, Math.PI * 2);
       ctx.fill();
     }
-  }, [waveformData, currentTime, duration, hoveredPosition, barColor, progressColor, backgroundColor]);
+  }, [waveformData, currentTime, duration, hoveredPosition, barColor, progressColor, backgroundColor, getComputedColor]);
 
   // Continuous animation loop for smooth playback visualization
   useEffect(() => {
