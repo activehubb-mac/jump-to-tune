@@ -1,16 +1,80 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Play, Mic2, ChevronLeft, ChevronRight } from "lucide-react";
+import { useFeaturedTracks } from "@/hooks/useFeaturedContent";
 import { useTrendingTracks, TrendingTrack } from "@/hooks/useTrendingTracks";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+interface CarouselTrack {
+  id: string;
+  title: string;
+  audio_url: string;
+  cover_art_url: string | null;
+  price: number;
+  has_karaoke: boolean | null;
+  artist_id: string;
+  artist_name: string | null;
+  isFeatured?: boolean;
+}
+
 export function FeaturedHeroCarousel() {
-  const { data: tracks, isLoading } = useTrendingTracks(5);
+  // Fetch admin-curated featured tracks first
+  const { data: featuredTracks, isLoading: featuredLoading } = useFeaturedTracks("home_hero");
+  // Fallback to trending tracks
+  const { data: trendingTracks, isLoading: trendingLoading } = useTrendingTracks(5);
   const { playTrack } = useAudioPlayer();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+
+  // Combine featured and trending tracks, prioritizing featured
+  const tracks = useMemo((): CarouselTrack[] => {
+    const result: CarouselTrack[] = [];
+    
+    // Add featured tracks first
+    if (featuredTracks && featuredTracks.length > 0) {
+      featuredTracks.forEach((f) => {
+        if (f.track) {
+          result.push({
+            id: f.track.id,
+            title: f.track.title,
+            audio_url: f.track.audio_url,
+            cover_art_url: f.track.cover_art_url,
+            price: f.track.price,
+            has_karaoke: f.track.has_karaoke,
+            artist_id: f.track.artist_id,
+            artist_name: f.track.artist_name,
+            isFeatured: true,
+          });
+        }
+      });
+    }
+
+    // Fill remaining slots with trending tracks (up to 5 total)
+    if (trendingTracks && result.length < 5) {
+      const featuredIds = new Set(result.map((t) => t.id));
+      trendingTracks.forEach((t: TrendingTrack) => {
+        if (result.length < 5 && !featuredIds.has(t.id)) {
+          result.push({
+            id: t.id,
+            title: t.title,
+            audio_url: t.audio_url,
+            cover_art_url: t.cover_art_url,
+            price: t.price,
+            has_karaoke: t.has_karaoke,
+            artist_id: t.artist_id,
+            artist_name: t.artist_name,
+            isFeatured: false,
+          });
+        }
+      });
+    }
+
+    return result;
+  }, [featuredTracks, trendingTracks]);
+
+  const isLoading = featuredLoading && trendingLoading;
 
   const goToNext = useCallback(() => {
     if (!tracks || tracks.length === 0) return;
@@ -30,7 +94,12 @@ export function FeaturedHeroCarousel() {
     return () => clearInterval(interval);
   }, [isPaused, tracks, goToNext]);
 
-  const handlePlay = (track: TrendingTrack) => {
+  // Reset index when tracks change
+  useEffect(() => {
+    setCurrentIndex(0);
+  }, [tracks.length]);
+
+  const handlePlay = (track: CarouselTrack) => {
     playTrack({
       id: track.id,
       title: track.title,
@@ -109,9 +178,14 @@ export function FeaturedHeroCarousel() {
 
           {/* Track Details */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/20 text-primary">
-                TRENDING
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className={cn(
+                "text-xs font-medium px-2 py-0.5 rounded-full",
+                currentTrack.isFeatured 
+                  ? "bg-yellow-500/20 text-yellow-400"
+                  : "bg-primary/20 text-primary"
+              )}>
+                {currentTrack.isFeatured ? "FEATURED" : "TRENDING"}
               </span>
               {currentTrack.has_karaoke && (
                 <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent/20 text-accent flex items-center gap-1">

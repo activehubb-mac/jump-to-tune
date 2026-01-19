@@ -150,6 +150,140 @@ export function useFeaturedLabels(displayLocation = "labels_page") {
   });
 }
 
+export interface FeaturedTrackWithDetails extends FeaturedContent {
+  track?: {
+    id: string;
+    title: string;
+    cover_art_url: string | null;
+    audio_url: string;
+    price: number;
+    has_karaoke: boolean | null;
+    duration: number | null;
+    artist_id: string;
+    artist_name: string | null;
+  };
+}
+
+export function useFeaturedTracks(displayLocation = "home_hero") {
+  return useQuery({
+    queryKey: ["featured-tracks", displayLocation],
+    queryFn: async () => {
+      // Get featured content entries for tracks
+      const { data: featuredData, error: featuredError } = await supabase
+        .from("featured_content")
+        .select("*")
+        .eq("content_type", "track")
+        .eq("display_location", displayLocation)
+        .eq("is_active", true)
+        .lte("starts_at", new Date().toISOString())
+        .order("priority", { ascending: true });
+
+      if (featuredError) throw featuredError;
+      if (!featuredData || featuredData.length === 0) return [];
+
+      // Get track details
+      const contentIds = featuredData.map((f) => f.content_id);
+      const { data: tracks, error: tracksError } = await supabase
+        .from("tracks")
+        .select("id, title, cover_art_url, audio_url, price, has_karaoke, duration, artist_id")
+        .in("id", contentIds)
+        .eq("is_draft", false);
+
+      if (tracksError) throw tracksError;
+      if (!tracks || tracks.length === 0) return [];
+
+      // Get artist names
+      const artistIds = [...new Set(tracks.map((t) => t.artist_id))];
+      const { data: artists } = await supabase
+        .from("profiles_public")
+        .select("id, display_name")
+        .in("id", artistIds);
+
+      const artistMap = new Map(artists?.map((a) => [a.id, a.display_name]));
+
+      // Merge and sort by priority
+      const trackMap = new Map(
+        tracks.map((t) => [
+          t.id,
+          { ...t, artist_name: artistMap.get(t.artist_id) || null },
+        ])
+      );
+      return featuredData
+        .map((f) => ({
+          ...f,
+          track: trackMap.get(f.content_id),
+        }))
+        .filter((f) => f.track) as FeaturedTrackWithDetails[];
+    },
+  });
+}
+
+export interface FeaturedAlbumWithDetails extends FeaturedContent {
+  album?: {
+    id: string;
+    title: string;
+    cover_art_url: string | null;
+    release_type: string;
+    total_price: number | null;
+    artist_id: string;
+    artist_name: string | null;
+  };
+}
+
+export function useFeaturedAlbums(displayLocation = "browse_page") {
+  return useQuery({
+    queryKey: ["featured-albums", displayLocation],
+    queryFn: async () => {
+      // Get featured content entries for albums
+      const { data: featuredData, error: featuredError } = await supabase
+        .from("featured_content")
+        .select("*")
+        .eq("content_type", "album")
+        .eq("display_location", displayLocation)
+        .eq("is_active", true)
+        .lte("starts_at", new Date().toISOString())
+        .order("priority", { ascending: true });
+
+      if (featuredError) throw featuredError;
+      if (!featuredData || featuredData.length === 0) return [];
+
+      // Get album details
+      const contentIds = featuredData.map((f) => f.content_id);
+      const { data: albums, error: albumsError } = await supabase
+        .from("albums")
+        .select("id, title, cover_art_url, release_type, total_price, artist_id")
+        .in("id", contentIds)
+        .eq("is_draft", false);
+
+      if (albumsError) throw albumsError;
+      if (!albums || albums.length === 0) return [];
+
+      // Get artist names
+      const artistIds = [...new Set(albums.map((a) => a.artist_id))];
+      const { data: artists } = await supabase
+        .from("profiles_public")
+        .select("id, display_name")
+        .in("id", artistIds);
+
+      const artistMap = new Map(artists?.map((a) => [a.id, a.display_name]));
+
+      // Merge and sort by priority
+      const albumMap = new Map(
+        albums.map((a) => [
+          a.id,
+          { ...a, artist_name: artistMap.get(a.artist_id) || null },
+        ])
+      );
+      return featuredData
+        .map((f) => ({
+          ...f,
+          album: albumMap.get(f.content_id),
+        }))
+        .filter((f) => f.album) as FeaturedAlbumWithDetails[];
+    },
+  });
+}
+
 export function useAddFeaturedContent() {
   const queryClient = useQueryClient();
 
@@ -181,6 +315,8 @@ export function useAddFeaturedContent() {
       queryClient.invalidateQueries({ queryKey: ["featured-content-admin"] });
       queryClient.invalidateQueries({ queryKey: ["featured-artists"] });
       queryClient.invalidateQueries({ queryKey: ["featured-labels"] });
+      queryClient.invalidateQueries({ queryKey: ["featured-tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["featured-albums"] });
     },
   });
 }
@@ -204,6 +340,8 @@ export function useUpdateFeaturedContent() {
       queryClient.invalidateQueries({ queryKey: ["featured-content-admin"] });
       queryClient.invalidateQueries({ queryKey: ["featured-artists"] });
       queryClient.invalidateQueries({ queryKey: ["featured-labels"] });
+      queryClient.invalidateQueries({ queryKey: ["featured-tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["featured-albums"] });
     },
   });
 }
@@ -224,6 +362,8 @@ export function useRemoveFeaturedContent() {
       queryClient.invalidateQueries({ queryKey: ["featured-content-admin"] });
       queryClient.invalidateQueries({ queryKey: ["featured-artists"] });
       queryClient.invalidateQueries({ queryKey: ["featured-labels"] });
+      queryClient.invalidateQueries({ queryKey: ["featured-tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["featured-albums"] });
     },
   });
 }
