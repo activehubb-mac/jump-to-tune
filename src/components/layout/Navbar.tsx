@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
@@ -48,6 +48,18 @@ export function Navbar() {
   const { user, profile, role, signOut, isLoading } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { isAdmin } = useAdminAccess();
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -349,7 +361,7 @@ export function Navbar() {
 
           {/* Mobile Navigation */}
           {isOpen && (
-            <div className="md:hidden py-4">
+            <div className="md:hidden py-4 max-h-[calc(100vh-4rem)] overflow-y-auto overscroll-contain touch-pan-y">
               <div className="flex flex-col gap-2">
                 {navLinks.map((link) => {
                   // Skip auth-required links for non-authenticated users
