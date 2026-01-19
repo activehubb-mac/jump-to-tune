@@ -3,9 +3,9 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Music, X, ChevronDown, ChevronUp, Upload, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { formatDuration, formatFileSize } from '@/lib/audioUtils';
+import { formatDuration, formatFileSize, isValidAudioFile } from '@/lib/audioUtils';
 import { cn } from '@/lib/utils';
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -34,7 +34,9 @@ interface AlbumTrackRowProps {
 export const AlbumTrackRow = ({ track, onUpdate, onRemove, disabled }: AlbumTrackRowProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [lyricsTab, setLyricsTab] = useState<'plain' | 'lrc'>('plain');
+  const [isDraggingInstrumental, setIsDraggingInstrumental] = useState(false);
   const lrcInputRef = useRef<HTMLInputElement>(null);
+  const instrumentalInputRef = useRef<HTMLInputElement>(null);
   
   const {
     attributes,
@@ -87,6 +89,39 @@ export const AlbumTrackRow = ({ track, onUpdate, onRemove, disabled }: AlbumTrac
     
     if (lrcInputRef.current) {
       lrcInputRef.current.value = '';
+    }
+  };
+
+  const processInstrumentalFile = useCallback((file: File) => {
+    if (!isValidAudioFile(file)) {
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      return;
+    }
+    onUpdate({ ...track, instrumentalFile: file });
+  }, [track, onUpdate]);
+
+  const handleInstrumentalDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingInstrumental(false);
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      processInstrumentalFile(file);
+    }
+  }, [processInstrumentalFile]);
+
+  const handleInstrumentalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processInstrumentalFile(file);
+    }
+  };
+
+  const handleRemoveInstrumental = () => {
+    onUpdate({ ...track, instrumentalFile: null });
+    if (instrumentalInputRef.current) {
+      instrumentalInputRef.current.value = '';
     }
   };
 
@@ -195,94 +230,150 @@ export const AlbumTrackRow = ({ track, onUpdate, onRemove, disabled }: AlbumTrac
               </Label>
             </div>
 
-            {/* Karaoke Lyrics Section */}
+            {/* Karaoke Section */}
             {track.hasKaraoke && (
-              <div className="space-y-3 p-4 bg-muted/30 rounded-lg border border-glass-border">
-                {/* Header with LRC badge and import button */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Label className="text-sm font-medium text-foreground">Lyrics</Label>
-                    {lrcDetected && (
-                      <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-                        LRC Synced
-                      </span>
-                    )}
-                  </div>
+              <div className="space-y-4 p-4 bg-muted/30 rounded-lg border border-glass-border">
+                {/* Instrumental Upload */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-foreground">Instrumental Version</Label>
                   
-                  {/* LRC Upload Button */}
-                  <div>
-                    <input
-                      ref={lrcInputRef}
-                      type="file"
-                      accept=".lrc,.txt"
-                      onChange={handleLrcFileChange}
-                      className="hidden"
-                      disabled={disabled}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => lrcInputRef.current?.click()}
-                      disabled={disabled}
-                      className="h-7 text-xs"
+                  {track.instrumentalFile ? (
+                    <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg border border-glass-border">
+                      <Music className="w-5 h-5 text-accent flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {track.instrumentalFile.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatFileSize(track.instrumentalFile.size)}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleRemoveInstrumental}
+                        disabled={disabled}
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      onDragOver={(e) => { e.preventDefault(); setIsDraggingInstrumental(true); }}
+                      onDragLeave={() => setIsDraggingInstrumental(false)}
+                      onDrop={handleInstrumentalDrop}
+                      onClick={() => !disabled && instrumentalInputRef.current?.click()}
+                      className={cn(
+                        "border-2 border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer",
+                        isDraggingInstrumental ? "border-accent bg-accent/5" : "border-glass-border hover:border-accent/50",
+                        disabled && "opacity-50 cursor-not-allowed"
+                      )}
                     >
-                      <Upload className="w-3 h-3 mr-1" />
-                      Import LRC
-                    </Button>
-                  </div>
+                      <input
+                        ref={instrumentalInputRef}
+                        type="file"
+                        accept="audio/mpeg,audio/wav,audio/flac"
+                        onChange={handleInstrumentalChange}
+                        className="hidden"
+                        disabled={disabled}
+                      />
+                      <Music className="w-6 h-6 text-accent mx-auto mb-1" />
+                      <p className="text-sm text-foreground font-medium">Drop instrumental file here</p>
+                      <p className="text-xs text-muted-foreground">MP3, WAV, FLAC up to 50MB</p>
+                    </div>
+                  )}
                 </div>
 
-                {/* Tabs for Plain Text / LRC */}
-                <Tabs value={lyricsTab} onValueChange={(v) => setLyricsTab(v as 'plain' | 'lrc')}>
-                  <TabsList className="h-8 bg-muted/50">
-                    <TabsTrigger value="plain" className="text-xs h-6">Plain Text</TabsTrigger>
-                    <TabsTrigger value="lrc" className="text-xs h-6">LRC Format</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="plain" className="mt-3">
-                    <Textarea
-                      value={track.lyrics || ''}
-                      onChange={(e) => handleLyricsChange(e.target.value)}
-                      placeholder="[Verse 1]&#10;Add your lyrics here...&#10;&#10;[Chorus]&#10;..."
-                      rows={6}
-                      className="bg-background/50 border-glass-border focus:border-accent resize-none font-mono text-sm"
-                      disabled={disabled}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="lrc" className="mt-3 space-y-3">
-                    <div className="p-3 bg-muted/50 rounded-lg border border-glass-border">
-                      <p className="text-xs text-muted-foreground mb-2">
-                        <strong>LRC Format Example:</strong>
-                      </p>
-                      <pre className="text-xs text-muted-foreground font-mono whitespace-pre-wrap">
+                {/* Lyrics Section */}
+                <div className="space-y-3">
+                  {/* Header with LRC badge and import button */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm font-medium text-foreground">Lyrics</Label>
+                      {lrcDetected && (
+                        <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                          LRC Synced
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* LRC Upload Button */}
+                    <div>
+                      <input
+                        ref={lrcInputRef}
+                        type="file"
+                        accept=".lrc,.txt"
+                        onChange={handleLrcFileChange}
+                        className="hidden"
+                        disabled={disabled}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => lrcInputRef.current?.click()}
+                        disabled={disabled}
+                        className="h-7 text-xs"
+                      >
+                        <Upload className="w-3 h-3 mr-1" />
+                        Import LRC
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Tabs for Plain Text / LRC */}
+                  <Tabs value={lyricsTab} onValueChange={(v) => setLyricsTab(v as 'plain' | 'lrc')}>
+                    <TabsList className="h-8 bg-muted/50">
+                      <TabsTrigger value="plain" className="text-xs h-6">Plain Text</TabsTrigger>
+                      <TabsTrigger value="lrc" className="text-xs h-6">LRC Format</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="plain" className="mt-3">
+                      <Textarea
+                        value={track.lyrics || ''}
+                        onChange={(e) => handleLyricsChange(e.target.value)}
+                        placeholder="[Verse 1]&#10;Add your lyrics here...&#10;&#10;[Chorus]&#10;..."
+                        rows={6}
+                        className="bg-background/50 border-glass-border focus:border-accent resize-none font-mono text-sm"
+                        disabled={disabled}
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="lrc" className="mt-3 space-y-3">
+                      <div className="p-3 bg-muted/50 rounded-lg border border-glass-border">
+                        <p className="text-xs text-muted-foreground mb-2">
+                          <strong>LRC Format Example:</strong>
+                        </p>
+                        <pre className="text-xs text-muted-foreground font-mono whitespace-pre-wrap">
 {`[ti:Song Title]
 [ar:Artist Name]
 [00:15.00]First line of lyrics
 [00:20.50]Second line of lyrics
 [00:25.00]Third line of lyrics`}
-                      </pre>
-                    </div>
-                    <Textarea
-                      value={track.lyrics || ''}
-                      onChange={(e) => handleLyricsChange(e.target.value)}
-                      placeholder="[00:00.00]Start of your lyrics..."
-                      rows={6}
-                      className="bg-background/50 border-glass-border focus:border-accent resize-none font-mono text-sm"
-                      disabled={disabled}
-                    />
-                  </TabsContent>
-                </Tabs>
+                        </pre>
+                      </div>
+                      <Textarea
+                        value={track.lyrics || ''}
+                        onChange={(e) => handleLyricsChange(e.target.value)}
+                        placeholder="[00:00.00]Start of your lyrics..."
+                        rows={6}
+                        className="bg-background/50 border-glass-border focus:border-accent resize-none font-mono text-sm"
+                        disabled={disabled}
+                      />
+                    </TabsContent>
+                  </Tabs>
 
-                {/* Footer info */}
-                <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
-                  <span>
-                    {lrcDetected 
-                      ? "✓ Synchronized lyrics detected - lyrics will scroll with the music" 
-                      : "Tip: Use LRC format for synchronized lyrics display"}
-                  </span>
-                  <span>{(track.lyrics || '').length} characters</span>
+                  {/* Footer info */}
+                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                    <span>
+                      {lrcDetected 
+                        ? "✓ Synchronized lyrics detected - lyrics will scroll with the music" 
+                        : "Tip: Use LRC format for synchronized lyrics display"}
+                    </span>
+                    <span>{(track.lyrics || '').length} characters</span>
+                  </div>
                 </div>
               </div>
             )}
