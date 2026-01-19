@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -420,9 +420,19 @@ export function GlobalAudioPlayer() {
                 )}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
-                  {currentTrack.title}
-                </p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {currentTrack.title}
+                  </p>
+                  {hasKaraoke && (
+                    <span 
+                      className="flex-shrink-0 inline-flex items-center justify-center w-4 h-4 rounded bg-primary/20 text-primary"
+                      title="Karaoke available"
+                    >
+                      <Mic2 className="w-2.5 h-2.5" />
+                    </span>
+                  )}
+                </div>
                 {currentTrack.artist && (
                   <Link
                     to={`/artist/${currentTrack.artist.id}`}
