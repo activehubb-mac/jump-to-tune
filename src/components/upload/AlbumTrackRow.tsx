@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Music, X, ChevronDown, ChevronUp, Upload, Mic } from 'lucide-react';
+import { GripVertical, Music, X, ChevronDown, ChevronUp, Upload, Mic, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatDuration, formatFileSize, isValidAudioFile } from '@/lib/audioUtils';
@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { isValidLRC } from '@/lib/lrcParser';
+import { KaraokePreviewModal } from './KaraokePreviewModal';
 
 export interface AlbumTrackData {
   id: string;
@@ -35,6 +36,7 @@ export const AlbumTrackRow = ({ track, onUpdate, onRemove, disabled }: AlbumTrac
   const [isExpanded, setIsExpanded] = useState(false);
   const [lyricsTab, setLyricsTab] = useState<'plain' | 'lrc'>('plain');
   const [isDraggingInstrumental, setIsDraggingInstrumental] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const lrcInputRef = useRef<HTMLInputElement>(null);
   const instrumentalInputRef = useRef<HTMLInputElement>(null);
   
@@ -365,16 +367,40 @@ export const AlbumTrackRow = ({ track, onUpdate, onRemove, disabled }: AlbumTrac
                     </TabsContent>
                   </Tabs>
 
-                  {/* Footer info */}
-                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                  {/* Footer info with Preview button */}
+                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-2">
                     <span>
                       {lrcDetected 
                         ? "✓ Synchronized lyrics detected - lyrics will scroll with the music" 
                         : "Tip: Use LRC format for synchronized lyrics display"}
                     </span>
-                    <span>{(track.lyrics || '').length} characters</span>
+                    <div className="flex items-center gap-3">
+                      <span>{(track.lyrics || '').length} characters</span>
+                      {track.lyrics && track.lyrics.trim().length > 0 && (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setShowPreview(true)}
+                          className="h-7 text-xs"
+                        >
+                          <Play className="w-3 h-3 mr-1" />
+                          Preview Sync
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
+
+                {/* Karaoke Preview Modal */}
+                <KaraokePreviewModal
+                  open={showPreview}
+                  onOpenChange={setShowPreview}
+                  audioFile={track.file}
+                  instrumentalFile={track.instrumentalFile}
+                  lyrics={track.lyrics || ''}
+                  trackTitle={track.title}
+                />
               </div>
             )}
           </div>
