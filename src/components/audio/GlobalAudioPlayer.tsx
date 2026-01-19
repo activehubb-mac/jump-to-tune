@@ -3,6 +3,7 @@ import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAudioPlayer, AudioTrack } from "@/contexts/AudioPlayerContext";
 import { useAudioKeyboardShortcuts } from "@/hooks/useAudioKeyboardShortcuts";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
@@ -569,38 +570,50 @@ export function GlobalAudioPlayer() {
               {hasKaraoke && (
                 <>
                   {/* Lyrics Toggle */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                      "h-8 w-8",
-                      showLyrics ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                    )}
-                    onClick={toggleShowLyrics}
-                    title="Toggle lyrics"
-                  >
-                    <Mic className="h-4 w-4" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          "h-8 w-8",
+                          showLyrics ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                        )}
+                        onClick={toggleShowLyrics}
+                      >
+                        <Mic className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>{showLyrics ? "Hide lyrics" : "Show lyrics"}</p>
+                    </TooltipContent>
+                  </Tooltip>
 
-                  {/* Karaoke Mode Toggle */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                      "h-8 w-8 hidden md:flex",
-                      isKaraokeMode 
-                        ? "text-primary bg-primary/10" 
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                    onClick={toggleKaraokeMode}
-                    title={isKaraokeMode ? "Switch to original" : "Switch to instrumental (karaoke)"}
-                  >
-                    {isKaraokeMode ? (
-                      <MicOff className="h-4 w-4" />
-                    ) : (
-                      <Mic className="h-4 w-4" />
-                    )}
-                  </Button>
+                  {/* Karaoke Mode Toggle - visible on all screen sizes */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          "h-8 w-8",
+                          isKaraokeMode 
+                            ? "text-primary bg-primary/10" 
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                        onClick={toggleKaraokeMode}
+                      >
+                        {isKaraokeMode ? (
+                          <MicOff className="h-4 w-4" />
+                        ) : (
+                          <Mic2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>{isKaraokeMode ? "Switch to original audio" : "Sing-along mode (instrumental)"}</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </>
               )}
 
