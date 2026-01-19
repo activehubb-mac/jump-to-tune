@@ -201,6 +201,48 @@ export type Database = {
         }
         Relationships: []
       }
+      featured_content: {
+        Row: {
+          content_id: string
+          content_type: Database["public"]["Enums"]["featured_content_type"]
+          created_at: string
+          created_by: string
+          display_location: string
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          priority: number
+          starts_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          content_id: string
+          content_type: Database["public"]["Enums"]["featured_content_type"]
+          created_at?: string
+          created_by: string
+          display_location: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          priority?: number
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: Database["public"]["Enums"]["featured_content_type"]
+          created_at?: string
+          created_by?: string
+          display_location?: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          priority?: number
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       follows: {
         Row: {
           created_at: string
@@ -902,6 +944,7 @@ export type Database = {
       app_role: "fan" | "artist" | "label" | "admin"
       credit_transaction_type: "purchase" | "spend" | "refund"
       earnings_status: "pending" | "paid" | "failed"
+      featured_content_type: "artist" | "label" | "track" | "album"
       subscription_status: "trialing" | "active" | "canceled" | "past_due"
     }
     CompositeTypes: {
@@ -1033,6 +1076,7 @@ export const Constants = {
       app_role: ["fan", "artist", "label", "admin"],
       credit_transaction_type: ["purchase", "spend", "refund"],
       earnings_status: ["pending", "paid", "failed"],
+      featured_content_type: ["artist", "label", "track", "album"],
       subscription_status: ["trialing", "active", "canceled", "past_due"],
     },
   },

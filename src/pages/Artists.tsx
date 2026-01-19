@@ -2,11 +2,12 @@ import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Music, Users, Loader2, UserPlus, UserMinus, CheckCircle } from "lucide-react";
+import { Search, Music, Users, Loader2, UserPlus, UserMinus, CheckCircle, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useArtists } from "@/hooks/useArtists";
 import { useFollow } from "@/hooks/useFollows";
 import { useFollowerCounts } from "@/hooks/useFollowerCounts";
+import { useFeaturedArtists } from "@/hooks/useFeaturedContent";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { formatCompactNumber } from "@/lib/formatters";
@@ -14,6 +15,7 @@ import { formatCompactNumber } from "@/lib/formatters";
 export default function Artists() {
   const [searchQuery, setSearchQuery] = useState("");
   const { data: artists, isLoading } = useArtists({ searchQuery: searchQuery || undefined });
+  const { data: featuredArtistsData, isLoading: featuredLoading } = useFeaturedArtists("artists_page");
   const { isFollowing, toggleFollow } = useFollow();
   const { user } = useAuth();
   const { showFeedback } = useFeedbackSafe();
@@ -21,7 +23,23 @@ export default function Artists() {
   const artistIds = useMemo(() => artists?.map((a) => a.id) || [], [artists]);
   const { data: followerCounts = {} } = useFollowerCounts(artistIds);
 
-  const featuredArtists = artists?.slice(0, 3) || [];
+  // Use admin-curated featured artists if available, otherwise fall back to first 3
+  const featuredArtistIds = useMemo(() => 
+    featuredArtistsData?.map(f => f.content_id) || [], 
+    [featuredArtistsData]
+  );
+  
+  const featuredArtists = useMemo(() => {
+    if (featuredArtistsData && featuredArtistsData.length > 0) {
+      // Map featured content to artist data
+      return featuredArtistsData
+        .map(featured => artists?.find(a => a.id === featured.content_id))
+        .filter(Boolean) as typeof artists;
+    }
+    // Fallback to first 3 if no admin-curated featured artists
+    return artists?.slice(0, 3) || [];
+  }, [featuredArtistsData, artists]);
+
   const allArtists = artists || [];
 
   const handleFollow = async (e: React.MouseEvent, artistId: string, artistName: string) => {
@@ -72,15 +90,18 @@ export default function Artists() {
           />
         </div>
 
-        {isLoading ? (
+        {isLoading || featuredLoading ? (
           <div className="flex justify-center py-24">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : allArtists.length > 0 ? (
           <>
-            {featuredArtists.length > 0 && !searchQuery && (
+            {featuredArtists && featuredArtists.length > 0 && !searchQuery && (
               <section className="mb-12">
-                <h2 className="text-2xl font-bold text-foreground mb-6">Featured Artists</h2>
+                <div className="flex items-center gap-2 mb-6">
+                  <Star className="w-5 h-5 text-yellow-500" />
+                  <h2 className="text-2xl font-bold text-foreground">Featured Artists</h2>
+                </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {featuredArtists.map((artist) => {
                     const following = isFollowing(artist.id);

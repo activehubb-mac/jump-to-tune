@@ -1,16 +1,29 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Building2, Users, Music, Loader2, CheckCircle } from "lucide-react";
+import { Search, Building2, Users, Music, Loader2, CheckCircle, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLabels } from "@/hooks/useLabels";
+import { useFeaturedLabels } from "@/hooks/useFeaturedContent";
 
 export default function Labels() {
   const [searchQuery, setSearchQuery] = useState("");
   const { data: labels, isLoading } = useLabels({ searchQuery: searchQuery || undefined });
+  const { data: featuredLabelsData, isLoading: featuredLoading } = useFeaturedLabels("labels_page");
 
-  const featuredLabels = labels?.slice(0, 2) || [];
+  // Use admin-curated featured labels if available, otherwise fall back to first 2
+  const featuredLabels = useMemo(() => {
+    if (featuredLabelsData && featuredLabelsData.length > 0) {
+      // Map featured content to label data
+      return featuredLabelsData
+        .map(featured => labels?.find(l => l.id === featured.content_id))
+        .filter(Boolean) as typeof labels;
+    }
+    // Fallback to first 2 if no admin-curated featured labels
+    return labels?.slice(0, 2) || [];
+  }, [featuredLabelsData, labels]);
+
   const allLabels = labels || [];
 
   return (
@@ -26,13 +39,16 @@ export default function Labels() {
           <Input placeholder="Search labels..." className="pl-10 bg-muted/50 border-glass-border focus:border-primary h-12" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
         </div>
 
-        {isLoading ? (
+        {isLoading || featuredLoading ? (
           <div className="flex justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-accent" /></div>
         ) : allLabels.length > 0 ? (
           <>
-            {featuredLabels.length > 0 && !searchQuery && (
+            {featuredLabels && featuredLabels.length > 0 && !searchQuery && (
               <section className="mb-12">
-                <h2 className="text-2xl font-bold text-foreground mb-6">Featured Labels</h2>
+                <div className="flex items-center gap-2 mb-6">
+                  <Star className="w-5 h-5 text-yellow-500" />
+                  <h2 className="text-2xl font-bold text-foreground">Featured Labels</h2>
+                </div>
                 <div className="grid md:grid-cols-2 gap-6">
                   {featuredLabels.map((label) => (
                     <Link key={label.id} to={`/label/${label.id}`} className="glass-card p-6 group hover:bg-accent/10 transition-all duration-300">
