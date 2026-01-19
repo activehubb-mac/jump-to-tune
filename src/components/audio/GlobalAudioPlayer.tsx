@@ -550,7 +550,7 @@ export function GlobalAudioPlayer() {
                 
                 {showWaveform && currentTrack?.audio_url ? (
                   <UrlWaveformVisualizer
-                    audioUrl={currentTrack.audio_url.startsWith('http') ? currentTrack.audio_url : `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/tracks/${currentTrack.audio_url}`}
+                    audioUrl={currentTrack.audio_url.startsWith('http') ? currentTrack.audio_url : `https://ezamzkycxqrstuznqaha.supabase.co/storage/v1/object/public/tracks/${currentTrack.audio_url}`}
                     currentTime={currentTime}
                     duration={duration}
                     onSeek={seek}
