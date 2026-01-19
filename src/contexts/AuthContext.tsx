@@ -53,14 +53,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const fetchRole = async (userId: string) => {
+    // Fetch primary role (excluding admin) - admin is a separate privilege
     const { data: roleData } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
-      .single();
+      .neq("role", "admin")
+      .maybeSingle();
 
     if (roleData) {
       setRole(roleData.role as AppRole);
+    } else {
+      // Default to fan if no primary role found
+      setRole("fan");
     }
   };
 
