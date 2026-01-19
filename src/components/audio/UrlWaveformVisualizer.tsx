@@ -118,7 +118,10 @@ export function UrlWaveformVisualizer({
     };
   }, [audioUrl, generateFallbackWaveform, waveformData.length]);
 
-  // Draw the waveform
+  // Draw the waveform using requestAnimationFrame for smooth animation
+  const progressRef = useRef(0);
+  const animationRef = useRef<number>();
+
   const drawWaveform = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -141,7 +144,11 @@ export function UrlWaveformVisualizer({
     const barWidth = width / waveformData.length;
     const gap = 2;
     const actualBarWidth = Math.max(barWidth - gap, 1);
-    const progressPosition = duration > 0 ? (currentTime / duration) * width : 0;
+    const targetProgress = duration > 0 ? currentTime / duration : 0;
+    
+    // Smooth interpolation for fluid animation
+    progressRef.current += (targetProgress - progressRef.current) * 0.3;
+    const progressPosition = progressRef.current * width;
     const hoverPosition = hoveredPosition !== null ? hoveredPosition * width : null;
 
     // Clear canvas
@@ -151,10 +158,16 @@ export function UrlWaveformVisualizer({
       ctx.fillRect(0, 0, width, height);
     }
 
-    // Draw bars
+    // Draw bars with subtle animation
+    const time = Date.now() / 1000;
     waveformData.forEach((value, index) => {
       const x = index * barWidth;
-      const barHeight = Math.max(value * (height * 0.85), 2);
+      // Add subtle pulse animation based on position near playhead
+      const distFromPlayhead = Math.abs(x - progressPosition) / width;
+      const pulse = distFromPlayhead < 0.1 ? 1 + Math.sin(time * 8) * 0.1 * (1 - distFromPlayhead * 10) : 1;
+      const animatedValue = value * pulse;
+      
+      const barHeight = Math.max(animatedValue * (height * 0.85), 2);
       const y = (height - barHeight) / 2;
 
       // Determine if this bar is before the current progress
@@ -199,18 +212,43 @@ export function UrlWaveformVisualizer({
       ctx.setLineDash([]);
     }
 
-    // Draw playhead dot
+    // Draw animated playhead glow
     if (progressPosition > 0) {
+      // Glow effect
+      const gradient = ctx.createRadialGradient(progressPosition, height / 2, 0, progressPosition, height / 2, 8);
+      gradient.addColorStop(0, progressColor.replace(')', ' / 0.6)').replace('hsl(', 'hsla('));
+      gradient.addColorStop(1, 'transparent');
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(progressPosition, height / 2, 8, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Playhead dot
       ctx.fillStyle = progressColor;
       ctx.beginPath();
-      ctx.arc(progressPosition, height / 2, 3, 0, Math.PI * 2);
+      ctx.arc(progressPosition, height / 2, 4, 0, Math.PI * 2);
       ctx.fill();
     }
   }, [waveformData, currentTime, duration, hoveredPosition, barColor, progressColor, backgroundColor]);
 
-  // Redraw on data or time change
+  // Continuous animation loop for smooth playback visualization
   useEffect(() => {
-    drawWaveform();
+    let isActive = true;
+    
+    const animate = () => {
+      if (!isActive) return;
+      drawWaveform();
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    
+    animate();
+    
+    return () => {
+      isActive = false;
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
   }, [drawWaveform]);
 
   // Handle resize

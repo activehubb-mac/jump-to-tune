@@ -10,6 +10,7 @@ import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { KaraokeLyricsPanel } from "@/components/audio/KaraokeLyricsPanel";
 import { UrlWaveformVisualizer } from "@/components/audio/UrlWaveformVisualizer";
+import { MiniFrequencyVisualizer } from "@/components/audio/MiniFrequencyVisualizer";
 import { useKaraokeData, getInstrumentalUrl } from "@/hooks/useKaraokeData";
 import { Link } from "react-router-dom";
 import { DownloadButton } from "@/components/download/DownloadButton";
@@ -154,7 +155,27 @@ export function GlobalAudioPlayer() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumFeatureName, setPremiumFeatureName] = useState("");
   const [showKaraokeHint, setShowKaraokeHint] = useState(false);
-  const [showWaveform, setShowWaveform] = useState(false);
+  
+  // Load waveform preference from localStorage
+  const WAVEFORM_PREF_KEY = "jumtunes_waveform_preference";
+  const [showWaveform, setShowWaveform] = useState(() => {
+    try {
+      return localStorage.getItem(WAVEFORM_PREF_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+  
+  // Persist waveform preference
+  const toggleWaveform = () => {
+    const newValue = !showWaveform;
+    setShowWaveform(newValue);
+    try {
+      localStorage.setItem(WAVEFORM_PREF_KEY, String(newValue));
+    } catch {
+      // Ignore storage errors
+    }
+  };
 
   // One-time onboarding for karaoke feature
   const KARAOKE_ONBOARDING_KEY = "jumtunes_karaoke_onboarding_seen";
@@ -441,7 +462,7 @@ export function GlobalAudioPlayer() {
           <div className="flex items-center gap-4 py-3">
             {/* Track Info */}
             <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-64">
-              <div className="w-12 h-12 rounded-lg bg-muted/50 overflow-hidden flex-shrink-0">
+              <div className="w-12 h-12 rounded-lg bg-muted/50 overflow-hidden flex-shrink-0 relative">
                 {currentTrack.cover_art_url ? (
                   <img
                     src={currentTrack.cover_art_url}
@@ -451,6 +472,16 @@ export function GlobalAudioPlayer() {
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Disc3 className="w-6 h-6 text-muted-foreground/50" />
+                  </div>
+                )}
+                {/* Mini frequency visualizer overlay */}
+                {isPlaying && (
+                  <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-0.5 bg-gradient-to-t from-black/60 to-transparent">
+                    <MiniFrequencyVisualizer 
+                      isPlaying={isPlaying && !isBuffering} 
+                      barCount={5}
+                      className="h-3"
+                    />
                   </div>
                 )}
               </div>
@@ -579,7 +610,7 @@ export function GlobalAudioPlayer() {
                         "h-6 w-6",
                         showWaveform ? "text-primary" : "text-muted-foreground hover:text-foreground"
                       )}
-                      onClick={() => setShowWaveform(!showWaveform)}
+                      onClick={toggleWaveform}
                     >
                       <AudioWaveform className="h-3.5 w-3.5" />
                     </Button>
