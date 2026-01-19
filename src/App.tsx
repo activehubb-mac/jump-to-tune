@@ -36,6 +36,7 @@ import Subscription from "./pages/Subscription";
 import Wallet from "./pages/Wallet";
 import ArtistPayouts from "./pages/ArtistPayouts";
 import NotificationSettings from "./pages/NotificationSettings";
+import ThemePreview from "./pages/ThemePreview";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -79,6 +80,7 @@ const App = () => (
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/artist/payouts" element={<ArtistPayouts />} />
                 <Route path="/settings/notifications" element={<NotificationSettings />} />
+                <Route path="/theme-preview" element={<ThemePreview />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <GlobalAudioPlayer />
