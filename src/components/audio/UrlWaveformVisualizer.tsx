@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, forwardRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 
 interface UrlWaveformVisualizerProps {
@@ -12,7 +12,7 @@ interface UrlWaveformVisualizerProps {
   backgroundColor?: string;
 }
 
-export const UrlWaveformVisualizer = forwardRef<HTMLDivElement, UrlWaveformVisualizerProps>(({
+export function UrlWaveformVisualizer({
   audioUrl,
   currentTime,
   duration,
@@ -21,12 +21,11 @@ export const UrlWaveformVisualizer = forwardRef<HTMLDivElement, UrlWaveformVisua
   barColor = 'hsl(var(--muted-foreground) / 0.3)',
   progressColor = 'hsl(var(--primary))',
   backgroundColor = 'transparent',
-}, ref) => {
+}: UrlWaveformVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [waveformData, setWaveformData] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
   const [hoveredPosition, setHoveredPosition] = useState<number | null>(null);
   const lastUrlRef = useRef<string>('');
 
@@ -50,7 +49,6 @@ export const UrlWaveformVisualizer = forwardRef<HTMLDivElement, UrlWaveformVisua
     }
     
     lastUrlRef.current = audioUrl;
-    setHasError(false);
     
     // Show fallback immediately while loading
     setWaveformData(generateFallbackWaveform());
@@ -105,7 +103,6 @@ export const UrlWaveformVisualizer = forwardRef<HTMLDivElement, UrlWaveformVisua
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           console.warn('Failed to extract waveform:', error);
-          setHasError(true);
         }
       } finally {
         setIsLoading(false);
@@ -119,7 +116,7 @@ export const UrlWaveformVisualizer = forwardRef<HTMLDivElement, UrlWaveformVisua
       clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [audioUrl, generateFallbackWaveform]);
+  }, [audioUrl, generateFallbackWaveform, waveformData.length]);
 
   // Draw the waveform
   const drawWaveform = useCallback(() => {
@@ -248,14 +245,7 @@ export const UrlWaveformVisualizer = forwardRef<HTMLDivElement, UrlWaveformVisua
 
   return (
     <div 
-      ref={(node) => {
-        containerRef.current = node;
-        if (typeof ref === 'function') {
-          ref(node);
-        } else if (ref) {
-          ref.current = node;
-        }
-      }}
+      ref={containerRef}
       className={cn("relative w-full h-8", className)}
     >
       {isLoading && waveformData.length === 0 ? (
@@ -278,6 +268,4 @@ export const UrlWaveformVisualizer = forwardRef<HTMLDivElement, UrlWaveformVisua
       )}
     </div>
   );
-});
-
-UrlWaveformVisualizer.displayName = 'UrlWaveformVisualizer';
+}
