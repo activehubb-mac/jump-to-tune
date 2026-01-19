@@ -144,10 +144,7 @@ function FeaturedArtistsSection() {
               <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center border border-accent/40">
                 <Star className="w-5 h-5 text-accent" />
               </div>
-              <div>
-                <h2 className="text-xl md:text-2xl font-bold text-foreground">Featured Artists</h2>
-                <p className="text-sm text-muted-foreground">Handpicked talent worth discovering</p>
-              </div>
+              <h2 className="text-xl md:text-2xl font-bold text-foreground">Featured Artists</h2>
             </div>
             <Button variant="outline" size="sm" className="hidden sm:flex" asChild>
               <Link to="/artists">View All</Link>
