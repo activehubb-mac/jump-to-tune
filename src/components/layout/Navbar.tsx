@@ -18,7 +18,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown, Bell, Check, ArrowUp, ArrowDown, Sparkles, Wallet, Heart, AlertTriangle, UserPlus, DollarSign } from "lucide-react";
+import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown, Bell, Check, ArrowUp, ArrowDown, Sparkles, Wallet, Heart, AlertTriangle, UserPlus, DollarSign, Mic2 } from "lucide-react";
 import { CreditBalanceChip } from "@/components/wallet/CreditBalanceChip";
 import { SubscriptionCountdownChip } from "@/components/subscription/SubscriptionCountdownChip";
 import { QuickTopupModal } from "@/components/wallet/QuickTopupModal";
@@ -31,6 +31,7 @@ import { formatDistanceToNow } from "date-fns";
 const navLinks = [
   { href: "/", label: "Home", icon: Home },
   { href: "/browse", label: "Browse", icon: Search },
+  { href: "/karaoke", label: "Sing-Along", icon: Mic2 },
   { href: "/artists", label: "Artists", icon: User },
   { href: "/labels", label: "Labels", icon: Building2 },
   { href: "/collection", label: "Collection", icon: Library, authRequired: true },

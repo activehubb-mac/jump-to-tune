@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Music, Disc3, Users, Building2, Headphones, Zap, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History, ListPlus, Lock } from "lucide-react";
 import { DownloadButton } from "@/components/download/DownloadButton";
 import { TrendingCarousel } from "@/components/home/TrendingCarousel";
+import { KaraokePromoBanner } from "@/components/home/KaraokePromoBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRecommendedArtists } from "@/hooks/useRecommendedArtists";
 import { useFollow } from "@/hooks/useFollows";
@@ -377,6 +378,9 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* Karaoke Promo Banner */}
+      <KaraokePromoBanner />
 
       {/* Discover Section - Only show for authenticated users */}
       {user && recommendedArtists && recommendedArtists.length > 0 && (

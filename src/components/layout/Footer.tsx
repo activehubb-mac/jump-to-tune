@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Music, Twitter, Instagram, Youtube } from "lucide-react";
+import { Twitter, Instagram, Youtube, Mic2 } from "lucide-react";
 
 export function Footer() {
   return (
@@ -36,6 +36,7 @@ export function Footer() {
             <h4 className="font-semibold mb-4 text-foreground">Platform</h4>
             <ul className="space-y-2 text-sm">
               <li><Link to="/browse" className="text-muted-foreground hover:text-foreground transition-colors">Browse Music</Link></li>
+              <li><Link to="/karaoke" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"><Mic2 className="w-3.5 h-3.5" />Sing-Along</Link></li>
               <li><Link to="/artists" className="text-muted-foreground hover:text-foreground transition-colors">Artists</Link></li>
               <li><Link to="/labels" className="text-muted-foreground hover:text-foreground transition-colors">Labels</Link></li>
               <li><Link to="/collection" className="text-muted-foreground hover:text-foreground transition-colors">My Collection</Link></li>
