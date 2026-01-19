@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const RECENTLY_PLAYED_KEY = "jumtunes_recently_played";
 const MAX_RECENTLY_PLAYED = 20;
+const PREVIEW_LIMIT_SECONDS = 30;
 
 // Helper to save recently played track
 const saveToRecentlyPlayed = (track: { 
@@ -66,6 +68,9 @@ interface AudioPlayerContextType {
   repeatMode: RepeatMode;
   isKaraokeMode: boolean;
   showLyrics: boolean;
+  isPreviewMode: boolean;
+  previewTimeRemaining: number;
+  showPreviewEndedModal: boolean;
   playTrack: (track: AudioTrack) => void;
   togglePlayPause: () => void;
   seek: (time: number) => void;
@@ -83,11 +88,15 @@ interface AudioPlayerContextType {
   toggleKaraokeMode: () => void;
   toggleShowLyrics: () => void;
   setInstrumentalUrl: (url: string | null) => void;
+  dismissPreviewEndedModal: () => void;
+  restartPreview: () => void;
+  grantFullAccess: (trackId: string) => void;
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined);
 
 export function AudioPlayerProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [currentTrack, setCurrentTrack] = useState<AudioTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -106,6 +115,63 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const [showLyrics, setShowLyrics] = useState(false);
   const [instrumentalUrl, setInstrumentalUrlState] = useState<string | null>(null);
   const [originalAudioUrl, setOriginalAudioUrl] = useState<string | null>(null);
+  
+  // Preview mode state
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [showPreviewEndedModal, setShowPreviewEndedModal] = useState(false);
+  const accessCache = useRef<Map<string, boolean>>(new Map());
+
+  // Check if user has full access to a track
+  const checkFullAccess = useCallback(async (trackId: string): Promise<boolean> => {
+    if (!user) return false;
+
+    // Check cache first
+    if (accessCache.current.has(trackId)) {
+      return accessCache.current.get(trackId)!;
+    }
+
+    try {
+      // Check if user purchased the track
+      const { data: purchase } = await supabase
+        .from("purchases")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("track_id", trackId)
+        .maybeSingle();
+
+      if (purchase) {
+        accessCache.current.set(trackId, true);
+        return true;
+      }
+
+      // Check if user is the artist or label owner
+      const { data: track } = await supabase
+        .from("tracks")
+        .select("artist_id, label_id")
+        .eq("id", trackId)
+        .single();
+
+      const hasAccess = track?.artist_id === user.id || track?.label_id === user.id;
+      accessCache.current.set(trackId, hasAccess);
+      return hasAccess;
+    } catch (e) {
+      console.error("Error checking track access:", e);
+      accessCache.current.set(trackId, false);
+      return false;
+    }
+  }, [user]);
+
+  // Grant full access (called after purchase)
+  const grantFullAccess = useCallback((trackId: string) => {
+    accessCache.current.set(trackId, true);
+    if (currentTrack?.id === trackId) {
+      setIsPreviewMode(false);
+    }
+  }, [currentTrack?.id]);
+
+  const previewTimeRemaining = isPreviewMode 
+    ? Math.max(0, PREVIEW_LIMIT_SECONDS - currentTime)
+    : 0;
 
   const ensureAudioElement = useCallback(() => {
     if (audioRef.current) return audioRef.current;
@@ -152,6 +218,25 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     return audio;
   }, []);
 
+  // Enforce preview limit
+  useEffect(() => {
+    if (!isPreviewMode || !audioRef.current) return;
+
+    const audio = audioRef.current;
+    
+    const checkPreviewLimit = () => {
+      if (audio.currentTime >= PREVIEW_LIMIT_SECONDS) {
+        audio.pause();
+        audio.currentTime = 0;
+        setCurrentTime(0);
+        setShowPreviewEndedModal(true);
+      }
+    };
+
+    audio.addEventListener("timeupdate", checkPreviewLimit);
+    return () => audio.removeEventListener("timeupdate", checkPreviewLimit);
+  }, [isPreviewMode]);
+
   const getAudioUrl = useCallback((url: string) => {
     if (url.startsWith("http")) {
       return url;
@@ -160,13 +245,14 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     return data.publicUrl;
   }, []);
 
-  const playTrackInternal = useCallback(async (track: AudioTrack) => {
+  const playTrackInternal = useCallback(async (track: AudioTrack, forcePreviewCheck = true) => {
     const audio = ensureAudioElement();
 
     setCurrentTime(0);
     setDuration(track.duration || 0);
     setIsPlayerVisible(true);
     setIsBuffering(true);
+    setShowPreviewEndedModal(false);
 
     let audioUrl = track.audio_url;
     let hasKaraoke = track.has_karaoke;
@@ -216,6 +302,12 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
     setCurrentTrack(hydratedTrack);
 
+    // Check access and set preview mode
+    if (forcePreviewCheck) {
+      const hasAccess = await checkFullAccess(track.id);
+      setIsPreviewMode(!hasAccess);
+    }
+
     // Save to recently played
     saveToRecentlyPlayed(hydratedTrack);
 
@@ -223,7 +315,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     audio.src = resolvedUrl;
     audio.load();
     audio.play().catch(console.error);
-  }, [getAudioUrl, ensureAudioElement]);
+  }, [getAudioUrl, ensureAudioElement, checkFullAccess]);
 
   // Handle track ended - auto-play next based on repeat/shuffle modes
   useEffect(() => {
@@ -265,6 +357,11 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       }
     };
   }, [ensureAudioElement]);
+
+  // Clear access cache on user change
+  useEffect(() => {
+    accessCache.current.clear();
+  }, [user?.id]);
 
   const playTrack = useCallback((track: AudioTrack) => {
     const audio = ensureAudioElement();
@@ -371,9 +468,15 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
   const seek = useCallback((time: number) => {
     const audio = ensureAudioElement();
+    
+    // In preview mode, prevent seeking past the limit
+    if (isPreviewMode && time >= PREVIEW_LIMIT_SECONDS) {
+      time = PREVIEW_LIMIT_SECONDS - 0.5;
+    }
+    
     audio.currentTime = time;
     setCurrentTime(time);
-  }, [ensureAudioElement]);
+  }, [ensureAudioElement, isPreviewMode]);
 
   const setVolume = useCallback((level: number) => {
     const audio = ensureAudioElement();
@@ -492,8 +595,9 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         }, 10000);
       });
 
-      // Restore position
-      audio.currentTime = currentPos;
+      // Restore position (respect preview limit)
+      const targetTime = isPreviewMode ? Math.min(currentPos, PREVIEW_LIMIT_SECONDS - 0.5) : currentPos;
+      audio.currentTime = targetTime;
       
       if (wasPlaying) {
         await audio.play();
@@ -514,7 +618,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     } finally {
       setIsBuffering(false);
     }
-  }, [currentTrack, instrumentalUrl, originalAudioUrl, isKaraokeMode, getAudioUrl]);
+  }, [currentTrack, instrumentalUrl, originalAudioUrl, isKaraokeMode, isPreviewMode, getAudioUrl]);
 
   const toggleShowLyrics = useCallback(() => {
     setShowLyrics(prev => !prev);
@@ -522,6 +626,20 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
   const setInstrumentalUrl = useCallback((url: string | null) => {
     setInstrumentalUrlState(url);
+  }, []);
+
+  const dismissPreviewEndedModal = useCallback(() => {
+    setShowPreviewEndedModal(false);
+  }, []);
+
+  const restartPreview = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.currentTime = 0;
+      setCurrentTime(0);
+      audio.play().catch(console.error);
+    }
+    setShowPreviewEndedModal(false);
   }, []);
 
   const closePlayer = useCallback(() => {
@@ -544,6 +662,8 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     setShowLyrics(false);
     setInstrumentalUrlState(null);
     setOriginalAudioUrl(null);
+    setIsPreviewMode(false);
+    setShowPreviewEndedModal(false);
   }, []);
 
   return (
@@ -563,6 +683,9 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         repeatMode,
         isKaraokeMode,
         showLyrics,
+        isPreviewMode,
+        previewTimeRemaining,
+        showPreviewEndedModal,
         playTrack,
         togglePlayPause,
         seek,
@@ -580,6 +703,9 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         toggleKaraokeMode,
         toggleShowLyrics,
         setInstrumentalUrl,
+        dismissPreviewEndedModal,
+        restartPreview,
+        grantFullAccess,
       }}
     >
       {children}
@@ -603,6 +729,9 @@ const defaultAudioPlayerContext: AudioPlayerContextType = {
   repeatMode: "off",
   isKaraokeMode: false,
   showLyrics: false,
+  isPreviewMode: false,
+  previewTimeRemaining: 0,
+  showPreviewEndedModal: false,
   playTrack: () => {},
   togglePlayPause: () => {},
   seek: () => {},
@@ -620,6 +749,9 @@ const defaultAudioPlayerContext: AudioPlayerContextType = {
   toggleKaraokeMode: () => {},
   toggleShowLyrics: () => {},
   setInstrumentalUrl: () => {},
+  dismissPreviewEndedModal: () => {},
+  restartPreview: () => {},
+  grantFullAccess: () => {},
 };
 
 export function useAudioPlayer() {
