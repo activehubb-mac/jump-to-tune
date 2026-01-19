@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -137,38 +137,39 @@ export default function AdminFeatured() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
+      {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-          <Star className="w-5 h-5 text-yellow-500" />
+        <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0">
+          <Star className="w-4 h-4 md:w-5 md:h-5 text-yellow-500" />
         </div>
-        <div>
-          <h2 className="text-xl font-bold">Featured Content</h2>
-          <p className="text-sm text-muted-foreground">Manage featured artists and labels across the platform</p>
+        <div className="min-w-0">
+          <h2 className="text-lg md:text-xl font-bold">Featured Content</h2>
+          <p className="text-xs md:text-sm text-muted-foreground truncate">Manage featured artists and labels</p>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FeaturedContentType)}>
-        <div className="flex items-center justify-between mb-4">
-          <TabsList>
-            <TabsTrigger value="artist" className="gap-2">
-              <User className="w-4 h-4" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="artist" className="gap-1.5 flex-1 sm:flex-initial text-xs sm:text-sm">
+              <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               Artists
             </TabsTrigger>
-            <TabsTrigger value="label" className="gap-2">
-              <Building2 className="w-4 h-4" />
+            <TabsTrigger value="label" className="gap-1.5 flex-1 sm:flex-initial text-xs sm:text-sm">
+              <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               Labels
             </TabsTrigger>
           </TabsList>
 
           <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button className="gap-2 w-full sm:w-auto" size="sm">
                 <Plus className="w-4 h-4" />
                 Add Featured
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="max-w-[90vw] sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Add Featured {activeTab === "artist" ? "Artist" : "Label"}</DialogTitle>
                 <DialogDescription>
@@ -224,7 +225,7 @@ export default function AdminFeatured() {
                               : "hover:bg-muted"
                           }`}
                         >
-                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
                             {content.avatar_url ? (
                               <img src={content.avatar_url} alt="" className="w-full h-full object-cover" />
                             ) : activeTab === "artist" ? (
@@ -233,16 +234,16 @@ export default function AdminFeatured() {
                               <Building2 className="w-5 h-5 text-muted-foreground" />
                             )}
                           </div>
-                          <div className="flex-1 text-left">
+                          <div className="flex-1 text-left min-w-0">
                             <div className="flex items-center gap-1">
-                              <span className="font-medium">{content.display_name || "Unknown"}</span>
+                              <span className="font-medium truncate">{content.display_name || "Unknown"}</span>
                               {content.is_verified && (
-                                <CheckCircle className="w-3.5 h-3.5 text-primary" />
+                                <CheckCircle className="w-3.5 h-3.5 text-primary shrink-0" />
                               )}
                             </div>
                           </div>
                           {selectedContentId === content.id && (
-                            <CheckCircle className="w-5 h-5 text-primary" />
+                            <CheckCircle className="w-5 h-5 text-primary shrink-0" />
                           )}
                         </button>
                       ))
@@ -254,16 +255,17 @@ export default function AdminFeatured() {
                 </div>
               </div>
 
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+              <DialogFooter className="flex-col sm:flex-row gap-2">
+                <Button variant="outline" onClick={() => setAddDialogOpen(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
                 <Button 
                   onClick={handleAddFeatured} 
                   disabled={!selectedContentId || !selectedLocation || addMutation.isPending}
+                  className="w-full sm:w-auto"
                 >
                   {addMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Add to Featured
+                  Add
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -342,8 +344,8 @@ function FeaturedList({
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <Star className="w-12 h-12 text-muted-foreground/30 mb-4" />
-          <h3 className="font-semibold mb-1">No featured {contentType}s yet</h3>
-          <p className="text-sm text-muted-foreground">Add your first featured {contentType} to get started</p>
+          <h3 className="font-semibold mb-1 text-center">No featured {contentType}s yet</h3>
+          <p className="text-sm text-muted-foreground text-center">Add your first featured {contentType} to get started</p>
         </CardContent>
       </Card>
     );
@@ -356,11 +358,12 @@ function FeaturedList({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2 md:space-y-3">
       {items.map((item, index) => (
         <Card key={item.id} className={!item.is_active ? "opacity-60" : ""}>
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex flex-col gap-1">
+          <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 md:p-4">
+            {/* Reorder Controls - Hidden on mobile, shown on tablet+ */}
+            <div className="hidden sm:flex flex-col gap-1">
               <Button
                 variant="ghost"
                 size="icon"
@@ -382,52 +385,75 @@ function FeaturedList({
               </Button>
             </div>
 
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-              {getContentAvatar(item.content_id) ? (
-                <img src={getContentAvatar(item.content_id)!} alt="" className="w-full h-full object-cover" />
-              ) : contentType === "artist" ? (
-                <User className="w-6 h-6 text-muted-foreground" />
-              ) : (
-                <Building2 className="w-6 h-6 text-muted-foreground" />
-              )}
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold truncate">{getContentName(item.content_id)}</h4>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary" className="text-xs">
-                  {locationLabels[item.display_location] || item.display_location}
-                </Badge>
-                <span className="text-xs text-muted-foreground">
-                  Priority: {item.priority}
-                </span>
+            {/* Content Info */}
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                {getContentAvatar(item.content_id) ? (
+                  <img src={getContentAvatar(item.content_id)!} alt="" className="w-full h-full object-cover" />
+                ) : contentType === "artist" ? (
+                  <User className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground" />
+                ) : (
+                  <Building2 className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground" />
+                )}
               </div>
-              {item.ends_at && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Ends: {format(new Date(item.ends_at), "MMM d, yyyy")}
-                </p>
-              )}
+
+              <div className="min-w-0 flex-1">
+                <h4 className="font-semibold text-sm md:text-base truncate">{getContentName(item.content_id)}</h4>
+                <div className="flex items-center gap-2 flex-wrap mt-1">
+                  <Badge variant="secondary" className="text-xs">
+                    {locationLabels[item.display_location] || item.display_location}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground hidden xs:inline">
+                    #{item.priority}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            {/* Actions */}
+            <div className="flex items-center gap-2 sm:gap-3 justify-between sm:justify-end mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0">
+              {/* Mobile reorder buttons */}
+              <div className="flex items-center gap-1 sm:hidden">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={index === 0}
+                  onClick={() => onMovePriority(item.id, "up")}
+                >
+                  <ArrowUp className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={index === items.length - 1}
+                  onClick={() => onMovePriority(item.id, "down")}
+                >
+                  <ArrowDown className="w-4 h-4" />
+                </Button>
+              </div>
+
               <div className="flex items-center gap-2">
-                <Label htmlFor={`active-${item.id}`} className="text-sm text-muted-foreground">
-                  Active
-                </Label>
-                <Switch
-                  id={`active-${item.id}`}
-                  checked={item.is_active}
-                  onCheckedChange={() => onToggleActive(item.id, item.is_active)}
-                />
+                <div className="flex items-center gap-2">
+                  <Label htmlFor={`active-${item.id}`} className="text-xs md:text-sm text-muted-foreground">
+                    Active
+                  </Label>
+                  <Switch
+                    id={`active-${item.id}`}
+                    checked={item.is_active}
+                    onCheckedChange={() => onToggleActive(item.id, item.is_active)}
+                  />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => onRemove(item.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={() => onRemove(item.id)}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
             </div>
           </CardContent>
         </Card>
