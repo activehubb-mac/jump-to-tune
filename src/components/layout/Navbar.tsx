@@ -522,6 +522,16 @@ export function Navbar() {
                       <Crown className="w-5 h-5" />
                       Subscription
                     </Link>
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-destructive hover:bg-destructive/10 rounded-lg"
+                      >
+                        <Shield className="w-5 h-5" />
+                        Admin Dashboard
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         setIsOpen(false);
