@@ -4,7 +4,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock, X } from "lucide-react";
+import { Search, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock, X, Mic2 } from "lucide-react";
 import { TrackCardSkeletonGrid } from "@/components/dashboard/TrackCardSkeleton";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { RecentlyViewedSection } from "@/components/browse/RecentlyViewedSection";
@@ -45,9 +45,11 @@ export default function Browse() {
     genre: selectedGenre,
     mood: selectedMood,
     sortBy,
+    karaokeOnly,
     setGenre: setSelectedGenre,
     setMood: setSelectedMood,
     setSortBy,
+    setKaraokeOnly,
     clearFilters,
     hasActiveFilters,
   } = useBrowsePreferences();
@@ -76,6 +78,7 @@ export default function Browse() {
     genre: selectedGenre,
     mood: selectedMood,
     sortBy,
+    karaokeOnly,
     searchQuery: searchQuery || undefined,
   });
 
@@ -280,8 +283,21 @@ export default function Browse() {
         </div>
 
         {/* Sort & Clear Filters Row */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
+            {/* Karaoke Filter Toggle */}
+            <button
+              onClick={() => setKaraokeOnly(!karaokeOnly)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                karaokeOnly
+                  ? "bg-primary text-primary-foreground neon-glow-subtle"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <Mic2 className="w-4 h-4" />
+              <span>Sing-along</span>
+            </button>
+
             {hasActiveFilters && (
               <Button
                 variant="ghost"
@@ -293,7 +309,7 @@ export default function Browse() {
                 Clear filters
               </Button>
             )}
-            {(selectedGenre !== "All" || selectedMood !== "All") && (
+            {(selectedGenre !== "All" || selectedMood !== "All" || karaokeOnly) && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 {selectedGenre !== "All" && (
                   <span className="px-2 py-1 rounded-md bg-primary/10 text-primary text-xs">
@@ -303,6 +319,12 @@ export default function Browse() {
                 {selectedMood !== "All" && (
                   <span className="px-2 py-1 rounded-md bg-accent/50 text-accent-foreground text-xs">
                     {selectedMood}
+                  </span>
+                )}
+                {karaokeOnly && (
+                  <span className="px-2 py-1 rounded-md bg-primary/10 text-primary text-xs flex items-center gap-1">
+                    <Mic2 className="w-3 h-3" />
+                    Sing-along
                   </span>
                 )}
               </div>

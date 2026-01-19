@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -152,6 +152,37 @@ export function GlobalAudioPlayer() {
   const [showQueue, setShowQueue] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumFeatureName, setPremiumFeatureName] = useState("");
+  const [showKaraokeHint, setShowKaraokeHint] = useState(false);
+
+  // One-time onboarding for karaoke feature
+  const KARAOKE_ONBOARDING_KEY = "jumtunes_karaoke_onboarding_seen";
+  const hasSeenKaraokeOnboarding = useRef(
+    typeof localStorage !== "undefined" && localStorage.getItem(KARAOKE_ONBOARDING_KEY) === "true"
+  );
+
+  // Show hint when first karaoke track is played
+  useEffect(() => {
+    if (
+      currentTrack?.has_karaoke &&
+      !hasSeenKaraokeOnboarding.current
+    ) {
+      // Small delay so the player is visible first
+      const timer = setTimeout(() => {
+        setShowKaraokeHint(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [currentTrack?.id, currentTrack?.has_karaoke]);
+
+  const dismissKaraokeHint = () => {
+    setShowKaraokeHint(false);
+    hasSeenKaraokeOnboarding.current = true;
+    try {
+      localStorage.setItem(KARAOKE_ONBOARDING_KEY, "true");
+    } catch {
+      // Ignore storage errors
+    }
+  };
 
   // Fetch karaoke data for current track
   const { data: karaokeData } = useKaraokeData(
@@ -590,38 +621,51 @@ export function GlobalAudioPlayer() {
                     </TooltipContent>
                   </Tooltip>
 
-                  {/* Karaoke Mode Toggle - visible on all screen sizes */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
+                  {/* Karaoke Mode Toggle - visible on all screen sizes with label on mobile */}
+                  <div className="relative">
+                    <Tooltip open={showKaraokeHint} onOpenChange={(open) => !open && dismissKaraokeHint()}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={cn(
+                            "h-8 gap-1.5 px-2",
+                            isKaraokeMode
+                              ? "text-primary bg-primary/10"
+                              : "text-muted-foreground hover:text-foreground"
+                          )}
+                          onClick={() => {
+                            dismissKaraokeHint();
+                            toggleKaraokeMode();
+                          }}
+                          disabled={!karaokeReady}
+                        >
+                          {isKaraokeMode ? (
+                            <MicOff className="h-4 w-4" />
+                          ) : (
+                            <Mic2 className="h-4 w-4" />
+                          )}
+                          <span className="text-xs md:hidden">Karaoke</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent 
+                        side="top" 
                         className={cn(
-                          "h-8 w-8",
-                          isKaraokeMode
-                            ? "text-primary bg-primary/10"
-                            : "text-muted-foreground hover:text-foreground"
+                          showKaraokeHint && "bg-primary text-primary-foreground animate-pulse"
                         )}
-                        onClick={toggleKaraokeMode}
-                        disabled={!karaokeReady}
                       >
-                        {isKaraokeMode ? (
-                          <MicOff className="h-4 w-4" />
-                        ) : (
-                          <Mic2 className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p>
-                        {!karaokeReady
-                          ? "Loading sing-along…"
-                          : isKaraokeMode
-                            ? "Switch to original audio"
-                            : "Sing-along mode (instrumental)"}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
+                        <p>
+                          {showKaraokeHint
+                            ? "🎤 Tap to enable sing-along mode!"
+                            : !karaokeReady
+                              ? "Loading sing-along…"
+                              : isKaraokeMode
+                                ? "Switch to original audio"
+                                : "Sing-along mode (instrumental)"}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                 </>
               )}
 

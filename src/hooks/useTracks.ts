@@ -183,10 +183,11 @@ interface UseInfiniteTracksOptions {
   mood?: string;
   searchQuery?: string;
   sortBy?: SortOption;
+  karaokeOnly?: boolean;
 }
 
 export function useInfinitePublishedTracks(options: UseInfiniteTracksOptions = {}) {
-  const { genre, mood, searchQuery, sortBy = "newest" } = options;
+  const { genre, mood, searchQuery, sortBy = "newest", karaokeOnly = false } = options;
 
   return useInfiniteQuery({
     queryKey: ["infinite-tracks", options],
@@ -222,6 +223,10 @@ export function useInfinitePublishedTracks(options: UseInfiniteTracksOptions = {
 
       if (mood && mood !== "All") {
         query = query.contains("moods", [mood]);
+      }
+
+      if (karaokeOnly) {
+        query = query.eq("has_karaoke", true);
       }
 
       if (searchQuery) {

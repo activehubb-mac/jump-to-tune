@@ -6,6 +6,7 @@ interface BrowsePreferences {
   genre: string;
   mood: string;
   sortBy: SortOption;
+  karaokeOnly: boolean;
 }
 
 const STORAGE_KEY = "browse-preferences";
@@ -14,6 +15,7 @@ const defaultPreferences: BrowsePreferences = {
   genre: "All",
   mood: "All",
   sortBy: "newest",
+  karaokeOnly: false,
 };
 
 function loadPreferences(): BrowsePreferences {
@@ -25,6 +27,7 @@ function loadPreferences(): BrowsePreferences {
         genre: parsed.genre || defaultPreferences.genre,
         mood: parsed.mood || defaultPreferences.mood,
         sortBy: parsed.sortBy || defaultPreferences.sortBy,
+        karaokeOnly: parsed.karaokeOnly ?? defaultPreferences.karaokeOnly,
       };
     }
   } catch {
@@ -61,17 +64,22 @@ export function useBrowsePreferences() {
     setPreferencesState((prev) => ({ ...prev, sortBy }));
   }, []);
 
-  const clearFilters = useCallback(() => {
-    setPreferencesState((prev) => ({ ...prev, genre: "All", mood: "All" }));
+  const setKaraokeOnly = useCallback((karaokeOnly: boolean) => {
+    setPreferencesState((prev) => ({ ...prev, karaokeOnly }));
   }, []);
 
-  const hasActiveFilters = preferences.genre !== "All" || preferences.mood !== "All";
+  const clearFilters = useCallback(() => {
+    setPreferencesState((prev) => ({ ...prev, genre: "All", mood: "All", karaokeOnly: false }));
+  }, []);
+
+  const hasActiveFilters = preferences.genre !== "All" || preferences.mood !== "All" || preferences.karaokeOnly;
 
   return {
     ...preferences,
     setGenre,
     setMood,
     setSortBy,
+    setKaraokeOnly,
     clearFilters,
     hasActiveFilters,
   };
