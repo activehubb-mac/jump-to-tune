@@ -19,16 +19,20 @@ import {
   GripVertical,
   ArrowUp,
   ArrowDown,
-  CheckCircle
+  CheckCircle,
+  Music,
+  Album
 } from "lucide-react";
 import { useFeaturedContentAdmin, useAddFeaturedContent, useUpdateFeaturedContent, useRemoveFeaturedContent, FeaturedContentType } from "@/hooks/useFeaturedContent";
 import { useArtists } from "@/hooks/useArtists";
 import { useLabels } from "@/hooks/useLabels";
+import { useTracks } from "@/hooks/useTracks";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { format } from "date-fns";
 
-const DISPLAY_LOCATIONS = {
+const DISPLAY_LOCATIONS: Record<FeaturedContentType, { value: string; label: string }[]> = {
   artist: [
     { value: "artists_page", label: "Artists Page - Featured Section" },
     { value: "home_hero", label: "Home Page - Hero Carousel" },
@@ -37,10 +41,25 @@ const DISPLAY_LOCATIONS = {
     { value: "labels_page", label: "Labels Page - Featured Section" },
     { value: "home_hero", label: "Home Page - Hero Carousel" },
   ],
+  track: [
+    { value: "home_hero", label: "Home Page - Hero Carousel" },
+    { value: "browse_page", label: "Browse Page - Featured Section" },
+  ],
+  album: [
+    { value: "browse_page", label: "Browse Page - Featured Section" },
+    { value: "home_hero", label: "Home Page - Hero Carousel" },
+  ],
 };
 
+const TAB_CONFIG = [
+  { value: "track" as const, label: "Tracks", icon: Music },
+  { value: "artist" as const, label: "Artists", icon: User },
+  { value: "label" as const, label: "Labels", icon: Building2 },
+  { value: "album" as const, label: "Albums", icon: Album },
+];
+
 export default function AdminFeatured() {
-  const [activeTab, setActiveTab] = useState<FeaturedContentType>("artist");
+  const [activeTab, setActiveTab] = useState<FeaturedContentType>("track");
   const [searchQuery, setSearchQuery] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedContentId, setSelectedContentId] = useState<string>("");
@@ -50,13 +69,81 @@ export default function AdminFeatured() {
   const { data: featuredContent, isLoading: featuredLoading } = useFeaturedContentAdmin(activeTab);
   const { data: artists, isLoading: artistsLoading } = useArtists({ searchQuery: searchQuery || undefined });
   const { data: labels, isLoading: labelsLoading } = useLabels({ searchQuery: searchQuery || undefined });
+  const { data: tracks, isLoading: tracksLoading } = useTracks({ 
+    publishedOnly: true, 
+    searchQuery: searchQuery || undefined,
+    limit: 50 
+  });
+  const { data: albums, isLoading: albumsLoading } = useQuery({
+    queryKey: ["admin-albums", searchQuery],
+    queryFn: async () => {
+      let query = supabase
+        .from("albums")
+        .select(`
+          id, title, cover_art_url, release_type,
+          artist:profiles_public!albums_artist_id_fkey(id, display_name)
+        `)
+        .eq("is_draft", false)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (searchQuery) {
+        query = query.ilike("title", `%${searchQuery}%`);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
   
   const addMutation = useAddFeaturedContent();
   const updateMutation = useUpdateFeaturedContent();
   const removeMutation = useRemoveFeaturedContent();
 
-  const contentList = activeTab === "artist" ? artists : labels;
-  const isContentLoading = activeTab === "artist" ? artistsLoading : labelsLoading;
+  // Get content list based on active tab
+  const getContentList = () => {
+    switch (activeTab) {
+      case "artist":
+        return artists?.map(a => ({ 
+          id: a.id, 
+          name: a.display_name || "Unknown", 
+          avatar: a.avatar_url,
+          isVerified: a.is_verified 
+        })) || [];
+      case "label":
+        return labels?.map(l => ({ 
+          id: l.id, 
+          name: l.display_name || "Unknown", 
+          avatar: l.avatar_url,
+          isVerified: l.is_verified 
+        })) || [];
+      case "track":
+        return tracks?.map(t => ({ 
+          id: t.id, 
+          name: t.title, 
+          avatar: t.cover_art_url,
+          subtitle: t.artist?.display_name || "Unknown Artist"
+        })) || [];
+      case "album":
+        return albums?.map(a => ({ 
+          id: a.id, 
+          name: a.title, 
+          avatar: a.cover_art_url,
+          subtitle: a.artist?.[0]?.display_name || "Unknown Artist"
+        })) || [];
+      default:
+        return [];
+    }
+  };
+
+  const isContentLoading = 
+    activeTab === "artist" ? artistsLoading : 
+    activeTab === "label" ? labelsLoading :
+    activeTab === "track" ? tracksLoading :
+    albumsLoading;
+
+  const contentList = getContentList();
 
   // Get already featured IDs to filter them out
   const featuredIds = new Set(featuredContent?.map(f => f.content_id) || []);
@@ -122,19 +209,63 @@ export default function AdminFeatured() {
     }
   };
 
-  const getContentName = (contentId: string) => {
-    if (activeTab === "artist") {
-      return artists?.find(a => a.id === contentId)?.display_name || "Unknown Artist";
+  const getContentName = (contentId: string): string => {
+    switch (activeTab) {
+      case "artist":
+        return artists?.find(a => a.id === contentId)?.display_name || "Unknown Artist";
+      case "label":
+        return labels?.find(l => l.id === contentId)?.display_name || "Unknown Label";
+      case "track":
+        return tracks?.find(t => t.id === contentId)?.title || "Unknown Track";
+      case "album":
+        return albums?.find(a => a.id === contentId)?.title || "Unknown Album";
+      default:
+        return "Unknown";
     }
-    return labels?.find(l => l.id === contentId)?.display_name || "Unknown Label";
   };
 
-  const getContentAvatar = (contentId: string) => {
-    if (activeTab === "artist") {
-      return artists?.find(a => a.id === contentId)?.avatar_url;
+  const getContentSubtitle = (contentId: string): string | null => {
+    switch (activeTab) {
+      case "track":
+        return tracks?.find(t => t.id === contentId)?.artist?.display_name || null;
+      case "album":
+        return albums?.find(a => a.id === contentId)?.artist?.[0]?.display_name || null;
+      default:
+        return null;
     }
-    return labels?.find(l => l.id === contentId)?.avatar_url;
   };
+
+  const getContentAvatar = (contentId: string): string | null | undefined => {
+    switch (activeTab) {
+      case "artist":
+        return artists?.find(a => a.id === contentId)?.avatar_url;
+      case "label":
+        return labels?.find(l => l.id === contentId)?.avatar_url;
+      case "track":
+        return tracks?.find(t => t.id === contentId)?.cover_art_url;
+      case "album":
+        return albums?.find(a => a.id === contentId)?.cover_art_url;
+      default:
+        return null;
+    }
+  };
+
+  const getContentIcon = () => {
+    switch (activeTab) {
+      case "artist":
+        return User;
+      case "label":
+        return Building2;
+      case "track":
+        return Music;
+      case "album":
+        return Album;
+      default:
+        return Music;
+    }
+  };
+
+  const ContentIcon = getContentIcon();
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -145,33 +276,31 @@ export default function AdminFeatured() {
         </div>
         <div className="min-w-0">
           <h2 className="text-lg md:text-xl font-bold">Featured Content</h2>
-          <p className="text-xs md:text-sm text-muted-foreground truncate">Manage featured artists and labels</p>
+          <p className="text-xs md:text-sm text-muted-foreground truncate">Manage featured tracks, artists, labels & albums</p>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FeaturedContentType)}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="artist" className="gap-1.5 flex-1 sm:flex-initial text-xs sm:text-sm">
-              <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              Artists
-            </TabsTrigger>
-            <TabsTrigger value="label" className="gap-1.5 flex-1 sm:flex-initial text-xs sm:text-sm">
-              <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              Labels
-            </TabsTrigger>
+        <div className="flex flex-col gap-3 mb-4">
+          <TabsList className="w-full grid grid-cols-4">
+            {TAB_CONFIG.map(({ value, label, icon: Icon }) => (
+              <TabsTrigger key={value} value={value} className="gap-1 text-xs sm:text-sm px-1 sm:px-3">
+                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">{label}</span>
+              </TabsTrigger>
+            ))}
           </TabsList>
 
           <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2 w-full sm:w-auto" size="sm">
                 <Plus className="w-4 h-4" />
-                Add Featured
+                Add Featured {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-[90vw] sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Add Featured {activeTab === "artist" ? "Artist" : "Label"}</DialogTitle>
+                <DialogTitle>Add Featured {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</DialogTitle>
                 <DialogDescription>
                   Select a {activeTab} to feature on the platform
                 </DialogDescription>
@@ -195,7 +324,7 @@ export default function AdminFeatured() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Search {activeTab === "artist" ? "Artists" : "Labels"}</Label>
+                  <Label>Search {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}s</Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
@@ -212,7 +341,7 @@ export default function AdminFeatured() {
                     <div className="flex justify-center py-4">
                       <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                     </div>
-                  ) : contentList && contentList.length > 0 ? (
+                  ) : contentList.length > 0 ? (
                     contentList
                       .filter(c => !featuredIds.has(c.id))
                       .map((content) => (
@@ -225,22 +354,23 @@ export default function AdminFeatured() {
                               : "hover:bg-muted"
                           }`}
                         >
-                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                            {content.avatar_url ? (
-                              <img src={content.avatar_url} alt="" className="w-full h-full object-cover" />
-                            ) : activeTab === "artist" ? (
-                              <User className="w-5 h-5 text-muted-foreground" />
+                          <div className={`w-10 h-10 ${activeTab === "artist" || activeTab === "label" ? "rounded-full" : "rounded-lg"} bg-muted flex items-center justify-center overflow-hidden shrink-0`}>
+                            {content.avatar ? (
+                              <img src={content.avatar} alt="" className="w-full h-full object-cover" />
                             ) : (
-                              <Building2 className="w-5 h-5 text-muted-foreground" />
+                              <ContentIcon className="w-5 h-5 text-muted-foreground" />
                             )}
                           </div>
                           <div className="flex-1 text-left min-w-0">
                             <div className="flex items-center gap-1">
-                              <span className="font-medium truncate">{content.display_name || "Unknown"}</span>
-                              {content.is_verified && (
+                              <span className="font-medium truncate">{content.name}</span>
+                              {"isVerified" in content && content.isVerified && (
                                 <CheckCircle className="w-3.5 h-3.5 text-primary shrink-0" />
                               )}
                             </div>
+                            {"subtitle" in content && content.subtitle && (
+                              <span className="text-xs text-muted-foreground truncate block">{content.subtitle}</span>
+                            )}
                           </div>
                           {selectedContentId === content.id && (
                             <CheckCircle className="w-5 h-5 text-primary shrink-0" />
@@ -272,31 +402,21 @@ export default function AdminFeatured() {
           </Dialog>
         </div>
 
-        <TabsContent value="artist" className="mt-0">
-          <FeaturedList
-            items={featuredContent || []}
-            isLoading={featuredLoading}
-            onToggleActive={handleToggleActive}
-            onRemove={handleRemove}
-            onMovePriority={handleMovePriority}
-            getContentName={getContentName}
-            getContentAvatar={getContentAvatar}
-            contentType="artist"
-          />
-        </TabsContent>
-
-        <TabsContent value="label" className="mt-0">
-          <FeaturedList
-            items={featuredContent || []}
-            isLoading={featuredLoading}
-            onToggleActive={handleToggleActive}
-            onRemove={handleRemove}
-            onMovePriority={handleMovePriority}
-            getContentName={getContentName}
-            getContentAvatar={getContentAvatar}
-            contentType="label"
-          />
-        </TabsContent>
+        {TAB_CONFIG.map(({ value }) => (
+          <TabsContent key={value} value={value} className="mt-0">
+            <FeaturedList
+              items={featuredContent || []}
+              isLoading={featuredLoading}
+              onToggleActive={handleToggleActive}
+              onRemove={handleRemove}
+              onMovePriority={handleMovePriority}
+              getContentName={getContentName}
+              getContentSubtitle={getContentSubtitle}
+              getContentAvatar={getContentAvatar}
+              contentType={value}
+            />
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );
@@ -317,8 +437,9 @@ interface FeaturedListProps {
   onRemove: (id: string) => void;
   onMovePriority: (id: string, direction: "up" | "down") => void;
   getContentName: (id: string) => string;
+  getContentSubtitle: (id: string) => string | null;
   getContentAvatar: (id: string) => string | null | undefined;
-  contentType: "artist" | "label";
+  contentType: FeaturedContentType;
 }
 
 function FeaturedList({
@@ -328,6 +449,7 @@ function FeaturedList({
   onRemove,
   onMovePriority,
   getContentName,
+  getContentSubtitle,
   getContentAvatar,
   contentType,
 }: FeaturedListProps) {
@@ -355,109 +477,129 @@ function FeaturedList({
     artists_page: "Artists Page",
     labels_page: "Labels Page",
     home_hero: "Home Hero",
+    browse_page: "Browse Page",
   };
+
+  const getIcon = () => {
+    switch (contentType) {
+      case "artist":
+        return User;
+      case "label":
+        return Building2;
+      case "track":
+        return Music;
+      case "album":
+        return Album;
+      default:
+        return Music;
+    }
+  };
+
+  const ContentIcon = getIcon();
+  const isRounded = contentType === "artist" || contentType === "label";
 
   return (
     <div className="space-y-2 md:space-y-3">
-      {items.map((item, index) => (
-        <Card key={item.id} className={!item.is_active ? "opacity-60" : ""}>
-          <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 md:p-4">
-            {/* Reorder Controls - Hidden on mobile, shown on tablet+ */}
-            <div className="hidden sm:flex flex-col gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                disabled={index === 0}
-                onClick={() => onMovePriority(item.id, "up")}
-              >
-                <ArrowUp className="w-3 h-3" />
-              </Button>
-              <GripVertical className="w-4 h-4 text-muted-foreground mx-auto" />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                disabled={index === items.length - 1}
-                onClick={() => onMovePriority(item.id, "down")}
-              >
-                <ArrowDown className="w-3 h-3" />
-              </Button>
-            </div>
-
-            {/* Content Info */}
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                {getContentAvatar(item.content_id) ? (
-                  <img src={getContentAvatar(item.content_id)!} alt="" className="w-full h-full object-cover" />
-                ) : contentType === "artist" ? (
-                  <User className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground" />
-                ) : (
-                  <Building2 className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground" />
-                )}
-              </div>
-
-              <div className="min-w-0 flex-1">
-                <h4 className="font-semibold text-sm md:text-base truncate">{getContentName(item.content_id)}</h4>
-                <div className="flex items-center gap-2 flex-wrap mt-1">
-                  <Badge variant="secondary" className="text-xs">
-                    {locationLabels[item.display_location] || item.display_location}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground hidden xs:inline">
-                    #{item.priority}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-2 sm:gap-3 justify-between sm:justify-end mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0">
-              {/* Mobile reorder buttons */}
-              <div className="flex items-center gap-1 sm:hidden">
+      {items.map((item, index) => {
+        const subtitle = getContentSubtitle(item.content_id);
+        return (
+          <Card key={item.id} className={!item.is_active ? "opacity-60" : ""}>
+            <CardContent className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 md:p-4">
+              {/* Reorder Controls - Hidden on mobile, shown on tablet+ */}
+              <div className="hidden sm:flex flex-col gap-1">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-6 w-6"
                   disabled={index === 0}
                   onClick={() => onMovePriority(item.id, "up")}
                 >
-                  <ArrowUp className="w-4 h-4" />
+                  <ArrowUp className="w-3 h-3" />
                 </Button>
+                <GripVertical className="w-4 h-4 text-muted-foreground mx-auto" />
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-6 w-6"
                   disabled={index === items.length - 1}
                   onClick={() => onMovePriority(item.id, "down")}
                 >
-                  <ArrowDown className="w-4 h-4" />
+                  <ArrowDown className="w-3 h-3" />
                 </Button>
               </div>
 
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor={`active-${item.id}`} className="text-xs md:text-sm text-muted-foreground">
-                    Active
-                  </Label>
-                  <Switch
-                    id={`active-${item.id}`}
-                    checked={item.is_active}
-                    onCheckedChange={() => onToggleActive(item.id, item.is_active)}
-                  />
+              {/* Content Info */}
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className={`w-10 h-10 md:w-12 md:h-12 ${isRounded ? "rounded-full" : "rounded-lg"} bg-muted flex items-center justify-center overflow-hidden shrink-0`}>
+                  {getContentAvatar(item.content_id) ? (
+                    <img src={getContentAvatar(item.content_id)!} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <ContentIcon className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground" />
+                  )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => onRemove(item.id)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-semibold text-sm md:text-base truncate">{getContentName(item.content_id)}</h4>
+                  {subtitle && (
+                    <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
+                  )}
+                  <div className="flex items-center gap-2 flex-wrap mt-1">
+                    <Badge variant="secondary" className="text-xs">
+                      {locationLabels[item.display_location] || item.display_location}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground hidden xs:inline">
+                      #{item.priority}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 sm:gap-3 justify-between sm:justify-end mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0">
+                {/* Mobile reorder buttons */}
+                <div className="flex items-center gap-1 sm:hidden">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    disabled={index === 0}
+                    onClick={() => onMovePriority(item.id, "up")}
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    disabled={index === items.length - 1}
+                    onClick={() => onMovePriority(item.id, "down")}
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground hidden sm:inline">Active</span>
+                    <Switch
+                      checked={item.is_active}
+                      onCheckedChange={() => onToggleActive(item.id, item.is_active)}
+                    />
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => onRemove(item.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }
