@@ -47,3 +47,15 @@ export function formatCompactNumber(num: number): string {
   }
   return num.toString();
 }
+
+/**
+ * Format duration in seconds to mm:ss format
+ * @param seconds - Duration in seconds
+ * @returns Formatted duration string (e.g., "3:45")
+ */
+export function formatDuration(seconds: number): string {
+  if (!seconds || seconds <= 0) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}

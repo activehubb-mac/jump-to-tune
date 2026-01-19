@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Lock, Loader2, AlertCircle, Save, Rocket, UserCircle } from "lucide-react";
+import { Lock, Loader2, AlertCircle, Save, Rocket, UserCircle, Disc3 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -277,7 +277,15 @@ export default function Upload() {
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Upload Track</h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-4xl font-bold text-foreground">Upload Track</h1>
+            <Button variant="outline" asChild className="border-glass-border">
+              <Link to="/upload/album">
+                <Disc3 className="w-4 h-4 mr-2" />
+                Upload Album/EP
+              </Link>
+            </Button>
+          </div>
           <p className="text-muted-foreground">Share your music with the world</p>
         </div>
 
