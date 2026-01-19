@@ -70,18 +70,18 @@ export default function AdminFinance() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 px-4 md:px-6">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Total Sales
             </CardTitle>
             <DollarSign className="w-4 h-4 text-green-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${totalPurchases.toFixed(2)}</div>
+          <CardContent className="px-4 md:px-6">
+            <div className="text-xl md:text-2xl font-bold">${totalPurchases.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
               {purchases?.length || 0} transactions
             </p>
@@ -89,14 +89,14 @@ export default function AdminFinance() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 px-4 md:px-6">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Pending Payouts
             </CardTitle>
             <Clock className="w-4 h-4 text-yellow-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${(totalPending / 100).toFixed(2)}</div>
+          <CardContent className="px-4 md:px-6">
+            <div className="text-xl md:text-2xl font-bold">${(totalPending / 100).toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
               {earnings?.filter(e => e.status === 'pending').length || 0} pending
             </p>
@@ -104,14 +104,14 @@ export default function AdminFinance() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 px-4 md:px-6">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Paid Out
             </CardTitle>
             <ArrowUpRight className="w-4 h-4 text-primary" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${(totalPaid / 100).toFixed(2)}</div>
+          <CardContent className="px-4 md:px-6">
+            <div className="text-xl md:text-2xl font-bold">${(totalPaid / 100).toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
               {earnings?.filter(e => e.status === 'paid').length || 0} completed
             </p>
@@ -121,32 +121,32 @@ export default function AdminFinance() {
 
       {/* Tabs for different views */}
       <Tabs defaultValue="purchases" className="w-full">
-        <TabsList>
-          <TabsTrigger value="purchases">Purchases</TabsTrigger>
-          <TabsTrigger value="earnings">Artist Earnings</TabsTrigger>
-          <TabsTrigger value="credits">Credit Transactions</TabsTrigger>
+        <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex">
+          <TabsTrigger value="purchases" className="text-xs md:text-sm">Purchases</TabsTrigger>
+          <TabsTrigger value="earnings" className="text-xs md:text-sm">Earnings</TabsTrigger>
+          <TabsTrigger value="credits" className="text-xs md:text-sm">Credits</TabsTrigger>
         </TabsList>
 
         <TabsContent value="purchases" className="mt-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Recent Purchases</CardTitle>
+            <CardHeader className="px-4 md:px-6">
+              <CardTitle className="text-base md:text-lg">Recent Purchases</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 md:px-6">
               <div className="space-y-2">
                 {purchases?.map((purchase) => (
                   <div
                     key={purchase.id}
                     className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
                   >
-                    <div>
-                      <p className="text-sm font-mono">{purchase.id.slice(0, 8)}...</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm font-mono truncate">{purchase.id.slice(0, 8)}...</p>
                       <p className="text-xs text-muted-foreground">
                         Edition #{purchase.edition_number}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium">
+                    <div className="text-right shrink-0 ml-3">
+                      <p className="font-medium text-sm md:text-base">
                         ${(Number(purchase.price_paid) + Number(purchase.tip_amount || 0)).toFixed(2)}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -165,31 +165,30 @@ export default function AdminFinance() {
 
         <TabsContent value="earnings" className="mt-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Artist Earnings</CardTitle>
+            <CardHeader className="px-4 md:px-6">
+              <CardTitle className="text-base md:text-lg">Artist Earnings</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 md:px-6">
               <div className="space-y-2">
                 {earnings?.map((earning) => (
                   <div
                     key={earning.id}
                     className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
                   >
-                    <div>
-                      <p className="text-sm font-mono">{earning.artist_id.slice(0, 8)}...</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge 
-                          variant={
-                            earning.status === 'paid' ? 'default' : 
-                            earning.status === 'pending' ? 'secondary' : 'destructive'
-                          }
-                        >
-                          {earning.status}
-                        </Badge>
-                      </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs md:text-sm font-mono truncate">{earning.artist_id.slice(0, 8)}...</p>
+                      <Badge 
+                        variant={
+                          earning.status === 'paid' ? 'default' : 
+                          earning.status === 'pending' ? 'secondary' : 'destructive'
+                        }
+                        className="mt-1 text-xs"
+                      >
+                        {earning.status}
+                      </Badge>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium">
+                    <div className="text-right shrink-0 ml-3">
+                      <p className="font-medium text-sm md:text-base">
                         ${(earning.artist_payout_cents / 100).toFixed(2)}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -208,31 +207,31 @@ export default function AdminFinance() {
 
         <TabsContent value="credits" className="mt-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Credit Transactions</CardTitle>
+            <CardHeader className="px-4 md:px-6">
+              <CardTitle className="text-base md:text-lg">Credit Transactions</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 md:px-6">
               <div className="space-y-2">
                 {transactions?.map((tx) => (
                   <div
                     key={tx.id}
                     className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                       {tx.type === 'purchase' ? (
-                        <ArrowUpRight className="w-4 h-4 text-green-500" />
+                        <ArrowUpRight className="w-4 h-4 text-green-500 shrink-0" />
                       ) : (
-                        <ArrowDownRight className="w-4 h-4 text-red-500" />
+                        <ArrowDownRight className="w-4 h-4 text-red-500 shrink-0" />
                       )}
-                      <div>
-                        <p className="text-sm">{tx.description}</p>
+                      <div className="min-w-0">
+                        <p className="text-xs md:text-sm truncate">{tx.description}</p>
                         <p className="text-xs text-muted-foreground">
                           {new Date(tx.created_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className={`font-medium ${tx.type === 'purchase' ? 'text-green-500' : 'text-red-500'}`}>
+                    <div className="text-right shrink-0 ml-3">
+                      <p className={`font-medium text-sm md:text-base ${tx.type === 'purchase' ? 'text-green-500' : 'text-red-500'}`}>
                         {tx.type === 'purchase' ? '+' : '-'}${(tx.amount_cents / 100).toFixed(2)}
                       </p>
                       <Badge variant="outline" className="text-xs">

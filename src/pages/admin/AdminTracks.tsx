@@ -102,12 +102,12 @@ export default function AdminTracks() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Search */}
-      <div className="relative max-w-md">
+      <div className="relative w-full md:max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Search tracks by title or ID..."
+          placeholder="Search tracks..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10"
@@ -116,21 +116,22 @@ export default function AdminTracks() {
 
       {/* Tracks List */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center justify-between">
+        <CardHeader className="px-4 md:px-6">
+          <CardTitle className="text-base md:text-lg flex items-center justify-between">
             <span>All Tracks</span>
-            <Badge variant="outline">{filteredTracks?.length || 0} tracks</Badge>
+            <Badge variant="outline">{filteredTracks?.length || 0}</Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-3 md:px-6">
           <div className="space-y-2">
             {filteredTracks?.map((track) => (
               <div
                 key={track.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-muted overflow-hidden flex-shrink-0">
+                {/* Track Info */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-muted overflow-hidden flex-shrink-0">
                     {track.cover_art_url ? (
                       <img
                         src={track.cover_art_url}
@@ -139,33 +140,37 @@ export default function AdminTracks() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Music className="w-5 h-5 text-muted-foreground" />
+                        <Music className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
                       </div>
                     )}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{track.title}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-medium text-sm md:text-base truncate max-w-[150px] sm:max-w-none">
+                        {track.title}
+                      </span>
                       {track.is_explicit && (
-                        <Badge variant="outline" className="text-xs">E</Badge>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">E</Badge>
                       )}
                       {track.is_draft && (
-                        <Badge variant="secondary" className="text-xs">Draft</Badge>
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Draft</Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                       <span>${Number(track.price).toFixed(2)}</span>
                       <span>•</span>
-                      <span>{track.editions_sold}/{track.total_editions} sold</span>
+                      <span>{track.editions_sold}/{track.total_editions}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                {/* Actions */}
+                <div className="flex items-center gap-2 ml-auto">
                   {/* Toggle Visibility */}
                   <Button
                     variant="outline"
                     size="sm"
+                    className="h-8 text-xs"
                     onClick={() => toggleDraftMutation.mutate({ 
                       trackId: track.id, 
                       isDraft: !track.is_draft 
@@ -174,12 +179,12 @@ export default function AdminTracks() {
                     {track.is_draft ? (
                       <>
                         <Eye className="w-3 h-3 mr-1" />
-                        Publish
+                        <span className="hidden xs:inline">Publish</span>
                       </>
                     ) : (
                       <>
                         <EyeOff className="w-3 h-3 mr-1" />
-                        Hide
+                        <span className="hidden xs:inline">Hide</span>
                       </>
                     )}
                   </Button>
@@ -187,11 +192,11 @@ export default function AdminTracks() {
                   {/* Delete */}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm">
-                        <Trash2 className="w-3 h-3" />
+                      <Button variant="destructive" size="sm" className="h-8 w-8 p-0">
+                        <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="max-w-[90vw] sm:max-w-lg">
                       <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2">
                           <AlertTriangle className="w-5 h-5 text-destructive" />
@@ -199,7 +204,6 @@ export default function AdminTracks() {
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                           Are you sure you want to delete "{track.title}"? This action cannot be undone.
-                          All associated purchases and earnings records will also be affected.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -208,7 +212,7 @@ export default function AdminTracks() {
                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                           onClick={() => deleteMutation.mutate(track.id)}
                         >
-                          Delete Track
+                          Delete
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>

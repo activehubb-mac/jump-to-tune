@@ -12,14 +12,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -87,65 +79,65 @@ export default function AdminReports() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pending Reports
+          <CardHeader className="pb-2 px-3 md:px-6">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
+              Pending
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-500">{pendingCount}</div>
+          <CardContent className="px-3 md:px-6">
+            <div className="text-xl md:text-2xl font-bold text-yellow-500">{pendingCount}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Reports
+          <CardHeader className="pb-2 px-3 md:px-6">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
+              Total
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{reports?.length || 0}</div>
+          <CardContent className="px-3 md:px-6">
+            <div className="text-xl md:text-2xl font-bold">{reports?.length || 0}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Track Reports
+          <CardHeader className="pb-2 px-3 md:px-6">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
+              Tracks
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="px-3 md:px-6">
+            <div className="text-xl md:text-2xl font-bold">
               {reports?.filter((r) => r.reported_type === 'track').length || 0}
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              User Reports
+          <CardHeader className="pb-2 px-3 md:px-6">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
+              Users
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="px-3 md:px-6">
+            <div className="text-xl md:text-2xl font-bold">
               {reports?.filter((r) => r.reported_type === 'user').length || 0}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Reports Table */}
+      {/* Reports List */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Flag className="w-5 h-5" />
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 md:px-6">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Flag className="w-4 h-4 md:w-5 md:h-5" />
             Reports
           </CardTitle>
           <Select value={filter} onValueChange={(v) => setFilter(v as any)}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Filter by status" />
+            <SelectTrigger className="w-full sm:w-[150px]">
+              <SelectValue placeholder="Filter" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
@@ -156,66 +148,61 @@ export default function AdminReports() {
             </SelectContent>
           </Select>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-3 md:px-6">
           {filteredReports && filteredReports.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Reported</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredReports.map((report) => (
-                  <TableRow key={report.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {report.reported_type === 'track' ? (
-                          <Music className="w-4 h-4 text-muted-foreground" />
-                        ) : (
-                          <User className="w-4 h-4 text-muted-foreground" />
-                        )}
-                        <span className="capitalize">{report.reported_type}</span>
+            <div className="space-y-2">
+              {filteredReports.map((report) => (
+                <div
+                  key={report.id}
+                  className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg bg-muted/30"
+                >
+                  {/* Report Info */}
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                      {report.reported_type === 'track' ? (
+                        <Music className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <User className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium capitalize">{report.reported_type}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {REASON_LABELS[report.reason] || report.reason}
+                        </Badge>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {REASON_LABELS[report.reason] || report.reason}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={STATUS_COLORS[report.status]}>
-                        {report.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDistanceToNow(new Date(report.created_at), { addSuffix: true })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenReport(report)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteReport(report.id)}
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {formatDistanceToNow(new Date(report.created_at), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Status & Actions */}
+                  <div className="flex items-center gap-2 ml-auto">
+                    <Badge className={`${STATUS_COLORS[report.status]} text-xs`}>
+                      {report.status}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleOpenReport(report)}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleDeleteReport(report.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               <Flag className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -227,7 +214,7 @@ export default function AdminReports() {
 
       {/* Report Detail Dialog */}
       <Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="max-w-[90vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Review Report</DialogTitle>
           </DialogHeader>
@@ -244,11 +231,11 @@ export default function AdminReports() {
                 </div>
                 <div>
                   <p className="text-muted-foreground">Reported ID</p>
-                  <p className="font-mono text-xs">{selectedReport.reported_id}</p>
+                  <p className="font-mono text-xs truncate">{selectedReport.reported_id}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Reporter ID</p>
-                  <p className="font-mono text-xs">{selectedReport.reporter_id}</p>
+                  <p className="font-mono text-xs truncate">{selectedReport.reporter_id}</p>
                 </div>
               </div>
 
@@ -291,10 +278,8 @@ export default function AdminReports() {
                   Cancel
                 </Button>
                 <Button onClick={handleUpdateReport} disabled={updateReport.isPending}>
-                  {updateReport.isPending ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : null}
-                  Save Changes
+                  {updateReport.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Save
                 </Button>
               </div>
             </div>

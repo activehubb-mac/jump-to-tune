@@ -183,20 +183,20 @@ export default function AdminAnalytics() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* User Growth Chart */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-medium flex items-center gap-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 px-4 md:px-6">
+            <CardTitle className="text-sm md:text-base font-medium flex items-center gap-2">
               <Users className="w-4 h-4 text-primary" />
-              User Growth (30 days)
+              <span className="truncate">User Growth (30d)</span>
             </CardTitle>
-            <TrendingUp className="w-4 h-4 text-muted-foreground" />
+            <TrendingUp className="w-4 h-4 text-muted-foreground shrink-0" />
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[250px] w-full">
+          <CardContent className="px-2 md:px-6">
+            <ChartContainer config={chartConfig} className="h-[200px] md:h-[250px] w-full">
               <AreaChart data={userGrowth}>
                 <defs>
                   <linearGradient id="userGradient" x1="0" y1="0" x2="0" y2="1">
@@ -206,12 +206,13 @@ export default function AdminAnalytics() {
                 </defs>
                 <XAxis
                   dataKey="date"
-                  fontSize={12}
+                  fontSize={10}
                   tickLine={false}
                   axisLine={false}
                   interval="preserveStartEnd"
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
                 />
-                <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis fontSize={10} tickLine={false} axisLine={false} width={30} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Area
                   type="monotone"
@@ -227,15 +228,15 @@ export default function AdminAnalytics() {
 
         {/* Revenue Chart */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-medium flex items-center gap-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 px-4 md:px-6">
+            <CardTitle className="text-sm md:text-base font-medium flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-green-500" />
-              Revenue (30 days)
+              <span className="truncate">Revenue (30d)</span>
             </CardTitle>
-            <TrendingUp className="w-4 h-4 text-muted-foreground" />
+            <TrendingUp className="w-4 h-4 text-muted-foreground shrink-0" />
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[250px] w-full">
+          <CardContent className="px-2 md:px-6">
+            <ChartContainer config={chartConfig} className="h-[200px] md:h-[250px] w-full">
               <AreaChart data={revenueData}>
                 <defs>
                   <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
@@ -245,16 +246,18 @@ export default function AdminAnalytics() {
                 </defs>
                 <XAxis
                   dataKey="date"
-                  fontSize={12}
+                  fontSize={10}
                   tickLine={false}
                   axisLine={false}
                   interval="preserveStartEnd"
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
                 />
                 <YAxis
-                  fontSize={12}
+                  fontSize={10}
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={(v) => `$${v}`}
+                  width={40}
                 />
                 <ChartTooltip
                   content={<ChartTooltipContent formatter={(v) => `$${v}`} />}
@@ -273,23 +276,24 @@ export default function AdminAnalytics() {
 
         {/* Track Uploads Chart */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-medium flex items-center gap-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 px-4 md:px-6">
+            <CardTitle className="text-sm md:text-base font-medium flex items-center gap-2">
               <Music className="w-4 h-4 text-purple-500" />
-              Track Uploads (30 days)
+              <span className="truncate">Track Uploads (30d)</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[250px] w-full">
+          <CardContent className="px-2 md:px-6">
+            <ChartContainer config={chartConfig} className="h-[200px] md:h-[250px] w-full">
               <BarChart data={trackData}>
                 <XAxis
                   dataKey="date"
-                  fontSize={12}
+                  fontSize={10}
                   tickLine={false}
                   axisLine={false}
                   interval="preserveStartEnd"
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
                 />
-                <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis fontSize={10} tickLine={false} axisLine={false} width={30} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar
                   dataKey="tracks"
@@ -303,23 +307,24 @@ export default function AdminAnalytics() {
 
         {/* Activity Chart */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-medium flex items-center gap-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 px-4 md:px-6">
+            <CardTitle className="text-sm md:text-base font-medium flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-orange-500" />
-              User Activity (30 days)
+              <span className="truncate">User Activity (30d)</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[250px] w-full">
+          <CardContent className="px-2 md:px-6">
+            <ChartContainer config={chartConfig} className="h-[200px] md:h-[250px] w-full">
               <LineChart data={activityData}>
                 <XAxis
                   dataKey="date"
-                  fontSize={12}
+                  fontSize={10}
                   tickLine={false}
                   axisLine={false}
                   interval="preserveStartEnd"
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
                 />
-                <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis fontSize={10} tickLine={false} axisLine={false} width={30} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Line
                   type="monotone"
