@@ -28,6 +28,7 @@ interface Track {
     id: string;
     display_name: string | null;
     avatar_url: string | null;
+    is_verified: boolean | null;
   } | null;
   featuredArtists?: FeaturedArtist[];
 }
@@ -117,7 +118,7 @@ export function useTracks(options: UseTracksOptions = {}) {
       const [artistsResult, featuresResult] = await Promise.all([
         supabase
           .from("profiles_public")
-          .select("id, display_name, avatar_url")
+          .select("id, display_name, avatar_url, is_verified")
           .in("id", artistIds),
         supabase
           .from("track_features")
@@ -248,7 +249,7 @@ export function useInfinitePublishedTracks(options: UseInfiniteTracksOptions = {
       const [artistsResult, featuresResult] = await Promise.all([
         supabase
           .from("profiles_public")
-          .select("id, display_name, avatar_url")
+          .select("id, display_name, avatar_url, is_verified")
           .in("id", artistIds),
         supabase
           .from("track_features")
