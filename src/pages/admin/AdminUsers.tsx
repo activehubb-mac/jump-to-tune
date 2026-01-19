@@ -190,73 +190,76 @@ export default function AdminUsers() {
       </div>
 
       {/* Users List */}
-      <Card>
-        <CardHeader className="px-4 md:px-6">
+      <Card className="overflow-hidden">
+        <CardHeader className="px-4 md:px-6 pb-3">
           <CardTitle className="text-base md:text-lg flex items-center justify-between">
             <span>All Users</span>
-            <Badge variant="outline">{filteredUsers?.length || 0}</Badge>
+            <Badge variant="outline" className="text-xs">{filteredUsers?.length || 0} users</Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-3 md:px-6">
+        <CardContent className="px-2 sm:px-4 md:px-6">
           <div className="space-y-2">
             {filteredUsers?.map((user) => (
               <div
                 key={user.id}
-                className="flex flex-col gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors overflow-hidden"
+                className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
               >
-                {/* User Info Row */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <Avatar className="w-9 h-9 shrink-0">
+                {/* Mobile: Stacked Layout */}
+                <div className="flex items-start gap-3">
+                  <Avatar className="w-10 h-10 shrink-0">
                     <AvatarImage src={user.avatar_url || undefined} />
-                    <AvatarFallback>
+                    <AvatarFallback className="text-sm">
                       {user.display_name?.[0]?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium truncate text-sm">
-                        {user.display_name || 'Unnamed User'}
-                      </span>
-                      {user.is_verified && (
-                        <CheckCircle className="w-3.5 h-3.5 text-primary shrink-0" />
-                      )}
+                  
+                  <div className="flex-1 min-w-0 space-y-2">
+                    {/* Name & ID */}
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium text-sm truncate max-w-[120px] sm:max-w-none">
+                          {user.display_name || 'Unnamed'}
+                        </span>
+                        {user.is_verified && (
+                          <CheckCircle className="w-3.5 h-3.5 text-primary shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground font-mono">
+                        {user.id.slice(0, 8)}...
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground font-mono truncate">
-                      {user.id.slice(0, 8)}...
-                    </p>
-                  </div>
-                </div>
-
-                {/* Badges & Actions Row */}
-                <div className="flex items-center justify-between gap-2">
-                  {/* Role Badges */}
-                  <div className="flex items-center gap-1 flex-wrap">
-                    <Badge variant={getRoleBadgeVariant(user.role) as any} className="text-xs">
-                      <span className="flex items-center gap-1">
-                        {getRoleIcon(user.role)}
-                        <span>{user.role || 'fan'}</span>
-                      </span>
-                    </Badge>
-                    {user.isAdmin && (
-                      <Badge variant="destructive" className="text-xs">
+                    
+                    {/* Role Badges */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Badge 
+                        variant={getRoleBadgeVariant(user.role) as any} 
+                        className="text-[10px] px-1.5 py-0.5 h-5"
+                      >
                         <span className="flex items-center gap-1">
-                          <ShieldCheck className="w-3 h-3" />
-                          <span>admin</span>
+                          {getRoleIcon(user.role)}
+                          {user.role || 'fan'}
                         </span>
                       </Badge>
-                    )}
+                      {user.isAdmin && (
+                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 h-5">
+                          <span className="flex items-center gap-1">
+                            <ShieldCheck className="w-2.5 h-2.5" />
+                            admin
+                          </span>
+                        </Badge>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {/* Admin Toggle */}
+                  {/* Action Buttons - Right aligned */}
+                  <div className="flex flex-col gap-1.5 shrink-0">
                     {user.id !== currentUser?.id && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button
                             variant={user.isAdmin ? "outline" : "destructive"}
-                            size="sm"
-                            className="h-7 text-xs px-2"
+                            size="icon"
+                            className="h-7 w-7"
                           >
                             {user.isAdmin ? (
                               <ShieldOff className="w-3.5 h-3.5" />
@@ -265,39 +268,39 @@ export default function AdminUsers() {
                             )}
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent className="max-w-[90vw] sm:max-w-lg">
+                        <AlertDialogContent className="mx-4 max-w-[calc(100vw-2rem)] sm:max-w-lg">
                           <AlertDialogHeader>
-                            <AlertDialogTitle>
+                            <AlertDialogTitle className="text-base">
                               {user.isAdmin ? 'Remove Admin Access' : 'Grant Admin Access'}
                             </AlertDialogTitle>
-                            <AlertDialogDescription>
+                            <AlertDialogDescription className="text-sm">
                               {user.isAdmin
-                                ? `Remove admin privileges from ${user.display_name || 'this user'}? They will lose access to the admin dashboard.`
-                                : `Grant admin privileges to ${user.display_name || 'this user'}? They will have full access to the admin dashboard.`}
+                                ? `Remove admin privileges from ${user.display_name || 'this user'}?`
+                                : `Grant admin privileges to ${user.display_name || 'this user'}?`}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                            <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
                             <AlertDialogAction
+                              className="w-full sm:w-auto"
                               onClick={() => user.isAdmin 
                                 ? removeAdminMutation.mutate(user.id)
                                 : promoteToAdminMutation.mutate(user.id)
                               }
                             >
-                              {user.isAdmin ? 'Remove Admin' : 'Make Admin'}
+                              {user.isAdmin ? 'Remove' : 'Make Admin'}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
                     )}
 
-                    {/* Verify Toggle */}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
                           variant={user.is_verified ? "outline" : "default"}
-                          size="sm"
-                          className="h-7 text-xs px-2"
+                          size="icon"
+                          className="h-7 w-7"
                         >
                           {user.is_verified ? (
                             <XCircle className="w-3.5 h-3.5" />
@@ -306,20 +309,21 @@ export default function AdminUsers() {
                           )}
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="max-w-[90vw] sm:max-w-lg">
+                      <AlertDialogContent className="mx-4 max-w-[calc(100vw-2rem)] sm:max-w-lg">
                         <AlertDialogHeader>
-                          <AlertDialogTitle>
+                          <AlertDialogTitle className="text-base">
                             {user.is_verified ? 'Remove Verification' : 'Verify User'}
                           </AlertDialogTitle>
-                          <AlertDialogDescription>
+                          <AlertDialogDescription className="text-sm">
                             {user.is_verified
-                              ? `Remove verification badge from ${user.display_name || 'this user'}?`
-                              : `Grant verification badge to ${user.display_name || 'this user'}?`}
+                              ? `Remove verification from ${user.display_name || 'this user'}?`
+                              : `Verify ${user.display_name || 'this user'}?`}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                          <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
                           <AlertDialogAction
+                            className="w-full sm:w-auto"
                             onClick={() => verifyMutation.mutate({ 
                               userId: user.id, 
                               verified: !user.is_verified 
@@ -336,7 +340,7 @@ export default function AdminUsers() {
             ))}
 
             {filteredUsers?.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">
+              <p className="text-center text-muted-foreground py-8 text-sm">
                 No users found
               </p>
             )}
