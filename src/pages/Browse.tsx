@@ -4,7 +4,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock, X, Mic2, Album } from "lucide-react";
+import { Search, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock, X, Mic2, Album, Star } from "lucide-react";
 import { TrackCardSkeletonGrid } from "@/components/dashboard/TrackCardSkeleton";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { RecentlyViewedSection } from "@/components/browse/RecentlyViewedSection";
@@ -29,6 +29,7 @@ import { usePurchases } from "@/hooks/usePurchases";
 import { TrackDetailModal } from "@/components/dashboard/TrackDetailModal";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useFeaturedAlbums } from "@/hooks/useFeaturedContent";
 
 const genres = ["All", "Electronic", "Hip Hop", "R&B", "Pop", "Rock", "Jazz", "Classical", "Indie"];
 const moods = ["All", "Chill", "Energetic", "Dark", "Uplifting", "Melancholic", "Romantic", "Aggressive", "Dreamy", "Funky"];
@@ -42,6 +43,81 @@ const sortOptions: { value: SortOption; label: string }[] = [
   { value: "price_low", label: "Price: Low to High" },
   { value: "price_high", label: "Price: High to Low" },
 ];
+
+// Featured Albums Section Component
+function FeaturedAlbumsSection() {
+  const { data: featuredAlbums, isLoading } = useFeaturedAlbums("browse_page");
+
+  if (isLoading) {
+    return (
+      <div className="mb-12">
+        <div className="flex justify-center py-8">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!featuredAlbums || featuredAlbums.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mb-12">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Star className="w-6 h-6 text-accent" />
+            Featured Albums
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">Handpicked releases you'll love</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        {featuredAlbums.slice(0, 5).map((item) => (
+          <Link
+            key={item.id}
+            to={`/album/${item.content_id}`}
+            className="glass-card group hover:bg-primary/10 transition-all duration-300 overflow-hidden"
+          >
+            <div className="aspect-square relative overflow-hidden">
+              {item.album?.cover_art_url ? (
+                <img
+                  src={item.album.cover_art_url}
+                  alt={item.album.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              ) : (
+                <div className="w-full h-full bg-muted/50 flex items-center justify-center">
+                  <Album className="w-12 h-12 text-muted-foreground" />
+                </div>
+              )}
+              <div className="absolute top-2 left-2">
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-accent/90 text-accent-foreground backdrop-blur-sm">
+                  <Star className="w-3 h-3" />
+                  Featured
+                </span>
+              </div>
+            </div>
+            <div className="p-4">
+              <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                {item.album?.title || "Unknown Album"}
+              </h3>
+              <p className="text-sm text-muted-foreground truncate">
+                {item.album?.artist_name || "Unknown Artist"}
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground capitalize">
+                  {item.album?.release_type || "Album"}
+                </span>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Browse() {
   const {
@@ -238,6 +314,9 @@ export default function Browse() {
       <div className="container mx-auto px-4 py-8">
         {/* Hero Carousel */}
         <HeroCarousel />
+
+        {/* Featured Albums Section */}
+        <FeaturedAlbumsSection />
 
         {/* Header */}
         <div className="mb-8">
