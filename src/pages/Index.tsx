@@ -1,7 +1,7 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Music, Disc3, Users, Building2, Headphones, Zap, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History, ListPlus, Lock, TrendingUp, Rocket, Crown } from "lucide-react";
+import { Music, Disc3, Users, Building2, Headphones, Zap, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History, ListPlus, Lock, TrendingUp, Rocket, Crown, Star, BadgeCheck } from "lucide-react";
 import { DownloadButton } from "@/components/download/DownloadButton";
 import { TrendingCarousel } from "@/components/home/TrendingCarousel";
 import { KaraokePromoBanner } from "@/components/home/KaraokePromoBanner";
@@ -19,6 +19,7 @@ import { useState, useEffect } from "react";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
+import { useFeaturedArtists, useFeaturedLabels } from "@/hooks/useFeaturedContent";
 const features = [
   {
     icon: Disc3,
@@ -48,6 +49,182 @@ const stats = [
   { value: "500K+", label: "Collectors" },
   { value: "$2M+", label: "Artist Earnings" },
 ];
+
+// Featured Artists Section Component
+function FeaturedArtistsSection() {
+  const { data: featuredArtists, isLoading } = useFeaturedArtists("home_hero");
+
+  if (isLoading) {
+    return (
+      <section className="py-12 bg-card/10">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!featuredArtists || featuredArtists.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="py-12 bg-card/10">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
+              <Star className="w-7 h-7 text-accent" />
+              Featured Artists
+            </h2>
+            <p className="text-muted-foreground mt-1">Handpicked talent worth discovering</p>
+          </div>
+          <Button variant="outline" className="hidden md:flex" asChild>
+            <Link to="/artists">View All Artists</Link>
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          {featuredArtists.slice(0, 6).map((item) => (
+            <Link
+              key={item.id}
+              to={`/artist/${item.content_id}`}
+              className="glass-card p-4 text-center group hover:bg-primary/10 transition-all duration-300"
+            >
+              <div className="relative w-20 h-20 mx-auto mb-3">
+                <div className="w-full h-full rounded-full bg-muted/50 flex items-center justify-center group-hover:scale-105 transition-transform overflow-hidden">
+                  {item.profile?.avatar_url ? (
+                    <img
+                      src={item.profile.avatar_url}
+                      alt={item.profile.display_name || "Artist"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Users className="w-8 h-8 text-muted-foreground" />
+                  )}
+                </div>
+                {item.profile?.is_verified && (
+                  <div className="absolute -top-1 -right-1 bg-primary rounded-full p-1">
+                    <BadgeCheck className="w-4 h-4 text-primary-foreground" />
+                  </div>
+                )}
+              </div>
+              <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                {item.profile?.display_name || "Unknown Artist"}
+              </h3>
+              {item.profile?.bio && (
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                  {item.profile.bio}
+                </p>
+              )}
+              <div className="mt-2 inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-accent/20 text-accent">
+                <Star className="w-3 h-3" />
+                Featured
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        <div className="mt-6 text-center md:hidden">
+          <Button variant="outline" asChild>
+            <Link to="/artists">View All Artists</Link>
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Featured Labels Section Component
+function FeaturedLabelsSection() {
+  const { data: featuredLabels, isLoading } = useFeaturedLabels("home_hero");
+
+  if (isLoading) {
+    return (
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!featuredLabels || featuredLabels.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="py-12">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
+              <Building2 className="w-7 h-7 text-secondary" />
+              Featured Labels
+            </h2>
+            <p className="text-muted-foreground mt-1">Top labels powering the music scene</p>
+          </div>
+          <Button variant="outline" className="hidden md:flex" asChild>
+            <Link to="/labels">View All Labels</Link>
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {featuredLabels.slice(0, 4).map((item) => (
+            <Link
+              key={item.id}
+              to={`/label/${item.content_id}`}
+              className="glass-card p-6 group hover:bg-secondary/10 transition-all duration-300 flex items-center gap-4"
+            >
+              <div className="relative flex-shrink-0">
+                <div className="w-16 h-16 rounded-xl bg-muted/50 flex items-center justify-center group-hover:scale-105 transition-transform overflow-hidden">
+                  {item.profile?.avatar_url ? (
+                    <img
+                      src={item.profile.avatar_url}
+                      alt={item.profile.display_name || "Label"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Building2 className="w-8 h-8 text-muted-foreground" />
+                  )}
+                </div>
+                {item.profile?.is_verified && (
+                  <div className="absolute -top-1 -right-1 bg-secondary rounded-full p-1">
+                    <BadgeCheck className="w-3 h-3 text-secondary-foreground" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-foreground truncate group-hover:text-secondary transition-colors">
+                  {item.profile?.display_name || "Unknown Label"}
+                </h3>
+                {item.profile?.bio && (
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                    {item.profile.bio}
+                  </p>
+                )}
+                <div className="mt-2 inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-secondary/20 text-secondary">
+                  <Star className="w-3 h-3" />
+                  Featured
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        <div className="mt-6 text-center md:hidden">
+          <Button variant="outline" asChild>
+            <Link to="/labels">View All Labels</Link>
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function Index() {
   const { user, role, profile, isLoading: authLoading } = useAuth();
@@ -409,6 +586,12 @@ export default function Index() {
 
       {/* Karaoke Promo Banner */}
       <KaraokePromoBanner />
+
+      {/* Featured Artists Section */}
+      <FeaturedArtistsSection />
+
+      {/* Featured Labels Section */}
+      <FeaturedLabelsSection />
 
       {/* Discover Section - Only show for authenticated users */}
       {user && recommendedArtists && recommendedArtists.length > 0 && (
