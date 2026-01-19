@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Building2, Users, Music, Loader2 } from "lucide-react";
+import { Search, Building2, Users, Music, Loader2, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLabels } from "@/hooks/useLabels";
 
@@ -41,7 +41,14 @@ export default function Labels() {
                           {label.avatar_url ? <img src={label.avatar_url} alt={label.display_name || ""} className="w-full h-full object-cover" /> : <Building2 className="w-12 h-12 text-foreground" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-xl font-bold text-foreground group-hover:text-accent transition-colors">{label.display_name || "Unknown Label"}</h3>
+                          <div className="flex items-center gap-1.5">
+                            <h3 className="text-xl font-bold text-foreground group-hover:text-accent transition-colors">{label.display_name || "Unknown Label"}</h3>
+                            {label.is_verified && (
+                              <span title="Verified Label">
+                                <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
+                              </span>
+                            )}
+                          </div>
                           <p className="text-muted-foreground text-sm mt-1 line-clamp-2">{label.bio || "No description available"}</p>
                           <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1"><Users className="w-4 h-4" />{label.artistCount} artists</span>
@@ -63,7 +70,14 @@ export default function Labels() {
                     <div className="w-20 h-20 mx-auto rounded-xl bg-muted/50 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform overflow-hidden">
                       {label.avatar_url ? <img src={label.avatar_url} alt={label.display_name || ""} className="w-full h-full object-cover" /> : <Building2 className="w-10 h-10 text-muted-foreground" />}
                     </div>
-                    <h3 className="font-semibold text-foreground mb-1">{label.display_name || "Unknown"}</h3>
+                    <div className="flex items-center justify-center gap-1">
+                      <h3 className="font-semibold text-foreground">{label.display_name || "Unknown"}</h3>
+                      {label.is_verified && (
+                        <span title="Verified Label">
+                          <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" />
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground">{label.artistCount} artists</p>
                   </Link>
                 ))}

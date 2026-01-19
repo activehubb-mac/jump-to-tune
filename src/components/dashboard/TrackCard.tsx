@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Disc3, Edit, Trash2, Play, Pause, ListPlus, Lock, Mic2 } from "lucide-react";
+import { Disc3, Edit, Trash2, Play, Pause, ListPlus, Lock, Mic2, CheckCircle } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,7 @@ interface TrackCardProps {
     artist?: {
       id: string;
       display_name: string | null;
+      is_verified?: boolean | null;
     };
     featuredArtists?: {
       id: string;
@@ -206,19 +207,26 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
           <div>
             <h3 className="font-semibold text-foreground truncate">{track.title}</h3>
             {showArtist && track.artist && (
-              <Link
-                to={`/artist/${track.artist.id}`}
-                className="text-sm text-muted-foreground truncate hover:text-primary transition-colors block"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {track.artist.display_name || "Unknown Artist"}
+              <div className="flex items-center gap-1 text-sm">
+                <Link
+                  to={`/artist/${track.artist.id}`}
+                  className="text-muted-foreground truncate hover:text-primary transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {track.artist.display_name || "Unknown Artist"}
+                </Link>
+                {track.artist.is_verified && (
+                  <span title="Verified Artist">
+                    <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                  </span>
+                )}
                 {track.featuredArtists && track.featuredArtists.length > 0 && (
-                  <span className="text-muted-foreground/70">
+                  <span className="text-muted-foreground/70 truncate">
                     {" feat. "}
                     {track.featuredArtists.map((a) => a.display_name).join(", ")}
                   </span>
                 )}
-              </Link>
+              </div>
             )}
             {!showArtist && track.genre && (
               <p className="text-sm text-muted-foreground truncate">{track.genre}</p>
