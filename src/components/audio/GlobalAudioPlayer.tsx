@@ -245,7 +245,8 @@ export function GlobalAudioPlayer() {
   const canShuffle = canUseFeature("shuffle");
   const canRepeat = canUseFeature("repeat");
 
-  const hasKaraoke = currentTrack?.has_karaoke && karaokeData;
+  const hasKaraoke = !!currentTrack?.has_karaoke;
+  const karaokeReady = !!karaokeData?.instrumental_url;
 
   return (
     <>
@@ -597,11 +598,12 @@ export function GlobalAudioPlayer() {
                         size="icon"
                         className={cn(
                           "h-8 w-8",
-                          isKaraokeMode 
-                            ? "text-primary bg-primary/10" 
+                          isKaraokeMode
+                            ? "text-primary bg-primary/10"
                             : "text-muted-foreground hover:text-foreground"
                         )}
                         onClick={toggleKaraokeMode}
+                        disabled={!karaokeReady}
                       >
                         {isKaraokeMode ? (
                           <MicOff className="h-4 w-4" />
@@ -611,7 +613,13 @@ export function GlobalAudioPlayer() {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="top">
-                      <p>{isKaraokeMode ? "Switch to original audio" : "Sing-along mode (instrumental)"}</p>
+                      <p>
+                        {!karaokeReady
+                          ? "Loading sing-along…"
+                          : isKaraokeMode
+                            ? "Switch to original audio"
+                            : "Sing-along mode (instrumental)"}
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </>
