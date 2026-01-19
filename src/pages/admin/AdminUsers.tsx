@@ -202,19 +202,19 @@ export default function AdminUsers() {
             {filteredUsers?.map((user) => (
               <div
                 key={user.id}
-                className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                className="flex flex-col gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors overflow-hidden"
               >
-                {/* User Info */}
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <Avatar className="w-9 h-9 md:w-10 md:h-10 shrink-0">
+                {/* User Info Row */}
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar className="w-9 h-9 shrink-0">
                     <AvatarImage src={user.avatar_url || undefined} />
                     <AvatarFallback>
                       {user.display_name?.[0]?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium truncate text-sm md:text-base">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium truncate text-sm">
                         {user.display_name || 'Unnamed User'}
                       </span>
                       {user.is_verified && (
@@ -227,28 +227,28 @@ export default function AdminUsers() {
                   </div>
                 </div>
 
-                {/* Badges & Actions */}
-                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                {/* Badges & Actions Row */}
+                <div className="flex items-center justify-between gap-2">
                   {/* Role Badges */}
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1 flex-wrap">
                     <Badge variant={getRoleBadgeVariant(user.role) as any} className="text-xs">
                       <span className="flex items-center gap-1">
                         {getRoleIcon(user.role)}
-                        <span className="hidden xs:inline">{user.role || 'fan'}</span>
+                        <span>{user.role || 'fan'}</span>
                       </span>
                     </Badge>
                     {user.isAdmin && (
                       <Badge variant="destructive" className="text-xs">
                         <span className="flex items-center gap-1">
                           <ShieldCheck className="w-3 h-3" />
-                          <span className="hidden xs:inline">admin</span>
+                          <span>admin</span>
                         </span>
                       </Badge>
                     )}
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex items-center gap-1.5 ml-auto sm:ml-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {/* Admin Toggle */}
                     {user.id !== currentUser?.id && (
                       <AlertDialog>
@@ -256,18 +256,12 @@ export default function AdminUsers() {
                           <Button
                             variant={user.isAdmin ? "outline" : "destructive"}
                             size="sm"
-                            className="h-8 text-xs px-2 md:px-3"
+                            className="h-7 text-xs px-2"
                           >
                             {user.isAdmin ? (
-                              <>
-                                <ShieldOff className="w-3 h-3 md:mr-1" />
-                                <span className="hidden md:inline">Remove</span>
-                              </>
+                              <ShieldOff className="w-3.5 h-3.5" />
                             ) : (
-                              <>
-                                <Shield className="w-3 h-3 md:mr-1" />
-                                <span className="hidden md:inline">Admin</span>
-                              </>
+                              <Shield className="w-3.5 h-3.5" />
                             )}
                           </Button>
                         </AlertDialogTrigger>
@@ -303,18 +297,12 @@ export default function AdminUsers() {
                         <Button
                           variant={user.is_verified ? "outline" : "default"}
                           size="sm"
-                          className="h-8 text-xs px-2 md:px-3"
+                          className="h-7 text-xs px-2"
                         >
                           {user.is_verified ? (
-                            <>
-                              <XCircle className="w-3 h-3 md:mr-1" />
-                              <span className="hidden md:inline">Unverify</span>
-                            </>
+                            <XCircle className="w-3.5 h-3.5" />
                           ) : (
-                            <>
-                              <CheckCircle className="w-3 h-3 md:mr-1" />
-                              <span className="hidden md:inline">Verify</span>
-                            </>
+                            <CheckCircle className="w-3.5 h-3.5" />
                           )}
                         </Button>
                       </AlertDialogTrigger>
