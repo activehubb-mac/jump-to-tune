@@ -40,6 +40,7 @@ import NotificationSettings from "./pages/NotificationSettings";
 import ThemePreview from "./pages/ThemePreview";
 import Karaoke from "./pages/Karaoke";
 import NotFound from "./pages/NotFound";
+import AlbumDetail from "./pages/AlbumDetail";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +79,7 @@ const App = () => (
                 <Route path="/label/roster" element={<LabelRoster />} />
                 <Route path="/upload" element={<Upload />} />
                 <Route path="/upload/album" element={<AlbumUpload />} />
+                <Route path="/album/:id" element={<AlbumDetail />} />
                 <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route path="/payment-canceled" element={<PaymentCanceled />} />
                 <Route path="/subscription" element={<Subscription />} />

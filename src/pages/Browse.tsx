@@ -4,11 +4,12 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock, X, Mic2 } from "lucide-react";
+import { Search, Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock, X, Mic2, Album } from "lucide-react";
 import { TrackCardSkeletonGrid } from "@/components/dashboard/TrackCardSkeleton";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { RecentlyViewedSection } from "@/components/browse/RecentlyViewedSection";
 import { HeroCarousel } from "@/components/browse/HeroCarousel";
+import { AlbumCard } from "@/components/browse/AlbumCard";
 import { Link } from "react-router-dom";
 import { useInfinitePublishedTracks } from "@/hooks/useTracks";
 import { useBrowsePreferences } from "@/hooks/useBrowsePreferences";
@@ -26,6 +27,8 @@ import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { DownloadButton } from "@/components/download/DownloadButton";
 import { usePurchases } from "@/hooks/usePurchases";
 import { TrackDetailModal } from "@/components/dashboard/TrackDetailModal";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const genres = ["All", "Electronic", "Hip Hop", "R&B", "Pop", "Rock", "Jazz", "Classical", "Indie"];
 const moods = ["All", "Chill", "Energetic", "Dark", "Uplifting", "Melancholic", "Romantic", "Aggressive", "Dreamy", "Funky"];
@@ -86,6 +89,30 @@ export default function Browse() {
   const tracks = useMemo(() => {
     return data?.pages.flatMap((page) => page.tracks) || [];
   }, [data]);
+
+  // Fetch published albums
+  const { data: albums = [] } = useQuery({
+    queryKey: ["browse-albums", selectedGenre],
+    queryFn: async () => {
+      let query = supabase
+        .from("albums")
+        .select(`
+          id, title, cover_art_url, release_type, genre, total_price,
+          artist:profiles_public!albums_artist_id_fkey(id, display_name, avatar_url)
+        `)
+        .eq("is_draft", false)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (selectedGenre !== "All") {
+        query = query.eq("genre", selectedGenre);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
 
   // Infinite scroll observer
   useEffect(() => {
@@ -347,6 +374,37 @@ export default function Browse() {
             </Select>
           </div>
         </div>
+
+        {/* Albums Section */}
+        {albums && albums.length > 0 && !searchQuery && (
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                <Album className="w-6 h-6 text-primary" />
+                Albums & EPs
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              {albums.map((album) => (
+                <AlbumCard 
+                  key={album.id} 
+                  album={{
+                    ...album,
+                    artist: album.artist?.[0] || null,
+                  }} 
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tracks Section Header */}
+        {albums && albums.length > 0 && !searchQuery && (
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
+            <Disc3 className="w-6 h-6 text-primary" />
+            Tracks
+          </h2>
+        )}
 
         {/* Track Grid */}
         {isLoading ? (
