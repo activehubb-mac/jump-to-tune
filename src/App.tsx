@@ -29,6 +29,7 @@ import LabelTracks from "./pages/LabelTracks";
 import LabelPayouts from "./pages/LabelPayouts";
 import LabelRoster from "./pages/LabelRoster";
 import Upload from "./pages/Upload";
+import AlbumUpload from "./pages/AlbumUpload";
 import TrackEdit from "./pages/TrackEdit";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCanceled from "./pages/PaymentCanceled";
@@ -76,6 +77,7 @@ const App = () => (
                 <Route path="/label/payouts" element={<LabelPayouts />} />
                 <Route path="/label/roster" element={<LabelRoster />} />
                 <Route path="/upload" element={<Upload />} />
+                <Route path="/upload/album" element={<AlbumUpload />} />
                 <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route path="/payment-canceled" element={<PaymentCanceled />} />
                 <Route path="/subscription" element={<Subscription />} />
