@@ -18,7 +18,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown, Bell, Check, ArrowUp, ArrowDown, Sparkles, Wallet, Heart, AlertTriangle, UserPlus, DollarSign, Mic2 } from "lucide-react";
+import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown, Bell, Check, ArrowUp, ArrowDown, Sparkles, Wallet, Heart, AlertTriangle, UserPlus, DollarSign, Mic2, Shield } from "lucide-react";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { CreditBalanceChip } from "@/components/wallet/CreditBalanceChip";
 import { SubscriptionCountdownChip } from "@/components/subscription/SubscriptionCountdownChip";
 import { QuickTopupModal } from "@/components/wallet/QuickTopupModal";
@@ -46,6 +47,7 @@ export function Navbar() {
   const navigate = useNavigate();
   const { user, profile, role, signOut, isLoading } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { isAdmin } = useAdminAccess();
 
   const handleSignOut = async () => {
     await signOut();
@@ -289,6 +291,17 @@ export function Navbar() {
                           Subscription
                         </Link>
                       </DropdownMenuItem>
+                      {isAdmin && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                            <Link to="/admin" className="flex items-center gap-2 cursor-pointer text-destructive">
+                              <Shield className="w-4 h-4" />
+                              Admin Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem 
                         onClick={() => setIsProfileOpen(true)}
