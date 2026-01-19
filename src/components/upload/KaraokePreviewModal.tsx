@@ -7,6 +7,7 @@ import { Play, Pause, RotateCcw, Volume2, VolumeX, Mic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseLRC, getCurrentLineIndex, isValidLRC, LyricLine } from '@/lib/lrcParser';
 import { formatDuration } from '@/lib/audioUtils';
+import { WaveformVisualizer } from '@/components/audio/WaveformVisualizer';
 
 interface KaraokePreviewModalProps {
   open: boolean;
@@ -260,14 +261,19 @@ export function KaraokePreviewModal({
           </div>
         </ScrollArea>
 
-        {/* Progress Bar */}
+        {/* Waveform Visualizer */}
         <div className="space-y-2">
-          <Slider
-            value={[currentTime]}
-            max={duration || 100}
-            step={0.1}
-            onValueChange={handleSeek}
-            className="cursor-pointer"
+          <WaveformVisualizer
+            audioFile={useInstrumental && instrumentalFile ? instrumentalFile : audioFile}
+            currentTime={currentTime}
+            duration={duration}
+            onSeek={(time) => {
+              if (audioRef.current) {
+                audioRef.current.currentTime = time;
+                setCurrentTime(time);
+              }
+            }}
+            className="h-14"
           />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{formatDuration(currentTime)}</span>
