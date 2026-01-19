@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import { Twitter, Instagram, Youtube, Mic2 } from "lucide-react";
+import { Twitter, Instagram, Youtube, Mic2, Heart, Music, Users } from "lucide-react";
 
 export function Footer() {
   return (
     <footer className="bg-card/30 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center">
@@ -39,7 +39,17 @@ export function Footer() {
               <li><Link to="/karaoke" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"><Mic2 className="w-3.5 h-3.5" />Sing-Along</Link></li>
               <li><Link to="/artists" className="text-muted-foreground hover:text-foreground transition-colors">Artists</Link></li>
               <li><Link to="/labels" className="text-muted-foreground hover:text-foreground transition-colors">Labels</Link></li>
-              <li><Link to="/collection" className="text-muted-foreground hover:text-foreground transition-colors">My Collection</Link></li>
+              <li><Link to="/library" className="text-muted-foreground hover:text-foreground transition-colors">My Library</Link></li>
+            </ul>
+          </div>
+
+          {/* Library */}
+          <div>
+            <h4 className="font-semibold mb-4 text-foreground">Library</h4>
+            <ul className="space-y-2 text-sm">
+              <li><Link to="/library?tab=liked" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"><Heart className="w-3.5 h-3.5" />Liked Tracks</Link></li>
+              <li><Link to="/library?tab=owned" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"><Music className="w-3.5 h-3.5" />Owned Music</Link></li>
+              <li><Link to="/library?tab=following" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"><Users className="w-3.5 h-3.5" />Following</Link></li>
             </ul>
           </div>
 

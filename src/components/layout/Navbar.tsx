@@ -34,7 +34,7 @@ const navLinks = [
   { href: "/karaoke", label: "Sing-Along", icon: Mic2 },
   { href: "/artists", label: "Artists", icon: User },
   { href: "/labels", label: "Labels", icon: Building2 },
-  { href: "/collection", label: "Library", icon: Library, authRequired: true },
+  { href: "/library", label: "Library", icon: Library, authRequired: true },
 ];
 
 export function Navbar() {
@@ -272,7 +272,7 @@ export function Navbar() {
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem asChild>
-                        <Link to="/collection" className="flex items-center gap-2 cursor-pointer">
+                        <Link to="/library" className="flex items-center gap-2 cursor-pointer">
                           <Library className="w-4 h-4" />
                           Library
                         </Link>

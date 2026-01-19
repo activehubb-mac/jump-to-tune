@@ -65,7 +65,7 @@ const App = () => (
                 <Route path="/artist/:id" element={<ArtistProfile />} />
                 <Route path="/label/:id" element={<LabelProfile />} />
                 <Route path="/profile/:id" element={<UserProfile />} />
-                <Route path="/collection" element={<Collection />} />
+                <Route path="/library" element={<Collection />} />
                 <Route path="/artist/dashboard" element={<ArtistDashboard />} />
                 <Route path="/artist/analytics" element={<ArtistAnalytics />} />
                 <Route path="/artist/collectors" element={<ArtistCollectors />} />
