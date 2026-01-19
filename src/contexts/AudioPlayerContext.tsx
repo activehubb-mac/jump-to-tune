@@ -162,46 +162,62 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
   const playTrackInternal = useCallback(async (track: AudioTrack) => {
     const audio = ensureAudioElement();
-    
-    setCurrentTrack(track);
+
     setCurrentTime(0);
     setDuration(track.duration || 0);
     setIsPlayerVisible(true);
     setIsBuffering(true);
 
-    // Save to recently played
-    saveToRecentlyPlayed(track);
-
     let audioUrl = track.audio_url;
+    let hasKaraoke = track.has_karaoke;
 
-    // If audio_url is empty, fetch it from the database
-    if (!audioUrl || audioUrl.trim() === "") {
+    // Hydrate missing fields (some callers only pass a subset of track fields)
+    const needsAudioUrl = !audioUrl || audioUrl.trim() === "";
+    const needsHasKaraoke = hasKaraoke === undefined || hasKaraoke === null;
+
+    if (needsAudioUrl || needsHasKaraoke) {
       try {
         const { data, error } = await supabase
           .from("tracks")
-          .select("audio_url")
+          .select("audio_url, has_karaoke")
           .eq("id", track.id)
           .maybeSingle();
-        
+
         if (error) {
-          console.error("Failed to fetch audio URL:", error);
+          console.error("Failed to hydrate track:", error);
           setIsBuffering(false);
           return;
         }
-        
-        if (!data?.audio_url) {
-          console.error("No audio URL found for track:", track.id);
-          setIsBuffering(false);
-          return;
+
+        if (needsAudioUrl) {
+          if (!data?.audio_url) {
+            console.error("No audio URL found for track:", track.id);
+            setIsBuffering(false);
+            return;
+          }
+          audioUrl = data.audio_url;
         }
-        
-        audioUrl = data.audio_url;
+
+        if (needsHasKaraoke) {
+          hasKaraoke = data?.has_karaoke ?? null;
+        }
       } catch (e) {
-        console.error("Error fetching audio URL:", e);
+        console.error("Error hydrating track:", e);
         setIsBuffering(false);
         return;
       }
     }
+
+    const hydratedTrack: AudioTrack = {
+      ...track,
+      audio_url: audioUrl,
+      has_karaoke: hasKaraoke,
+    };
+
+    setCurrentTrack(hydratedTrack);
+
+    // Save to recently played
+    saveToRecentlyPlayed(hydratedTrack);
 
     const resolvedUrl = getAudioUrl(audioUrl);
     audio.src = resolvedUrl;
