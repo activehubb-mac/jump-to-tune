@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      albums: {
+        Row: {
+          artist_id: string
+          cover_art_url: string | null
+          created_at: string
+          description: string | null
+          genre: string | null
+          id: string
+          is_draft: boolean
+          label_id: string | null
+          release_type: string
+          title: string
+          total_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          artist_id: string
+          cover_art_url?: string | null
+          created_at?: string
+          description?: string | null
+          genre?: string | null
+          id?: string
+          is_draft?: boolean
+          label_id?: string | null
+          release_type: string
+          title: string
+          total_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          artist_id?: string
+          cover_art_url?: string | null
+          created_at?: string
+          description?: string | null
+          genre?: string | null
+          id?: string
+          is_draft?: boolean
+          label_id?: string | null
+          release_type?: string
+          title?: string
+          total_price?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       artist_earnings: {
         Row: {
           artist_id: string
@@ -620,6 +665,7 @@ export type Database = {
       }
       tracks: {
         Row: {
+          album_id: string | null
           artist_id: string
           audio_url: string
           cover_art_url: string | null
@@ -638,9 +684,11 @@ export type Database = {
           price: number
           title: string
           total_editions: number
+          track_number: number | null
           updated_at: string
         }
         Insert: {
+          album_id?: string | null
           artist_id: string
           audio_url: string
           cover_art_url?: string | null
@@ -659,9 +707,11 @@ export type Database = {
           price?: number
           title: string
           total_editions?: number
+          track_number?: number | null
           updated_at?: string
         }
         Update: {
+          album_id?: string | null
           artist_id?: string
           audio_url?: string
           cover_art_url?: string | null
@@ -680,9 +730,17 @@ export type Database = {
           price?: number
           title?: string
           total_editions?: number
+          track_number?: number | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tracks_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tracks_artist_id_fkey"
             columns: ["artist_id"]
