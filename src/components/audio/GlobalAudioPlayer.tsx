@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 import { useAudioPlayer, AudioTrack } from "@/contexts/AudioPlayerContext";
 import { useAudioKeyboardShortcuts } from "@/hooks/useAudioKeyboardShortcuts";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
@@ -11,6 +12,7 @@ import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { KaraokeLyricsPanel } from "@/components/audio/KaraokeLyricsPanel";
 import { UrlWaveformVisualizer } from "@/components/audio/UrlWaveformVisualizer";
 import { MiniFrequencyVisualizer } from "@/components/audio/MiniFrequencyVisualizer";
+import { PreviewEndedModal } from "@/components/audio/PreviewEndedModal";
 import { useKaraokeData, getInstrumentalUrl } from "@/hooks/useKaraokeData";
 import { Link } from "react-router-dom";
 import { DownloadButton } from "@/components/download/DownloadButton";
@@ -33,6 +35,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
+
+const PREVIEW_LIMIT_SECONDS = 30;
 
 function formatTime(seconds: number): string {
   if (!seconds || isNaN(seconds)) return "0:00";
@@ -131,6 +135,9 @@ export function GlobalAudioPlayer() {
     repeatMode,
     isKaraokeMode,
     showLyrics,
+    isPreviewMode,
+    previewTimeRemaining,
+    showPreviewEndedModal,
     togglePlayPause,
     seek,
     setVolume,
@@ -147,6 +154,9 @@ export function GlobalAudioPlayer() {
     toggleKaraokeMode,
     toggleShowLyrics,
     setInstrumentalUrl,
+    dismissPreviewEndedModal,
+    restartPreview,
+    grantFullAccess,
   } = useAudioPlayer();
 
   const { canUseFeature } = useFeatureGate();
@@ -302,6 +312,13 @@ export function GlobalAudioPlayer() {
   const hasKaraoke = !!currentTrack?.has_karaoke;
   const karaokeReady = !!karaokeData?.instrumental_url;
 
+  // Handle purchase success - grant full access
+  const handlePurchaseSuccess = () => {
+    if (currentTrack) {
+      grantFullAccess(currentTrack.id);
+    }
+  };
+
   return (
     <>
       {/* Premium Feature Modal */}
@@ -309,6 +326,21 @@ export function GlobalAudioPlayer() {
         open={showPremiumModal}
         onOpenChange={setShowPremiumModal}
         feature={premiumFeatureName}
+      />
+
+      {/* Preview Ended Modal */}
+      <PreviewEndedModal
+        open={showPreviewEndedModal}
+        onOpenChange={dismissPreviewEndedModal}
+        track={currentTrack ? {
+          id: currentTrack.id,
+          title: currentTrack.title,
+          cover_art_url: currentTrack.cover_art_url,
+          price: currentTrack.price || 0,
+          artist: currentTrack.artist,
+        } : null}
+        onReplayPreview={restartPreview}
+        onPurchaseSuccess={handlePurchaseSuccess}
       />
 
       {/* Karaoke Lyrics Panel */}
@@ -490,6 +522,15 @@ export function GlobalAudioPlayer() {
                   <p className="text-sm font-medium text-foreground truncate">
                     {currentTrack.title}
                   </p>
+                  {isPreviewMode && (
+                    <Badge 
+                      variant="outline" 
+                      className="flex-shrink-0 text-[10px] px-1.5 py-0 h-4 border-amber-500/50 text-amber-500 bg-amber-500/10"
+                    >
+                      <Clock className="w-2.5 h-2.5 mr-0.5" />
+                      {Math.ceil(previewTimeRemaining)}s
+                    </Badge>
+                  )}
                   {hasKaraoke && (
                     <span 
                       className="flex-shrink-0 inline-flex items-center justify-center w-4 h-4 rounded bg-primary/20 text-primary"
@@ -580,25 +621,43 @@ export function GlobalAudioPlayer() {
                 </span>
                 
                 {showWaveform && currentTrack?.audio_url ? (
-                  <UrlWaveformVisualizer
-                    audioUrl={currentTrack.audio_url.startsWith('http') ? currentTrack.audio_url : `https://ezamzkycxqrstuznqaha.supabase.co/storage/v1/object/public/tracks/${currentTrack.audio_url}`}
-                    currentTime={currentTime}
-                    duration={duration}
-                    onSeek={seek}
-                    className="flex-1 h-8"
-                  />
+                  <div className="relative flex-1">
+                    <UrlWaveformVisualizer
+                      audioUrl={currentTrack.audio_url.startsWith('http') ? currentTrack.audio_url : `https://ezamzkycxqrstuznqaha.supabase.co/storage/v1/object/public/tracks/${currentTrack.audio_url}`}
+                      currentTime={currentTime}
+                      duration={isPreviewMode ? PREVIEW_LIMIT_SECONDS : duration}
+                      onSeek={seek}
+                      className="flex-1 h-8"
+                    />
+                    {/* Preview limit marker */}
+                    {isPreviewMode && duration > 0 && (
+                      <div 
+                        className="absolute top-0 bottom-0 w-0.5 bg-amber-500 pointer-events-none"
+                        style={{ left: `${(PREVIEW_LIMIT_SECONDS / duration) * 100}%` }}
+                      />
+                    )}
+                  </div>
                 ) : (
-                  <Slider
-                    value={[currentTime]}
-                    max={duration || 100}
-                    step={0.1}
-                    onValueChange={handleSeek}
-                    className="flex-1 cursor-pointer"
-                  />
+                  <div className="relative flex-1">
+                    <Slider
+                      value={[currentTime]}
+                      max={isPreviewMode ? PREVIEW_LIMIT_SECONDS : (duration || 100)}
+                      step={0.1}
+                      onValueChange={handleSeek}
+                      className="flex-1 cursor-pointer"
+                    />
+                    {/* Preview limit marker */}
+                    {isPreviewMode && duration > PREVIEW_LIMIT_SECONDS && (
+                      <div 
+                        className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-amber-500 pointer-events-none rounded-full"
+                        style={{ left: `${(PREVIEW_LIMIT_SECONDS / duration) * 100}%` }}
+                      />
+                    )}
+                  </div>
                 )}
                 
                 <span className="text-xs text-muted-foreground w-10">
-                  {formatTime(duration)}
+                  {isPreviewMode ? formatTime(PREVIEW_LIMIT_SECONDS) : formatTime(duration)}
                 </span>
                 
                 <Tooltip>
@@ -799,16 +858,27 @@ export function GlobalAudioPlayer() {
 
           {/* Mobile Progress Bar */}
           <div className="md:hidden pb-2">
-            <Slider
-              value={[currentTime]}
-              max={duration || 100}
-              step={0.1}
-              onValueChange={handleSeek}
-              className="w-full"
-            />
+            <div className="relative">
+              <Slider
+                value={[currentTime]}
+                max={isPreviewMode ? PREVIEW_LIMIT_SECONDS : (duration || 100)}
+                step={0.1}
+                onValueChange={handleSeek}
+                className="w-full"
+              />
+              {/* Preview limit marker */}
+              {isPreviewMode && duration > PREVIEW_LIMIT_SECONDS && (
+                <div 
+                  className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-amber-500 pointer-events-none rounded-full"
+                  style={{ left: `${(PREVIEW_LIMIT_SECONDS / duration) * 100}%` }}
+                />
+              )}
+            </div>
             <div className="flex justify-between mt-1">
               <span className="text-xs text-muted-foreground">{formatTime(currentTime)}</span>
-              <span className="text-xs text-muted-foreground">{formatTime(duration)}</span>
+              <span className="text-xs text-muted-foreground">
+                {isPreviewMode ? formatTime(PREVIEW_LIMIT_SECONDS) : formatTime(duration)}
+              </span>
             </div>
           </div>
         </div>
