@@ -3,11 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Play, Pause, RotateCcw, Volume2, VolumeX, Mic } from 'lucide-react';
+import { Play, Pause, RotateCcw, Volume2, VolumeX, Mic, AudioWaveform } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseLRC, getCurrentLineIndex, isValidLRC, LyricLine } from '@/lib/lrcParser';
 import { formatDuration } from '@/lib/audioUtils';
 import { WaveformVisualizer } from '@/components/audio/WaveformVisualizer';
+import { FrequencyVisualizer } from '@/components/audio/FrequencyVisualizer';
 
 interface KaraokePreviewModalProps {
   open: boolean;
@@ -35,6 +36,7 @@ export function KaraokePreviewModal({
   const [isMuted, setIsMuted] = useState(false);
   const [useInstrumental, setUseInstrumental] = useState(!!instrumentalFile);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [showFrequencyBars, setShowFrequencyBars] = useState(false);
 
   // Create object URL for the audio file
   useEffect(() => {
@@ -261,20 +263,45 @@ export function KaraokePreviewModal({
           </div>
         </ScrollArea>
 
-        {/* Waveform Visualizer */}
+        {/* Visualizer Section */}
         <div className="space-y-2">
-          <WaveformVisualizer
-            audioFile={useInstrumental && instrumentalFile ? instrumentalFile : audioFile}
-            currentTime={currentTime}
-            duration={duration}
-            onSeek={(time) => {
-              if (audioRef.current) {
-                audioRef.current.currentTime = time;
-                setCurrentTime(time);
-              }
-            }}
-            className="h-14"
-          />
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-muted-foreground">Audio Visualizer</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFrequencyBars(!showFrequencyBars)}
+              className="h-6 text-xs gap-1"
+            >
+              <AudioWaveform className="w-3 h-3" />
+              {showFrequencyBars ? 'Waveform' : 'Frequency'}
+            </Button>
+          </div>
+          
+          {showFrequencyBars ? (
+            <div className="h-14 bg-muted/30 rounded-lg overflow-hidden">
+              <FrequencyVisualizer
+                audioElement={audioRef.current}
+                isPlaying={isPlaying}
+                barCount={40}
+                className="h-full"
+              />
+            </div>
+          ) : (
+            <WaveformVisualizer
+              audioFile={useInstrumental && instrumentalFile ? instrumentalFile : audioFile}
+              currentTime={currentTime}
+              duration={duration}
+              onSeek={(time) => {
+                if (audioRef.current) {
+                  audioRef.current.currentTime = time;
+                  setCurrentTime(time);
+                }
+              }}
+              className="h-14"
+            />
+          )}
+          
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{formatDuration(currentTime)}</span>
             <span>{formatDuration(duration)}</span>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2 } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,6 +9,7 @@ import { useAudioKeyboardShortcuts } from "@/hooks/useAudioKeyboardShortcuts";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { KaraokeLyricsPanel } from "@/components/audio/KaraokeLyricsPanel";
+import { UrlWaveformVisualizer } from "@/components/audio/UrlWaveformVisualizer";
 import { useKaraokeData, getInstrumentalUrl } from "@/hooks/useKaraokeData";
 import { Link } from "react-router-dom";
 import { DownloadButton } from "@/components/download/DownloadButton";
@@ -153,6 +154,7 @@ export function GlobalAudioPlayer() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumFeatureName, setPremiumFeatureName] = useState("");
   const [showKaraokeHint, setShowKaraokeHint] = useState(false);
+  const [showWaveform, setShowWaveform] = useState(false);
 
   // One-time onboarding for karaoke feature
   const KARAOKE_ONBOARDING_KEY = "jumtunes_karaoke_onboarding_seen";
@@ -546,17 +548,46 @@ export function GlobalAudioPlayer() {
                   {formatTime(currentTime)}
                 </span>
                 
-                <Slider
-                  value={[currentTime]}
-                  max={duration || 100}
-                  step={0.1}
-                  onValueChange={handleSeek}
-                  className="flex-1 cursor-pointer"
-                />
+                {showWaveform && currentTrack?.audio_url ? (
+                  <UrlWaveformVisualizer
+                    audioUrl={currentTrack.audio_url.startsWith('http') ? currentTrack.audio_url : `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/tracks/${currentTrack.audio_url}`}
+                    currentTime={currentTime}
+                    duration={duration}
+                    onSeek={seek}
+                    className="flex-1 h-8"
+                  />
+                ) : (
+                  <Slider
+                    value={[currentTime]}
+                    max={duration || 100}
+                    step={0.1}
+                    onValueChange={handleSeek}
+                    className="flex-1 cursor-pointer"
+                  />
+                )}
                 
                 <span className="text-xs text-muted-foreground w-10">
                   {formatTime(duration)}
                 </span>
+                
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn(
+                        "h-6 w-6",
+                        showWaveform ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                      )}
+                      onClick={() => setShowWaveform(!showWaveform)}
+                    >
+                      <AudioWaveform className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>{showWaveform ? "Simple progress" : "Waveform view"}</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </div>
 

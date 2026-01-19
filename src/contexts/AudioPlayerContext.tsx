@@ -442,35 +442,79 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     });
   }, []);
 
-  const toggleKaraokeMode = useCallback(() => {
+  const toggleKaraokeMode = useCallback(async () => {
     const audio = audioRef.current;
     if (!audio || !currentTrack) return;
 
     const currentPos = audio.currentTime;
     const wasPlaying = !audio.paused;
+    const newMode = !isKaraokeMode;
 
-    setIsKaraokeMode(prev => {
-      const newMode = !prev;
-      
+    setIsBuffering(true);
+
+    try {
       if (newMode && instrumentalUrl) {
-        // Switch to instrumental
-        setOriginalAudioUrl(audio.src);
+        // Switch to instrumental - save original URL first
+        if (!originalAudioUrl) {
+          setOriginalAudioUrl(audio.src);
+        }
         audio.src = instrumentalUrl;
       } else if (!newMode && originalAudioUrl) {
         // Switch back to original
         audio.src = originalAudioUrl;
+      } else if (!newMode && currentTrack.audio_url) {
+        // Fallback: use track's audio_url
+        audio.src = getAudioUrl(currentTrack.audio_url);
       }
 
-      // Restore position and playback state
-      audio.load();
+      // Wait for audio to be ready before seeking
+      await new Promise<void>((resolve, reject) => {
+        const onCanPlay = () => {
+          audio.removeEventListener('canplay', onCanPlay);
+          audio.removeEventListener('error', onError);
+          resolve();
+        };
+        const onError = () => {
+          audio.removeEventListener('canplay', onCanPlay);
+          audio.removeEventListener('error', onError);
+          reject(new Error('Failed to load audio'));
+        };
+        
+        audio.addEventListener('canplay', onCanPlay);
+        audio.addEventListener('error', onError);
+        audio.load();
+        
+        // Timeout after 10 seconds
+        setTimeout(() => {
+          audio.removeEventListener('canplay', onCanPlay);
+          audio.removeEventListener('error', onError);
+          reject(new Error('Audio load timeout'));
+        }, 10000);
+      });
+
+      // Restore position
       audio.currentTime = currentPos;
+      
       if (wasPlaying) {
-        audio.play().catch(console.error);
+        await audio.play();
       }
 
-      return newMode;
-    });
-  }, [currentTrack, instrumentalUrl, originalAudioUrl]);
+      setIsKaraokeMode(newMode);
+    } catch (error) {
+      console.error('Failed to switch audio mode:', error);
+      // Revert on error - try to restore original audio
+      if (originalAudioUrl) {
+        audio.src = originalAudioUrl;
+        audio.load();
+        audio.currentTime = currentPos;
+        if (wasPlaying) {
+          audio.play().catch(console.error);
+        }
+      }
+    } finally {
+      setIsBuffering(false);
+    }
+  }, [currentTrack, instrumentalUrl, originalAudioUrl, isKaraokeMode, getAudioUrl]);
 
   const toggleShowLyrics = useCallback(() => {
     setShowLyrics(prev => !prev);
