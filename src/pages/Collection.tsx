@@ -200,9 +200,9 @@ export default function Collection() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">
-            {profile?.display_name ? `${profile.display_name}'s Collection` : "My Collection"}
+            {profile?.display_name ? `${profile.display_name}'s Library` : "My Library"}
           </h1>
-          <p className="text-muted-foreground">Your owned tracks and music collection</p>
+          <p className="text-muted-foreground">Your owned tracks and music library</p>
         </div>
 
         {/* Stats */}

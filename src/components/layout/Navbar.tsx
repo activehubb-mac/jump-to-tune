@@ -34,7 +34,7 @@ const navLinks = [
   { href: "/karaoke", label: "Sing-Along", icon: Mic2 },
   { href: "/artists", label: "Artists", icon: User },
   { href: "/labels", label: "Labels", icon: Building2 },
-  { href: "/collection", label: "Collection", icon: Library, authRequired: true },
+  { href: "/collection", label: "Library", icon: Library, authRequired: true },
 ];
 
 export function Navbar() {
@@ -260,7 +260,7 @@ export function Navbar() {
                       <DropdownMenuItem asChild>
                         <Link to={getDashboardLink()} className="flex items-center gap-2 cursor-pointer">
                           <LayoutDashboard className="w-4 h-4" />
-                          {role === "fan" ? "My Collection" : "Dashboard"}
+                          {role === "fan" ? "My Library" : "Dashboard"}
                         </Link>
                       </DropdownMenuItem>
                       {(role === "artist" || role === "label") && (
@@ -274,7 +274,7 @@ export function Navbar() {
                       <DropdownMenuItem asChild>
                         <Link to="/collection" className="flex items-center gap-2 cursor-pointer">
                           <Library className="w-4 h-4" />
-                          Collection
+                          Library
                         </Link>
                       </DropdownMenuItem>
                   <DropdownMenuItem asChild>
