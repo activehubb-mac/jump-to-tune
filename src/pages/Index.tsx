@@ -1,10 +1,11 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Music, Disc3, Users, Building2, Headphones, Zap, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History, ListPlus, Lock } from "lucide-react";
+import { Music, Disc3, Users, Building2, Headphones, Zap, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History, ListPlus, Lock, TrendingUp, Rocket, Crown } from "lucide-react";
 import { DownloadButton } from "@/components/download/DownloadButton";
 import { TrendingCarousel } from "@/components/home/TrendingCarousel";
 import { KaraokePromoBanner } from "@/components/home/KaraokePromoBanner";
+import { FeaturedHeroCarousel } from "@/components/home/FeaturedHeroCarousel";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRecommendedArtists } from "@/hooks/useRecommendedArtists";
 import { useFollow } from "@/hooks/useFollows";
@@ -142,17 +143,17 @@ export default function Index() {
   // Determine hero content based on auth state and role
   const getHeroContent = () => {
     if (!user) {
-      // Not logged in - show default marketing
+      // Not logged in - show motivating marketing
       return {
-        badge: "The Future of Music Ownership",
+        badge: { text: "Join 10K+ Creators", icon: TrendingUp },
         heading: (
           <>
-            <span className="text-foreground">Collect Music.</span>
+            <span className="text-foreground">Where Artists</span>
             <br />
-            <span className="text-gradient">Own the Experience.</span>
+            <span className="text-gradient">Thrive.</span>
           </>
         ),
-        subheading: "JumTunes is where fans become collectors. Discover exclusive tracks, support your favorite artists, and build a music collection that's truly yours.",
+        subheading: "Your sound. Your earnings. Your legacy. Join thousands of artists building their future on JumTunes.",
         ctas: (
           <>
             <Button
@@ -161,8 +162,8 @@ export default function Index() {
               asChild
             >
               <Link to="/auth?mode=signup">
-                <Headphones className="w-5 h-5 mr-2" />
-                Start Collecting
+                <Rocket className="w-5 h-5 mr-2" />
+                Start Creating
               </Link>
             </Button>
             <Button
@@ -173,7 +174,7 @@ export default function Index() {
             >
               <Link to="/browse">
                 <Music className="w-5 h-5 mr-2" />
-                Browse Music
+                Explore Music
               </Link>
             </Button>
           </>
@@ -185,15 +186,15 @@ export default function Index() {
 
     if (role === "fan") {
       return {
-        badge: "Welcome Back, Collector",
+        badge: { text: "Your Collection Awaits", icon: Library },
         heading: (
           <>
-            <span className="text-foreground">Hey {displayName}!</span>
+            <span className="text-foreground">Discover Your</span>
             <br />
-            <span className="text-gradient">Ready to Discover?</span>
+            <span className="text-gradient">Next Favorite.</span>
           </>
         ),
-        subheading: "Explore new releases from your favorite artists, grow your collection, and find your next favorite track.",
+        subheading: "Own the music you love. Support the artists you believe in. Build a collection that's truly yours.",
         ctas: (
           <>
             <Button
@@ -202,7 +203,7 @@ export default function Index() {
               asChild
             >
               <Link to="/browse">
-                <Music className="w-5 h-5 mr-2" />
+                <Headphones className="w-5 h-5 mr-2" />
                 Discover Music
               </Link>
             </Button>
@@ -224,15 +225,15 @@ export default function Index() {
 
     if (role === "artist") {
       return {
-        badge: "Artist Studio",
+        badge: { text: "Artist Studio", icon: Sparkles },
         heading: (
           <>
-            <span className="text-foreground">Welcome, {displayName}!</span>
+            <span className="text-foreground">Your Fans Are</span>
             <br />
-            <span className="text-gradient">Share Your Sound.</span>
+            <span className="text-gradient">Waiting.</span>
           </>
         ),
-        subheading: "Upload new tracks, connect with your collectors, and grow your fanbase on JumTunes.",
+        subheading: `Share your sound, ${displayName}. Earn directly from your collectors and grow your fanbase.`,
         ctas: (
           <>
             <Button
@@ -263,15 +264,15 @@ export default function Index() {
 
     if (role === "label") {
       return {
-        badge: "Label HQ",
+        badge: { text: "Label Command Center", icon: Crown },
         heading: (
           <>
-            <span className="text-foreground">Welcome, {displayName}!</span>
+            <span className="text-foreground">Build Your</span>
             <br />
-            <span className="text-gradient">Manage Your Roster.</span>
+            <span className="text-gradient">Empire.</span>
           </>
         ),
-        subheading: "Upload music for your artists, manage your roster, and track your label's performance.",
+        subheading: `Empower your roster, ${displayName}. Manage releases, track performance, and scale your label.`,
         ctas: (
           <>
             <Button
@@ -300,17 +301,17 @@ export default function Index() {
       };
     }
 
-    // Fallback for any edge case
+    // Fallback
     return {
-      badge: "Welcome to JumTunes",
+      badge: { text: "Welcome to JumTunes", icon: Music },
       heading: (
         <>
-          <span className="text-foreground">Collect Music.</span>
+          <span className="text-foreground">Where Music</span>
           <br />
-          <span className="text-gradient">Own the Experience.</span>
+          <span className="text-gradient">Meets Ownership.</span>
         </>
       ),
-      subheading: "JumTunes is where fans become collectors. Discover exclusive tracks, support your favorite artists, and build a music collection that's truly yours.",
+      subheading: "Discover exclusive tracks, support your favorite artists, and build a music collection that's truly yours.",
       ctas: (
         <Button
           size="lg"
@@ -331,49 +332,76 @@ export default function Index() {
   return (
     <Layout>
       <div className="animate-fade-in">
-      {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+      {/* Hero Section - Split Layout */}
+      <section className="relative min-h-[85vh] flex items-center overflow-hidden py-12 md:py-0">
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/30 rounded-full blur-[128px] animate-pulse-glow" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/30 rounded-full blur-[128px] animate-pulse-glow" style={{ animationDelay: "1s" }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-secondary/10 rounded-full blur-[200px]" />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[150px] animate-pulse-glow" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-[150px] animate-pulse-glow" style={{ animationDelay: "1s" }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-secondary/5 rounded-full blur-[200px]" />
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Brand Logo */}
-            <div className="flex justify-center mb-4 relative">
-              {/* Glow effect */}
-              <div className="absolute inset-0 flex justify-center items-center">
-                <div className="w-40 h-40 md:w-60 md:h-60 bg-primary/40 rounded-full blur-[80px]" />
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Left Side - Motivational Content */}
+            <div className="text-center lg:text-left order-2 lg:order-1">
+              {/* Small Logo */}
+              <div className="flex justify-center lg:justify-start mb-6 relative">
+                <div className="absolute inset-0 flex justify-center lg:justify-start items-center">
+                  <div className="w-24 h-24 bg-primary/30 rounded-full blur-[60px]" />
+                </div>
+                <img 
+                  src="/images/jumtunes-logo.png" 
+                  alt="JumTunes" 
+                  className="h-20 md:h-24 w-auto object-contain relative z-10"
+                />
               </div>
-              <img 
-                src="/images/jumtunes-logo.png" 
-                alt="JumTunes" 
-                className="h-40 md:h-60 w-auto object-contain relative z-10"
-              />
+
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-6">
+                <heroContent.badge.icon className="w-4 h-4 text-accent" />
+                <span className="text-sm font-medium text-muted-foreground">{heroContent.badge.text}</span>
+              </div>
+
+              {/* Main Heading */}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+                {heroContent.heading}
+              </h1>
+
+              {/* Subheading */}
+              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0">
+                {heroContent.subheading}
+              </p>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                {heroContent.ctas}
+              </div>
+
+              {/* Quick Stats for Guests */}
+              {!user && (
+                <div className="flex items-center justify-center lg:justify-start gap-6 mt-8 pt-8 border-t border-glass-border">
+                  <div className="text-center lg:text-left">
+                    <div className="text-2xl font-bold text-gradient">50K+</div>
+                    <div className="text-xs text-muted-foreground">Tracks</div>
+                  </div>
+                  <div className="w-px h-8 bg-glass-border" />
+                  <div className="text-center lg:text-left">
+                    <div className="text-2xl font-bold text-gradient">10K+</div>
+                    <div className="text-xs text-muted-foreground">Artists</div>
+                  </div>
+                  <div className="w-px h-8 bg-glass-border" />
+                  <div className="text-center lg:text-left">
+                    <div className="text-2xl font-bold text-gradient">$2M+</div>
+                    <div className="text-xs text-muted-foreground">Earned</div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-4">
-              <Zap className="w-4 h-4 text-accent" />
-              <span className="text-sm text-muted-foreground">{heroContent.badge}</span>
-            </div>
-
-            {/* Main Heading */}
-            <h1 className="text-5xl md:text-7xl font-bold mb-4 leading-tight">
-              {heroContent.heading}
-            </h1>
-
-            {/* Subheading */}
-            <p className="text-xl text-muted-foreground mb-6 max-w-2xl mx-auto">
-              {heroContent.subheading}
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {heroContent.ctas}
+            {/* Right Side - Featured Content Carousel */}
+            <div className="order-1 lg:order-2">
+              <FeaturedHeroCarousel />
             </div>
           </div>
         </div>
