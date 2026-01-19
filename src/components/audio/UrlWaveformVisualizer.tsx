@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface UrlWaveformVisualizerProps {
@@ -12,7 +12,7 @@ interface UrlWaveformVisualizerProps {
   backgroundColor?: string;
 }
 
-export function UrlWaveformVisualizer({
+export const UrlWaveformVisualizer = forwardRef<HTMLDivElement, UrlWaveformVisualizerProps>(({
   audioUrl,
   currentTime,
   duration,
@@ -21,66 +21,105 @@ export function UrlWaveformVisualizer({
   barColor = 'hsl(var(--muted-foreground) / 0.3)',
   progressColor = 'hsl(var(--primary))',
   backgroundColor = 'transparent',
-}: UrlWaveformVisualizerProps) {
+}, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [waveformData, setWaveformData] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [hoveredPosition, setHoveredPosition] = useState<number | null>(null);
   const lastUrlRef = useRef<string>('');
 
+  // Generate fallback waveform for immediate visual feedback
+  const generateFallbackWaveform = useCallback(() => {
+    return Array.from({ length: 80 }, (_, i) => {
+      const base = 0.4 + Math.sin(i * 0.15) * 0.15;
+      const variation = Math.sin(i * 0.3) * 0.2 + Math.cos(i * 0.1) * 0.1;
+      return Math.max(0.15, Math.min(1, base + variation));
+    });
+  }, []);
+
   // Extract waveform data from audio URL
   useEffect(() => {
-    if (!audioUrl || audioUrl === lastUrlRef.current) return;
+    if (!audioUrl) return;
+    
+    // Only refetch if URL actually changed
+    if (audioUrl === lastUrlRef.current && waveformData.length > 0) {
+      setIsLoading(false);
+      return;
+    }
+    
     lastUrlRef.current = audioUrl;
+    setHasError(false);
+    
+    // Show fallback immediately while loading
+    setWaveformData(generateFallbackWaveform());
+    setIsLoading(true);
 
+    const controller = new AbortController();
+    
     const extractWaveform = async () => {
-      setIsLoading(true);
       try {
-        const response = await fetch(audioUrl);
-        if (!response.ok) throw new Error('Failed to fetch audio');
+        const response = await fetch(audioUrl, { 
+          signal: controller.signal,
+          mode: 'cors',
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch audio: ${response.status}`);
+        }
         
         const arrayBuffer = await response.arrayBuffer();
         const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         
-        // Get audio data from the first channel
-        const rawData = audioBuffer.getChannelData(0);
-        const samples = 100; // Number of bars in the waveform
-        const blockSize = Math.floor(rawData.length / samples);
-        const filteredData: number[] = [];
-        
-        for (let i = 0; i < samples; i++) {
-          const blockStart = blockSize * i;
-          let sum = 0;
-          for (let j = 0; j < blockSize; j++) {
-            sum += Math.abs(rawData[blockStart + j]);
+        try {
+          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+          
+          // Get audio data from the first channel
+          const rawData = audioBuffer.getChannelData(0);
+          const samples = 80; // Number of bars in the waveform
+          const blockSize = Math.floor(rawData.length / samples);
+          const filteredData: number[] = [];
+          
+          for (let i = 0; i < samples; i++) {
+            const blockStart = blockSize * i;
+            let sum = 0;
+            for (let j = 0; j < blockSize; j++) {
+              sum += Math.abs(rawData[blockStart + j]);
+            }
+            filteredData.push(sum / blockSize);
           }
-          filteredData.push(sum / blockSize);
+          
+          // Normalize the data
+          const maxValue = Math.max(...filteredData);
+          if (maxValue > 0) {
+            const normalizedData = filteredData.map(val => Math.max(0.1, val / maxValue));
+            setWaveformData(normalizedData);
+          }
+          
+          audioContext.close();
+        } catch (decodeError) {
+          console.warn('Failed to decode audio data:', decodeError);
+          // Keep using fallback waveform
         }
-        
-        // Normalize the data
-        const maxValue = Math.max(...filteredData);
-        const normalizedData = filteredData.map(val => val / maxValue);
-        
-        setWaveformData(normalizedData);
-        audioContext.close();
       } catch (error) {
-        console.error('Failed to extract waveform:', error);
-        // Fallback: generate procedural waveform for visual purposes
-        const fallbackData = Array.from({ length: 100 }, (_, i) => {
-          const base = 0.3 + Math.sin(i * 0.2) * 0.2;
-          const variation = Math.random() * 0.3;
-          return Math.min(1, base + variation);
-        });
-        setWaveformData(fallbackData);
+        if ((error as Error).name !== 'AbortError') {
+          console.warn('Failed to extract waveform:', error);
+          setHasError(true);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
-    extractWaveform();
-  }, [audioUrl]);
+    // Small delay to allow the component to mount properly
+    const timeoutId = setTimeout(extractWaveform, 100);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [audioUrl, generateFallbackWaveform]);
 
   // Draw the waveform
   const drawWaveform = useCallback(() => {
@@ -93,6 +132,8 @@ export function UrlWaveformVisualizer({
 
     // Set canvas size
     const rect = container.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    
     const dpr = window.devicePixelRatio || 1;
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
@@ -107,13 +148,16 @@ export function UrlWaveformVisualizer({
     const hoverPosition = hoveredPosition !== null ? hoveredPosition * width : null;
 
     // Clear canvas
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, width, height);
+    ctx.clearRect(0, 0, width, height);
+    if (backgroundColor !== 'transparent') {
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(0, 0, width, height);
+    }
 
     // Draw bars
     waveformData.forEach((value, index) => {
       const x = index * barWidth;
-      const barHeight = value * (height * 0.8);
+      const barHeight = Math.max(value * (height * 0.85), 2);
       const y = (height - barHeight) / 2;
 
       // Determine if this bar is before the current progress
@@ -148,9 +192,9 @@ export function UrlWaveformVisualizer({
 
     // Draw hover indicator
     if (hoverPosition !== null) {
-      ctx.strokeStyle = 'hsl(var(--foreground) / 0.5)';
+      ctx.strokeStyle = 'hsl(var(--foreground) / 0.4)';
       ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
+      ctx.setLineDash([3, 3]);
       ctx.beginPath();
       ctx.moveTo(hoverPosition, 0);
       ctx.lineTo(hoverPosition, height);
@@ -158,11 +202,13 @@ export function UrlWaveformVisualizer({
       ctx.setLineDash([]);
     }
 
-    // Draw playhead
-    ctx.fillStyle = progressColor;
-    ctx.beginPath();
-    ctx.arc(progressPosition, height / 2, 4, 0, Math.PI * 2);
-    ctx.fill();
+    // Draw playhead dot
+    if (progressPosition > 0) {
+      ctx.fillStyle = progressColor;
+      ctx.beginPath();
+      ctx.arc(progressPosition, height / 2, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }, [waveformData, currentTime, duration, hoveredPosition, barColor, progressColor, backgroundColor]);
 
   // Redraw on data or time change
@@ -172,7 +218,9 @@ export function UrlWaveformVisualizer({
 
   // Handle resize
   useEffect(() => {
-    const handleResize = () => drawWaveform();
+    const handleResize = () => {
+      requestAnimationFrame(drawWaveform);
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [drawWaveform]);
@@ -200,22 +248,23 @@ export function UrlWaveformVisualizer({
 
   return (
     <div 
-      ref={containerRef}
-      className={cn("relative w-full h-12", className)}
+      ref={(node) => {
+        containerRef.current = node;
+        if (typeof ref === 'function') {
+          ref(node);
+        } else if (ref) {
+          ref.current = node;
+        }
+      }}
+      className={cn("relative w-full h-8", className)}
     >
-      {isLoading ? (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex gap-1">
-            {Array.from({ length: 20 }).map((_, i) => (
-              <div
-                key={i}
-                className="w-1 bg-muted-foreground/20 rounded-full animate-pulse"
-                style={{
-                  height: `${20 + Math.random() * 60}%`,
-                  animationDelay: `${i * 50}ms`,
-                }}
-              />
-            ))}
+      {isLoading && waveformData.length === 0 ? (
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary/50 rounded-full transition-all duration-150"
+              style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+            />
           </div>
         </div>
       ) : (
@@ -229,4 +278,6 @@ export function UrlWaveformVisualizer({
       )}
     </div>
   );
-}
+});
+
+UrlWaveformVisualizer.displayName = 'UrlWaveformVisualizer';
