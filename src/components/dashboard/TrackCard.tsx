@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Disc3, Edit, Trash2, Play, Pause, ListPlus, Lock } from "lucide-react";
+import { Disc3, Edit, Trash2, Play, Pause, ListPlus, Lock, Mic2 } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ interface TrackCardProps {
     moods?: string[] | null;
     duration?: number | null;
     is_explicit?: boolean;
+    has_karaoke?: boolean;
     artist?: {
       id: string;
       display_name: string | null;
@@ -116,15 +117,25 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
               </div>
             )}
 
-            {/* Explicit Badge */}
-            {track.is_explicit && (
-              <Badge 
-                variant="destructive" 
-                className="absolute top-2 left-2 text-[10px] px-1.5 py-0 h-5"
-              >
-                E
-              </Badge>
-            )}
+            {/* Badges - Top Left */}
+            <div className="absolute top-2 left-2 flex gap-1">
+              {track.is_explicit && (
+                <Badge 
+                  variant="destructive" 
+                  className="text-[10px] px-1.5 py-0 h-5"
+                >
+                  E
+                </Badge>
+              )}
+              {track.has_karaoke && (
+                <Badge 
+                  className="text-[10px] px-1.5 py-0 h-5 bg-primary/90 hover:bg-primary text-primary-foreground gap-0.5"
+                  title="Karaoke available"
+                >
+                  <Mic2 className="w-3 h-3" />
+                </Badge>
+              )}
+            </div>
 
             {/* Play overlay for fan-facing cards */}
             {showPlayButton && (
