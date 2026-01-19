@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Mic, Music, X, Info, FileText, Upload } from 'lucide-react';
+import { Mic, Music, X, Info, FileText, Upload, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -18,6 +18,7 @@ interface KaraokeSectionProps {
   lyrics: string;
   onLyricsChange: (lyrics: string) => void;
   disabled?: boolean;
+  onPreview?: () => void;
 }
 
 export const KaraokeSection = ({
@@ -28,6 +29,7 @@ export const KaraokeSection = ({
   lyrics,
   onLyricsChange,
   disabled,
+  onPreview,
 }: KaraokeSectionProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -302,7 +304,22 @@ export const KaraokeSection = ({
                   ? "✓ Synchronized lyrics detected - lyrics will scroll with the music" 
                   : "Tip: Use LRC format for synchronized lyrics display"}
               </span>
-              <span>{lyrics.length} characters</span>
+              <div className="flex items-center gap-3">
+                <span>{lyrics.length} characters</span>
+                {onPreview && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={onPreview}
+                    disabled={disabled}
+                    className="h-7 text-xs"
+                  >
+                    <Play className="w-3 h-3 mr-1" />
+                    Preview Sync
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
