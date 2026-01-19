@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Loader2, Search, CheckCircle, XCircle, User, 
-  ShieldCheck, Music, Building2 
+  ShieldCheck, Music, Building2, Shield, ShieldOff 
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 type UserWithRole = {
   id: string;
@@ -30,11 +31,13 @@ type UserWithRole = {
   is_verified: boolean | null;
   created_at: string;
   role: string | null;
+  isAdmin: boolean;
 };
 
 export default function AdminUsers() {
   const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
 
   // Fetch all users with their roles
   const { data: users, isLoading } = useQuery({
@@ -53,11 +56,22 @@ export default function AdminUsers() {
 
       if (rolesError) throw rolesError;
 
-      const roleMap = new Map(roles?.map(r => [r.user_id, r.role]) || []);
+      // Create a map for primary roles and check for admin
+      const roleMap = new Map<string, string>();
+      const adminSet = new Set<string>();
+      
+      roles?.forEach(r => {
+        if (r.role === 'admin') {
+          adminSet.add(r.user_id);
+        } else if (!roleMap.has(r.user_id)) {
+          roleMap.set(r.user_id, r.role);
+        }
+      });
 
       return profiles?.map(profile => ({
         ...profile,
         role: roleMap.get(profile.id) || 'fan',
+        isAdmin: adminSet.has(profile.id),
       })) as UserWithRole[];
     },
   });
@@ -77,6 +91,48 @@ export default function AdminUsers() {
     },
     onError: (error) => {
       toast.error('Failed to update verification');
+      console.error(error);
+    },
+  });
+
+  // Promote to admin
+  const promoteToAdminMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from('user_roles')
+        .insert({ user_id: userId, role: 'admin' });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success('User promoted to admin');
+    },
+    onError: (error: any) => {
+      if (error.code === '23505') {
+        toast.error('User is already an admin');
+      } else {
+        toast.error('Failed to promote user');
+      }
+      console.error(error);
+    },
+  });
+
+  // Remove admin role
+  const removeAdminMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId)
+        .eq('role', 'admin');
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success('Admin role removed');
+    },
+    onError: (error) => {
+      toast.error('Failed to remove admin role');
       console.error(error);
     },
   });
@@ -171,13 +227,71 @@ export default function AdminUsers() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Badge variant={getRoleBadgeVariant(user.role) as any}>
-                    <span className="flex items-center gap-1">
-                      {getRoleIcon(user.role)}
-                      {user.role || 'fan'}
-                    </span>
-                  </Badge>
+                  <div className="flex items-center gap-1">
+                    <Badge variant={getRoleBadgeVariant(user.role) as any}>
+                      <span className="flex items-center gap-1">
+                        {getRoleIcon(user.role)}
+                        {user.role || 'fan'}
+                      </span>
+                    </Badge>
+                    {user.isAdmin && (
+                      <Badge variant="destructive">
+                        <span className="flex items-center gap-1">
+                          <ShieldCheck className="w-3 h-3" />
+                          admin
+                        </span>
+                      </Badge>
+                    )}
+                  </div>
 
+                  {/* Admin Toggle */}
+                  {user.id !== currentUser?.id && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant={user.isAdmin ? "outline" : "destructive"}
+                          size="sm"
+                        >
+                          {user.isAdmin ? (
+                            <>
+                              <ShieldOff className="w-3 h-3 mr-1" />
+                              Remove Admin
+                            </>
+                          ) : (
+                            <>
+                              <Shield className="w-3 h-3 mr-1" />
+                              Make Admin
+                            </>
+                          )}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            {user.isAdmin ? 'Remove Admin Access' : 'Grant Admin Access'}
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {user.isAdmin
+                              ? `Remove admin privileges from ${user.display_name || 'this user'}? They will lose access to the admin dashboard.`
+                              : `Grant admin privileges to ${user.display_name || 'this user'}? They will have full access to the admin dashboard and can manage users, tracks, and finances.`}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => user.isAdmin 
+                              ? removeAdminMutation.mutate(user.id)
+                              : promoteToAdminMutation.mutate(user.id)
+                            }
+                          >
+                            {user.isAdmin ? 'Remove Admin' : 'Make Admin'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+
+                  {/* Verify Toggle */}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
