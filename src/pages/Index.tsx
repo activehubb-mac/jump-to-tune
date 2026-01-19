@@ -50,15 +50,27 @@ const stats = [
   { value: "$2M+", label: "Artist Earnings" },
 ];
 
-// Featured Artists Section Component
+// Featured Artists Section Component - Banner style with carousel
 function FeaturedArtistsSection() {
   const { data: featuredArtists, isLoading } = useFeaturedArtists("home_hero");
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Auto-rotate carousel when more than 1 artist
+  useEffect(() => {
+    if (!featuredArtists || featuredArtists.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % featuredArtists.length);
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [featuredArtists]);
 
   if (isLoading) {
     return (
-      <section className="py-12 bg-card/10">
+      <section className="py-8">
         <div className="container mx-auto px-4">
-          <div className="flex justify-center py-8">
+          <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         </div>
@@ -70,65 +82,118 @@ function FeaturedArtistsSection() {
     return null;
   }
 
-  return (
-    <section className="py-12 bg-card/10">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
-              <Star className="w-7 h-7 text-accent" />
-              Featured Artists
-            </h2>
-            <p className="text-muted-foreground mt-1">Handpicked talent worth discovering</p>
-          </div>
-          <Button variant="outline" className="hidden md:flex" asChild>
-            <Link to="/artists">View All Artists</Link>
-          </Button>
-        </div>
+  const currentArtist = featuredArtists[currentIndex];
+  const showCarouselControls = featuredArtists.length > 1;
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-          {featuredArtists.slice(0, 6).map((item) => (
-            <Link
-              key={item.id}
-              to={`/artist/${item.content_id}`}
-              className="glass-card p-4 text-center group hover:bg-primary/10 transition-all duration-300"
+  return (
+    <section className="py-8">
+      <div className="container mx-auto px-4">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-accent/20 via-primary/10 to-accent/20 p-6 md:p-10">
+          {/* Background decorative elements */}
+          <div className="absolute top-0 left-0 w-72 h-72 bg-accent/20 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
+          <div className="absolute bottom-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
+          
+          {/* Floating decoration */}
+          <div className="absolute top-6 right-10 opacity-20">
+            <Sparkles className="w-10 h-10 text-accent animate-pulse" />
+          </div>
+          <div className="absolute bottom-6 left-10 opacity-15">
+            <Music className="w-8 h-8 text-primary animate-bounce" style={{ animationDuration: "3s" }} />
+          </div>
+          
+          {/* Header */}
+          <div className="relative z-10 flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center border border-accent/40">
+                <Star className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <h2 className="text-xl md:text-2xl font-bold text-foreground">Featured Artists</h2>
+                <p className="text-sm text-muted-foreground">Handpicked talent worth discovering</p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" className="hidden sm:flex" asChild>
+              <Link to="/artists">View All</Link>
+            </Button>
+          </div>
+          
+          {/* Artist Content */}
+          <div className="relative z-10">
+            <Link 
+              to={`/artist/${currentArtist.content_id}`}
+              className="flex flex-col md:flex-row items-center gap-6 md:gap-10 group"
             >
-              <div className="relative w-20 h-20 mx-auto mb-3">
-                <div className="w-full h-full rounded-full bg-muted/50 flex items-center justify-center group-hover:scale-105 transition-transform overflow-hidden">
-                  {item.profile?.avatar_url ? (
+              {/* Artist Avatar */}
+              <div className="shrink-0 relative">
+                <div className="w-28 h-28 md:w-36 md:h-36 rounded-full bg-muted/50 overflow-hidden border-4 border-accent/30 shadow-lg shadow-accent/20 group-hover:scale-105 group-hover:border-accent/60 transition-all duration-300">
+                  {currentArtist.profile?.avatar_url ? (
                     <img
-                      src={item.profile.avatar_url}
-                      alt={item.profile.display_name || "Artist"}
+                      src={currentArtist.profile.avatar_url}
+                      alt={currentArtist.profile.display_name || "Artist"}
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <Users className="w-8 h-8 text-muted-foreground" />
+                    <div className="w-full h-full flex items-center justify-center bg-muted">
+                      <Users className="w-12 h-12 text-muted-foreground" />
+                    </div>
                   )}
                 </div>
-                {item.profile?.is_verified && (
-                  <div className="absolute -top-1 -right-1 bg-primary rounded-full p-1">
-                    <BadgeCheck className="w-4 h-4 text-primary-foreground" />
+                {currentArtist.profile?.is_verified && (
+                  <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1.5 shadow-lg">
+                    <BadgeCheck className="w-5 h-5 text-primary-foreground" />
                   </div>
                 )}
               </div>
-              <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                {item.profile?.display_name || "Unknown Artist"}
-              </h3>
-              {item.profile?.bio && (
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                  {item.profile.bio}
-                </p>
-              )}
-              <div className="mt-2 inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-accent/20 text-accent">
-                <Star className="w-3 h-3" />
-                Featured
+              
+              {/* Artist Info */}
+              <div className="flex-1 text-center md:text-left">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/20 text-accent text-xs font-medium mb-3">
+                  <Star className="w-3 h-3" />
+                  Featured Artist
+                </div>
+                <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-accent transition-colors">
+                  {currentArtist.profile?.display_name || "Unknown Artist"}
+                </h3>
+                {currentArtist.profile?.bio && (
+                  <p className="text-muted-foreground max-w-xl line-clamp-2 mb-4">
+                    {currentArtist.profile.bio}
+                  </p>
+                )}
+                <div className="flex items-center justify-center md:justify-start gap-4">
+                  <Button 
+                    className="gradient-accent neon-glow-subtle hover:scale-105 transition-all duration-300"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    View Profile
+                  </Button>
+                </div>
               </div>
             </Link>
-          ))}
+          </div>
+          
+          {/* Carousel Indicators */}
+          {showCarouselControls && (
+            <div className="relative z-10 flex items-center justify-center gap-2 mt-6">
+              {featuredArtists.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentIndex(idx)}
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    idx === currentIndex 
+                      ? "bg-accent w-8" 
+                      : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                  }`}
+                  aria-label={`Go to artist ${idx + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
-
-        <div className="mt-6 text-center md:hidden">
-          <Button variant="outline" asChild>
+        
+        {/* Mobile View All Button */}
+        <div className="mt-4 text-center sm:hidden">
+          <Button variant="outline" size="sm" asChild>
             <Link to="/artists">View All Artists</Link>
           </Button>
         </div>
@@ -584,11 +649,11 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Karaoke Promo Banner */}
-      <KaraokePromoBanner />
-
       {/* Featured Artists Section */}
       <FeaturedArtistsSection />
+
+      {/* Karaoke Promo Banner */}
+      <KaraokePromoBanner />
 
       {/* Featured Labels Section */}
       <FeaturedLabelsSection />
