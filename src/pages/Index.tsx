@@ -1,7 +1,7 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Music, Disc3, Users, Building2, Headphones, Zap, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History, ListPlus, Lock, TrendingUp, Rocket, Crown, Star, BadgeCheck } from "lucide-react";
+import { Music, Disc3, Users, Building2, Headphones, Zap, Shield, Upload, LayoutDashboard, Library, Sparkles, UserPlus, UserMinus, Loader2, Play, Clock, History, ListPlus, Lock, TrendingUp, Rocket, Crown, Star, BadgeCheck, ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import { DownloadButton } from "@/components/download/DownloadButton";
 import { TrendingCarousel } from "@/components/home/TrendingCarousel";
 import { KaraokePromoBanner } from "@/components/home/KaraokePromoBanner";
@@ -19,7 +19,7 @@ import { useState, useEffect } from "react";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
-import { useFeaturedArtists, useFeaturedLabels } from "@/hooks/useFeaturedContent";
+import { useFeaturedArtists, useFeaturedLabels, useFeaturedTracks } from "@/hooks/useFeaturedContent";
 const features = [
   {
     icon: Disc3,
@@ -236,21 +236,37 @@ function FeaturedArtistsSection() {
             </Link>
           </div>
           
-          {/* Carousel Indicators */}
+          {/* Carousel Controls */}
           {showCarouselControls && (
-            <div className="relative z-10 flex items-center justify-center gap-2 mt-6">
-              {featuredArtists.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentIndex(idx)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                    idx === currentIndex 
-                      ? "bg-accent w-8" 
-                      : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                  }`}
-                  aria-label={`Go to artist ${idx + 1}`}
-                />
-              ))}
+            <div className="relative z-10 flex items-center justify-center gap-4 mt-6">
+              <button
+                onClick={() => setCurrentIndex((prev) => (prev - 1 + featuredArtists.length) % featuredArtists.length)}
+                className="w-10 h-10 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center transition-colors"
+                aria-label="Previous artist"
+              >
+                <ChevronLeft className="w-5 h-5 text-foreground" />
+              </button>
+              <div className="flex items-center gap-2">
+                {featuredArtists.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                      idx === currentIndex 
+                        ? "bg-accent w-8" 
+                        : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                    }`}
+                    aria-label={`Go to artist ${idx + 1}`}
+                  />
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentIndex((prev) => (prev + 1) % featuredArtists.length)}
+                className="w-10 h-10 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center transition-colors"
+                aria-label="Next artist"
+              >
+                <ChevronRight className="w-5 h-5 text-foreground" />
+              </button>
             </div>
           )}
         </div>
@@ -469,21 +485,37 @@ function FeaturedLabelsSection() {
             </Link>
           </div>
           
-          {/* Carousel Indicators */}
+          {/* Carousel Controls */}
           {showCarouselControls && (
-            <div className="relative z-10 flex items-center justify-center gap-2 mt-6">
-              {featuredLabels.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentIndex(idx)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                    idx === currentIndex 
-                      ? "bg-secondary w-8" 
-                      : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                  }`}
-                  aria-label={`Go to label ${idx + 1}`}
-                />
-              ))}
+            <div className="relative z-10 flex items-center justify-center gap-4 mt-6">
+              <button
+                onClick={() => setCurrentIndex((prev) => (prev - 1 + featuredLabels.length) % featuredLabels.length)}
+                className="w-10 h-10 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center transition-colors"
+                aria-label="Previous label"
+              >
+                <ChevronLeft className="w-5 h-5 text-foreground" />
+              </button>
+              <div className="flex items-center gap-2">
+                {featuredLabels.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                      idx === currentIndex 
+                        ? "bg-secondary w-8" 
+                        : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                    }`}
+                    aria-label={`Go to label ${idx + 1}`}
+                  />
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentIndex((prev) => (prev + 1) % featuredLabels.length)}
+                className="w-10 h-10 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center transition-colors"
+                aria-label="Next label"
+              >
+                <ChevronRight className="w-5 h-5 text-foreground" />
+              </button>
             </div>
           )}
         </div>
@@ -492,6 +524,259 @@ function FeaturedLabelsSection() {
         <div className="mt-4 text-center sm:hidden">
           <Button variant="outline" size="sm" asChild>
             <Link to="/labels">View All Labels</Link>
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Featured Tracks Section Component - Banner style with carousel
+function FeaturedTracksSection() {
+  const { data: featuredTracks, isLoading } = useFeaturedTracks("home_hero");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [trackStats, setTrackStats] = useState<Record<string, { likeCount: number; purchaseCount: number }>>({});
+
+  // Fetch stats for all featured tracks
+  useEffect(() => {
+    if (!featuredTracks || featuredTracks.length === 0) return;
+
+    const fetchStats = async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const stats: Record<string, { likeCount: number; purchaseCount: number }> = {};
+
+      await Promise.all(
+        featuredTracks.map(async (track) => {
+          const [likesResult, purchasesResult] = await Promise.all([
+            supabase
+              .from("likes")
+              .select("id", { count: "exact", head: true })
+              .eq("track_id", track.content_id),
+            supabase
+              .from("purchases")
+              .select("id", { count: "exact", head: true })
+              .eq("track_id", track.content_id),
+          ]);
+
+          stats[track.content_id] = {
+            likeCount: likesResult.count || 0,
+            purchaseCount: purchasesResult.count || 0,
+          };
+        })
+      );
+
+      setTrackStats(stats);
+    };
+
+    fetchStats();
+  }, [featuredTracks]);
+
+  // Auto-rotate carousel when more than 1 track
+  useEffect(() => {
+    if (!featuredTracks || featuredTracks.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % featuredTracks.length);
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [featuredTracks]);
+
+  if (isLoading) {
+    return (
+      <section className="py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!featuredTracks || featuredTracks.length === 0) {
+    return null;
+  }
+
+  const currentTrack = featuredTracks[currentIndex];
+  const showCarouselControls = featuredTracks.length > 1;
+  const currentStats = trackStats[currentTrack.content_id];
+
+  return (
+    <section className="py-8">
+      <div className="container mx-auto px-4">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/20 via-accent/10 to-primary/20 p-6 md:p-10">
+          {/* Background decorative elements */}
+          <div className="absolute top-0 left-0 w-72 h-72 bg-primary/20 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
+          <div className="absolute bottom-0 right-0 w-64 h-64 bg-accent/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
+          
+          {/* Floating decoration */}
+          <div className="absolute top-6 right-10 opacity-20">
+            <Sparkles className="w-10 h-10 text-primary animate-pulse" />
+          </div>
+          <div className="absolute bottom-6 left-10 opacity-15">
+            <Disc3 className="w-8 h-8 text-accent animate-spin" style={{ animationDuration: "8s" }} />
+          </div>
+          
+          {/* Header */}
+          <div className="relative z-10 flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/40">
+                <Music className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl md:text-2xl font-bold text-foreground">Featured Tracks</h2>
+                <p className="text-sm text-muted-foreground">Curated hits you need to hear</p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" className="hidden sm:flex" asChild>
+              <Link to="/browse">View All</Link>
+            </Button>
+          </div>
+          
+          {/* Track Content */}
+          <div className="relative z-10">
+            <Link 
+              to={`/browse`}
+              className="flex flex-col md:flex-row items-center gap-6 md:gap-10 group"
+            >
+              {/* Track Cover */}
+              <div className="shrink-0 relative">
+                <div className="w-32 h-32 md:w-40 md:h-40 rounded-xl bg-muted/50 overflow-hidden border-4 border-primary/30 shadow-lg shadow-primary/20 group-hover:scale-105 group-hover:border-primary/60 transition-all duration-300">
+                  {currentTrack.track?.cover_art_url ? (
+                    <img
+                      src={currentTrack.track.cover_art_url}
+                      alt={currentTrack.track.title || "Track"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-muted">
+                      <Disc3 className="w-12 h-12 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                {/* Play overlay */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="w-14 h-14 rounded-full bg-primary/90 flex items-center justify-center shadow-lg">
+                    <Play className="w-6 h-6 text-primary-foreground ml-1" />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Track Info */}
+              <div className="flex-1 text-center md:text-left">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-medium mb-3">
+                  <Star className="w-3 h-3" />
+                  Featured Track
+                </div>
+                <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                  {currentTrack.track?.title || "Unknown Track"}
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  by <span className="text-foreground font-medium">{currentTrack.track?.artist_name || "Unknown Artist"}</span>
+                </p>
+                
+                {/* Stats */}
+                <div className="flex items-center justify-center md:justify-start gap-6 mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+                      <Heart className="w-4 h-4 text-accent" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-foreground">
+                        {formatCompactNumber(currentStats?.likeCount || 0)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Likes</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Users className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-foreground">
+                        {formatCompactNumber(currentStats?.purchaseCount || 0)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Collectors</p>
+                    </div>
+                  </div>
+                  {currentTrack.track?.price && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center">
+                        <Zap className="w-4 h-4 text-secondary" />
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-foreground">
+                          ${currentTrack.track.price.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Price</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex items-center justify-center md:justify-start gap-4">
+                  <Button 
+                    className="gradient-accent neon-glow-subtle hover:scale-105 transition-all duration-300"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    Listen Now
+                  </Button>
+                  {currentTrack.track?.has_karaoke && (
+                    <Button 
+                      variant="outline"
+                      className="border-accent/50 text-accent hover:bg-accent/10"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Headphones className="w-4 h-4 mr-2" />
+                      Karaoke
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Link>
+          </div>
+          
+          {/* Carousel Controls */}
+          {showCarouselControls && (
+            <div className="relative z-10 flex items-center justify-center gap-4 mt-6">
+              <button
+                onClick={() => setCurrentIndex((prev) => (prev - 1 + featuredTracks.length) % featuredTracks.length)}
+                className="w-10 h-10 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center transition-colors"
+                aria-label="Previous track"
+              >
+                <ChevronLeft className="w-5 h-5 text-foreground" />
+              </button>
+              <div className="flex items-center gap-2">
+                {featuredTracks.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                      idx === currentIndex 
+                        ? "bg-primary w-8" 
+                        : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                    }`}
+                    aria-label={`Go to track ${idx + 1}`}
+                  />
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentIndex((prev) => (prev + 1) % featuredTracks.length)}
+                className="w-10 h-10 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center transition-colors"
+                aria-label="Next track"
+              >
+                <ChevronRight className="w-5 h-5 text-foreground" />
+              </button>
+            </div>
+          )}
+        </div>
+        
+        {/* Mobile View All Button */}
+        <div className="mt-4 text-center sm:hidden">
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/browse">Browse All Tracks</Link>
           </Button>
         </div>
       </div>
@@ -859,6 +1144,9 @@ export default function Index() {
 
       {/* Featured Artists Section */}
       <FeaturedArtistsSection />
+
+      {/* Featured Tracks Section */}
+      <FeaturedTracksSection />
 
       {/* Karaoke Promo Banner */}
       <KaraokePromoBanner />
