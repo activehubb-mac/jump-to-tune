@@ -41,6 +41,12 @@ import ThemePreview from "./pages/ThemePreview";
 import Karaoke from "./pages/Karaoke";
 import NotFound from "./pages/NotFound";
 import AlbumDetail from "./pages/AlbumDetail";
+// Admin pages
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminTracks from "./pages/admin/AdminTracks";
+import AdminFinance from "./pages/admin/AdminFinance";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +93,13 @@ const App = () => (
                 <Route path="/artist/payouts" element={<ArtistPayouts />} />
                 <Route path="/settings/notifications" element={<NotificationSettings />} />
                 <Route path="/theme-preview" element={<ThemePreview />} />
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminDashboard />}>
+                  <Route index element={<AdminOverview />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="tracks" element={<AdminTracks />} />
+                  <Route path="finance" element={<AdminFinance />} />
+                </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <GlobalAudioPlayer />
