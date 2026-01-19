@@ -22,6 +22,7 @@ import { useTrackUpload } from "@/hooks/useTrackUpload";
 import { AudioUpload } from "@/components/upload/AudioUpload";
 import { CoverArtUpload } from "@/components/upload/CoverArtUpload";
 import { KaraokeSection } from "@/components/upload/KaraokeSection";
+import { KaraokePreviewModal } from "@/components/upload/KaraokePreviewModal";
 import { ArtistSelector } from "@/components/upload/ArtistSelector";
 import { InfoTooltip } from "@/components/upload/InfoTooltip";
 import MoodTagsInput from "@/components/upload/MoodTagsInput";
@@ -93,6 +94,7 @@ export default function Upload() {
   const [karaokeEnabled, setKaraokeEnabled] = useState(false);
   const [instrumentalFile, setInstrumentalFile] = useState<File | null>(null);
   const [lyrics, setLyrics] = useState("");
+  const [showKaraokePreview, setShowKaraokePreview] = useState(false);
 
   // New fields
   const [moods, setMoods] = useState<string[]>([]);
@@ -492,7 +494,20 @@ export default function Upload() {
               lyrics={lyrics}
               onLyricsChange={setLyrics}
               disabled={isUploading}
+              onPreview={audioFile && karaokeEnabled && lyrics.trim() ? () => setShowKaraokePreview(true) : undefined}
             />
+
+            {/* Karaoke Preview Modal */}
+            {audioFile && (
+              <KaraokePreviewModal
+                open={showKaraokePreview}
+                onOpenChange={setShowKaraokePreview}
+                audioFile={audioFile}
+                instrumentalFile={instrumentalFile}
+                lyrics={lyrics}
+                trackTitle={form.watch("title") || "Untitled Track"}
+              />
+            )}
 
             {/* Rights Confirmation */}
             <RightsConfirmation
