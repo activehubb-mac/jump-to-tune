@@ -37,6 +37,7 @@ import Wallet from "./pages/Wallet";
 import ArtistPayouts from "./pages/ArtistPayouts";
 import NotificationSettings from "./pages/NotificationSettings";
 import ThemePreview from "./pages/ThemePreview";
+import Karaoke from "./pages/Karaoke";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ const App = () => (
                 <Route path="/auth/reset-password" element={<ResetPassword />} />
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/browse" element={<Browse />} />
+                <Route path="/karaoke" element={<Karaoke />} />
                 <Route path="/artists" element={<Artists />} />
                 <Route path="/labels" element={<Labels />} />
                 <Route path="/artist/:id" element={<ArtistProfile />} />

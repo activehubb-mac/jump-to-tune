@@ -10,6 +10,7 @@ export interface TrendingTrack {
   artist_id: string;
   artist_name: string | null;
   artist_avatar: string | null;
+  has_karaoke: boolean | null;
   engagement_score: number;
 }
 
@@ -79,6 +80,7 @@ export function useTrendingTracks(limit: number = 6) {
             artist_id: track.artist_id,
             artist_name: artist?.display_name || null,
             artist_avatar: artist?.avatar_url || null,
+            has_karaoke: track.has_karaoke || null,
             engagement_score: engagementMap.get(track.id) || 0,
           };
         });
@@ -88,7 +90,7 @@ export function useTrendingTracks(limit: number = 6) {
       if (sortedTrackIds.length > 0) {
         const { data: tracks, error: tracksError } = await supabase
           .from("tracks")
-          .select("id, title, audio_url, cover_art_url, price, artist_id")
+          .select("id, title, audio_url, cover_art_url, price, artist_id, has_karaoke")
           .in("id", sortedTrackIds)
           .eq("is_draft", false);
 
@@ -106,7 +108,7 @@ export function useTrendingTracks(limit: number = 6) {
       // Fallback: Get most recent published tracks if no engagement data
       const { data: recentTracks, error: recentError } = await supabase
         .from("tracks")
-        .select("id, title, audio_url, cover_art_url, price, artist_id")
+        .select("id, title, audio_url, cover_art_url, price, artist_id, has_karaoke")
         .eq("is_draft", false)
         .order("created_at", { ascending: false })
         .limit(limit);

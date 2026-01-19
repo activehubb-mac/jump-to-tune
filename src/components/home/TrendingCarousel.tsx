@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Disc3, Play, TrendingUp, ListPlus, Lock, Loader2 } from "lucide-react";
+import { Disc3, Play, TrendingUp, ListPlus, Lock, Loader2, Mic2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Carousel,
@@ -142,6 +142,12 @@ export function TrendingCarousel({ onAddToQueue }: TrendingCarouselProps) {
                         />
                       ) : (
                         <Disc3 className="w-12 h-12 text-muted-foreground" />
+                      )}
+                      {/* Karaoke Badge */}
+                      {track.has_karaoke && (
+                        <span className="absolute top-2 right-2 flex items-center justify-center w-6 h-6 rounded-full bg-primary/90 text-primary-foreground" title="Sing-along available">
+                          <Mic2 className="w-3.5 h-3.5" />
+                        </span>
                       )}
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                         <button
