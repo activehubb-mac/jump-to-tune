@@ -1,6 +1,6 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { FeedbackProvider } from "@/contexts/FeedbackContext";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
@@ -18,6 +18,7 @@ import ArtistProfile from "./pages/ArtistProfile";
 import LabelProfile from "./pages/LabelProfile";
 import UserProfile from "./pages/UserProfile";
 import Collection from "./pages/Collection";
+import FanDashboard from "./pages/FanDashboard";
 import ArtistDashboard from "./pages/ArtistDashboard";
 import ArtistAnalytics from "./pages/ArtistAnalytics";
 import ArtistCollectors from "./pages/ArtistCollectors";
@@ -75,6 +76,8 @@ const App = () => (
                 <Route path="/label/:id" element={<LabelProfile />} />
                 <Route path="/profile/:id" element={<UserProfile />} />
                 <Route path="/library" element={<Collection />} />
+                <Route path="/collection" element={<Navigate to="/library" replace />} />
+                <Route path="/fan/dashboard" element={<FanDashboard />} />
                 <Route path="/artist/dashboard" element={<ArtistDashboard />} />
                 <Route path="/artist/analytics" element={<ArtistAnalytics />} />
                 <Route path="/artist/collectors" element={<ArtistCollectors />} />
