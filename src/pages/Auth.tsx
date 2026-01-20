@@ -4,7 +4,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Music, Mail, Lock, User, Building2, Headphones, ArrowRight, Loader2, RefreshCw, ArrowLeft, KeyRound } from "lucide-react";
+import { Music, Mail, Lock, User, Building2, Headphones, ArrowRight, Loader2, RefreshCw, ArrowLeft, KeyRound, Check, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
@@ -13,10 +13,33 @@ type AuthMode = "signin" | "signup";
 type UserRole = "fan" | "artist" | "label";
 
 const roles: { value: UserRole; label: string; icon: React.ElementType; description: string }[] = [
-  { value: "fan", label: "Fan", icon: Headphones, description: "Collect and own music" },
-  { value: "artist", label: "Artist", icon: Music, description: "Upload and sell your music" },
-  { value: "label", label: "Label", icon: Building2, description: "Manage artists and releases" },
+  { value: "fan", label: "Fan", icon: Headphones, description: "Browse, collect, and own music from your favorite artists" },
+  { value: "artist", label: "Artist", icon: Music, description: "Upload your music, build your fanbase, and earn from sales" },
+  { value: "label", label: "Label", icon: Building2, description: "Manage multiple artists, releases, and earnings in one place" },
 ];
+
+// Helper to detect email provider and get quick link
+const getEmailProvider = (email: string) => {
+  const domain = email.split("@")[1]?.toLowerCase();
+  if (!domain) return null;
+  
+  if (domain.includes("gmail") || domain.includes("googlemail")) {
+    return { name: "Gmail", url: "https://mail.google.com", color: "text-red-400" };
+  }
+  if (domain.includes("outlook") || domain.includes("hotmail") || domain.includes("live")) {
+    return { name: "Outlook", url: "https://outlook.live.com", color: "text-blue-400" };
+  }
+  if (domain.includes("yahoo")) {
+    return { name: "Yahoo Mail", url: "https://mail.yahoo.com", color: "text-purple-400" };
+  }
+  if (domain.includes("icloud") || domain.includes("me.com") || domain.includes("mac.com")) {
+    return { name: "iCloud Mail", url: "https://www.icloud.com/mail", color: "text-sky-400" };
+  }
+  if (domain.includes("proton") || domain.includes("protonmail")) {
+    return { name: "ProtonMail", url: "https://mail.proton.me", color: "text-violet-400" };
+  }
+  return null;
+};
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -252,6 +275,8 @@ export default function Auth() {
 
   // Email Confirmation Screen
   if (showEmailConfirmation) {
+    const emailProvider = getEmailProvider(pendingEmail);
+    
     return (
       <Layout showFooter={false}>
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
@@ -278,16 +303,45 @@ export default function Auth() {
 
             {/* Confirmation Card */}
             <div className="glass-card p-8 text-center space-y-6">
-              <div className="space-y-3">
-                <p className="text-muted-foreground text-sm">
-                  Click the link in the email to verify your account and get started.
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  Don't see it? Check your spam folder.
-                </p>
-              </div>
+              {/* Quick Open Email Button */}
+              {emailProvider && (
+                <a
+                  href={emailProvider.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    "flex items-center justify-center gap-2 w-full py-3 px-4 rounded-lg",
+                    "bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-colors",
+                    "text-primary font-medium"
+                  )}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Open {emailProvider.name}
+                </a>
+              )}
 
               <div className="space-y-3">
+                <div className="p-4 rounded-lg bg-muted/30 border border-glass-border">
+                  <p className="text-foreground text-sm font-medium mb-2">
+                    📬 What to do next:
+                  </p>
+                  <ol className="text-muted-foreground text-sm text-left space-y-1.5 list-decimal list-inside">
+                    <li>Open your email inbox</li>
+                    <li>Look for an email from <span className="text-foreground">JumTunes</span></li>
+                    <li>Click the <span className="text-primary">"Confirm Email"</span> button</li>
+                  </ol>
+                </div>
+                
+                <div className="flex items-center gap-2 justify-center text-amber-400 text-xs">
+                  <span>💡</span>
+                  <span>Can't find it? Check your <strong>spam</strong> or <strong>junk</strong> folder!</span>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <p className="text-muted-foreground text-xs">
+                  Still no email after a few minutes?
+                </p>
                 <Button
                   onClick={handleResendEmail}
                   disabled={isResending || resendCooldown > 0}
@@ -489,39 +543,58 @@ export default function Auth() {
               </button>
             </div>
 
-            {/* Role Selection for Signup */}
+            {/* Role Selection for Signup - Enhanced */}
             {mode === "signup" && (
-              <div className="mb-6">
-                <Label className="text-sm text-muted-foreground mb-3 block">I am a...</Label>
-                <div className="grid grid-cols-3 gap-2">
+              <div className="mb-6 space-y-3">
+                <div className="text-center pb-1">
+                  <Label className="text-base font-semibold text-foreground">Choose Your Account Type</Label>
+                  <p className="text-xs text-muted-foreground mt-1">This determines what features you'll have access to</p>
+                </div>
+                <div className="space-y-2">
                   {roles.map((role) => {
                     const Icon = role.icon;
+                    const isSelected = selectedRole === role.value;
                     return (
                       <button
                         key={role.value}
                         type="button"
                         onClick={() => setSelectedRole(role.value)}
                         className={cn(
-                          "p-3 rounded-lg border transition-all duration-200 text-center",
-                          selectedRole === role.value
-                            ? "border-primary bg-primary/10 neon-glow-subtle"
+                          "w-full p-4 rounded-lg border transition-all duration-200 flex items-center gap-3 text-left",
+                          isSelected
+                            ? "border-primary bg-primary/10 ring-2 ring-primary/30 neon-glow-subtle"
                             : "border-glass-border hover:border-primary/50 hover:bg-muted/50"
                         )}
                       >
-                        <Icon
-                          className={cn(
-                            "w-5 h-5 mx-auto mb-1",
-                            selectedRole === role.value ? "text-primary" : "text-muted-foreground"
-                          )}
-                        />
-                        <span
-                          className={cn(
-                            "text-xs font-medium",
-                            selectedRole === role.value ? "text-foreground" : "text-muted-foreground"
-                          )}
-                        >
-                          {role.label}
-                        </span>
+                        <div className={cn(
+                          "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
+                          isSelected ? "bg-primary/20" : "bg-muted/50"
+                        )}>
+                          <Icon
+                            className={cn(
+                              "w-5 h-5",
+                              isSelected ? "text-primary" : "text-muted-foreground"
+                            )}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span
+                            className={cn(
+                              "font-medium block",
+                              isSelected ? "text-foreground" : "text-muted-foreground"
+                            )}
+                          >
+                            {role.label}
+                          </span>
+                          <span className="text-xs text-muted-foreground line-clamp-1">
+                            {role.description}
+                          </span>
+                        </div>
+                        {isSelected && (
+                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
+                            <Check className="w-4 h-4 text-primary-foreground" />
+                          </div>
+                        )}
                       </button>
                     );
                   })}

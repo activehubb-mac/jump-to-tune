@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
+import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
 
 interface LayoutProps {
   children: ReactNode;
@@ -14,7 +15,10 @@ export function Layout({ children, showFooter = true }: LayoutProps) {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className={`flex-1 pt-16 ${isPlayerVisible ? "pb-24 md:pb-20" : ""}`}>
+      <div className="pt-16">
+        <EmailVerificationBanner />
+      </div>
+      <main className={`flex-1 ${isPlayerVisible ? "pb-24 md:pb-20" : ""}`}>
         {children}
       </main>
       {showFooter && <Footer />}
