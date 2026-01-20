@@ -19,6 +19,7 @@ import LabelProfile from "./pages/LabelProfile";
 import UserProfile from "./pages/UserProfile";
 import Collection from "./pages/Collection";
 import FanDashboard from "./pages/FanDashboard";
+import ForYou from "./pages/ForYou";
 import ArtistDashboard from "./pages/ArtistDashboard";
 import ArtistAnalytics from "./pages/ArtistAnalytics";
 import ArtistCollectors from "./pages/ArtistCollectors";
@@ -70,6 +71,7 @@ const App = () => (
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/browse" element={<Browse />} />
                 <Route path="/karaoke" element={<Karaoke />} />
+                <Route path="/for-you" element={<ForYou />} />
                 <Route path="/artists" element={<Artists />} />
                 <Route path="/labels" element={<Labels />} />
                 <Route path="/artist/:id" element={<ArtistProfile />} />

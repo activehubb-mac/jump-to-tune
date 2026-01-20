@@ -364,8 +364,13 @@ export default function FanDashboard() {
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
         <div className="mt-6 flex flex-wrap gap-3">
+          <Button asChild className="gradient-accent neon-glow-subtle">
+            <Link to="/for-you">
+              <Sparkles className="w-4 h-4 mr-2" />
+              For You Playlist
+            </Link>
+          </Button>
           <Button asChild variant="outline" className="border-glass-border">
             <Link to="/browse">
               <Music className="w-4 h-4 mr-2" />
