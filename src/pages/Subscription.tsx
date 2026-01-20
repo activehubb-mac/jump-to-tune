@@ -25,13 +25,15 @@ import {
   Music,
   Users,
   XCircle,
+  Pause,
+  Play,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useDownload } from "@/hooks/useDownload";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, addMonths } from "date-fns";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { CheckoutLoadingOverlay } from "@/components/subscription/CheckoutLoadingOverlay";
 
@@ -94,6 +96,9 @@ export default function Subscription() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
+  const [showPauseDialog, setShowPauseDialog] = useState(false);
+  const [isPausing, setIsPausing] = useState(false);
+  const [isResuming, setIsResuming] = useState(false);
 
   const isLoading = authLoading || subLoading;
 
@@ -212,6 +217,66 @@ export default function Subscription() {
       });
       setIsCanceling(false);
       setShowCancelDialog(false);
+    }
+  };
+
+  const handlePauseSubscription = async () => {
+    setIsPausing(true);
+    try {
+      // Pause for 1 month by default
+      const resumeAt = addMonths(new Date(), 1).toISOString();
+      
+      const { data, error } = await supabase.functions.invoke("pause-subscription", {
+        body: { action: "pause", resumeAt },
+      });
+
+      if (error) throw error;
+
+      showFeedback({ 
+        type: "success", 
+        title: "Subscription Paused", 
+        message: data.message || "Your subscription has been paused for 1 month." 
+      });
+      setShowPauseDialog(false);
+      refreshSubscription();
+    } catch (error) {
+      console.error("Pause subscription error:", error);
+      const message = error instanceof Error ? error.message : "Failed to pause subscription";
+      showFeedback({ 
+        type: "error", 
+        title: "Error", 
+        message 
+      });
+    } finally {
+      setIsPausing(false);
+    }
+  };
+
+  const handleResumeSubscription = async () => {
+    setIsResuming(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("pause-subscription", {
+        body: { action: "resume" },
+      });
+
+      if (error) throw error;
+
+      showFeedback({ 
+        type: "success", 
+        title: "Welcome Back!", 
+        message: data.message || "Your subscription is now active again." 
+      });
+      refreshSubscription();
+    } catch (error) {
+      console.error("Resume subscription error:", error);
+      const message = error instanceof Error ? error.message : "Failed to resume subscription";
+      showFeedback({ 
+        type: "error", 
+        title: "Error", 
+        message 
+      });
+    } finally {
+      setIsResuming(false);
     }
   };
 
@@ -337,7 +402,7 @@ export default function Subscription() {
                     </div>
                   </div>
 
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex flex-wrap gap-2 shrink-0">
                     <Button
                       variant="outline"
                       onClick={handleManageSubscription}
@@ -350,6 +415,21 @@ export default function Subscription() {
                       )}
                       Manage Billing
                     </Button>
+                    {subscription?.status === "active" && !isInTrial && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowPauseDialog(true)}
+                        disabled={isPausing}
+                        className="text-orange-600 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/20"
+                      >
+                        {isPausing ? (
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        ) : (
+                          <Pause className="w-4 h-4 mr-2" />
+                        )}
+                        Pause Plan
+                      </Button>
+                    )}
                     {subscription?.status !== "canceled" && !isInTrial && (
                       <Button
                         variant="ghost"
@@ -560,6 +640,55 @@ export default function Subscription() {
                 </>
               ) : (
                 "Cancel Subscription"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Pause Subscription Dialog */}
+      <Dialog open={showPauseDialog} onOpenChange={setShowPauseDialog}>
+        <DialogContent className="glass">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-orange-600">
+              <Pause className="w-5 h-5" />
+              Pause Subscription
+            </DialogTitle>
+            <DialogDescription className="text-left space-y-3">
+              <p>
+                Need a break? Pause your <strong className="text-foreground">{currentTierInfo?.name}</strong> subscription for 1 month.
+              </p>
+              <ul className="list-disc list-inside text-sm space-y-1 text-muted-foreground">
+                <li>No charges while paused</li>
+                <li>Automatically resumes after 1 month</li>
+                <li>You can resume early anytime</li>
+                <li>Your profile and content remain visible</li>
+                {(subscription?.tier === "artist" || subscription?.tier === "label") && (
+                  <li>Your uploaded tracks stay available</li>
+                )}
+              </ul>
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPauseDialog(false)} disabled={isPausing}>
+              Keep Active
+            </Button>
+            <Button 
+              onClick={handlePauseSubscription}
+              disabled={isPausing}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {isPausing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Pausing...
+                </>
+              ) : (
+                <>
+                  <Pause className="w-4 h-4 mr-2" />
+                  Pause for 1 Month
+                </>
               )}
             </Button>
           </DialogFooter>
