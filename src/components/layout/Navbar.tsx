@@ -275,7 +275,7 @@ export function Navbar() {
                       <DropdownMenuItem asChild>
                         <Link to={getDashboardLink()} className="flex items-center gap-2 cursor-pointer">
                           <LayoutDashboard className="w-4 h-4" />
-                          {role === "fan" ? "My Library" : "Dashboard"}
+                          {role === "fan" ? "My Dashboard" : "Dashboard"}
                         </Link>
                       </DropdownMenuItem>
                       {(role === "artist" || role === "label") && (
@@ -488,7 +488,7 @@ export function Navbar() {
                       className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
                     >
                       <LayoutDashboard className="w-5 h-5" />
-                      {role === "fan" ? "My Library" : "Dashboard"}
+                      {role === "fan" ? "My Dashboard" : "Dashboard"}
                     </Link>
                     {(role === "artist" || role === "label") && (
                       <Link
