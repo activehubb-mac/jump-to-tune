@@ -41,6 +41,8 @@ const getEmailProvider = (email: string) => {
   return null;
 };
 
+import { SignupConfirmationModal } from "@/components/auth/SignupConfirmationModal";
+
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -65,6 +67,9 @@ export default function Auth() {
   // Forgot password states
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
+
+  // Signup confirmation modal state
+  const [showSignupConfirmation, setShowSignupConfirmation] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -172,12 +177,10 @@ export default function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setIsLoading(true);
 
     // Basic validation
     if (!email || !password) {
       setError("Please fill in all required fields");
-      setIsLoading(false);
       return;
     }
 
@@ -185,56 +188,27 @@ export default function Auth() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError("Please enter a valid email address");
-      setIsLoading(false);
       return;
     }
 
     if (mode === "signup") {
       if (!displayName.trim()) {
         setError("Please enter a display name");
-        setIsLoading(false);
         return;
       }
       if (password !== confirmPassword) {
         setError("Passwords do not match");
-        setIsLoading(false);
         return;
       }
       if (password.length < 6) {
         setError("Password must be at least 6 characters");
-        setIsLoading(false);
         return;
       }
 
-      const { error: signUpError, existingUser } = await signUp(email, password, displayName, selectedRole);
-      
-      if (signUpError) {
-        if (signUpError.message.includes("already registered") || existingUser) {
-          showFeedback({
-            type: "warning",
-            title: "Account May Already Exist",
-            message: "If you already have an account, please sign in. Otherwise, check your email for a confirmation link.",
-            primaryAction: {
-              label: "Sign In Instead",
-              onClick: () => {
-                closeFeedback();
-                setMode("signin");
-              },
-            },
-          });
-          setIsLoading(false);
-          return;
-        }
-        setError(signUpError.message);
-        setIsLoading(false);
-        return;
-      }
-
-      // Show email confirmation screen
-      setPendingEmail(email);
-      setShowEmailConfirmation(true);
-      setIsLoading(false);
+      // Show confirmation modal instead of directly signing up
+      setShowSignupConfirmation(true);
     } else {
+      setIsLoading(true);
       const { error: signInError } = await signIn(email, password);
       
       if (signInError) {
@@ -260,6 +234,42 @@ export default function Auth() {
       });
       navigate("/");
     }
+  };
+
+  // Handle actual signup after confirmation
+  const handleConfirmedSignup = async () => {
+    setIsLoading(true);
+
+    const { error: signUpError, existingUser } = await signUp(email, password, displayName, selectedRole);
+    
+    if (signUpError) {
+      setShowSignupConfirmation(false);
+      if (signUpError.message.includes("already registered") || existingUser) {
+        showFeedback({
+          type: "warning",
+          title: "Account May Already Exist",
+          message: "If you already have an account, please sign in. Otherwise, check your email for a confirmation link.",
+          primaryAction: {
+            label: "Sign In Instead",
+            onClick: () => {
+              closeFeedback();
+              setMode("signin");
+            },
+          },
+        });
+        setIsLoading(false);
+        return;
+      }
+      setError(signUpError.message);
+      setIsLoading(false);
+      return;
+    }
+
+    // Show email confirmation screen
+    setShowSignupConfirmation(false);
+    setPendingEmail(email);
+    setShowEmailConfirmation(true);
+    setIsLoading(false);
   };
 
   // Show loading state while checking auth
@@ -488,6 +498,17 @@ export default function Auth() {
 
   return (
     <Layout showFooter={false}>
+      {/* Signup Confirmation Modal */}
+      <SignupConfirmationModal
+        open={showSignupConfirmation}
+        onOpenChange={setShowSignupConfirmation}
+        selectedRole={selectedRole}
+        displayName={displayName}
+        email={email}
+        onConfirm={handleConfirmedSignup}
+        onChangeRole={() => setShowSignupConfirmation(false)}
+        isLoading={isLoading}
+      />
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">

@@ -43,6 +43,7 @@ import ThemePreview from "./pages/ThemePreview";
 import Karaoke from "./pages/Karaoke";
 import NotFound from "./pages/NotFound";
 import AlbumDetail from "./pages/AlbumDetail";
+import AccountSettings from "./pages/AccountSettings";
 // Admin pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOverview from "./pages/admin/AdminOverview";
@@ -100,6 +101,7 @@ const App = () => (
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/artist/payouts" element={<ArtistPayouts />} />
                 <Route path="/settings/notifications" element={<NotificationSettings />} />
+                <Route path="/settings" element={<AccountSettings />} />
                 <Route path="/theme-preview" element={<ThemePreview />} />
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminDashboard />}>
