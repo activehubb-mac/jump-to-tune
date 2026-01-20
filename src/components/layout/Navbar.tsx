@@ -69,7 +69,7 @@ export function Navbar() {
   const getDashboardLink = () => {
     if (role === "artist") return "/artist/dashboard";
     if (role === "label") return "/label/dashboard";
-    return "/library";
+    return "/fan/dashboard";
   };
 
   const getInitials = () => {
