@@ -316,17 +316,10 @@ export function Navbar() {
                         </>
                       )}
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onClick={() => setIsProfileOpen(true)}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <Settings className="w-4 h-4" />
-                        Edit Profile
-                      </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/settings/notifications" className="flex items-center gap-2 cursor-pointer">
-                          <Bell className="w-4 h-4" />
-                          Notification Settings
+                        <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
+                          <Settings className="w-4 h-4" />
+                          Account Settings
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem 
