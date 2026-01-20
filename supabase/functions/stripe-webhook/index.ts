@@ -564,7 +564,7 @@ serve(async (req) => {
 
         const { data: subRecord } = await supabaseClient
           .from("subscriptions")
-          .select("user_id")
+          .select("user_id, tier")
           .eq("stripe_subscription_id", subscription.id)
           .single();
 
@@ -593,6 +593,37 @@ serve(async (req) => {
                 canceled_at: new Date().toISOString(),
               },
             });
+
+          // Send cancellation email (non-blocking)
+          try {
+            const periodEnd = subscription.current_period_end 
+              ? new Date(subscription.current_period_end * 1000).toISOString() 
+              : undefined;
+
+            fetch(
+              `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-cancellation-email`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                },
+                body: JSON.stringify({
+                  userId: subRecord.user_id,
+                  tier: subRecord.tier,
+                  canceledAt: new Date().toISOString(),
+                  periodEnd,
+                }),
+              }
+            ).then(res => {
+              if (!res.ok) logStep("Cancellation email failed", { status: res.status });
+              else logStep("Cancellation email sent");
+            }).catch(err => logStep("Cancellation email error", { error: err.message }));
+          } catch (emailError) {
+            logStep("Cancellation email error (non-blocking)", { 
+              error: emailError instanceof Error ? emailError.message : "Unknown" 
+            });
+          }
         }
         break;
       }
