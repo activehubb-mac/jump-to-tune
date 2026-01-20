@@ -150,9 +150,9 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
               
               <div style="text-align: center; margin: 24px 0;">
-                <a href="https://jump-to-tune.lovable.app/collection" 
+                <a href="https://jump-to-tune.lovable.app/library" 
                    style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                  View Your Collection
+                  View Your Library
                 </a>
               </div>
               

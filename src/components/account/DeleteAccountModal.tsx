@@ -121,7 +121,7 @@ export function DeleteAccountModal({ open, onOpenChange }: DeleteAccountModalPro
             <ul className="list-disc list-inside text-sm space-y-1 text-muted-foreground">
               <li>Your profile and personal information</li>
               <li>All uploaded tracks and music</li>
-              <li>Your collection and purchases</li>
+              <li>Your library and purchases</li>
               <li>Follows, likes, and bookmarks</li>
               <li>Wallet balance and transaction history</li>
               <li>Subscription and payment records</li>

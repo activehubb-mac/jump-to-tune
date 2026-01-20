@@ -235,8 +235,8 @@ export default function PaymentSuccess() {
               </>
             ) : (
               <>
-                <Button className="gradient-accent neon-glow-subtle" asChild>
-                  <Link to="/collection">Go to Collection</Link>
+              <Button className="gradient-accent neon-glow-subtle" asChild>
+                  <Link to="/library">Go to Library</Link>
                 </Button>
                 <Button variant="outline" className="border-glass-border" asChild>
                   <Link to="/browse">Browse More Music</Link>
