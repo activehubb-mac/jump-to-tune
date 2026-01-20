@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, CreditCard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 
 interface DeleteAccountModalProps {
@@ -25,6 +26,7 @@ interface DeleteAccountModalProps {
 export function DeleteAccountModal({ open, onOpenChange }: DeleteAccountModalProps) {
   const { user, signOut } = useAuth();
   const { showFeedback } = useFeedbackSafe();
+  const { subscription, hasActiveSubscription } = useSubscription();
   const navigate = useNavigate();
   
   const [confirmText, setConfirmText] = useState("");
@@ -32,6 +34,7 @@ export function DeleteAccountModal({ open, onOpenChange }: DeleteAccountModalPro
 
   const CONFIRM_PHRASE = "DELETE MY ACCOUNT";
   const isConfirmValid = confirmText === CONFIRM_PHRASE;
+  const tierName = subscription?.tier ? subscription.tier.charAt(0).toUpperCase() + subscription.tier.slice(1) : null;
 
   const handleDeleteAccount = async () => {
     if (!user || !isConfirmValid) return;
@@ -127,6 +130,20 @@ export function DeleteAccountModal({ open, onOpenChange }: DeleteAccountModalPro
               <li>Subscription and payment records</li>
               <li>Label roster associations (if applicable)</li>
             </ul>
+
+            {hasActiveSubscription && (
+              <div className="flex items-start gap-2 p-3 mt-3 bg-destructive/10 rounded-lg border border-destructive/20">
+                <CreditCard className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-foreground">
+                    Your {tierName} subscription will be canceled
+                  </p>
+                  <p className="text-muted-foreground">
+                    No further charges will be made to your payment method.
+                  </p>
+                </div>
+              </div>
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
 

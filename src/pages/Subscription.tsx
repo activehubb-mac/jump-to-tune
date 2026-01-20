@@ -24,6 +24,7 @@ import {
   AlertTriangle,
   Music,
   Users,
+  XCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -91,6 +92,8 @@ export default function Subscription() {
   const [warningDetails, setWarningDetails] = useState<ValidationResult | null>(null);
   const [pendingTier, setPendingTier] = useState<"fan" | "artist" | "label" | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [isCanceling, setIsCanceling] = useState(false);
 
   const isLoading = authLoading || subLoading;
 
@@ -189,6 +192,26 @@ export default function Subscription() {
       }
     } finally {
       setOpeningPortal(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    setIsCanceling(true);
+    try {
+      const url = await openCustomerPortal();
+      if (url) {
+        // Redirect to portal where user can cancel
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error("Cancel subscription error:", error);
+      showFeedback({ 
+        type: "error", 
+        title: "Error", 
+        message: "Failed to open cancellation portal. Please try again." 
+      });
+      setIsCanceling(false);
+      setShowCancelDialog(false);
     }
   };
 
@@ -314,19 +337,30 @@ export default function Subscription() {
                     </div>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    onClick={handleManageSubscription}
-                    disabled={openingPortal}
-                    className="shrink-0"
-                  >
-                    {openingPortal ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    ) : (
-                      <ExternalLink className="w-4 h-4 mr-2" />
+                  <div className="flex gap-2 shrink-0">
+                    <Button
+                      variant="outline"
+                      onClick={handleManageSubscription}
+                      disabled={openingPortal}
+                    >
+                      {openingPortal ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                      )}
+                      Manage Billing
+                    </Button>
+                    {subscription?.status !== "canceled" && !isInTrial && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => setShowCancelDialog(true)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Cancel Plan
+                      </Button>
                     )}
-                    Manage Billing
-                  </Button>
+                  </div>
                 </div>
 
                 {/* Current Plan Features */}
@@ -482,6 +516,51 @@ export default function Subscription() {
               className="gradient-accent"
             >
               Confirm Change
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Subscription Confirmation Dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent className="glass">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <XCircle className="w-5 h-5" />
+              Cancel Subscription
+            </DialogTitle>
+            <DialogDescription className="text-left space-y-3">
+              <p>
+                Are you sure you want to cancel your <strong className="text-foreground">{currentTierInfo?.name}</strong> subscription?
+              </p>
+              <ul className="list-disc list-inside text-sm space-y-1 text-muted-foreground">
+                <li>Your subscription will remain active until {subscription?.current_period_end ? format(new Date(subscription.current_period_end), "MMM d, yyyy") : "the end of your billing period"}</li>
+                <li>You won't be charged again after cancellation</li>
+                <li>You can resubscribe anytime</li>
+                {(subscription?.tier === "artist" || subscription?.tier === "label") && (
+                  <li>Your uploaded tracks will remain available</li>
+                )}
+              </ul>
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCancelDialog(false)} disabled={isCanceling}>
+              Keep Subscription
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleCancelSubscription}
+              disabled={isCanceling}
+            >
+              {isCanceling ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Opening Portal...
+                </>
+              ) : (
+                "Cancel Subscription"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
