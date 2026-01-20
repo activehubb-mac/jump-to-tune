@@ -23,6 +23,7 @@ interface AuthContextType {
   profile: Profile | null;
   role: AppRole | null;
   isLoading: boolean;
+  isEmailVerified: boolean;
   signUp: (email: string, password: string, displayName: string, role: AppRole) => Promise<SignUpResult>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -202,6 +203,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
+  // Check if email is verified
+  const isEmailVerified = user?.email_confirmed_at != null;
+
   return (
     <AuthContext.Provider
       value={{
@@ -210,6 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         role,
         isLoading,
+        isEmailVerified,
         signUp,
         signIn,
         signOut,
