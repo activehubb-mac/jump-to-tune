@@ -125,7 +125,7 @@ export function InstantPurchaseModal({
                     <Check className="h-8 w-8 text-green-500" />
                   </div>
                   <p className="text-center text-muted-foreground">
-                    This track is now in your collection. You can download it anytime.
+                    This track is now in your library. You can download it anytime.
                   </p>
                 </div>
 

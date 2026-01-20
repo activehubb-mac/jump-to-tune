@@ -42,10 +42,10 @@ const FAN_TOUR_STEPS: TourStep[] = [
     highlight: "Browse",
   },
   {
-    title: "Build Your Collection",
-    description: "Purchased tracks appear in your Collection. Listen anytime, download in high quality, and show off your taste.",
+    title: "Build Your Library",
+    description: "Purchased tracks appear in your Library. Listen anytime, download in high quality, and show off your taste.",
     icon: <Heart className="w-8 h-8" />,
-    highlight: "Collection",
+    highlight: "Library",
   },
   {
     title: "Download & Own",

@@ -494,7 +494,7 @@ export function Navbar() {
                       className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
                     >
                       <LayoutDashboard className="w-5 h-5" />
-                      {role === "fan" ? "My Collection" : "Dashboard"}
+                      {role === "fan" ? "My Library" : "Dashboard"}
                     </Link>
                     {(role === "artist" || role === "label") && (
                       <Link

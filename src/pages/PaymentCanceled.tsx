@@ -45,7 +45,7 @@ export default function PaymentCanceled() {
               </Link>
             </Button>
             <Button className="gradient-accent neon-glow-subtle" asChild>
-              <Link to="/collection">Go to Collection</Link>
+              <Link to="/library">Go to Library</Link>
             </Button>
           </div>
         </div>
