@@ -17,6 +17,9 @@ import {
   ArrowLeft,
   Sparkles,
   X,
+  UserPlus,
+  ListMusic,
+  Mic2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +43,24 @@ const FAN_TOUR_STEPS: TourStep[] = [
     description: "Browse trending tracks and discover new artists. Every purchase means you own that track forever.",
     icon: <Music className="w-8 h-8" />,
     highlight: "Browse",
+  },
+  {
+    title: "Follow Your Favorites",
+    description: "Follow artists you love to stay updated on their new releases. Build your personalized music network.",
+    icon: <UserPlus className="w-8 h-8" />,
+    highlight: "Artists",
+  },
+  {
+    title: "For You Playlist",
+    description: "Get personalized track recommendations based on your listening history, likes, and followed artists.",
+    icon: <ListMusic className="w-8 h-8" />,
+    highlight: "For You",
+  },
+  {
+    title: "Karaoke Mode 🎤",
+    description: "Sing along with synchronized lyrics! Look for the mic icon on tracks with karaoke versions.",
+    icon: <Mic2 className="w-8 h-8" />,
+    highlight: "Karaoke",
   },
   {
     title: "Build Your Library",
