@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, ListMusic, Plus, Sparkles, PlayCircle, Shuffle } from "lucide-react";
+import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, ListMusic, Plus, PlayCircle, Shuffle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,7 +17,6 @@ import { useCollectionStats, useOwnedTracks } from "@/hooks/useCollectionStats";
 import { useLikedTracks, useLikes } from "@/hooks/useLikes";
 import { useFollowedArtists, useFollow } from "@/hooks/useFollows";
 import { usePlaylists } from "@/hooks/usePlaylists";
-import { useForYouPlaylist } from "@/hooks/useForYouPlaylist";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { formatPrice } from "@/lib/formatters";
 import { DownloadButton } from "@/components/download/DownloadButton";
@@ -42,7 +41,6 @@ export default function Collection() {
   const { data: likedTracks, isLoading: likedLoading } = useLikedTracks();
   const { data: followedArtists, isLoading: followingLoading } = useFollowedArtists();
   const { playlists, isLoading: playlistsLoading, createPlaylist, deletePlaylist } = usePlaylists();
-  const { data: forYouTracks } = useForYouPlaylist();
   
   const { toggleLike } = useLikes();
   const { toggleFollow } = useFollow();
@@ -204,35 +202,6 @@ export default function Collection() {
     });
   };
 
-  const handlePlayForYou = () => {
-    if (!forYouTracks || forYouTracks.length === 0) return;
-    clearQueue();
-    const firstTrack = forYouTracks[0];
-    playTrack({
-      id: firstTrack.id,
-      title: firstTrack.title,
-      audio_url: firstTrack.audio_url,
-      cover_art_url: firstTrack.cover_art_url,
-      duration: firstTrack.duration,
-      artist: firstTrack.artist,
-    });
-    forYouTracks.slice(1).forEach((track) => {
-      addToQueue({
-        id: track.id,
-        title: track.title,
-        audio_url: track.audio_url,
-        cover_art_url: track.cover_art_url,
-        duration: track.duration,
-        artist: track.artist,
-      });
-    });
-    showFeedback({
-      type: "success",
-      title: "Now Playing",
-      message: `Playing your personalized mix`,
-    });
-  };
-
   const handleCreatePlaylist = async (data: { name: string; description?: string }) => {
     await createPlaylist.mutateAsync(data);
     showFeedback({
@@ -380,7 +349,10 @@ export default function Collection() {
             ) : (
               <div>
                 {/* Create Playlist Button */}
-                <div className="flex justify-end mb-6">
+                <div className="flex justify-between items-center mb-6">
+                  <p className="text-muted-foreground text-sm">
+                    Create playlists from your {ownedTracks?.length || 0} owned track{(ownedTracks?.length || 0) !== 1 ? "s" : ""}
+                  </p>
                   <Button
                     onClick={() => setShowCreatePlaylist(true)}
                     className="gradient-accent neon-glow-subtle"
@@ -390,45 +362,17 @@ export default function Collection() {
                   </Button>
                 </div>
 
-                {/* Special Playlists */}
-                <div className="mb-8">
-                  <h2 className="text-lg font-semibold mb-4 text-muted-foreground">Auto-Generated</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                    <PlaylistCard
-                      name="For You"
-                      icon={<Sparkles className="w-12 h-12 text-primary" />}
-                      trackCount={forYouTracks?.length || 0}
-                      isSpecial
-                      href="/for-you"
-                      onPlay={handlePlayForYou}
-                      onShuffle={handlePlayForYou}
-                    />
-                    <PlaylistCard
-                      name="All Tracks"
-                      icon={<Disc3 className="w-12 h-12 text-primary" />}
-                      trackCount={ownedTracks?.length || 0}
-                      isSpecial
-                      href="/library?tab=all"
-                      onPlay={handlePlayAllOwned}
-                      onShuffle={handleShuffleOwned}
-                    />
-                  </div>
-                </div>
-
                 {/* User Playlists */}
                 {playlists.length > 0 ? (
-                  <div>
-                    <h2 className="text-lg font-semibold mb-4 text-muted-foreground">Your Playlists</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                      {playlists.map((playlist) => (
-                        <PlaylistCard
-                          key={playlist.id}
-                          playlist={playlist}
-                          onEdit={() => {}} // Navigate to detail for editing
-                          onDelete={() => handleDeletePlaylist(playlist.id, playlist.name)}
-                        />
-                      ))}
-                    </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                    {playlists.map((playlist) => (
+                      <PlaylistCard
+                        key={playlist.id}
+                        playlist={playlist}
+                        onEdit={() => {}} // Navigate to detail for editing
+                        onDelete={() => handleDeletePlaylist(playlist.id, playlist.name)}
+                      />
+                    ))}
                   </div>
                 ) : (
                   <div className="glass-card p-12 text-center">
@@ -437,11 +381,15 @@ export default function Collection() {
                     </div>
                     <h2 className="text-2xl font-bold text-foreground mb-4">No playlists yet</h2>
                     <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-                      Create your first playlist to organize your owned tracks the way you like.
+                      {(ownedTracks?.length || 0) > 0 
+                        ? `Create your first playlist to organize your ${ownedTracks?.length} owned tracks.`
+                        : "Purchase some tracks first, then create playlists to organize them."
+                      }
                     </p>
                     <Button
                       onClick={() => setShowCreatePlaylist(true)}
                       className="gradient-accent neon-glow-subtle"
+                      disabled={(ownedTracks?.length || 0) === 0}
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Create Your First Playlist
