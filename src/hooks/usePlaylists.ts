@@ -112,10 +112,16 @@ export function usePlaylists() {
   });
 
   const updatePlaylist = useMutation({
-    mutationFn: async ({ id, name, description }: { id: string; name?: string; description?: string }) => {
-      const updates: Record<string, any> = {};
+    mutationFn: async ({ id, name, description, cover_image_url }: { 
+      id: string; 
+      name?: string; 
+      description?: string;
+      cover_image_url?: string | null;
+    }) => {
+      const updates: Record<string, any> = { updated_at: new Date().toISOString() };
       if (name !== undefined) updates.name = name;
       if (description !== undefined) updates.description = description;
+      if (cover_image_url !== undefined) updates.cover_image_url = cover_image_url;
 
       const { data, error } = await supabase
         .from("playlists")
