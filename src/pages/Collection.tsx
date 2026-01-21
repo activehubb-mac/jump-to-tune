@@ -9,14 +9,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, X, Download, Crown, Building2, PlayCircle, Shuffle } from "lucide-react";
+import { Disc3, Play, Music, Lock, Loader2, Heart, Users, User, ArrowUpDown, ListPlus, ListMusic, Plus, Sparkles, PlayCircle, Shuffle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCollectionStats, useOwnedTracks } from "@/hooks/useCollectionStats";
 import { useLikedTracks, useLikes } from "@/hooks/useLikes";
 import { useFollowedArtists, useFollow } from "@/hooks/useFollows";
-
+import { usePlaylists } from "@/hooks/usePlaylists";
+import { useForYouPlaylist } from "@/hooks/useForYouPlaylist";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { formatPrice } from "@/lib/formatters";
 import { DownloadButton } from "@/components/download/DownloadButton";
@@ -24,19 +25,24 @@ import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { usePurchases } from "@/hooks/usePurchases";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { PlaylistCard } from "@/components/playlist/PlaylistCard";
+import { CreatePlaylistModal } from "@/components/playlist/CreatePlaylistModal";
+import { Building2 } from "lucide-react";
 
 type SortOption = "recent" | "title" | "artist" | "price";
 
 export default function Collection() {
-  const [activeTab, setActiveTab] = useState("liked");
+  const [activeTab, setActiveTab] = useState("playlists");
   const [likedSort, setLikedSort] = useState<SortOption>("recent");
-  const [ownedSort, setOwnedSort] = useState<SortOption>("recent");
+  const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
   
   const { user, profile, isLoading } = useAuth();
   const { data: stats, isLoading: statsLoading } = useCollectionStats(user?.id);
   const { data: ownedTracks, isLoading: tracksLoading } = useOwnedTracks(user?.id);
   const { data: likedTracks, isLoading: likedLoading } = useLikedTracks();
   const { data: followedArtists, isLoading: followingLoading } = useFollowedArtists();
+  const { playlists, isLoading: playlistsLoading, createPlaylist, deletePlaylist } = usePlaylists();
+  const { data: forYouTracks } = useForYouPlaylist();
   
   const { toggleLike } = useLikes();
   const { toggleFollow } = useFollow();
@@ -47,7 +53,7 @@ export default function Collection() {
   const { isOwned } = usePurchases();
   const { showFeedback } = useFeedbackSafe();
 
-  // Sort liked tracks - must be called before any early returns
+  // Sort liked tracks
   const sortedLikedTracks = useMemo(() => {
     if (!likedTracks) return [];
     const sorted = [...likedTracks];
@@ -62,31 +68,9 @@ export default function Collection() {
         return sorted.sort((a, b) => b.price - a.price);
       case "recent":
       default:
-        return sorted; // Already sorted by most recent from hook
+        return sorted;
     }
   }, [likedTracks, likedSort]);
-
-  // Sort owned tracks - must be called before any early returns
-  const sortedOwnedTracks = useMemo(() => {
-    if (!ownedTracks) return [];
-    const sorted = [...ownedTracks];
-    switch (ownedSort) {
-      case "title":
-        return sorted.sort((a, b) => 
-          (a.track?.title || "").localeCompare(b.track?.title || "")
-        );
-      case "artist":
-        return sorted.sort((a, b) => 
-          (a.track?.artist?.display_name || "").localeCompare(b.track?.artist?.display_name || "")
-        );
-      case "price":
-        return sorted.sort((a, b) => (b.price_paid || 0) - (a.price_paid || 0));
-      case "recent":
-      default:
-        return sorted; // Already sorted by most recent from hook
-    }
-  }, [ownedTracks, ownedSort]);
-
 
   if (isLoading) {
     return (
@@ -98,7 +82,6 @@ export default function Collection() {
     );
   }
 
-  // Not logged in - show sign in prompt
   if (!user) {
     return (
       <Layout>
@@ -109,7 +92,7 @@ export default function Collection() {
             </div>
             <h1 className="text-3xl font-bold text-foreground mb-4">Your Collection Awaits</h1>
             <p className="text-muted-foreground mb-8">
-              Sign in to view your music collection and manage your owned tracks.
+              Sign in to view your music collection and manage your playlists.
             </p>
             <div className="flex gap-4 justify-center">
               <Button className="gradient-accent neon-glow-subtle" asChild>
@@ -151,6 +134,120 @@ export default function Collection() {
       cover_art_url: track.cover_art_url,
       duration: track.duration,
       artist: track.artist,
+    });
+  };
+
+  const handlePlayAllOwned = () => {
+    if (!ownedTracks || ownedTracks.length === 0) return;
+    clearQueue();
+    const firstTrack = ownedTracks[0];
+    if (firstTrack.track) {
+      playTrack({
+        id: firstTrack.track.id,
+        title: firstTrack.track.title,
+        audio_url: firstTrack.track.audio_url,
+        cover_art_url: firstTrack.track.cover_art_url,
+        duration: firstTrack.track.duration,
+        artist: firstTrack.track.artist,
+      });
+    }
+    ownedTracks.slice(1).forEach((purchase) => {
+      if (purchase.track) {
+        addToQueue({
+          id: purchase.track.id,
+          title: purchase.track.title,
+          audio_url: purchase.track.audio_url,
+          cover_art_url: purchase.track.cover_art_url,
+          duration: purchase.track.duration,
+          artist: purchase.track.artist,
+        });
+      }
+    });
+    showFeedback({
+      type: "success",
+      title: "Now Playing",
+      message: `Playing ${ownedTracks.length} owned tracks`,
+    });
+  };
+
+  const handleShuffleOwned = () => {
+    if (!ownedTracks || ownedTracks.length === 0) return;
+    clearQueue();
+    const shuffled = [...ownedTracks].sort(() => Math.random() - 0.5);
+    const firstTrack = shuffled[0];
+    if (firstTrack.track) {
+      playTrack({
+        id: firstTrack.track.id,
+        title: firstTrack.track.title,
+        audio_url: firstTrack.track.audio_url,
+        cover_art_url: firstTrack.track.cover_art_url,
+        duration: firstTrack.track.duration,
+        artist: firstTrack.track.artist,
+      });
+    }
+    shuffled.slice(1).forEach((purchase) => {
+      if (purchase.track) {
+        addToQueue({
+          id: purchase.track.id,
+          title: purchase.track.title,
+          audio_url: purchase.track.audio_url,
+          cover_art_url: purchase.track.cover_art_url,
+          duration: purchase.track.duration,
+          artist: purchase.track.artist,
+        });
+      }
+    });
+    showFeedback({
+      type: "success",
+      title: "Shuffle Play",
+      message: `Playing ${ownedTracks.length} tracks shuffled`,
+    });
+  };
+
+  const handlePlayForYou = () => {
+    if (!forYouTracks || forYouTracks.length === 0) return;
+    clearQueue();
+    const firstTrack = forYouTracks[0];
+    playTrack({
+      id: firstTrack.id,
+      title: firstTrack.title,
+      audio_url: firstTrack.audio_url,
+      cover_art_url: firstTrack.cover_art_url,
+      duration: firstTrack.duration,
+      artist: firstTrack.artist,
+    });
+    forYouTracks.slice(1).forEach((track) => {
+      addToQueue({
+        id: track.id,
+        title: track.title,
+        audio_url: track.audio_url,
+        cover_art_url: track.cover_art_url,
+        duration: track.duration,
+        artist: track.artist,
+      });
+    });
+    showFeedback({
+      type: "success",
+      title: "Now Playing",
+      message: `Playing your personalized mix`,
+    });
+  };
+
+  const handleCreatePlaylist = async (data: { name: string; description?: string }) => {
+    await createPlaylist.mutateAsync(data);
+    showFeedback({
+      type: "success",
+      title: "Playlist created",
+      message: `"${data.name}" has been created`,
+    });
+  };
+
+  const handleDeletePlaylist = async (playlistId: string, playlistName: string) => {
+    await deletePlaylist.mutateAsync(playlistId);
+    showFeedback({
+      type: "success",
+      title: "Playlist deleted",
+      message: `"${playlistName}" has been deleted`,
     });
   };
 
@@ -196,13 +293,18 @@ export default function Collection() {
         onOpenChange={setShowPremiumModal}
         feature={premiumFeatureName}
       />
+      <CreatePlaylistModal
+        open={showCreatePlaylist}
+        onOpenChange={setShowCreatePlaylist}
+        onSubmit={handleCreatePlaylist}
+      />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">
             {profile?.display_name ? `${profile.display_name}'s Library` : "My Library"}
           </h1>
-          <p className="text-muted-foreground">Your owned tracks and music library</p>
+          <p className="text-muted-foreground">Your playlists and music collection</p>
         </div>
 
         {/* Stats */}
@@ -215,9 +317,9 @@ export default function Collection() {
           </div>
           <div className="glass-card p-4 text-center">
             <div className="text-3xl font-bold text-gradient">
-              {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : likedTracks?.length ?? 0}
+              {playlistsLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : playlists.length}
             </div>
-            <div className="text-sm text-muted-foreground">Liked Tracks</div>
+            <div className="text-sm text-muted-foreground">Playlists</div>
           </div>
           <div className="glass-card p-4 text-center">
             <div className="text-3xl font-bold text-gradient">
@@ -240,21 +342,21 @@ export default function Collection() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full max-w-2xl grid-cols-3 mb-8">
+            <TabsTrigger value="playlists" className="flex items-center gap-2">
+              <ListMusic className="w-4 h-4" />
+              <span className="hidden sm:inline">Playlists</span>
+              {playlists.length > 0 && (
+                <span className="text-xs bg-primary/20 px-2 py-0.5 rounded-full">
+                  {playlists.length}
+                </span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="liked" className="flex items-center gap-2">
               <Heart className="w-4 h-4" />
               <span className="hidden sm:inline">Liked</span>
               {likedTracks && likedTracks.length > 0 && (
                 <span className="text-xs bg-primary/20 px-2 py-0.5 rounded-full">
                   {likedTracks.length}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="owned" className="flex items-center gap-2">
-              <Disc3 className="w-4 h-4" />
-              <span className="hidden sm:inline">Owned</span>
-              {ownedTracks && ownedTracks.length > 0 && (
-                <span className="text-xs bg-primary/20 px-2 py-0.5 rounded-full">
-                  {ownedTracks.length}
                 </span>
               )}
             </TabsTrigger>
@@ -268,6 +370,87 @@ export default function Collection() {
               )}
             </TabsTrigger>
           </TabsList>
+
+          {/* Playlists Tab */}
+          <TabsContent value="playlists">
+            {playlistsLoading ? (
+              <div className="glass-card p-12 flex justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div>
+                {/* Create Playlist Button */}
+                <div className="flex justify-end mb-6">
+                  <Button
+                    onClick={() => setShowCreatePlaylist(true)}
+                    className="gradient-accent neon-glow-subtle"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Playlist
+                  </Button>
+                </div>
+
+                {/* Special Playlists */}
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold mb-4 text-muted-foreground">Auto-Generated</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                    <PlaylistCard
+                      name="For You"
+                      icon={<Sparkles className="w-12 h-12 text-primary" />}
+                      trackCount={forYouTracks?.length || 0}
+                      isSpecial
+                      href="/for-you"
+                      onPlay={handlePlayForYou}
+                      onShuffle={handlePlayForYou}
+                    />
+                    <PlaylistCard
+                      name="All Tracks"
+                      icon={<Disc3 className="w-12 h-12 text-primary" />}
+                      trackCount={ownedTracks?.length || 0}
+                      isSpecial
+                      href="/library?tab=all"
+                      onPlay={handlePlayAllOwned}
+                      onShuffle={handleShuffleOwned}
+                    />
+                  </div>
+                </div>
+
+                {/* User Playlists */}
+                {playlists.length > 0 ? (
+                  <div>
+                    <h2 className="text-lg font-semibold mb-4 text-muted-foreground">Your Playlists</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                      {playlists.map((playlist) => (
+                        <PlaylistCard
+                          key={playlist.id}
+                          playlist={playlist}
+                          onEdit={() => {}} // Navigate to detail for editing
+                          onDelete={() => handleDeletePlaylist(playlist.id, playlist.name)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="glass-card p-12 text-center">
+                    <div className="w-20 h-20 mx-auto rounded-full bg-muted/30 flex items-center justify-center mb-6">
+                      <ListMusic className="w-10 h-10 text-muted-foreground/50" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-foreground mb-4">No playlists yet</h2>
+                    <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+                      Create your first playlist to organize your owned tracks the way you like.
+                    </p>
+                    <Button
+                      onClick={() => setShowCreatePlaylist(true)}
+                      className="gradient-accent neon-glow-subtle"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Your First Playlist
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
 
           {/* Liked Tracks Tab */}
           <TabsContent value="liked">
@@ -385,7 +568,6 @@ export default function Collection() {
                     className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
                     onClick={() => handlePlayTrack(track)}
                   >
-                    {/* Album Art */}
                     <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">
                       {track.cover_art_url ? (
                         <img
@@ -417,20 +599,28 @@ export default function Collection() {
                             <Lock className="h-2 w-2 absolute -top-0.5 -right-0.5 text-primary" />
                           )}
                         </Button>
+                        {isOwned(track.id) && (
+                          <DownloadButton
+                            track={{
+                              id: track.id,
+                              title: track.title,
+                              cover_art_url: track.cover_art_url,
+                              price: track.price,
+                              audio_url: track.audio_url || "",
+                              artist: track.artist ? { display_name: track.artist.display_name } : undefined,
+                            }}
+                            variant="outline"
+                            size="icon"
+                            className="rounded-full w-10 h-10 border-glass-border/50 hover:border-primary/50"
+                          />
+                        )}
                       </div>
-                      {/* Unlike Button */}
-                      <button
-                        className="absolute top-2 right-2 p-2 rounded-full bg-background/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleLike(track.id);
-                        }}
-                      >
-                        <Heart className="w-4 h-4 text-primary fill-primary" />
-                      </button>
+                      {isOwned(track.id) && (
+                        <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-primary/80 backdrop-blur-sm text-xs font-medium text-primary-foreground">
+                          Owned
+                        </div>
+                      )}
                     </div>
-
-                    {/* Track Info */}
                     <div>
                       <h3 className="font-semibold text-foreground truncate">{track.title}</h3>
                       <Link
@@ -441,29 +631,18 @@ export default function Collection() {
                         {track.artist?.display_name || "Unknown Artist"}
                       </Link>
                       <div className="flex items-center justify-between mt-2">
-                        <span className="text-sm font-medium text-primary">
-                          {formatPrice(track.price)}
-                        </span>
-                        {isOwned(track.id) ? (
-                          <Badge variant="secondary" className="text-xs">
-                            <Disc3 className="w-3 h-3 mr-1" />
-                            Owned
-                          </Badge>
-                        ) : (
-                          <DownloadButton
-                            track={{
-                              id: track.id,
-                              title: track.title,
-                              price: track.price,
-                              audio_url: track.audio_url,
-                              cover_art_url: track.cover_art_url,
-                              artist: track.artist,
-                            }}
-                            size="sm"
-                            variant="outline"
-                            className="h-7 text-xs"
-                          />
-                        )}
+                        <span className="text-sm font-medium text-primary">{formatPrice(track.price)}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleLike(track.id);
+                          }}
+                        >
+                          <Heart className="w-4 h-4 fill-current" />
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -475,228 +654,10 @@ export default function Collection() {
                 <Heart className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
                 <h2 className="text-xl font-semibold text-foreground mb-2">No liked tracks yet</h2>
                 <p className="text-muted-foreground mb-6">
-                  Browse music and click the heart to save your favorites!
+                  Explore and like tracks to build your collection!
                 </p>
                 <Button variant="outline" asChild>
                   <Link to="/browse">Browse Music</Link>
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="owned">
-            {tracksLoading ? (
-              <div className="glass-card p-12 flex justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            ) : sortedOwnedTracks.length > 0 ? (
-              <div>
-                <div className="flex justify-between items-center gap-3 mb-4">
-                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                    <Button
-                      onClick={() => {
-                        if (sortedOwnedTracks.length > 0) {
-                          clearQueue();
-                          const firstTrack = sortedOwnedTracks[0];
-                          if (firstTrack.track) {
-                            playTrack({
-                              id: firstTrack.track.id,
-                              title: firstTrack.track.title,
-                              audio_url: firstTrack.track.audio_url,
-                              cover_art_url: firstTrack.track.cover_art_url,
-                              duration: firstTrack.track.duration,
-                              artist: firstTrack.track.artist,
-                            });
-                          }
-                          sortedOwnedTracks.slice(1).forEach((purchase) => {
-                            if (purchase.track) {
-                              addToQueue({
-                                id: purchase.track.id,
-                                title: purchase.track.title,
-                                audio_url: purchase.track.audio_url,
-                                cover_art_url: purchase.track.cover_art_url,
-                                duration: purchase.track.duration,
-                                artist: purchase.track.artist,
-                              });
-                            }
-                          });
-                          showFeedback({
-                            type: "success",
-                            title: "Now Playing",
-                            message: `Playing ${sortedOwnedTracks.length} owned tracks`,
-                          });
-                        }
-                      }}
-                      className="gradient-accent neon-glow-subtle whitespace-nowrap flex-shrink-0"
-                    >
-                      <PlayCircle className="w-4 h-4 mr-2" />
-                      Play All
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="whitespace-nowrap flex-shrink-0"
-                      onClick={() => {
-                        if (sortedOwnedTracks.length > 0) {
-                          clearQueue();
-                          const shuffled = [...sortedOwnedTracks].sort(() => Math.random() - 0.5);
-                          const firstTrack = shuffled[0];
-                          if (firstTrack.track) {
-                            playTrack({
-                              id: firstTrack.track.id,
-                              title: firstTrack.track.title,
-                              audio_url: firstTrack.track.audio_url,
-                              cover_art_url: firstTrack.track.cover_art_url,
-                              duration: firstTrack.track.duration,
-                              artist: firstTrack.track.artist,
-                            });
-                          }
-                          shuffled.slice(1).forEach((purchase) => {
-                            if (purchase.track) {
-                              addToQueue({
-                                id: purchase.track.id,
-                                title: purchase.track.title,
-                                audio_url: purchase.track.audio_url,
-                                cover_art_url: purchase.track.cover_art_url,
-                                duration: purchase.track.duration,
-                                artist: purchase.track.artist,
-                              });
-                            }
-                          });
-                          showFeedback({
-                            type: "success",
-                            title: "Shuffle Play",
-                            message: `Playing ${sortedOwnedTracks.length} tracks shuffled`,
-                          });
-                        }
-                      }}
-                    >
-                      <Shuffle className="w-4 h-4 mr-2" />
-                      Shuffle
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      className="whitespace-nowrap flex-shrink-0"
-                      onClick={() => {
-                        sortedOwnedTracks.forEach((purchase) => {
-                          if (purchase.track) {
-                            addToQueue({
-                              id: purchase.track.id,
-                              title: purchase.track.title,
-                              audio_url: purchase.track.audio_url,
-                              cover_art_url: purchase.track.cover_art_url,
-                              duration: purchase.track.duration,
-                              artist: purchase.track.artist,
-                            });
-                          }
-                        });
-                        showFeedback({
-                          type: "success",
-                          title: "Added to Queue",
-                          message: `${sortedOwnedTracks.length} owned tracks added to queue`,
-                        });
-                      }}
-                    >
-                      <ListPlus className="w-4 h-4 mr-2" />
-                      Queue All
-                    </Button>
-                  </div>
-                  <SortSelect value={ownedSort} onChange={setOwnedSort} />
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {sortedOwnedTracks.map((purchase) => (
-                  <div
-                    key={purchase.id}
-                    className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
-                    onClick={() => {
-                      if (purchase.track) {
-                        playTrack({
-                          id: purchase.track.id,
-                          title: purchase.track.title,
-                          audio_url: purchase.track.audio_url,
-                          cover_art_url: purchase.track.cover_art_url,
-                          duration: purchase.track.duration,
-                          artist: purchase.track.artist,
-                        });
-                      }
-                    }}
-                  >
-                    {/* Album Art */}
-                    <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">
-                      {purchase.track?.cover_art_url ? (
-                        <img
-                          src={purchase.track.cover_art_url}
-                          alt={purchase.track.title}
-                          className="absolute inset-0 w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Disc3 className="w-16 h-16 text-muted-foreground/50" />
-                        </div>
-                      )}
-                      {/* Hover Overlay */}
-                      <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <Button 
-                          size="icon" 
-                          className="rounded-full gradient-accent neon-glow w-12 h-12"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (purchase.track) {
-                              playTrack({
-                                id: purchase.track.id,
-                                title: purchase.track.title,
-                                audio_url: purchase.track.audio_url,
-                                cover_art_url: purchase.track.cover_art_url,
-                                duration: purchase.track.duration,
-                                artist: purchase.track.artist,
-                              });
-                            }
-                          }}
-                        >
-                          <Play className="w-5 h-5 ml-0.5" />
-                        </Button>
-                      </div>
-                      {/* Edition Badge */}
-                      <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-primary/80 backdrop-blur-sm text-xs font-medium text-primary-foreground">
-                        #{purchase.edition_number}
-                      </div>
-                    </div>
-
-                    {/* Track Info */}
-                    <div>
-                      <h3 className="font-semibold text-foreground truncate">{purchase.track?.title}</h3>
-                      <Link
-                        to={`/artist/${purchase.track?.artist?.id}`}
-                        className="text-sm text-muted-foreground truncate hover:text-primary transition-colors block"
-                      >
-                        {purchase.track?.artist?.display_name || "Unknown Artist"}
-                      </Link>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-sm font-medium text-primary">
-                          {formatPrice(purchase.price_paid)}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          of {purchase.track?.total_editions}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                </div>
-              </div>
-            ) : (
-              <div className="glass-card p-12 text-center">
-                <div className="w-20 h-20 mx-auto rounded-full bg-muted/30 flex items-center justify-center mb-6">
-                  <Music className="w-10 h-10 text-muted-foreground/50" />
-                </div>
-                <h2 className="text-2xl font-bold text-foreground mb-4">Your collection is empty</h2>
-                <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-                  Start building your collection by browsing and purchasing tracks from talented artists.
-                </p>
-                <Button className="gradient-accent neon-glow-subtle hover:neon-glow" asChild>
-                  <Link to="/browse">
-                    <Disc3 className="w-4 h-4 mr-2" />
-                    Browse Music
-                  </Link>
                 </Button>
               </div>
             )}
@@ -716,7 +677,6 @@ export default function Collection() {
                     to={artist.role === 'label' ? `/label/${artist.id}` : `/artist/${artist.id}`}
                     className="glass-card p-4 group hover:bg-primary/10 transition-all duration-300"
                   >
-                    {/* Avatar */}
                     <div className="aspect-square rounded-full bg-muted/50 mb-4 relative overflow-hidden mx-auto w-32 h-32">
                       {artist.avatar_url ? (
                         <img
@@ -730,8 +690,6 @@ export default function Collection() {
                         </div>
                       )}
                     </div>
-
-                    {/* Artist Info */}
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-2 mb-1">
                         <h3 className="font-semibold text-foreground truncate">
