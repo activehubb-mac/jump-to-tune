@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform, Clock } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform, Clock, FolderPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,6 +17,10 @@ import { useKaraokeData, getInstrumentalUrl } from "@/hooks/useKaraokeData";
 import { Link } from "react-router-dom";
 import { DownloadButton } from "@/components/download/DownloadButton";
 import { usePurchases } from "@/hooks/usePurchases";
+import { usePlaylists } from "@/hooks/usePlaylists";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { AddToPlaylistModal } from "@/components/playlist/AddToPlaylistModal";
+import { CreatePlaylistModal } from "@/components/playlist/CreatePlaylistModal";
 import {
   DndContext,
   closestCenter,
@@ -160,9 +164,13 @@ export function GlobalAudioPlayer() {
 
   const { canUseFeature } = useFeatureGate();
   const { isOwned } = usePurchases();
+  const { createPlaylist } = usePlaylists();
+  const { showFeedback } = useFeedbackSafe();
   const [showQueue, setShowQueue] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumFeatureName, setPremiumFeatureName] = useState("");
+  const [showAddToPlaylist, setShowAddToPlaylist] = useState(false);
+  const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
   const [showKaraokeHint, setShowKaraokeHint] = useState(false);
   
   // Load waveform preference from localStorage
@@ -318,6 +326,24 @@ export function GlobalAudioPlayer() {
     }
   };
 
+  // Handle create playlist from modal
+  const handleCreatePlaylist = async (data: { name: string; description?: string }) => {
+    try {
+      await createPlaylist.mutateAsync(data);
+      showFeedback({
+        type: "success",
+        title: "Playlist created",
+        message: `"${data.name}" created successfully`,
+      });
+    } catch {
+      showFeedback({
+        type: "error",
+        title: "Error",
+        message: "Failed to create playlist",
+      });
+    }
+  };
+
   return (
     <>
       {/* Premium Feature Modal */}
@@ -341,6 +367,24 @@ export function GlobalAudioPlayer() {
         onReplayPreview={restartPreview}
         onPurchaseSuccess={handlePurchaseSuccess}
       />
+
+      {/* Add to Playlist Modal */}
+      {currentTrack && (
+        <>
+          <AddToPlaylistModal
+            open={showAddToPlaylist}
+            onOpenChange={setShowAddToPlaylist}
+            trackId={currentTrack.id}
+            trackTitle={currentTrack.title}
+            onCreateNew={() => setShowCreatePlaylist(true)}
+          />
+          <CreatePlaylistModal
+            open={showCreatePlaylist}
+            onOpenChange={setShowCreatePlaylist}
+            onSubmit={handleCreatePlaylist}
+          />
+        </>
+      )}
 
       {/* Karaoke Lyrics Panel */}
       {showLyrics && currentTrack && (
@@ -787,6 +831,25 @@ export function GlobalAudioPlayer() {
                     </Tooltip>
                   </div>
                 </>
+              )}
+
+              {/* Add to Playlist Button - only for owned tracks */}
+              {currentTrack && isOwned(currentTrack.id) && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => setShowAddToPlaylist(true)}
+                    >
+                      <FolderPlus className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>Add to playlist</p>
+                  </TooltipContent>
+                </Tooltip>
               )}
 
               {/* Download Button */}
