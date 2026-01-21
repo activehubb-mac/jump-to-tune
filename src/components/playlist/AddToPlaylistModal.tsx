@@ -73,9 +73,9 @@ export function AddToPlaylistModal({
           throw error;
         }
       } else {
-        // Invalidate queries to refresh data
+        // Invalidate queries to refresh data - use same keys as usePlaylists hooks
         queryClient.invalidateQueries({ queryKey: ["playlists"] });
-        queryClient.invalidateQueries({ queryKey: ["playlistTracks", playlistId] });
+        queryClient.invalidateQueries({ queryKey: ["playlist-tracks", playlistId] });
         
         showFeedback({
           type: "success",

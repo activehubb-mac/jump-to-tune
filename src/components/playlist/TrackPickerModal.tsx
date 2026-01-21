@@ -107,9 +107,9 @@ export function TrackPickerModal({
 
       if (error) throw error;
 
-      // Invalidate queries
+      // Invalidate queries - use same keys as usePlaylists hooks
       queryClient.invalidateQueries({ queryKey: ["playlists"] });
-      queryClient.invalidateQueries({ queryKey: ["playlistTracks", playlistId] });
+      queryClient.invalidateQueries({ queryKey: ["playlist-tracks", playlistId] });
 
       showFeedback({
         type: "success",
