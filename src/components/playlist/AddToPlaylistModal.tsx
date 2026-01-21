@@ -6,11 +6,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Plus, Check, ListMusic } from "lucide-react";
-import { usePlaylists, usePlaylistTracks } from "@/hooks/usePlaylists";
+import { usePlaylists } from "@/hooks/usePlaylists";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AddToPlaylistModalProps {
   open: boolean;
@@ -30,6 +31,7 @@ export function AddToPlaylistModal({
   const { playlists, isLoading } = usePlaylists();
   const [addingTo, setAddingTo] = useState<string | null>(null);
   const { showFeedback } = useFeedbackSafe();
+  const queryClient = useQueryClient();
 
   // Check which playlists already contain this track
   const playlistsWithTrack = playlists.filter((p) =>
@@ -39,30 +41,55 @@ export function AddToPlaylistModal({
   const handleAddToPlaylist = async (playlistId: string, playlistName: string) => {
     setAddingTo(playlistId);
     try {
-      // Use the hook to add track
-      const { addTrack } = usePlaylistTracks(playlistId);
-      await addTrack.mutateAsync({ trackId });
-      
-      showFeedback({
-        type: "success",
-        title: "Added to playlist",
-        message: `"${trackTitle}" added to "${playlistName}"`,
-      });
-      onOpenChange(false);
-    } catch (error: any) {
-      if (error.code === "23505") {
-        showFeedback({
-          type: "info",
-          title: "Already in playlist",
-          message: `"${trackTitle}" is already in "${playlistName}"`,
+      // Get the current max position
+      const { data: existingTracks } = await supabase
+        .from("playlist_tracks")
+        .select("position")
+        .eq("playlist_id", playlistId)
+        .order("position", { ascending: false })
+        .limit(1);
+
+      const nextPosition = existingTracks && existingTracks.length > 0 
+        ? existingTracks[0].position + 1 
+        : 0;
+
+      // Insert the track
+      const { error } = await supabase
+        .from("playlist_tracks")
+        .insert({
+          playlist_id: playlistId,
+          track_id: trackId,
+          position: nextPosition,
         });
+
+      if (error) {
+        if (error.code === "23505") {
+          showFeedback({
+            type: "info",
+            title: "Already in playlist",
+            message: `"${trackTitle}" is already in "${playlistName}"`,
+          });
+        } else {
+          throw error;
+        }
       } else {
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ["playlists"] });
+        queryClient.invalidateQueries({ queryKey: ["playlistTracks", playlistId] });
+        
         showFeedback({
-          type: "error",
-          title: "Error",
-          message: "Failed to add track to playlist",
+          type: "success",
+          title: "Added to playlist",
+          message: `"${trackTitle}" added to "${playlistName}"`,
         });
+        onOpenChange(false);
       }
+    } catch (error: any) {
+      showFeedback({
+        type: "error",
+        title: "Error",
+        message: "Failed to add track to playlist",
+      });
     } finally {
       setAddingTo(null);
     }

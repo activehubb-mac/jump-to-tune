@@ -45,12 +45,14 @@ import {
   X,
   ListMusic,
   Plus,
+  Music,
 } from "lucide-react";
 import { usePlaylistTracks, usePlaylists, PlaylistTrack } from "@/hooks/usePlaylists";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDuration } from "@/lib/formatters";
+import { TrackPickerModal } from "@/components/playlist/TrackPickerModal";
 
 function SortableTrackRow({
   item,
@@ -174,6 +176,7 @@ export default function PlaylistDetail() {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(playlist?.name || "");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showTrackPicker, setShowTrackPicker] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -421,6 +424,13 @@ export default function PlaylistDetail() {
                   </Button>
                   <Button
                     variant="outline"
+                    onClick={() => setShowTrackPicker(true)}
+                  >
+                    <Music className="w-4 h-4 mr-2" />
+                    Add Tracks
+                  </Button>
+                  <Button
+                    variant="outline"
                     className="text-destructive hover:text-destructive"
                     onClick={() => setShowDeleteConfirm(true)}
                   >
@@ -439,11 +449,12 @@ export default function PlaylistDetail() {
                 <p className="text-muted-foreground mb-6">
                   Add tracks from your owned collection to this playlist
                 </p>
-                <Button variant="outline" asChild>
-                  <Link to="/library">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Browse Your Tracks
-                  </Link>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowTrackPicker(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Tracks
                 </Button>
               </div>
             ) : (
@@ -515,6 +526,15 @@ export default function PlaylistDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Track picker modal */}
+      <TrackPickerModal
+        open={showTrackPicker}
+        onOpenChange={setShowTrackPicker}
+        playlistId={playlistId || ""}
+        playlistName={playlist?.name || ""}
+        existingTrackIds={tracks.map((t) => t.track_id)}
+      />
     </Layout>
   );
 }
