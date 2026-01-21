@@ -10,6 +10,8 @@ interface SubscriptionData {
   trial_ends_at?: string;
   days_left_in_trial?: number;
   current_period_end?: string;
+  is_paused?: boolean;
+  paused_until?: string;
 }
 
 export function useSubscription() {
@@ -38,6 +40,8 @@ export function useSubscription() {
   const hasActiveSubscription = subscription?.subscribed === true;
   const isInTrial = subscription?.status === "trialing";
   const daysLeftInTrial = subscription?.days_left_in_trial ?? 0;
+  const isPaused = subscription?.is_paused === true;
+  const pausedUntil = subscription?.paused_until ?? null;
 
   // Wrap refetch to maintain backward-compatible function signature
   const refreshSubscription = useCallback(() => {
@@ -51,6 +55,8 @@ export function useSubscription() {
     hasActiveSubscription,
     isInTrial,
     daysLeftInTrial,
+    isPaused,
+    pausedUntil,
     refreshSubscription,
   };
 }

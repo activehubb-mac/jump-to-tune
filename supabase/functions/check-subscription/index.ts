@@ -139,6 +139,13 @@ serve(async (req) => {
           const subscription = await stripe.subscriptions.retrieve(localSub.stripe_subscription_id);
           const isActive = subscription.status === "active" || subscription.status === "trialing";
           const isTrialing = subscription.status === "trialing";
+          const isPaused = subscription.pause_collection !== null;
+          
+          // Determine resume date if paused
+          let pausedUntil = null;
+          if (isPaused && subscription.pause_collection?.resumes_at) {
+            pausedUntil = new Date(subscription.pause_collection.resumes_at * 1000).toISOString();
+          }
           
           return new Response(JSON.stringify({
             subscribed: isActive,
@@ -151,6 +158,8 @@ serve(async (req) => {
               ? Math.ceil((subscription.trial_end * 1000 - Date.now()) / (1000 * 60 * 60 * 24))
               : 0,
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            is_paused: isPaused,
+            paused_until: pausedUntil,
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 200,

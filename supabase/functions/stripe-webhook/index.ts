@@ -451,6 +451,10 @@ serve(async (req) => {
           const userId = subRecord.user_id;
           const currentTier = subRecord.tier;
 
+          // Check if subscription was just resumed from pause
+          // pause_collection will be null when resumed
+          const wasPreviouslyPaused = !subscription.pause_collection;
+          
           // Update subscription status
           const { error: updateError } = await supabaseClient
             .from("subscriptions")
@@ -467,6 +471,76 @@ serve(async (req) => {
 
           if (updateError) {
             logStep("Error updating subscription status", { error: updateError });
+          }
+
+          // Check if this is an auto-resume from pause (pause_collection changed from set to null)
+          // We detect this by checking if subscription is active and had a resumes_at that just passed
+          if (subscription.status === "active" && !subscription.pause_collection) {
+            // Check if there was a recent pause notification to determine if this was an auto-resume
+            const { data: recentPauseNotification } = await supabaseClient
+              .from("notifications")
+              .select("metadata")
+              .eq("user_id", userId)
+              .eq("type", "subscription_paused")
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .single();
+
+            if (recentPauseNotification?.metadata) {
+              const pauseMetadata = recentPauseNotification.metadata as { resumes_at?: string };
+              const resumesAt = pauseMetadata.resumes_at;
+              
+              // If there was a scheduled resume date that has passed, this is an auto-resume
+              if (resumesAt) {
+                const resumeDate = new Date(resumesAt);
+                const now = new Date();
+                // Allow 1 day buffer for timing differences
+                if (resumeDate <= new Date(now.getTime() + 24 * 60 * 60 * 1000)) {
+                  logStep("Auto-resume detected from pause", { userId, resumesAt });
+                  
+                  // Create auto-resume notification
+                  await supabaseClient
+                    .from("notifications")
+                    .insert({
+                      user_id: userId,
+                      type: "subscription_resumed",
+                      title: "Subscription Automatically Resumed",
+                      message: "Your pause period has ended. Your subscription is now active and billing has resumed.",
+                      metadata: {
+                        resumed_at: new Date().toISOString(),
+                        was_automatic: true,
+                      },
+                    });
+
+                  // Send auto-resume email (non-blocking)
+                  try {
+                    fetch(
+                      `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-resume-email`,
+                      {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                        },
+                        body: JSON.stringify({
+                          userId,
+                          tier: newTier || currentTier,
+                          resumedAt: new Date().toISOString(),
+                          wasAutomatic: true,
+                        }),
+                      }
+                    ).then(res => {
+                      if (!res.ok) logStep("Auto-resume email failed", { status: res.status });
+                      else logStep("Auto-resume email sent");
+                    }).catch(err => logStep("Auto-resume email error", { error: err.message }));
+                  } catch (emailError) {
+                    logStep("Auto-resume email error (non-blocking)", { 
+                      error: emailError instanceof Error ? emailError.message : "Unknown" 
+                    });
+                  }
+                }
+              }
+            }
           }
 
           // If tier changed, sync user_roles using UPDATE (not upsert with wrong constraint)

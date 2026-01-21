@@ -12,6 +12,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Crown,
   Loader2,
   Check,
@@ -64,6 +71,12 @@ const SUBSCRIPTION_TIERS = [
   },
 ];
 
+const PAUSE_DURATION_OPTIONS = [
+  { value: "1", label: "1 month" },
+  { value: "2", label: "2 months" },
+  { value: "3", label: "3 months" },
+];
+
 interface ValidationResult {
   allowed: boolean;
   reason?: string;
@@ -83,7 +96,7 @@ interface ValidationResult {
 export default function Subscription() {
   const navigate = useNavigate();
   const { user, role, isLoading: authLoading } = useAuth();
-  const { subscription, isLoading: subLoading, hasActiveSubscription, isInTrial, daysLeftInTrial, refreshSubscription } = useSubscription();
+  const { subscription, isLoading: subLoading, hasActiveSubscription, isInTrial, daysLeftInTrial, isPaused, pausedUntil, refreshSubscription } = useSubscription();
   const { createSubscriptionCheckout, openCustomerPortal } = useDownload();
   const { showFeedback } = useFeedbackSafe();
   
@@ -99,6 +112,7 @@ export default function Subscription() {
   const [showPauseDialog, setShowPauseDialog] = useState(false);
   const [isPausing, setIsPausing] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
+  const [pauseDuration, setPauseDuration] = useState("1");
 
   const isLoading = authLoading || subLoading;
 
@@ -223,8 +237,8 @@ export default function Subscription() {
   const handlePauseSubscription = async () => {
     setIsPausing(true);
     try {
-      // Pause for 1 month by default
-      const resumeAt = addMonths(new Date(), 1).toISOString();
+      const months = parseInt(pauseDuration, 10);
+      const resumeAt = addMonths(new Date(), months).toISOString();
       
       const { data, error } = await supabase.functions.invoke("pause-subscription", {
         body: { action: "pause", resumeAt },
@@ -232,12 +246,14 @@ export default function Subscription() {
 
       if (error) throw error;
 
+      const durationText = months === 1 ? "1 month" : `${months} months`;
       showFeedback({ 
         type: "success", 
         title: "Subscription Paused", 
-        message: data.message || "Your subscription has been paused for 1 month." 
+        message: data.message || `Your subscription has been paused for ${durationText}.` 
       });
       setShowPauseDialog(false);
+      setPauseDuration("1");
       refreshSubscription();
     } catch (error) {
       console.error("Pause subscription error:", error);
@@ -368,7 +384,12 @@ export default function Subscription() {
                           Trial
                         </Badge>
                       )}
-                      {subscription?.status === "active" && !isInTrial && (
+                      {isPaused && (
+                        <Badge variant="secondary" className="bg-orange-500/20 text-orange-600">
+                          Paused
+                        </Badge>
+                      )}
+                      {subscription?.status === "active" && !isInTrial && !isPaused && (
                         <Badge variant="default">Active</Badge>
                       )}
                       {subscription?.status === "canceled" && (
@@ -386,7 +407,13 @@ export default function Subscription() {
                           <span>{daysLeftInTrial} days left in trial</span>
                         </div>
                       )}
-                      {subscription?.current_period_end && (
+                      {isPaused && pausedUntil && (
+                        <div className="flex items-center gap-1 text-orange-600">
+                          <Pause className="w-4 h-4" />
+                          <span>Resumes {format(new Date(pausedUntil), "MMM d, yyyy")}</span>
+                        </div>
+                      )}
+                      {subscription?.current_period_end && !isPaused && (
                         <div className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
                           <span>
@@ -415,7 +442,23 @@ export default function Subscription() {
                       )}
                       Manage Billing
                     </Button>
-                    {subscription?.status === "active" && !isInTrial && (
+                    {/* Resume button when paused */}
+                    {isPaused && (
+                      <Button
+                        onClick={handleResumeSubscription}
+                        disabled={isResuming}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        {isResuming ? (
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        ) : (
+                          <Play className="w-4 h-4 mr-2" />
+                        )}
+                        Resume Now
+                      </Button>
+                    )}
+                    {/* Pause button when active and not paused */}
+                    {subscription?.status === "active" && !isInTrial && !isPaused && (
                       <Button
                         variant="outline"
                         onClick={() => setShowPauseDialog(true)}
@@ -647,7 +690,10 @@ export default function Subscription() {
       </Dialog>
 
       {/* Pause Subscription Dialog */}
-      <Dialog open={showPauseDialog} onOpenChange={setShowPauseDialog}>
+      <Dialog open={showPauseDialog} onOpenChange={(open) => {
+        setShowPauseDialog(open);
+        if (!open) setPauseDuration("1");
+      }}>
         <DialogContent className="glass">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-orange-600">
@@ -656,19 +702,38 @@ export default function Subscription() {
             </DialogTitle>
             <DialogDescription className="text-left space-y-3">
               <p>
-                Need a break? Pause your <strong className="text-foreground">{currentTierInfo?.name}</strong> subscription for 1 month.
+                Need a break? Pause your <strong className="text-foreground">{currentTierInfo?.name}</strong> subscription.
               </p>
-              <ul className="list-disc list-inside text-sm space-y-1 text-muted-foreground">
-                <li>No charges while paused</li>
-                <li>Automatically resumes after 1 month</li>
-                <li>You can resume early anytime</li>
-                <li>Your profile and content remain visible</li>
-                {(subscription?.tier === "artist" || subscription?.tier === "label") && (
-                  <li>Your uploaded tracks stay available</li>
-                )}
-              </ul>
             </DialogDescription>
           </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Pause Duration</label>
+              <Select value={pauseDuration} onValueChange={setPauseDuration}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAUSE_DURATION_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <ul className="list-disc list-inside text-sm space-y-1 text-muted-foreground">
+              <li>No charges while paused</li>
+              <li>Automatically resumes after {pauseDuration === "1" ? "1 month" : `${pauseDuration} months`}</li>
+              <li>You can resume early anytime</li>
+              <li>Your profile and content remain visible</li>
+              {(subscription?.tier === "artist" || subscription?.tier === "label") && (
+                <li>Your uploaded tracks stay available</li>
+              )}
+            </ul>
+          </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowPauseDialog(false)} disabled={isPausing}>
@@ -687,7 +752,7 @@ export default function Subscription() {
               ) : (
                 <>
                   <Pause className="w-4 h-4 mr-2" />
-                  Pause for 1 Month
+                  Pause for {pauseDuration === "1" ? "1 Month" : `${pauseDuration} Months`}
                 </>
               )}
             </Button>
