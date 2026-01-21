@@ -46,6 +46,7 @@ import {
   ListMusic,
   Plus,
   Music,
+  Settings,
 } from "lucide-react";
 import { usePlaylistTracks, usePlaylists, PlaylistTrack } from "@/hooks/usePlaylists";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -53,6 +54,7 @@ import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDuration } from "@/lib/formatters";
 import { TrackPickerModal } from "@/components/playlist/TrackPickerModal";
+import { PlaylistEditModal } from "@/components/playlist/PlaylistEditModal";
 
 function SortableTrackRow({
   item,
@@ -177,6 +179,7 @@ export default function PlaylistDetail() {
   const [editName, setEditName] = useState(playlist?.name || "");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showTrackPicker, setShowTrackPicker] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -281,6 +284,25 @@ export default function PlaylistDetail() {
     }
   };
 
+  const handleSavePlaylist = async (data: { name?: string; description?: string; cover_image_url?: string | null }) => {
+    if (!playlist) return;
+    try {
+      await updatePlaylist.mutateAsync({ id: playlist.id, ...data });
+      showFeedback({
+        type: "success",
+        title: "Playlist updated",
+        message: "Changes saved successfully",
+      });
+    } catch {
+      showFeedback({
+        type: "error",
+        title: "Error",
+        message: "Failed to update playlist",
+      });
+      throw new Error("Failed to update");
+    }
+  };
+
   const handleDelete = async () => {
     if (!playlist) return;
     try {
@@ -333,8 +355,18 @@ export default function PlaylistDetail() {
             {/* Header */}
             <div className="flex flex-col md:flex-row gap-6 mb-8">
               {/* Cover */}
-              <div className="w-48 h-48 rounded-lg overflow-hidden bg-muted/50 flex-shrink-0 mx-auto md:mx-0">
-                {coverTracks.length === 0 ? (
+              <div 
+                className="w-48 h-48 rounded-lg overflow-hidden bg-muted/50 flex-shrink-0 mx-auto md:mx-0 relative group cursor-pointer"
+                onClick={() => setShowEditModal(true)}
+              >
+                {/* Custom cover or mosaic */}
+                {playlist?.cover_image_url ? (
+                  <img
+                    src={playlist.cover_image_url}
+                    alt={playlist.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : coverTracks.length === 0 ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <ListMusic className="w-16 h-16 text-muted-foreground/50" />
                   </div>
@@ -363,6 +395,10 @@ export default function PlaylistDetail() {
                     })}
                   </div>
                 )}
+                {/* Edit overlay */}
+                <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Settings className="w-8 h-8 text-primary" />
+                </div>
               </div>
 
               {/* Info */}
@@ -370,7 +406,7 @@ export default function PlaylistDetail() {
                 <p className="text-sm text-muted-foreground mb-2">Playlist</p>
                 
                 {isEditing ? (
-                  <div className="flex items-center gap-2 justify-center md:justify-start mb-4">
+                  <div className="flex items-center gap-2 justify-center md:justify-start mb-2">
                     <Input
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
@@ -385,22 +421,27 @@ export default function PlaylistDetail() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 justify-center md:justify-start mb-4">
+                  <div className="flex items-center gap-2 justify-center md:justify-start mb-2">
                     <h1 className="text-3xl font-bold">{playlist?.name || "Playlist"}</h1>
                     <Button
                       size="icon"
                       variant="ghost"
-                      onClick={() => {
-                        setEditName(playlist?.name || "");
-                        setIsEditing(true);
-                      }}
+                      onClick={() => setShowEditModal(true)}
+                      title="Edit playlist"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
                   </div>
                 )}
 
-                <p className="text-muted-foreground mb-6">
+                {/* Description */}
+                {playlist?.description && (
+                  <p className="text-muted-foreground mb-2 max-w-lg">
+                    {playlist.description}
+                  </p>
+                )}
+
+                <p className="text-sm text-muted-foreground mb-6">
                   {tracks.length} {tracks.length === 1 ? "track" : "tracks"} · {formatDuration(totalDuration)}
                 </p>
 
@@ -535,6 +576,21 @@ export default function PlaylistDetail() {
         playlistName={playlist?.name || ""}
         existingTrackIds={tracks.map((t) => t.track_id)}
       />
+
+      {/* Edit playlist modal */}
+      {playlist && (
+        <PlaylistEditModal
+          open={showEditModal}
+          onOpenChange={setShowEditModal}
+          playlist={{
+            id: playlist.id,
+            name: playlist.name,
+            description: playlist.description,
+            cover_image_url: playlist.cover_image_url,
+          }}
+          onSave={handleSavePlaylist}
+        />
+      )}
     </Layout>
   );
 }

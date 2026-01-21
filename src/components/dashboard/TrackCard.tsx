@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Disc3, Edit, Trash2, Play, Pause, ListPlus, Lock, Mic2, CheckCircle, Eye } from "lucide-react";
+import { Disc3, Edit, Trash2, Play, Pause, ListPlus, Lock, Mic2, CheckCircle, Eye, FolderPlus } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,10 @@ import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { DownloadButton } from "@/components/download/DownloadButton";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { usePurchases } from "@/hooks/usePurchases";
+import { AddToPlaylistModal } from "@/components/playlist/AddToPlaylistModal";
+import { CreatePlaylistModal } from "@/components/playlist/CreatePlaylistModal";
+import { usePlaylists } from "@/hooks/usePlaylists";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 
 interface TrackCardProps {
   track: {
@@ -60,7 +64,11 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
     const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
     const { canUseFeature } = useFeatureGate();
     const { isOwned } = usePurchases();
+    const { createPlaylist } = usePlaylists();
+    const { showFeedback } = useFeedbackSafe();
     const [showPremiumModal, setShowPremiumModal] = useState(false);
+    const [showAddToPlaylist, setShowAddToPlaylist] = useState(false);
+    const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
     
     const isCurrentTrack = currentTrack?.id === track.id;
     const userOwnsTrack = isOwned(track.id);
@@ -95,6 +103,28 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
         artist: track.artist,
       });
     };
+    
+    const handleAddToPlaylist = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setShowAddToPlaylist(true);
+    };
+
+    const handleCreatePlaylist = async (data: { name: string; description?: string }) => {
+      try {
+        await createPlaylist.mutateAsync(data);
+        showFeedback({
+          type: "success",
+          title: "Playlist created",
+          message: `"${data.name}" created successfully`,
+        });
+      } catch {
+        showFeedback({
+          type: "error",
+          title: "Error",
+          message: "Failed to create playlist",
+        });
+      }
+    };
 
     return (
       <>
@@ -104,6 +134,19 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
           feature="Add to Queue"
         />
         
+        <AddToPlaylistModal
+          open={showAddToPlaylist}
+          onOpenChange={setShowAddToPlaylist}
+          trackId={track.id}
+          trackTitle={track.title}
+          onCreateNew={() => setShowCreatePlaylist(true)}
+        />
+        
+        <CreatePlaylistModal
+          open={showCreatePlaylist}
+          onOpenChange={setShowCreatePlaylist}
+          onSubmit={handleCreatePlaylist}
+        />
         <div
           ref={ref}
           className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
@@ -176,6 +219,18 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
                     <Lock className="h-2 w-2 absolute -top-0.5 -right-0.5 text-primary" />
                   )}
                 </Button>
+                {/* Add to Playlist - only show for owned tracks */}
+                {userOwnsTrack && (
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="rounded-full w-10 h-10 border-glass-border/50 hover:border-primary/50"
+                    onClick={handleAddToPlaylist}
+                    title="Add to playlist"
+                  >
+                    <FolderPlus className="w-4 h-4" />
+                  </Button>
+                )}
                 <DownloadButton
                   track={{
                     id: track.id,
