@@ -54,6 +54,9 @@ import AdminFeatured from "./pages/admin/AdminFeatured";
 import AdminFinance from "./pages/admin/AdminFinance";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import HelpCenter from "./pages/HelpCenter";
 
 const queryClient = new QueryClient();
 
@@ -105,6 +108,9 @@ const App = () => (
                 <Route path="/settings/notifications" element={<NotificationSettings />} />
                 <Route path="/settings" element={<AccountSettings />} />
                 <Route path="/theme-preview" element={<ThemePreview />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/help" element={<HelpCenter />} />
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminDashboard />}>
                   <Route index element={<AdminOverview />} />
