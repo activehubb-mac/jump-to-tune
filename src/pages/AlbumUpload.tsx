@@ -103,6 +103,8 @@ export default function AlbumUpload() {
         engineers: [],
         displayLabelName: '',
       },
+      moods: [],
+      isExplicit: false,
     }));
     setTracks(albumTracks);
   };
