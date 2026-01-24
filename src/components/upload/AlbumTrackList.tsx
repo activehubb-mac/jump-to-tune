@@ -27,6 +27,7 @@ interface AlbumTrackListProps {
   tracks: AlbumTrackData[];
   onChange: (tracks: AlbumTrackData[]) => void;
   disabled?: boolean;
+  excludeArtistId?: string;
 }
 
 // Normalize filename for matching (remove extension, lowercase, trim)
@@ -61,7 +62,7 @@ const calculateSimilarity = (trackTitle: string, lrcFilename: string): number =>
   return 0;
 };
 
-export const AlbumTrackList = ({ tracks, onChange, disabled }: AlbumTrackListProps) => {
+export const AlbumTrackList = ({ tracks, onChange, disabled, excludeArtistId }: AlbumTrackListProps) => {
   const bulkLrcInputRef = useRef<HTMLInputElement>(null);
   
   const sensors = useSensors(
@@ -228,6 +229,7 @@ export const AlbumTrackList = ({ tracks, onChange, disabled }: AlbumTrackListPro
                 onUpdate={handleTrackUpdate}
                 onRemove={handleTrackRemove}
                 disabled={disabled}
+                excludeArtistId={excludeArtistId}
               />
             ))}
           </div>

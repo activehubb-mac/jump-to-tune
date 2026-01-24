@@ -95,6 +95,14 @@ export default function AlbumUpload() {
       price: 0.99, // Default price
       hasKaraoke: false,
       lyrics: '',
+      featureArtists: [],
+      credits: {
+        writers: [],
+        composers: [],
+        producers: [],
+        engineers: [],
+        displayLabelName: '',
+      },
     }));
     setTracks(albumTracks);
   };
@@ -430,6 +438,7 @@ export default function AlbumUpload() {
                 tracks={tracks}
                 onChange={setTracks}
                 disabled={isUploading}
+                excludeArtistId={role === 'label' ? form.watch('artistId') : user?.id}
               />
             )}
 
