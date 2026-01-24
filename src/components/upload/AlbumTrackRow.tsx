@@ -12,6 +12,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { isValidLRC } from '@/lib/lrcParser';
 import { KaraokePreviewModal } from './KaraokePreviewModal';
+import FeatureArtistsSelector from './FeatureArtistsSelector';
+import CreditsSection, { TrackCredits } from './CreditsSection';
+
+export interface FeatureArtist {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+}
 
 export interface AlbumTrackData {
   id: string;
@@ -23,6 +31,8 @@ export interface AlbumTrackData {
   hasKaraoke?: boolean;
   instrumentalFile?: File | null;
   lyrics?: string;
+  featureArtists?: FeatureArtist[];
+  credits?: TrackCredits;
 }
 
 interface AlbumTrackRowProps {
@@ -30,9 +40,10 @@ interface AlbumTrackRowProps {
   onUpdate: (track: AlbumTrackData) => void;
   onRemove: (id: string) => void;
   disabled?: boolean;
+  excludeArtistId?: string;
 }
 
-export const AlbumTrackRow = ({ track, onUpdate, onRemove, disabled }: AlbumTrackRowProps) => {
+export const AlbumTrackRow = ({ track, onUpdate, onRemove, disabled, excludeArtistId }: AlbumTrackRowProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [lyricsTab, setLyricsTab] = useState<'plain' | 'lrc'>('plain');
   const [isDraggingInstrumental, setIsDraggingInstrumental] = useState(false);
@@ -218,6 +229,25 @@ export const AlbumTrackRow = ({ track, onUpdate, onRemove, disabled }: AlbumTrac
       {isExpanded && (
         <div className="px-3 pb-4 pt-2 border-t border-glass-border">
           <div className="pl-[4.5rem] space-y-4">
+            {/* Feature Artists */}
+            <FeatureArtistsSelector
+              selectedArtists={track.featureArtists || []}
+              onChange={(artists) => onUpdate({ ...track, featureArtists: artists })}
+              excludeArtistId={excludeArtistId}
+            />
+
+            {/* Credits Section */}
+            <CreditsSection
+              credits={track.credits || {
+                writers: [],
+                composers: [],
+                producers: [],
+                engineers: [],
+                displayLabelName: '',
+              }}
+              onChange={(credits) => onUpdate({ ...track, credits })}
+            />
+
             {/* Karaoke Toggle */}
             <div className="flex items-center gap-3">
               <Switch

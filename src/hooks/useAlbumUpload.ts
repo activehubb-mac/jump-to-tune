@@ -159,6 +159,7 @@ export const useAlbumUpload = (): UseAlbumUploadReturn => {
             is_draft: isDraft,
             genre: formData.genre || null,
             has_karaoke: track.hasKaraoke || false,
+            display_label_name: track.credits?.displayLabelName || null,
           })
           .select('id')
           .single();
@@ -183,6 +184,42 @@ export const useAlbumUpload = (): UseAlbumUploadReturn => {
 
           if (karaokeError) {
             console.error('Failed to save karaoke data:', karaokeError);
+          }
+        }
+
+        // Insert feature artists
+        if (track.featureArtists && track.featureArtists.length > 0 && insertedTrack) {
+          for (const artist of track.featureArtists) {
+            const { error: featureError } = await supabase
+              .from('track_features')
+              .insert({
+                track_id: insertedTrack.id,
+                artist_id: artist.id,
+              });
+
+            if (featureError) {
+              console.error('Failed to save feature artist:', featureError);
+            }
+          }
+        }
+
+        // Insert track credits
+        if (track.credits && insertedTrack) {
+          const creditsToInsert = [
+            ...track.credits.writers.map(name => ({ track_id: insertedTrack.id, role: 'writer', name })),
+            ...track.credits.composers.map(name => ({ track_id: insertedTrack.id, role: 'composer', name })),
+            ...track.credits.producers.map(name => ({ track_id: insertedTrack.id, role: 'producer', name })),
+            ...track.credits.engineers.map(name => ({ track_id: insertedTrack.id, role: 'engineer', name })),
+          ];
+
+          if (creditsToInsert.length > 0) {
+            const { error: creditsError } = await supabase
+              .from('track_credits')
+              .insert(creditsToInsert);
+
+            if (creditsError) {
+              console.error('Failed to save track credits:', creditsError);
+            }
           }
         }
 
