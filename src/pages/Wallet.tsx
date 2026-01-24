@@ -69,10 +69,10 @@ export default function WalletPage() {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid lg:grid-cols-3 gap-6 sm:gap-8" style={{ contain: 'layout' }}>
           {/* Balance Card */}
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="glass overflow-hidden">
+          <div className="lg:col-span-1 space-y-6 min-h-[280px]">
+            <Card className="glass overflow-hidden min-h-[200px]">
               <div className="gradient-accent p-6">
                 <div className="flex items-center justify-between mb-4">
                   <Wallet className="h-8 w-8 text-foreground" />
@@ -129,7 +129,7 @@ export default function WalletPage() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6 min-h-[400px]">
             {/* Quick Add */}
             <Card className="glass">
               <CardHeader>
