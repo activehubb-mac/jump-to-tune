@@ -19,15 +19,17 @@ interface TransactionHistoryProps {
 export function TransactionHistory({ transactions, isLoading }: TransactionHistoryProps) {
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2" style={{ contain: 'layout' }}>
         {[1, 2, 3].map((i) => (
-          <div key={i} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 animate-pulse">
-            <div className="w-10 h-10 rounded-full bg-muted" />
-            <div className="flex-1 space-y-2">
+          <div key={i} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 animate-pulse min-h-[64px]">
+            <div className="w-10 h-10 rounded-full bg-muted shrink-0" />
+            <div className="flex-1 min-w-0 space-y-2">
               <div className="h-4 w-1/3 bg-muted rounded" />
               <div className="h-3 w-1/4 bg-muted rounded" />
             </div>
-            <div className="h-4 w-16 bg-muted rounded" />
+            <div className="text-right shrink-0">
+              <div className="h-4 w-16 bg-muted rounded" />
+            </div>
           </div>
         ))}
       </div>
@@ -66,11 +68,11 @@ export function TransactionHistory({ transactions, isLoading }: TransactionHisto
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" style={{ contain: 'layout' }}>
       {transactions.map((tx) => (
         <div
           key={tx.id}
-          className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+          className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors min-h-[64px]"
         >
           <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", getIconBg(tx.type))}>
             {getIcon(tx.type)}
