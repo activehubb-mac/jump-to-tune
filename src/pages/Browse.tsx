@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { RecentlyViewedSection } from "@/components/browse/RecentlyViewedSection";
 import { HeroCarousel } from "@/components/browse/HeroCarousel";
 import { AlbumCard } from "@/components/browse/AlbumCard";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { Link } from "react-router-dom";
 import { useInfinitePublishedTracks } from "@/hooks/useTracks";
 import { useBrowsePreferences } from "@/hooks/useBrowsePreferences";
@@ -153,6 +154,7 @@ export default function Browse() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch,
   } = useInfinitePublishedTracks({
     genre: selectedGenre,
     mood: selectedMood,
@@ -160,6 +162,10 @@ export default function Browse() {
     karaokeOnly,
     searchQuery: searchQuery || undefined,
   });
+
+  const handleRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
 
   // Flatten pages into single tracks array
   const tracks = useMemo(() => {
@@ -311,7 +317,8 @@ export default function Browse() {
         />
       )}
       
-      <div className="container mx-auto px-4 py-8">
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="container mx-auto px-4 py-8">
         {/* Hero Carousel */}
         <HeroCarousel />
 
@@ -701,7 +708,8 @@ export default function Browse() {
           )}
         </div>
         <ScrollToTop />
-      </div>
+        </div>
+      </PullToRefresh>
     </Layout>
   );
 }
