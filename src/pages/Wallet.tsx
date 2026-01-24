@@ -59,7 +59,7 @@ export default function WalletPage() {
   return (
     <Layout>
       <PullToRefresh onRefresh={handleRefresh}>
-        <div className="container mx-auto px-4 py-6 sm:py-8">
+        <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:py-8 overflow-x-hidden">
         {/* Header */}
         <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Button variant="ghost" size="icon" className="shrink-0" asChild>
@@ -75,9 +75,9 @@ export default function WalletPage() {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6 sm:gap-8" style={{ contain: 'layout' }}>
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 w-full" style={{ contain: 'layout' }}>
           {/* Balance Card */}
-          <div className="lg:col-span-1 space-y-6 min-h-[280px]">
+          <div className="lg:col-span-1 space-y-4 sm:space-y-6 min-h-[280px] w-full min-w-0">
             <Card className="glass overflow-hidden min-h-[200px]">
               <div className="gradient-accent p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -135,9 +135,9 @@ export default function WalletPage() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6 min-h-[400px]">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6 min-h-[400px] w-full min-w-0">
             {/* Quick Add */}
-            <Card className="glass">
+            <Card className="glass w-full">
               <CardHeader>
                 <CardTitle className="text-lg">Quick Add Credits</CardTitle>
                 <CardDescription>
@@ -145,7 +145,7 @@ export default function WalletPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 w-full">
                   {PRESET_AMOUNTS.map((amount) => (
                     <Button
                       key={amount.cents}
@@ -179,7 +179,7 @@ export default function WalletPage() {
             </Card>
 
             {/* Transaction History */}
-            <Card className="glass">
+            <Card className="glass w-full">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2">

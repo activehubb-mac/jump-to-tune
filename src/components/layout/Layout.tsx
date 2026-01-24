@@ -13,7 +13,7 @@ export function Layout({ children, showFooter = true }: LayoutProps) {
   const { isPlayerVisible } = useAudioPlayer();
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full">
       <Navbar />
       <div className="pt-16">
         <EmailVerificationBanner />
