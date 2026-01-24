@@ -12,6 +12,7 @@ import { EmailVerificationCard } from "@/components/account/EmailVerificationCar
 import { DeleteAccountModal } from "@/components/account/DeleteAccountModal";
 import { ProfileEditModal } from "@/components/profile/ProfileEditModal";
 import { NotificationPreferencesCard } from "@/components/account/NotificationPreferencesCard";
+import { TestNotificationButton } from "@/components/account/TestNotificationButton";
 
 export default function AccountSettings() {
   const navigate = useNavigate();
@@ -126,6 +127,19 @@ export default function AccountSettings() {
 
           {/* Push Notifications */}
           <NotificationPreferencesCard />
+          
+          {/* Test Notification */}
+          <div className="glass-card p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h3 className="font-medium text-foreground text-sm">Test Notifications</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Send a test notification to verify everything works
+                </p>
+              </div>
+              <TestNotificationButton />
+            </div>
+          </div>
 
           {/* Settings Links */}
           <div className="glass-card divide-y divide-glass-border">

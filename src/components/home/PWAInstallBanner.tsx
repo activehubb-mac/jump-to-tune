@@ -29,6 +29,12 @@ export function PWAInstallBanner() {
     const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
     const isAndroid = /android/.test(userAgent);
     
+    // Only show on mobile devices
+    const isMobile = isIOSDevice || isAndroid;
+    if (!isMobile) {
+      return;
+    }
+    
     if (isIOSDevice) {
       setPlatform("ios");
       // Show on iOS Safari
@@ -43,7 +49,7 @@ export function PWAInstallBanner() {
       setPlatform("android");
     }
 
-    // For Android/Desktop, listen for beforeinstallprompt
+    // For Android, listen for beforeinstallprompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -52,10 +58,11 @@ export function PWAInstallBanner() {
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
-    // Show banner after a delay for desktop/android even without beforeinstallprompt
-    // This helps in iframe/preview environments where the event doesn't fire
+    // Show banner after a delay on Android even without beforeinstallprompt
     const timer = setTimeout(() => {
-      setIsVisible(true);
+      if (isAndroid) {
+        setIsVisible(true);
+      }
     }, 3000);
 
     return () => {

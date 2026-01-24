@@ -94,6 +94,20 @@ export function useNotifications() {
     },
   });
 
+  const deleteNotification = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("id", notificationId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+
   return {
     notifications,
     unreadCount,
@@ -101,5 +115,6 @@ export function useNotifications() {
     error,
     markAsRead: markAsRead.mutate,
     markAllAsRead: markAllAsRead.mutate,
+    deleteNotification: deleteNotification.mutate,
   };
 }
