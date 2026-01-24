@@ -14,6 +14,8 @@ import { isValidLRC } from '@/lib/lrcParser';
 import { KaraokePreviewModal } from './KaraokePreviewModal';
 import FeatureArtistsSelector from './FeatureArtistsSelector';
 import CreditsSection, { TrackCredits } from './CreditsSection';
+import MoodTagsInput from './MoodTagsInput';
+import ExplicitToggle from './ExplicitToggle';
 
 export interface FeatureArtist {
   id: string;
@@ -33,6 +35,8 @@ export interface AlbumTrackData {
   lyrics?: string;
   featureArtists?: FeatureArtist[];
   credits?: TrackCredits;
+  moods?: string[];
+  isExplicit?: boolean;
 }
 
 interface AlbumTrackRowProps {
@@ -246,6 +250,19 @@ export const AlbumTrackRow = ({ track, onUpdate, onRemove, disabled, excludeArti
                 displayLabelName: '',
               }}
               onChange={(credits) => onUpdate({ ...track, credits })}
+            />
+
+            {/* Mood Tags */}
+            <MoodTagsInput
+              moods={track.moods || []}
+              onChange={(moods) => onUpdate({ ...track, moods })}
+              maxTags={5}
+            />
+
+            {/* Explicit Toggle */}
+            <ExplicitToggle
+              isExplicit={track.isExplicit || false}
+              onChange={(isExplicit) => onUpdate({ ...track, isExplicit })}
             />
 
             {/* Karaoke Toggle */}

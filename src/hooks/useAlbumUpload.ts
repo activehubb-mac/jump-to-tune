@@ -160,6 +160,8 @@ export const useAlbumUpload = (): UseAlbumUploadReturn => {
             genre: formData.genre || null,
             has_karaoke: track.hasKaraoke || false,
             display_label_name: track.credits?.displayLabelName || null,
+            moods: track.moods || [],
+            is_explicit: track.isExplicit || false,
           })
           .select('id')
           .single();
