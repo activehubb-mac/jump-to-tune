@@ -53,23 +53,23 @@ export default function WalletPage() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" asChild>
+        <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <Button variant="ghost" size="icon" className="shrink-0" asChild>
             <Link to="/library">
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Credit Wallet</h1>
-            <p className="text-muted-foreground">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Credit Wallet</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Manage your credits for instant purchases
             </p>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Balance Card */}
           <div className="lg:col-span-1 space-y-6">
             <Card className="glass overflow-hidden">
@@ -139,7 +139,7 @@ export default function WalletPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3">
                   {PRESET_AMOUNTS.map((amount) => (
                     <Button
                       key={amount.cents}

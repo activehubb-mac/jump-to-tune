@@ -147,23 +147,23 @@ export default function NotificationSettings() {
   return (
     <Layout>
       <TooltipProvider>
-        <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <div className="container mx-auto px-4 py-6 sm:py-8 max-w-2xl">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-foreground mb-2">Notification Settings</h1>
-            <p className="text-muted-foreground">Choose which alerts you'd like to receive</p>
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-2">Notification Settings</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Choose which alerts you'd like to receive</p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Financial Alerts */}
-            <div className="glass-card p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
-                  <Wallet className="w-5 h-5 text-secondary" />
+            <div className="glass-card p-4 sm:p-6">
+              <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-secondary/20 flex items-center justify-center shrink-0">
+                  <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" />
                 </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">Financial Alerts</h2>
-                  <p className="text-sm text-muted-foreground">Balance and payment notifications</p>
+                <div className="min-w-0">
+                  <h2 className="text-base sm:text-lg font-semibold text-foreground">Financial Alerts</h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Balance and payment notifications</p>
                 </div>
               </div>
 
@@ -391,24 +391,24 @@ export default function NotificationSettings() {
               </div>
             </div>
             
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-destructive/5 border border-destructive/20">
-                <div className="flex-1">
-                  <h3 className="font-medium text-foreground">Delete Account</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Permanently delete your account and all associated data. This action cannot be undone.
-                  </p>
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 sm:p-4 rounded-lg bg-destructive/5 border border-destructive/20">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-foreground">Delete Account</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      Permanently delete your account and all associated data. This action cannot be undone.
+                    </p>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setShowDeleteModal(true)}
+                    className="w-full sm:w-auto shrink-0"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Account
+                  </Button>
                 </div>
-                <Button
-                  variant="destructive"
-                  onClick={() => setShowDeleteModal(true)}
-                  className="ml-4 shrink-0"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Account
-                </Button>
               </div>
-            </div>
           </div>
         </div>
       </TooltipProvider>

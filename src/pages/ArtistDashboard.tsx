@@ -151,22 +151,22 @@ export default function ArtistDashboard() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Subscription Status Banner */}
-        <SubscriptionStatusBanner className="mb-6" />
+        <SubscriptionStatusBanner className="mb-4 sm:mb-6" />
 
         {/* Label Invitations Section */}
         <LabelInvitesSection />
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-1 sm:mb-2 truncate">
               {profile?.display_name ? `Welcome, ${profile.display_name}` : "Artist Dashboard"}
             </h1>
-            <p className="text-muted-foreground">Manage your music and track your earnings</p>
+            <p className="text-sm sm:text-base text-muted-foreground">Manage your music and track your earnings</p>
           </div>
-          <Button className="gradient-accent neon-glow-subtle hover:neon-glow" asChild>
+          <Button className="gradient-accent neon-glow-subtle hover:neon-glow w-full sm:w-auto" asChild>
             <Link to="/upload">
               <Upload className="w-4 h-4 mr-2" />
               Upload Track
@@ -175,7 +175,7 @@ export default function ArtistDashboard() {
         </div>
 
         {/* Stats Grid - Clickable Tiles */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Link 
             to="/artist/tracks" 
             className="glass-card p-6 hover:border-primary/50 transition-colors cursor-pointer"
@@ -248,7 +248,7 @@ export default function ArtistDashboard() {
         </div>
 
         {/* Recent Activity & Quick Actions */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Recent Tracks */}
           <div className="lg:col-span-2 glass-card p-6">
             <div className="flex items-center justify-between mb-4">

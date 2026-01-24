@@ -323,11 +323,11 @@ export default function Subscription() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Subscription</h1>
-          <p className="text-muted-foreground">Manage your plan and billing</p>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-2">Subscription</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Manage your plan and billing</p>
         </div>
 
         {isLoading ? (
@@ -373,10 +373,10 @@ export default function Subscription() {
                   <h2 className="text-xl font-semibold text-foreground">Current Plan</h2>
                 </div>
 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex flex-col gap-4">
                   <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl font-bold text-foreground capitalize">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                      <span className="text-xl sm:text-2xl font-bold text-foreground capitalize">
                         {currentTierInfo?.name || subscription?.tier} Plan
                       </span>
                       {isInTrial && (
@@ -429,7 +429,7 @@ export default function Subscription() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2 shrink-0">
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       variant="outline"
                       onClick={handleManageSubscription}
