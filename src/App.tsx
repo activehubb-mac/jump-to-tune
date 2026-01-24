@@ -57,6 +57,7 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import HelpCenter from "./pages/HelpCenter";
+import Install from "./pages/Install";
 
 const queryClient = new QueryClient();
 
@@ -111,6 +112,7 @@ const App = () => (
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/help" element={<HelpCenter />} />
+                <Route path="/install" element={<Install />} />
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminDashboard />}>
                   <Route index element={<AdminOverview />} />
