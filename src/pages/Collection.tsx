@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,6 +26,8 @@ import { usePurchases } from "@/hooks/usePurchases";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { PlaylistCard } from "@/components/playlist/PlaylistCard";
 import { CreatePlaylistModal } from "@/components/playlist/CreatePlaylistModal";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
+import { useQueryClient } from "@tanstack/react-query";
 import { Building2 } from "lucide-react";
 
 type SortOption = "recent" | "title" | "artist" | "price";
@@ -34,6 +36,7 @@ export default function Collection() {
   const [activeTab, setActiveTab] = useState("playlists");
   const [likedSort, setLikedSort] = useState<SortOption>("recent");
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
+  const queryClient = useQueryClient();
   
   const { user, profile, isLoading } = useAuth();
   const { data: stats, isLoading: statsLoading } = useCollectionStats(user?.id);
@@ -50,6 +53,16 @@ export default function Collection() {
   const [premiumFeatureName, setPremiumFeatureName] = useState("");
   const { isOwned } = usePurchases();
   const { showFeedback } = useFeedbackSafe();
+
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["collection-stats"] }),
+      queryClient.invalidateQueries({ queryKey: ["owned-tracks"] }),
+      queryClient.invalidateQueries({ queryKey: ["liked-tracks"] }),
+      queryClient.invalidateQueries({ queryKey: ["followed-artists"] }),
+      queryClient.invalidateQueries({ queryKey: ["playlists"] }),
+    ]);
+  }, [queryClient]);
 
   // Sort liked tracks
   const sortedLikedTracks = useMemo(() => {
@@ -267,7 +280,8 @@ export default function Collection() {
         onOpenChange={setShowCreatePlaylist}
         onSubmit={handleCreatePlaylist}
       />
-      <div className="container mx-auto px-4 py-6 sm:py-8">
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-2">
@@ -686,7 +700,8 @@ export default function Collection() {
             )}
           </TabsContent>
         </Tabs>
-      </div>
+        </div>
+      </PullToRefresh>
     </Layout>
   );
 }

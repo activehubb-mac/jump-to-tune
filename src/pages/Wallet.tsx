@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { QuickTopupModal } from "@/components/wallet/QuickTopupModal";
 import { TransactionHistory } from "@/components/wallet/TransactionHistory";
 import { useLowBalanceNotification } from "@/hooks/useLowBalanceNotification";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { cn } from "@/lib/utils";
 
 const PRESET_AMOUNTS = [
@@ -51,9 +52,14 @@ export default function WalletPage() {
     );
   }
 
+  const handleRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-6 sm:py-8">
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Header */}
         <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Button variant="ghost" size="icon" className="shrink-0" asChild>
@@ -191,7 +197,8 @@ export default function WalletPage() {
             </Card>
           </div>
         </div>
-      </div>
+        </div>
+      </PullToRefresh>
 
       <QuickTopupModal open={showTopupModal} onOpenChange={setShowTopupModal} />
     </Layout>
