@@ -6,8 +6,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { 
   User, Settings, Shield, CreditCard, Bell, LogOut, 
-  Loader2, ChevronRight, Trash2 
+  Loader2, ChevronRight, Trash2, Info
 } from "lucide-react";
+
+declare const __BUILD_TIMESTAMP__: string;
 import { EmailVerificationCard } from "@/components/account/EmailVerificationCard";
 import { DeleteAccountModal } from "@/components/account/DeleteAccountModal";
 import { ProfileEditModal } from "@/components/profile/ProfileEditModal";
@@ -188,6 +190,16 @@ export default function AccountSettings() {
               <Trash2 className="w-4 h-4 mr-2" />
               Delete Account
             </Button>
+          </div>
+
+          {/* Version Info */}
+          <div className="pt-4 border-t border-glass-border">
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Info className="w-3 h-3" />
+              <span>
+                Build: {new Date(__BUILD_TIMESTAMP__).toLocaleString()}
+              </span>
+            </div>
           </div>
         </div>
       </div>
