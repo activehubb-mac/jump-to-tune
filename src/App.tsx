@@ -58,6 +58,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import HelpCenter from "./pages/HelpCenter";
 import Install from "./pages/Install";
+import NotificationCenter from "./pages/NotificationCenter";
 
 const queryClient = new QueryClient();
 
@@ -113,6 +114,7 @@ const App = () => (
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/help" element={<HelpCenter />} />
                 <Route path="/install" element={<Install />} />
+                <Route path="/notifications" element={<NotificationCenter />} />
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminDashboard />}>
                   <Route index element={<AdminOverview />} />
