@@ -117,23 +117,23 @@ export default function LabelTracks() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <Button variant="ghost" size="icon" className="shrink-0" asChild>
               <Link to="/label/dashboard">
                 <ArrowLeft className="w-5 h-5" />
               </Link>
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Label Tracks</h1>
-              <p className="text-muted-foreground">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Label Tracks</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 {tracks?.length ?? 0} track{(tracks?.length ?? 0) !== 1 ? "s" : ""} in catalog
               </p>
             </div>
           </div>
-          <Button className="bg-accent hover:bg-accent/90 neon-glow-subtle" asChild>
+          <Button className="bg-accent hover:bg-accent/90 neon-glow-subtle w-full sm:w-auto" asChild>
             <Link to="/upload">
               <Plus className="w-4 h-4 mr-2" />
               Upload New

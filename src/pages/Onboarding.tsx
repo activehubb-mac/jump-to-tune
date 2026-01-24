@@ -197,51 +197,51 @@ export default function Onboarding() {
   const currentStepIndex = steps.findIndex((s) => s.key === step);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-[120px]" />
+        <div className="absolute top-1/4 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-primary/20 rounded-full blur-[80px] sm:blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-accent/20 rounded-full blur-[80px] sm:blur-[120px]" />
       </div>
 
       {/* Progress Bar */}
-      <div className="relative z-10 pt-8 px-6">
+      <div className="relative z-10 pt-6 sm:pt-8 px-4 sm:px-6">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-between mb-2">
             {steps.map((s, i) => (
               <div
                 key={s.key}
                 className={cn(
-                  "flex-1 h-1 rounded-full mx-1 transition-colors",
+                  "flex-1 h-1 rounded-full mx-0.5 sm:mx-1 transition-colors",
                   i <= currentStepIndex ? "bg-primary" : "bg-muted"
                 )}
               />
             ))}
           </div>
-          <p className="text-sm text-muted-foreground text-center">
+          <p className="text-xs sm:text-sm text-muted-foreground text-center">
             Step {currentStepIndex + 1} of {steps.length}
           </p>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 relative z-10">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12 relative z-10">
         <div className="w-full max-w-md">
           {/* Welcome Step */}
           {step === "welcome" && (
-            <div className="text-center space-y-6">
+            <div className="text-center space-y-4 sm:space-y-6">
               <div className="flex justify-center">
                 <img 
                   src="/images/jumtunes-logo.png" 
                   alt="JumTunes" 
-                  className="h-72 w-auto object-contain"
+                  className="h-48 sm:h-72 w-auto object-contain"
                 />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
                   Welcome!
                 </h1>
-                <p className="text-muted-foreground">
+                <p className="text-sm sm:text-base text-muted-foreground">
                   Let's set up your {role === "label" ? "label" : "artist"} profile so fans can discover you.
                 </p>
               </div>

@@ -267,50 +267,50 @@ export default function Collection() {
         onOpenChange={setShowCreatePlaylist}
         onSubmit={handleCreatePlaylist}
       />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-2">
             {profile?.display_name ? `${profile.display_name}'s Library` : "My Library"}
           </h1>
-          <p className="text-muted-foreground">Your playlists and music collection</p>
+          <p className="text-sm sm:text-base text-muted-foreground">Your playlists and music collection</p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="glass-card p-4 text-center">
-            <div className="text-3xl font-bold text-gradient">
-              {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : stats?.tracksOwned ?? 0}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <div className="glass-card p-3 sm:p-4 text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-gradient">
+              {isDataLoading ? <Loader2 className="w-5 sm:w-6 h-5 sm:h-6 animate-spin mx-auto" /> : stats?.tracksOwned ?? 0}
             </div>
-            <div className="text-sm text-muted-foreground">Tracks Owned</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">Tracks Owned</div>
           </div>
-          <div className="glass-card p-4 text-center">
-            <div className="text-3xl font-bold text-gradient">
-              {playlistsLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : playlists.length}
+          <div className="glass-card p-3 sm:p-4 text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-gradient">
+              {playlistsLoading ? <Loader2 className="w-5 sm:w-6 h-5 sm:h-6 animate-spin mx-auto" /> : playlists.length}
             </div>
-            <div className="text-sm text-muted-foreground">Playlists</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">Playlists</div>
           </div>
-          <div className="glass-card p-4 text-center">
-            <div className="text-3xl font-bold text-gradient">
-              {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : followedArtists?.length ?? 0}
+          <div className="glass-card p-3 sm:p-4 text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-gradient">
+              {isDataLoading ? <Loader2 className="w-5 sm:w-6 h-5 sm:h-6 animate-spin mx-auto" /> : followedArtists?.length ?? 0}
             </div>
-            <div className="text-sm text-muted-foreground">Following</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">Following</div>
           </div>
-          <div className="glass-card p-4 text-center">
-            <div className="text-3xl font-bold text-gradient">
+          <div className="glass-card p-3 sm:p-4 text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-gradient">
               {isDataLoading ? (
-                <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+                <Loader2 className="w-5 sm:w-6 h-5 sm:h-6 animate-spin mx-auto" />
               ) : (
                 formatPrice(stats?.totalSpent ?? 0)
               )}
             </div>
-            <div className="text-sm text-muted-foreground">USD Spent</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">USD Spent</div>
           </div>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-2xl grid-cols-3 mb-8">
+          <TabsList className="grid w-full max-w-md sm:max-w-2xl grid-cols-3 mb-6 sm:mb-8">
             <TabsTrigger value="playlists" className="flex items-center gap-2">
               <ListMusic className="w-4 h-4" />
               <span className="hidden sm:inline">Playlists</span>

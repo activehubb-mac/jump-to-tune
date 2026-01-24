@@ -86,17 +86,17 @@ export default function FanDashboard() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Your Dashboard</h1>
-          <p className="text-muted-foreground">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Your Dashboard</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Welcome back! Here's your personalized music overview.
           </p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Card className="bg-glass border-glass-border">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
@@ -166,7 +166,7 @@ export default function FanDashboard() {
           </Card>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Recently Played */}
           <Card className="lg:col-span-2 bg-glass border-glass-border">
             <CardHeader className="flex flex-row items-center justify-between">
@@ -364,7 +364,7 @@ export default function FanDashboard() {
           </CardContent>
         </Card>
 
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-4 sm:mt-6 flex flex-wrap gap-2 sm:gap-3">
           <Button asChild className="gradient-accent neon-glow-subtle">
             <Link to="/for-you">
               <Sparkles className="w-4 h-4 mr-2" />
