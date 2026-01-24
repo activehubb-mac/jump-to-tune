@@ -431,6 +431,7 @@ export default function AlbumUpload() {
                 minTracks={constraints.min}
                 maxTracks={constraints.max}
                 disabled={isUploading}
+                hideTrackList={tracks.length > 0}
               />
             </div>
 

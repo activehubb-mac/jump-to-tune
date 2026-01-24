@@ -18,6 +18,7 @@ interface BulkAudioUploadProps {
   minTracks?: number;
   maxTracks?: number;
   disabled?: boolean;
+  hideTrackList?: boolean;
 }
 
 export const BulkAudioUpload = ({ 
@@ -25,7 +26,8 @@ export const BulkAudioUpload = ({
   onChange, 
   minTracks = 1, 
   maxTracks = 20,
-  disabled 
+  disabled,
+  hideTrackList = false
 }: BulkAudioUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -124,7 +126,7 @@ export const BulkAudioUpload = ({
   return (
     <div className="space-y-4">
       {/* Track List */}
-      {tracks.length > 0 && (
+      {!hideTrackList && tracks.length > 0 && (
         <div className="glass-card p-4 space-y-2">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-medium text-foreground">
