@@ -8,6 +8,14 @@ const isNativeApp = () => {
   return typeof (window as any).Capacitor !== "undefined";
 };
 
+// Detect platform
+const getPlatform = (): "ios" | "android" | "web" => {
+  if (!isNativeApp()) return "web";
+  const userAgent = window.navigator.userAgent.toLowerCase();
+  if (/iphone|ipad|ipod/.test(userAgent)) return "ios";
+  return "android";
+};
+
 interface PushNotificationState {
   isSupported: boolean;
   isEnabled: boolean;
@@ -24,33 +32,81 @@ export const usePushNotifications = () => {
     token: null,
   });
 
-  // Check if push notifications are supported
+  // Check if push notifications are supported and current status
   useEffect(() => {
     const checkSupport = async () => {
       let isSupported = false;
+      let isEnabled = false;
 
       if (isNativeApp()) {
-        // Capacitor native app - always supported
         isSupported = true;
+        // Check existing permission on native
+        try {
+          const { PushNotifications } = await import("@capacitor/push-notifications");
+          const permStatus = await PushNotifications.checkPermissions();
+          isEnabled = permStatus.receive === "granted";
+        } catch {
+          // Capacitor not available
+        }
       } else if ("Notification" in window && "serviceWorker" in navigator) {
-        // Web push notifications
         isSupported = true;
+        isEnabled = Notification.permission === "granted";
       }
-
-      const permission = isNativeApp() 
-        ? false // Will check via Capacitor
-        : Notification.permission === "granted";
 
       setState(prev => ({
         ...prev,
         isSupported,
-        isEnabled: permission,
+        isEnabled,
         isLoading: false,
       }));
+
+      // If enabled, fetch existing token from DB
+      if (isEnabled && user) {
+        const { data } = await supabase
+          .from("push_tokens")
+          .select("token")
+          .eq("user_id", user.id)
+          .eq("is_active", true)
+          .limit(1)
+          .single();
+        
+        if (data?.token) {
+          setState(prev => ({ ...prev, token: data.token }));
+        }
+      }
     };
 
     checkSupport();
-  }, []);
+  }, [user]);
+
+  // Save push token to database
+  const saveTokenToDatabase = useCallback(async (token: string) => {
+    if (!user) return;
+
+    const platform = getPlatform();
+    
+    try {
+      const { error } = await supabase
+        .from("push_tokens")
+        .upsert({
+          user_id: user.id,
+          token,
+          platform,
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: "user_id,token",
+        });
+
+      if (error) {
+        console.error("[Push] Error saving token:", error);
+      } else {
+        console.log("[Push] Token saved successfully");
+      }
+    } catch (error) {
+      console.error("[Push] Error saving token:", error);
+    }
+  }, [user]);
 
   // Request notification permission
   const requestPermission = useCallback(async (): Promise<boolean> => {
@@ -58,24 +114,18 @@ export const usePushNotifications = () => {
 
     try {
       if (isNativeApp()) {
-        // Use Capacitor Push Notifications
         const { PushNotifications } = await import("@capacitor/push-notifications");
         
         const permStatus = await PushNotifications.requestPermissions();
         
         if (permStatus.receive === "granted") {
-          // Register for push notifications
           await PushNotifications.register();
           
           // Listen for registration token
-          PushNotifications.addListener("registration", async (token) => {
-            console.log("[Push] Registration token:", token.value);
-            setState(prev => ({ ...prev, token: token.value, isEnabled: true }));
-            
-            // Save token to database
-            if (user) {
-              await saveTokenToDatabase(token.value);
-            }
+          PushNotifications.addListener("registration", async (tokenData) => {
+            console.log("[Push] Registration token:", tokenData.value);
+            setState(prev => ({ ...prev, token: tokenData.value, isEnabled: true }));
+            await saveTokenToDatabase(tokenData.value);
           });
 
           // Listen for registration errors
@@ -87,7 +137,6 @@ export const usePushNotifications = () => {
           // Listen for incoming notifications
           PushNotifications.addListener("pushNotificationReceived", (notification) => {
             console.log("[Push] Notification received:", notification);
-            // Show in-app notification
             toast(notification.title || "New notification", {
               description: notification.body,
             });
@@ -96,14 +145,15 @@ export const usePushNotifications = () => {
           // Listen for notification taps
           PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
             console.log("[Push] Notification tapped:", action);
-            // Handle navigation based on notification data
             handleNotificationTap(action.notification.data);
           });
 
           setState(prev => ({ ...prev, isEnabled: true, isLoading: false }));
+          toast.success("Notifications enabled!");
           return true;
         } else {
           setState(prev => ({ ...prev, isLoading: false }));
+          toast.error("Notification permission denied");
           return false;
         }
       } else {
@@ -111,12 +161,11 @@ export const usePushNotifications = () => {
         const permission = await Notification.requestPermission();
         
         if (permission === "granted") {
-          // Get service worker registration
-          const registration = await navigator.serviceWorker.ready;
+          // For web, generate a simple identifier
+          const webToken = `web_${user?.id}_${Date.now()}`;
+          await saveTokenToDatabase(webToken);
           
-          // Subscribe to push notifications (would need VAPID keys for production)
-          // For now, just enable local notifications
-          setState(prev => ({ ...prev, isEnabled: true, isLoading: false }));
+          setState(prev => ({ ...prev, isEnabled: true, token: webToken, isLoading: false }));
           toast.success("Notifications enabled!");
           return true;
         } else {
@@ -131,32 +180,35 @@ export const usePushNotifications = () => {
       toast.error("Failed to enable notifications");
       return false;
     }
-  }, [user]);
+  }, [user, saveTokenToDatabase]);
 
-  // Save push token to database
-  const saveTokenToDatabase = async (token: string) => {
+  // Disable notifications
+  const disableNotifications = useCallback(async () => {
     if (!user) return;
 
+    setState(prev => ({ ...prev, isLoading: true }));
+
     try {
-      // Store token in user's profile or a dedicated table
-      // For now, log it - you can create a push_tokens table later
-      console.log("[Push] Token to save:", { userId: user.id, token, platform: isNativeApp() ? "native" : "web" });
+      // Deactivate all tokens for this user
+      await supabase
+        .from("push_tokens")
+        .update({ is_active: false })
+        .eq("user_id", user.id);
+
+      setState(prev => ({ 
+        ...prev, 
+        isEnabled: false, 
+        token: null, 
+        isLoading: false 
+      }));
       
-      // TODO: Create push_tokens table and uncomment:
-      // const { error } = await supabase
-      //   .from("push_tokens")
-      //   .upsert({
-      //     user_id: user.id,
-      //     token,
-      //     platform: isNativeApp() ? "native" : "web",
-      //     updated_at: new Date().toISOString(),
-      //   }, {
-      //     onConflict: "user_id,token",
-      //   });
+      toast.success("Notifications disabled");
     } catch (error) {
-      console.error("[Push] Error saving token:", error);
+      console.error("[Push] Error disabling notifications:", error);
+      setState(prev => ({ ...prev, isLoading: false }));
+      toast.error("Failed to disable notifications");
     }
-  };
+  }, [user]);
 
   // Handle notification tap navigation
   const handleNotificationTap = (data: any) => {
@@ -169,7 +221,7 @@ export const usePushNotifications = () => {
         window.location.href = `/album/${id}`;
         break;
       case "purchase":
-        window.location.href = "/library";
+        window.location.href = "/collection";
         break;
       case "follow":
         window.location.href = `/artist/${id}`;
@@ -204,6 +256,7 @@ export const usePushNotifications = () => {
   return {
     ...state,
     requestPermission,
+    disableNotifications,
     sendLocalNotification,
   };
 };

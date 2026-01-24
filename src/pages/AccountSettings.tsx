@@ -11,6 +11,7 @@ import {
 import { EmailVerificationCard } from "@/components/account/EmailVerificationCard";
 import { DeleteAccountModal } from "@/components/account/DeleteAccountModal";
 import { ProfileEditModal } from "@/components/profile/ProfileEditModal";
+import { NotificationPreferencesCard } from "@/components/account/NotificationPreferencesCard";
 
 export default function AccountSettings() {
   const navigate = useNavigate();
@@ -122,6 +123,9 @@ export default function AccountSettings() {
 
           {/* Email Verification */}
           <EmailVerificationCard />
+
+          {/* Push Notifications */}
+          <NotificationPreferencesCard />
 
           {/* Settings Links */}
           <div className="glass-card divide-y divide-glass-border">
