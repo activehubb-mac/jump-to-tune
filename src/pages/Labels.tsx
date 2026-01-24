@@ -28,10 +28,10 @@ export default function Labels() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Labels</h1>
-          <p className="text-muted-foreground">Explore music labels and their artist rosters</p>
+      <div className="container mx-auto px-4 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-2">Labels</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Explore music labels and their artist rosters</p>
         </div>
 
         <div className="relative max-w-md mb-8">
@@ -80,21 +80,21 @@ export default function Labels() {
 
             <section>
               <h2 className="text-2xl font-bold text-foreground mb-6">All Labels</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
                 {allLabels.map((label) => (
-                  <Link key={label.id} to={`/label/${label.id}`} className="glass-card p-6 text-center group hover:bg-accent/10 transition-all duration-300">
-                    <div className="w-20 h-20 mx-auto rounded-xl bg-muted/50 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform overflow-hidden">
-                      {label.avatar_url ? <img src={label.avatar_url} alt={label.display_name || ""} className="w-full h-full object-cover" /> : <Building2 className="w-10 h-10 text-muted-foreground" />}
+                  <Link key={label.id} to={`/label/${label.id}`} className="glass-card p-4 sm:p-6 text-center group hover:bg-accent/10 transition-all duration-300">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-xl bg-muted/50 flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 transition-transform overflow-hidden">
+                      {label.avatar_url ? <img src={label.avatar_url} alt={label.display_name || ""} className="w-full h-full object-cover" /> : <Building2 className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground" />}
                     </div>
-                    <div className="flex items-center justify-center gap-1">
-                      <h3 className="font-semibold text-foreground">{label.display_name || "Unknown"}</h3>
+                    <div className="flex items-center justify-center gap-1 min-w-0">
+                      <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">{label.display_name || "Unknown"}</h3>
                       {label.is_verified && (
                         <span title="Verified Label">
                           <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" />
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground">{label.artistCount} artists</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{label.artistCount} artists</p>
                   </Link>
                 ))}
               </div>

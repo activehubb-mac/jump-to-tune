@@ -9,10 +9,11 @@ const corsHeaders = {
 interface PushPayload {
   user_id?: string;
   user_ids?: string[];
+  notify_followers_of?: string; // Artist ID to notify all followers of
   title: string;
   body: string;
   data?: Record<string, any>;
-  type?: "new_release" | "purchase" | "follow" | "like" | "general";
+  type?: "new_release" | "purchase" | "follow" | "like" | "general" | "track_purchase" | "track_sale";
 }
 
 serve(async (req) => {
@@ -26,7 +27,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const payload: PushPayload = await req.json();
-    const { user_id, user_ids, title, body, data, type = "general" } = payload;
+    const { user_id, user_ids, notify_followers_of, title, body, data, type = "general" } = payload;
 
     if (!title || !body) {
       return new Response(
@@ -36,14 +37,32 @@ serve(async (req) => {
     }
 
     // Get target user IDs
-    const targetUserIds = user_ids || (user_id ? [user_id] : []);
+    let targetUserIds: string[] = user_ids || (user_id ? [user_id] : []);
+
+    // If notify_followers_of is set, fetch all followers of that artist
+    if (notify_followers_of) {
+      const { data: followers, error: followersError } = await supabase
+        .from("follows")
+        .select("follower_id")
+        .eq("following_id", notify_followers_of);
+
+      if (followersError) {
+        console.error("Error fetching followers:", followersError);
+      } else if (followers && followers.length > 0) {
+        const followerIds = followers.map(f => f.follower_id);
+        console.log(`Found ${followerIds.length} followers for artist ${notify_followers_of}`);
+        targetUserIds = [...new Set([...targetUserIds, ...followerIds])];
+      }
+    }
 
     if (targetUserIds.length === 0) {
       return new Response(
-        JSON.stringify({ error: "user_id or user_ids required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ success: true, message: "No target users to notify" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log(`Sending notifications to ${targetUserIds.length} users`);
 
     // Fetch active push tokens for target users
     const { data: tokens, error: tokensError } = await supabase
@@ -63,22 +82,33 @@ serve(async (req) => {
     console.log(`Found ${tokens?.length || 0} active tokens for ${targetUserIds.length} users`);
 
     // Create in-app notifications for all target users
-    const notificationInserts = targetUserIds.map(userId => ({
-      user_id: userId,
-      type,
-      title,
-      message: body,
-      metadata: data || {},
-      read: false,
-    }));
+    // For large follower lists, batch the inserts
+    const BATCH_SIZE = 100;
+    let notificationsCreated = 0;
 
-    const { error: notifError } = await supabase
-      .from("notifications")
-      .insert(notificationInserts);
+    for (let i = 0; i < targetUserIds.length; i += BATCH_SIZE) {
+      const batch = targetUserIds.slice(i, i + BATCH_SIZE);
+      const notificationInserts = batch.map(userId => ({
+        user_id: userId,
+        type,
+        title,
+        message: body,
+        metadata: data || {},
+        read: false,
+      }));
 
-    if (notifError) {
-      console.error("Error creating notifications:", notifError);
+      const { error: notifError } = await supabase
+        .from("notifications")
+        .insert(notificationInserts);
+
+      if (notifError) {
+        console.error("Error creating notifications batch:", notifError);
+      } else {
+        notificationsCreated += notificationInserts.length;
+      }
     }
+
+    console.log(`Created ${notificationsCreated} in-app notifications`);
 
     // Send push notifications to each token
     // Note: For production, you'd integrate with FCM (Firebase Cloud Messaging) 
@@ -110,7 +140,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        notifications_created: notificationInserts.length,
+        notifications_created: notificationsCreated,
         push_results: pushResults,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

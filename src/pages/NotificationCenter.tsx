@@ -5,10 +5,10 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { 
-  Bell, BellOff, Check, CheckCheck, Trash2, Loader2, 
+  Bell, BellOff, CheckCheck, Loader2, 
   Heart, UserPlus, Music, ShoppingCart, Settings, ArrowLeft
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { SwipeableNotification } from "@/components/notifications/SwipeableNotification";
 
 export default function NotificationCenter() {
   const navigate = useNavigate();
@@ -38,6 +38,8 @@ export default function NotificationCenter() {
       case "new_release":
         return <Music className="w-5 h-5 text-primary" />;
       case "purchase":
+      case "track_purchase":
+      case "track_sale":
         return <ShoppingCart className="w-5 h-5 text-green-500" />;
       default:
         return <Bell className="w-5 h-5 text-muted-foreground" />;
@@ -74,7 +76,13 @@ export default function NotificationCenter() {
         }
         break;
       case "purchase":
-        navigate("/collection");
+      case "track_purchase":
+        navigate("/library");
+        break;
+      case "track_sale":
+        if (metadata?.track_id) {
+          navigate(`/track/${metadata.track_id}/edit`);
+        }
         break;
       default:
         break;
@@ -83,18 +91,19 @@ export default function NotificationCenter() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-2xl">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-3 sm:gap-4 mb-6">
           <Button 
             variant="ghost" 
             size="icon"
             onClick={() => navigate(-1)}
+            className="shrink-0"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-foreground">Notifications</h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Notifications</h1>
             {unreadCount > 0 && (
               <p className="text-sm text-muted-foreground">
                 {unreadCount} unread notification{unreadCount !== 1 ? "s" : ""}
@@ -105,6 +114,7 @@ export default function NotificationCenter() {
             variant="ghost"
             size="icon"
             onClick={() => navigate("/settings")}
+            className="shrink-0"
           >
             <Settings className="w-5 h-5" />
           </Button>
@@ -134,10 +144,16 @@ export default function NotificationCenter() {
               className="ml-auto"
             >
               <CheckCheck className="w-4 h-4 mr-2" />
-              Mark all read
+              <span className="hidden sm:inline">Mark all read</span>
+              <span className="sm:hidden">All read</span>
             </Button>
           )}
         </div>
+
+        {/* Swipe hint for mobile */}
+        <p className="text-xs text-muted-foreground mb-3 sm:hidden">
+          Swipe left on a notification to delete it
+        </p>
 
         {/* Notifications List */}
         {isLoading ? (
@@ -162,58 +178,14 @@ export default function NotificationCenter() {
         ) : (
           <div className="space-y-2">
             {filteredNotifications?.map((notification) => (
-              <div
+              <SwipeableNotification
                 key={notification.id}
-                className={`glass-card p-4 cursor-pointer transition-all hover:bg-muted/50 ${
-                  !notification.read ? "border-l-2 border-l-primary bg-primary/5" : ""
-                }`}
-                onClick={() => handleNotificationClick(notification)}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center shrink-0">
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className={`font-medium text-sm ${!notification.read ? "text-foreground" : "text-muted-foreground"}`}>
-                        {notification.title}
-                      </h3>
-                      <span className="text-xs text-muted-foreground shrink-0">
-                        {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">
-                      {notification.message}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {!notification.read && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          markAsRead(notification.id);
-                        }}
-                      >
-                        <Check className="w-4 h-4" />
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteNotification(notification.id);
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
+                notification={notification}
+                onDelete={deleteNotification}
+                onMarkRead={markAsRead}
+                onClick={handleNotificationClick}
+                getIcon={getNotificationIcon}
+              />
             ))}
           </div>
         )}

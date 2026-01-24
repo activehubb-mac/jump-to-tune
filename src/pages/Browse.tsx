@@ -351,12 +351,12 @@ export default function Browse() {
         {/* Genre Pills */}
         <div className="mb-4">
           <h3 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Genre</h3>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide md:flex-wrap md:overflow-visible">
             {genres.map((genre) => (
               <button
                 key={genre}
                 onClick={() => setSelectedGenre(genre)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap shrink-0 md:shrink ${
                   selectedGenre === genre
                     ? "bg-primary text-primary-foreground neon-glow-subtle"
                     : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -371,12 +371,12 @@ export default function Browse() {
         {/* Mood Pills */}
         <div className="mb-6">
           <h3 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Mood</h3>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide md:flex-wrap md:overflow-visible">
             {moods.map((mood) => (
               <button
                 key={mood}
                 onClick={() => setSelectedMood(mood)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap shrink-0 md:shrink ${
                   selectedMood === mood
                     ? "bg-accent text-accent-foreground ring-2 ring-accent ring-offset-2 ring-offset-background"
                     : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -389,8 +389,8 @@ export default function Browse() {
         </div>
 
         {/* Sort & Clear Filters Row */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Karaoke Filter Toggle */}
             <button
               onClick={() => setKaraokeOnly(!karaokeOnly)}
@@ -412,23 +412,23 @@ export default function Browse() {
                 className="text-muted-foreground hover:text-foreground"
               >
                 <X className="w-4 h-4 mr-1" />
-                Clear filters
+                Clear
               </Button>
             )}
             {(selectedGenre !== "All" || selectedMood !== "All" || karaokeOnly) && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground overflow-x-auto">
                 {selectedGenre !== "All" && (
-                  <span className="px-2 py-1 rounded-md bg-primary/10 text-primary text-xs">
+                  <span className="px-2 py-1 rounded-md bg-primary/10 text-primary text-xs whitespace-nowrap">
                     {selectedGenre}
                   </span>
                 )}
                 {selectedMood !== "All" && (
-                  <span className="px-2 py-1 rounded-md bg-accent/50 text-accent-foreground text-xs">
+                  <span className="px-2 py-1 rounded-md bg-accent/50 text-accent-foreground text-xs whitespace-nowrap">
                     {selectedMood}
                   </span>
                 )}
                 {karaokeOnly && (
-                  <span className="px-2 py-1 rounded-md bg-primary/10 text-primary text-xs flex items-center gap-1">
+                  <span className="px-2 py-1 rounded-md bg-primary/10 text-primary text-xs flex items-center gap-1 whitespace-nowrap">
                     <Mic2 className="w-3 h-3" />
                     Sing-along
                   </span>
@@ -438,9 +438,9 @@ export default function Browse() {
           </div>
           
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Sort by:</span>
+            <span className="text-sm text-muted-foreground hidden sm:inline">Sort by:</span>
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-              <SelectTrigger className="w-[180px] bg-muted/50 border-glass-border">
+              <SelectTrigger className="w-full sm:w-[180px] bg-muted/50 border-glass-border">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

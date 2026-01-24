@@ -136,44 +136,46 @@ export default function LabelDashboard() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-7xl">
         {/* Subscription Status Banner */}
-        <SubscriptionStatusBanner className="mb-6" />
+        <SubscriptionStatusBanner className="mb-4 sm:mb-6" />
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 sm:mb-8 gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-1 sm:mb-2 truncate">
               {profile?.display_name ? `${profile.display_name}` : "Label Dashboard"}
             </h1>
-            <p className="text-muted-foreground">Manage your artists and releases</p>
+            <p className="text-sm sm:text-base text-muted-foreground">Manage your artists and releases</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
             <Button 
               variant="outline" 
-              className="border-glass-border hover:border-accent/50"
+              className="border-glass-border hover:border-accent/50 flex-1 sm:flex-none text-xs sm:text-sm"
               onClick={handleAddArtistClick}
             >
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add Artist
-              <Badge variant="secondary" className="ml-2 text-xs">
+              <UserPlus className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Add Artist</span>
+              <span className="sm:hidden">Add</span>
+              <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">
                 {activeArtistCount}/{artistLimit}
               </Badge>
             </Button>
-            <Button className="bg-accent hover:bg-accent/90 neon-glow-subtle" asChild>
+            <Button className="bg-accent hover:bg-accent/90 neon-glow-subtle flex-1 sm:flex-none text-xs sm:text-sm" asChild>
               <Link to="/upload">
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Track
+                <Upload className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Upload Track</span>
+                <span className="sm:hidden">Upload</span>
               </Link>
             </Button>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-4 gap-6">
+        <div className="grid lg:grid-cols-4 gap-4 sm:gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="lg:col-span-3 space-y-4 sm:space-y-6">
             {/* Stats Grid - Clickable */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               <div className="glass-card p-6 hover:border-accent/50 transition-colors">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">

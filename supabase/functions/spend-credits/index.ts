@@ -222,7 +222,7 @@ serve(async (req) => {
     });
 
     // Create notifications for buyer and seller
-    // Notification for buyer
+    // Notification for buyer (in-app)
     await supabaseClient
       .from("notifications")
       .insert({
@@ -239,7 +239,32 @@ serve(async (req) => {
       });
     logStep("Buyer notification created");
 
-    // Notification for artist/label about sale
+    // Send push notification to buyer (non-blocking)
+    try {
+      fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            title: "Track Purchased! 🎵",
+            body: `You now own edition #${editionNumber} of "${track.title}"`,
+            data: {
+              type: "track_purchase",
+              track_id: track_id,
+            },
+          }),
+        }
+      ).catch(err => logStep("Buyer push notification error", { error: err.message }));
+    } catch (e) {
+      logStep("Buyer push notification error (caught)", { error: e instanceof Error ? e.message : "Unknown" });
+    }
+
+    // Notification for artist/label about sale (in-app)
     await supabaseClient
       .from("notifications")
       .insert({
@@ -255,6 +280,32 @@ serve(async (req) => {
         },
       });
     logStep("Seller notification created");
+
+    // Send push notification to seller (non-blocking)
+    try {
+      fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({
+            user_id: earningsRecipientId,
+            title: "New Sale! 🎉",
+            body: `"${track.title}" sold for $${(priceCents / 100).toFixed(2)} - You earned $${(artistPayoutCents / 100).toFixed(2)}`,
+            data: {
+              type: "track_sale",
+              track_id: track_id,
+              earnings_cents: artistPayoutCents,
+            },
+          }),
+        }
+      ).catch(err => logStep("Seller push notification error", { error: err.message }));
+    } catch (e) {
+      logStep("Seller push notification error (caught)", { error: e instanceof Error ? e.message : "Unknown" });
+    }
 
     // Send sale email to artist/label (non-blocking)
     try {
