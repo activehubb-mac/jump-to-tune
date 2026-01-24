@@ -233,6 +233,18 @@ export function Navbar() {
                           ))
                         )}
                       </ScrollArea>
+                      <div className="p-2 border-t border-border">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full text-xs text-primary"
+                          asChild
+                        >
+                          <Link to="/notifications">
+                            View All Notifications
+                          </Link>
+                        </Button>
+                      </div>
                     </DropdownMenuContent>
                   </DropdownMenu>
 
@@ -526,6 +538,27 @@ export function Navbar() {
                         Admin Dashboard
                       </Link>
                     )}
+                    <Link
+                      to="/settings"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+                    >
+                      <Settings className="w-5 h-5" />
+                      Account Settings
+                    </Link>
+                    <Link
+                      to="/notifications"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+                    >
+                      <Bell className="w-5 h-5" />
+                      Notifications
+                      {unreadCount > 0 && (
+                        <Badge variant="destructive" className="ml-auto text-xs">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </Badge>
+                      )}
+                    </Link>
                     <button
                       onClick={() => {
                         setIsOpen(false);
@@ -533,7 +566,7 @@ export function Navbar() {
                       }}
                       className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg w-full text-left"
                     >
-                      <Settings className="w-5 h-5" />
+                      <User className="w-5 h-5" />
                       Edit Profile
                     </button>
                     <button

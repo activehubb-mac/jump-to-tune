@@ -74,10 +74,10 @@ export default function Artists() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Artists</h1>
-          <p className="text-muted-foreground">Discover talented artists and explore their music collections</p>
+      <div className="container mx-auto px-4 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-2">Artists</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Discover talented artists and explore their music collections</p>
         </div>
 
         <div className="relative max-w-md mb-8">
@@ -161,26 +161,26 @@ export default function Artists() {
 
             <section>
               <h2 className="text-2xl font-bold text-foreground mb-6">All Artists</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
                 {allArtists.map((artist) => {
                   const following = isFollowing(artist.id);
                   const isOwnProfile = user?.id === artist.id;
                   const followers = followerCounts[artist.id] || artist.followerCount || 0;
 
                   return (
-                    <Link key={artist.id} to={`/artist/${artist.id}`} className="glass-card p-4 text-center group hover:bg-primary/10 transition-all duration-300">
-                      <div className="w-24 h-24 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform overflow-hidden">
-                        {artist.avatar_url ? <img src={artist.avatar_url} alt={artist.display_name || ""} className="w-full h-full object-cover" /> : <Music className="w-10 h-10 text-muted-foreground" />}
+                    <Link key={artist.id} to={`/artist/${artist.id}`} className="glass-card p-3 sm:p-4 text-center group hover:bg-primary/10 transition-all duration-300">
+                      <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-105 transition-transform overflow-hidden">
+                        {artist.avatar_url ? <img src={artist.avatar_url} alt={artist.display_name || ""} className="w-full h-full object-cover" /> : <Music className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground" />}
                       </div>
-                      <div className="flex items-center justify-center gap-1">
-                        <h3 className="font-semibold text-foreground truncate">{artist.display_name || "Unknown"}</h3>
+                      <div className="flex items-center justify-center gap-1 min-w-0">
+                        <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">{artist.display_name || "Unknown"}</h3>
                         {artist.is_verified && (
                           <span title="Verified Artist">
                             <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground">{artist.trackCount} tracks</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{artist.trackCount} tracks</p>
                       <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 mt-1">
                         <Users className="w-3 h-3" />
                         {formatCompactNumber(followers)} fans

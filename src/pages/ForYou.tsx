@@ -160,20 +160,20 @@ export default function ForYou() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Hero Section */}
-        <div className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-accent/10 to-background p-8">
+        <div className="relative mb-6 sm:mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-accent/10 to-background p-4 sm:p-8">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 rounded-full bg-primary/20 backdrop-blur-sm">
-                <Sparkles className="w-8 h-8 text-primary" />
+              <div className="p-2 sm:p-3 rounded-full bg-primary/20 backdrop-blur-sm shrink-0">
+                <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
               </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
                   For You
                 </h1>
-                <p className="text-muted-foreground">
+                <p className="text-sm sm:text-base text-muted-foreground">
                   Personalized based on your listening history & likes
                 </p>
               </div>

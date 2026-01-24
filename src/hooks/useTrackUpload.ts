@@ -239,6 +239,31 @@ export const useTrackUpload = (): UseTrackUploadReturn => {
         }
       }
 
+      // Notify followers about new release (only for published tracks, not drafts)
+      if (track && !isDraft) {
+        try {
+          await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push-notification`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            },
+            body: JSON.stringify({
+              notify_followers_of: artistId,
+              title: 'New Release! 🎵',
+              body: `${formData.title} is now available`,
+              data: {
+                type: 'new_release',
+                track_id: track.id,
+                artist_id: artistId,
+              },
+            }),
+          });
+        } catch (notifyError) {
+          console.error('Failed to notify followers:', notifyError);
+        }
+      }
+
       return { success: true, trackId: track?.id };
     } catch (error) {
       console.error('Track upload error:', error);
