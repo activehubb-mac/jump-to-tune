@@ -59,7 +59,7 @@ export default function WalletPage() {
   return (
     <Layout>
       <PullToRefresh onRefresh={handleRefresh}>
-        <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:py-8 overflow-x-hidden">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 overflow-x-hidden box-border">
         {/* Header */}
         <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Button variant="ghost" size="icon" className="shrink-0" asChild>
