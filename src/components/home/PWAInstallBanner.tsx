@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Download, Smartphone } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -8,9 +9,10 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function PWAInstallBanner() {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isIOS, setIsIOS] = useState(false);
+  const [platform, setPlatform] = useState<"ios" | "android" | "desktop">("desktop");
 
   useEffect(() => {
     // Check if already installed or dismissed
@@ -22,18 +24,23 @@ export function PWAInstallBanner() {
       return;
     }
 
-    // Detect iOS
+    // Detect platform
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
-    setIsIOS(isIOSDevice);
-
-    // For iOS, show banner if on mobile Safari
+    const isAndroid = /android/.test(userAgent);
+    
     if (isIOSDevice) {
+      setPlatform("ios");
+      // Show on iOS Safari
       const isSafari = /safari/.test(userAgent) && !/crios|fxios/.test(userAgent);
       if (isSafari) {
         setIsVisible(true);
       }
       return;
+    }
+    
+    if (isAndroid) {
+      setPlatform("android");
     }
 
     // For Android/Desktop, listen for beforeinstallprompt
@@ -45,18 +52,19 @@ export function PWAInstallBanner() {
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
+    // Show banner after a delay for desktop/android even without beforeinstallprompt
+    // This helps in iframe/preview environments where the event doesn't fire
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 3000);
+
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      clearTimeout(timer);
     };
   }, []);
 
   const handleInstall = async () => {
-    if (isIOS) {
-      // For iOS, redirect to install page with instructions
-      window.location.href = "/install";
-      return;
-    }
-
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -66,6 +74,9 @@ export function PWAInstallBanner() {
         localStorage.setItem("pwa-banner-dismissed", "true");
       }
       setDeferredPrompt(null);
+    } else {
+      // Navigate to install page for instructions
+      navigate("/install");
     }
   };
 
@@ -75,6 +86,17 @@ export function PWAInstallBanner() {
   };
 
   if (!isVisible) return null;
+
+  const getMessage = () => {
+    switch (platform) {
+      case "ios":
+        return "Tap Share → Add to Home Screen";
+      case "android":
+        return "Install for quick access and offline support";
+      default:
+        return "Install our app for the best experience";
+    }
+  };
 
   return (
     <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-4 md:max-w-sm z-50 animate-in slide-in-from-bottom-4 duration-300">
@@ -88,10 +110,7 @@ export function PWAInstallBanner() {
               Install JumTunes
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {isIOS 
-                ? "Add to Home Screen for the best experience"
-                : "Install our app for faster access and offline support"
-              }
+              {getMessage()}
             </p>
             <div className="flex items-center gap-2 mt-3">
               <Button 
@@ -100,7 +119,7 @@ export function PWAInstallBanner() {
                 className="h-8 text-xs"
               >
                 <Download className="w-3.5 h-3.5 mr-1.5" />
-                {isIOS ? "Learn How" : "Install"}
+                {deferredPrompt ? "Install" : "Learn How"}
               </Button>
               <Button 
                 variant="ghost" 
