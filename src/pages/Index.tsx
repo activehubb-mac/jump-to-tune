@@ -6,6 +6,7 @@ import { DownloadButton } from "@/components/download/DownloadButton";
 import { TrendingCarousel } from "@/components/home/TrendingCarousel";
 import { KaraokePromoBanner } from "@/components/home/KaraokePromoBanner";
 import { FeaturedHeroCarousel } from "@/components/home/FeaturedHeroCarousel";
+import { PWAInstallBanner } from "@/components/home/PWAInstallBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRecommendedArtists } from "@/hooks/useRecommendedArtists";
 import { useFollow } from "@/hooks/useFollows";
@@ -1603,6 +1604,9 @@ export default function Index() {
           onComplete={completeTour}
         />
       )}
+
+      {/* PWA Install Banner for mobile users */}
+      <PWAInstallBanner />
     </Layout>
   );
 }
