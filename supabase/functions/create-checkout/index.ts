@@ -56,7 +56,15 @@ serve(async (req) => {
       logStep("Existing customer found", { customerId });
     }
 
-    const origin = req.headers.get("origin") || "http://localhost:5173";
+    const origin = req.headers.get("origin") || "https://jump-to-tune.lovable.app";
+    
+    // Detect if request is from mobile app
+    const isMobileApp = req.headers.get("x-jumtunes-mobile") === "true";
+    const successBaseUrl = isMobileApp ? "jumtunes:/" : origin;
+    const cancelBaseUrl = isMobileApp ? "jumtunes:/" : origin;
+    
+    logStep("URL configuration", { origin, isMobileApp, successBaseUrl });
+    
     let session;
 
     if (mode === "subscription") {
@@ -76,8 +84,8 @@ serve(async (req) => {
             tier: tier,
           },
         },
-        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=subscription`,
-        cancel_url: `${origin}/`,
+        success_url: `${successBaseUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=subscription`,
+        cancel_url: `${cancelBaseUrl}/`,
         metadata: {
           user_id: user.id,
           tier: tier,
@@ -105,8 +113,8 @@ serve(async (req) => {
           },
         ],
         mode: "payment",
-        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=purchase&track_id=${trackId}`,
-        cancel_url: `${origin}/`,
+        success_url: `${successBaseUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=purchase&track_id=${trackId}`,
+        cancel_url: `${cancelBaseUrl}/`,
         metadata: {
           user_id: user.id,
           track_id: trackId,

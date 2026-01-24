@@ -81,6 +81,13 @@ serve(async (req) => {
 
     // Get origin for redirect URLs
     const origin = req.headers.get("origin") || "https://jump-to-tune.lovable.app";
+    
+    // Detect if request is from mobile app
+    const isMobileApp = req.headers.get("x-jumtunes-mobile") === "true";
+    const successBaseUrl = isMobileApp ? "jumtunes:/" : origin;
+    const cancelBaseUrl = isMobileApp ? "jumtunes:/" : origin;
+    
+    logStep("URL configuration", { origin, isMobileApp, successBaseUrl });
 
     // Create checkout session for credit purchase
     const session = await stripe.checkout.sessions.create({
@@ -100,8 +107,8 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=credits&credits=${creditsCents}`,
-      cancel_url: `${origin}/payment-canceled`,
+      success_url: `${successBaseUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=credits&credits=${creditsCents}`,
+      cancel_url: `${cancelBaseUrl}/payment-canceled`,
       metadata: {
         type: "credit_purchase",
         user_id: user.id,
