@@ -151,20 +151,6 @@
     .bg-futuristic,
     .bg-futuristic-subtle {
       background-attachment: fixed;
-      will-change: transform;
-    }
-    
-    /* Subtle parallax depth effect */
-    .bg-futuristic::before,
-    .bg-futuristic-subtle::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: inherit;
-      background-attachment: fixed;
-      transform: translateZ(-1px) scale(1.1);
-      z-index: -1;
-      pointer-events: none;
     }
   }
 
