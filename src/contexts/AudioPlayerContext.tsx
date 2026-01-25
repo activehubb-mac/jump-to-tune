@@ -58,6 +58,7 @@ interface AudioPlayerContextType {
   currentTrack: AudioTrack | null;
   isPlaying: boolean;
   isBuffering: boolean;
+  isPlaybackBlocked: boolean;
   currentTime: number;
   duration: number;
   volume: number;
@@ -93,6 +94,7 @@ interface AudioPlayerContextType {
   dismissPreviewEndedModal: () => void;
   restartPreview: () => void;
   grantFullAccess: (trackId: string) => void;
+  retryPlayback: () => void;
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined);
@@ -121,6 +123,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   // Preview mode state
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [showPreviewEndedModal, setShowPreviewEndedModal] = useState(false);
+  const [isPlaybackBlocked, setIsPlaybackBlocked] = useState(false);
   const accessCache = useRef<Map<string, boolean>>(new Map());
 
   // Check if user has full access to a track
@@ -368,13 +371,23 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     audio.src = resolvedUrl;
     audio.load();
     
+    // Reset blocked state
+    setIsPlaybackBlocked(false);
+    
     // Use canplaythrough event for more reliable playback on iOS
     const startPlayback = () => {
-      audio.play().catch((err) => {
-        console.error("Playback failed:", err);
-        // On iOS, if play fails, user may need to tap again
-        setIsBuffering(false);
-      });
+      audio.play()
+        .then(() => {
+          setIsPlaybackBlocked(false);
+        })
+        .catch((err) => {
+          console.error("Playback failed:", err);
+          // On iOS, if play fails due to user interaction requirement, show tap to play
+          if (err.name === 'NotAllowedError') {
+            setIsPlaybackBlocked(true);
+          }
+          setIsBuffering(false);
+        });
       audio.removeEventListener('canplaythrough', startPlayback);
     };
     
@@ -382,9 +395,17 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     if (isAudioUnlockedRef.current) {
       audio.addEventListener('canplaythrough', startPlayback, { once: true });
       // Also try immediate play in case audio is already ready
-      audio.play().catch(() => {
-        // Will be handled by canplaythrough event
-      });
+      audio.play()
+        .then(() => {
+          setIsPlaybackBlocked(false);
+        })
+        .catch((err) => {
+          if (err.name === 'NotAllowedError') {
+            setIsPlaybackBlocked(true);
+            setIsBuffering(false);
+          }
+          // Will be handled by canplaythrough event otherwise
+        });
     } else {
       // First time - wait for canplaythrough
       audio.addEventListener('canplaythrough', startPlayback, { once: true });
@@ -722,6 +743,29 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     setShowPreviewEndedModal(false);
   }, []);
 
+  // Retry playback when blocked (iOS tap to play)
+  const retryPlayback = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      setIsPlaybackBlocked(false);
+      setIsBuffering(true);
+      audio.play()
+        .then(() => {
+          setIsPlaybackBlocked(false);
+          isAudioUnlockedRef.current = true;
+        })
+        .catch((err) => {
+          console.error("Retry playback failed:", err);
+          if (err.name === 'NotAllowedError') {
+            setIsPlaybackBlocked(true);
+          }
+        })
+        .finally(() => {
+          setIsBuffering(false);
+        });
+    }
+  }, []);
+
   const closePlayer = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
@@ -744,6 +788,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     setOriginalAudioUrl(null);
     setIsPreviewMode(false);
     setShowPreviewEndedModal(false);
+    setIsPlaybackBlocked(false);
   }, []);
 
   return (
@@ -752,6 +797,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         currentTrack,
         isPlaying,
         isBuffering,
+        isPlaybackBlocked,
         currentTime,
         duration,
         volume,
@@ -787,6 +833,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         dismissPreviewEndedModal,
         restartPreview,
         grantFullAccess,
+        retryPlayback,
       }}
     >
       {children}
@@ -799,6 +846,7 @@ const defaultAudioPlayerContext: AudioPlayerContextType = {
   currentTrack: null,
   isPlaying: false,
   isBuffering: false,
+  isPlaybackBlocked: false,
   currentTime: 0,
   duration: 0,
   volume: 1,
@@ -834,6 +882,7 @@ const defaultAudioPlayerContext: AudioPlayerContextType = {
   dismissPreviewEndedModal: () => {},
   restartPreview: () => {},
   grantFullAccess: () => {},
+  retryPlayback: () => {},
 };
 
 export function useAudioPlayer() {
