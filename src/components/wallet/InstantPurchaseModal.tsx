@@ -11,6 +11,7 @@ import { useInstantPurchase, isInsufficientCreditsError } from "@/hooks/useInsta
 import { useWallet } from "@/hooks/useWallet";
 import { useDownload } from "@/hooks/useDownload";
 import { InsufficientCreditsModal } from "./InsufficientCreditsModal";
+import { DownloadProgressModal } from "@/components/download/DownloadProgressModal";
 
 interface Track {
   id: string;
@@ -37,7 +38,16 @@ export function InstantPurchaseModal({
 }: InstantPurchaseModalProps) {
   const { balanceDollars, refetch: refetchWallet } = useWallet();
   const { purchaseTrack, isPurchasing, lastPurchase } = useInstantPurchase();
-  const { downloadOwnedTrack, isDownloading } = useDownload();
+  const { 
+    downloadOwnedTrack, 
+    isDownloading, 
+    downloadProgress, 
+    downloadFilename, 
+    showProgressModal, 
+    setShowProgressModal, 
+    downloadComplete,
+    downloadCoverUrl,
+  } = useDownload();
   const [showInsufficientModal, setShowInsufficientModal] = useState(false);
   const [insufficientData, setInsufficientData] = useState<{ required: number } | null>(null);
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
@@ -64,9 +74,12 @@ export function InstantPurchaseModal({
   };
 
   const handleDownload = async () => {
-    await downloadOwnedTrack(track.id);
-    onOpenChange(false);
-    setPurchaseSuccess(false);
+    await downloadOwnedTrack(track.id, track.cover_art_url);
+    if (!showProgressModal) {
+      // Only close immediately on web (no progress modal)
+      onOpenChange(false);
+      setPurchaseSuccess(false);
+    }
   };
 
   const handleClose = () => {
@@ -232,6 +245,15 @@ export function InstantPurchaseModal({
         requiredCents={insufficientData?.required || priceCents}
         trackTitle={track.title}
         onSuccess={() => refetchWallet()}
+      />
+
+      <DownloadProgressModal
+        open={showProgressModal}
+        onOpenChange={setShowProgressModal}
+        progress={downloadProgress}
+        filename={downloadFilename}
+        coverUrl={downloadCoverUrl || track.cover_art_url}
+        isComplete={downloadComplete}
       />
     </>
   );

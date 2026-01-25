@@ -3,6 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { Capacitor } from "@capacitor/core";
+import { Haptics, NotificationType, ImpactStyle } from "@capacitor/haptics";
 
 interface PurchaseResult {
   success: boolean;
@@ -36,6 +38,15 @@ export function useInstantPurchase() {
       return null;
     }
 
+    // Trigger haptic on purchase initiation
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await Haptics.impact({ style: ImpactStyle.Medium });
+      } catch {
+        // Haptics not available
+      }
+    }
+
     setIsPurchasing(true);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -64,6 +75,15 @@ export function useInstantPurchase() {
       if (data?.success) {
         const result = data as PurchaseResult;
         setLastPurchase(result);
+        
+        // Success haptic feedback
+        if (Capacitor.isNativePlatform()) {
+          try {
+            await Haptics.notification({ type: NotificationType.Success });
+          } catch {
+            // Haptics not available
+          }
+        }
         
         // Invalidate relevant queries
         queryClient.invalidateQueries({ queryKey: ["wallet"] });
