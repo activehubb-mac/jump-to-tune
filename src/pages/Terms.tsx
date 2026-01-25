@@ -3,8 +3,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Terms() {
   return (
-    <Layout>
-      <div className="min-h-screen bg-background">
+    <Layout useBackground="subtle">
+      <div className="min-h-screen">
         <div className="container mx-auto px-4 py-12 max-w-4xl">
           <div className="space-y-8">
             {/* Header */}
