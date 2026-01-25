@@ -115,7 +115,7 @@ export function SwipeableLibraryItem({
       {/* Main content (swipeable) */}
       <div
         className={cn(
-          "relative bg-background",
+          "relative",
           isAnimating && "transition-transform duration-200 ease-out"
         )}
         style={{ transform: `translateX(${translateX}px)` }}
