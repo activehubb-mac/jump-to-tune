@@ -471,23 +471,67 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       return;
     }
 
-    // Unlock audio on iOS FIRST (synchronously within user gesture)
-    // This preserves the user interaction context before async operations
-    // We await to ensure unlock completes before proceeding
+    // CRITICAL FOR iOS: Unlock audio and immediately start playback
+    // This must happen synchronously within the user gesture context
     await unlockAudioForIOS();
-
-    // Check if track is already in queue
+    
+    // Immediately set audio source and start loading (preserve gesture)
+    const audioUrl = track.audio_url || "";
+    const resolvedUrl = getAudioUrl(audioUrl);
+    audio.src = resolvedUrl;
+    audio.load();
+    
+    // Try to play immediately (must be in gesture chain for iOS)
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          setIsPlaybackBlocked(false);
+        })
+        .catch((err) => {
+          console.error("iOS playback error:", err);
+          if (err.name === 'NotAllowedError') {
+            setIsPlaybackBlocked(true);
+          }
+        });
+    }
+    
+    // Set playing state immediately
+    setIsPlaying(true);
+    setIsBuffering(true);
+    setIsPlayerVisible(true);
+    setCurrentTime(0);
+    setDuration(track.duration || 0);
+    
+    // Create basic hydrated track for immediate display
+    const basicTrack: AudioTrack = {
+      id: track.id,
+      title: track.title || "",
+      audio_url: resolvedUrl,
+      cover_art_url: track.cover_art_url,
+      duration: track.duration || 0,
+      has_karaoke: track.has_karaoke || null,
+      preview_duration: track.preview_duration || DEFAULT_PREVIEW_LIMIT_SECONDS,
+      artist: track.artist,
+    };
+    setCurrentTrack(basicTrack);
+    
+    // Now handle queue management (audio is already playing)
     const existingIndex = queue.findIndex(t => t.id === track.id);
     if (existingIndex !== -1) {
       setQueueIndex(existingIndex);
     } else {
-      // Add to queue and set as current
       setQueue(prev => [...prev, track]);
       setQueueIndex(queue.length);
     }
-
-    playTrackInternal(track);
-  }, [currentTrack?.id, isPlaying, queue, ensureAudioElement, playTrackInternal, unlockAudioForIOS]);
+    
+    // Check access and set preview mode (async, in background)
+    const hasAccess = await checkFullAccess(track.id);
+    setIsPreviewMode(!hasAccess);
+    
+    // Save to recently played
+    saveToRecentlyPlayed(basicTrack);
+  }, [currentTrack?.id, isPlaying, queue, ensureAudioElement, unlockAudioForIOS, getAudioUrl, checkFullAccess, saveToRecentlyPlayed]);
 
   const addToQueue = useCallback((track: AudioTrack) => {
     // Don't add duplicates
