@@ -109,7 +109,10 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 glass">
+      <nav 
+        className="fixed top-0 left-0 right-0 z-50 glass"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -358,8 +361,9 @@ export function Navbar() {
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2 text-foreground"
+              className="md:hidden p-3 min-w-[44px] min-h-[44px] flex items-center justify-center text-foreground touch-manipulation"
               onClick={() => setIsOpen(!isOpen)}
+              aria-label={isOpen ? "Close menu" : "Open menu"}
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
