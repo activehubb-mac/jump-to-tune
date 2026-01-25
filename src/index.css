@@ -125,7 +125,7 @@
     @apply bg-glass/60 backdrop-blur-xl border border-glass-border/40 rounded-xl;
   }
 
-  /* Futuristic Background Utilities */
+  /* Futuristic Background Utilities with Parallax */
   .bg-futuristic {
     background-image: 
       linear-gradient(to bottom, rgba(13, 10, 20, 0.75), rgba(13, 10, 20, 0.85)),
@@ -146,8 +146,38 @@
     background-repeat: no-repeat;
   }
 
-  /* iOS Safari fallback for background-attachment: fixed */
+  /* Parallax effect for desktop only */
+  @media (min-width: 768px) and (hover: hover) {
+    .bg-futuristic,
+    .bg-futuristic-subtle {
+      background-attachment: fixed;
+      will-change: transform;
+    }
+    
+    /* Subtle parallax depth effect */
+    .bg-futuristic::before,
+    .bg-futuristic-subtle::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: inherit;
+      background-attachment: fixed;
+      transform: translateZ(-1px) scale(1.1);
+      z-index: -1;
+      pointer-events: none;
+    }
+  }
+
+  /* iOS Safari and touch device fallback */
   @supports (-webkit-touch-callout: none) {
+    .bg-futuristic,
+    .bg-futuristic-subtle {
+      background-attachment: scroll;
+    }
+  }
+  
+  /* Reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
     .bg-futuristic,
     .bg-futuristic-subtle {
       background-attachment: scroll;

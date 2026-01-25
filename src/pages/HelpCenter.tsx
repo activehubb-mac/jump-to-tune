@@ -203,8 +203,8 @@ export default function HelpCenter() {
   })).filter(category => category.items.length > 0);
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-background">
+    <Layout useBackground="subtle">
+      <div className="min-h-screen">
         {/* Hero Section */}
         <div className="bg-gradient-to-b from-primary/10 to-background py-16">
           <div className="container mx-auto px-4 text-center">

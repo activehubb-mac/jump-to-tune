@@ -1,9 +1,13 @@
 import { Link } from "react-router-dom";
 import { Twitter, Instagram, Youtube, Mic2, Heart, Music, Users } from "lucide-react";
 
-export function Footer() {
+interface FooterProps {
+  className?: string;
+}
+
+export function Footer({ className = "" }: FooterProps) {
   return (
-    <footer className="bg-card/30 backdrop-blur-sm">
+    <footer className={`bg-card/30 backdrop-blur-sm ${className}`}>
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           {/* Brand */}
