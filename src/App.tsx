@@ -103,6 +103,7 @@ function AppContent() {
           <Route path="/upload/album" element={<AlbumUpload />} />
           <Route path="/album/:id" element={<AlbumDetail />} />
           <Route path="/library/playlist/:playlistId" element={<PlaylistDetail />} />
+          <Route path="/playlist/:playlistId" element={<PlaylistDetail />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-canceled" element={<PaymentCanceled />} />
           <Route path="/subscription" element={<Subscription />} />
