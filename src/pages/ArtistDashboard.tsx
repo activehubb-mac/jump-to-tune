@@ -151,7 +151,7 @@ export default function ArtistDashboard() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-6 sm:py-8">
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden box-border">
         {/* Subscription Status Banner */}
         <SubscriptionStatusBanner className="mb-4 sm:mb-6" />
 
@@ -159,14 +159,14 @@ export default function ArtistDashboard() {
         <LabelInvitesSection />
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-3 sm:gap-4">
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-1 sm:mb-2 truncate">
+            <h1 className="text-xl sm:text-2xl md:text-4xl font-bold text-foreground mb-1 sm:mb-2 truncate">
               {profile?.display_name ? `Welcome, ${profile.display_name}` : "Artist Dashboard"}
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Manage your music and track your earnings</p>
+            <p className="text-xs sm:text-sm md:text-base text-muted-foreground">Manage your music and track your earnings</p>
           </div>
-          <Button className="gradient-accent neon-glow-subtle hover:neon-glow w-full sm:w-auto" asChild>
+          <Button className="gradient-accent neon-glow-subtle hover:neon-glow w-full sm:w-auto text-sm" asChild>
             <Link to="/upload">
               <Upload className="w-4 h-4 mr-2" />
               Upload Track
@@ -175,35 +175,35 @@ export default function ArtistDashboard() {
         </div>
 
         {/* Stats Grid - Clickable Tiles */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-8">
           <Link 
             to="/artist/tracks" 
-            className="glass-card p-6 hover:border-primary/50 transition-colors cursor-pointer"
+            className="glass-card p-3 sm:p-6 hover:border-primary/50 transition-colors cursor-pointer"
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                <Music className="w-5 h-5 text-primary" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+                <Music className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
-              <span className="text-muted-foreground text-sm">Total Tracks</span>
+              <span className="text-muted-foreground text-xs sm:text-sm">Total Tracks</span>
             </div>
-            <div className="text-3xl font-bold text-foreground">
-              {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats?.totalTracks ?? 0}
+            <div className="text-xl sm:text-3xl font-bold text-foreground">
+              {isDataLoading ? <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" /> : stats?.totalTracks ?? 0}
             </div>
           </Link>
 
           <Link 
             to="/artist/analytics" 
-            className="glass-card p-6 hover:border-primary/50 transition-colors cursor-pointer"
+            className="glass-card p-3 sm:p-6 hover:border-primary/50 transition-colors cursor-pointer"
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-secondary" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-secondary/20 flex items-center justify-center shrink-0">
+                <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" />
               </div>
-              <span className="text-muted-foreground text-sm">Total Earnings</span>
+              <span className="text-muted-foreground text-xs sm:text-sm">Earnings</span>
             </div>
-            <div className="text-3xl font-bold text-foreground">
+            <div className="text-xl sm:text-3xl font-bold text-foreground">
               {isDataLoading ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
+                <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
               ) : (
                 formatEarnings(stats?.totalEarnings ?? 0)
               )}
@@ -212,34 +212,34 @@ export default function ArtistDashboard() {
 
           <Link 
             to="/artist/collectors" 
-            className="glass-card p-6 hover:border-primary/50 transition-colors cursor-pointer"
+            className="glass-card p-3 sm:p-6 hover:border-primary/50 transition-colors cursor-pointer"
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
-                <Users className="w-5 h-5 text-accent" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-accent/20 flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
               </div>
-              <span className="text-muted-foreground text-sm">Collectors</span>
+              <span className="text-muted-foreground text-xs sm:text-sm">Collectors</span>
             </div>
-            <div className="text-3xl font-bold text-foreground">
-              {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats?.collectorsCount ?? 0}
+            <div className="text-xl sm:text-3xl font-bold text-foreground">
+              {isDataLoading ? <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" /> : stats?.collectorsCount ?? 0}
             </div>
           </Link>
 
           <Link 
             to="/artist/analytics" 
-            className="glass-card p-6 hover:border-primary/50 transition-colors cursor-pointer"
+            className="glass-card p-3 sm:p-6 hover:border-primary/50 transition-colors cursor-pointer"
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-green-500" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-green-500/20 flex items-center justify-center shrink-0">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
               </div>
-              <span className="text-muted-foreground text-sm">This Month</span>
+              <span className="text-muted-foreground text-xs sm:text-sm">This Month</span>
             </div>
-            <div className="text-3xl font-bold text-foreground">
+            <div className="text-lg sm:text-3xl font-bold text-foreground">
               {isDataLoading ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
+                <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
               ) : stats?.thisMonthSales ? (
-                `${stats.thisMonthSales} sales`
+                <span className="truncate">{stats.thisMonthSales} sales</span>
               ) : (
                 "--"
               )}
@@ -250,11 +250,11 @@ export default function ArtistDashboard() {
         {/* Recent Activity & Quick Actions */}
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Recent Tracks */}
-          <div className="lg:col-span-2 glass-card p-6">
+          <div className="lg:col-span-2 glass-card p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">Your Tracks</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-foreground">Your Tracks</h2>
               {tracks && tracks.length > 0 && (
-                <Button variant="ghost" size="sm" className="text-primary" asChild>
+                <Button variant="ghost" size="sm" className="text-primary text-xs sm:text-sm" asChild>
                   <Link to="/artist/tracks">
                     View All {hasMoreTracks && `(${tracks.length})`}
                   </Link>
@@ -267,7 +267,7 @@ export default function ArtistDashboard() {
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
             ) : displayTracks.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
                 {displayTracks.map((track) => (
                   <TrackCard
                     key={track.id}
@@ -294,30 +294,30 @@ export default function ArtistDashboard() {
           </div>
 
           {/* Quick Actions & Earnings */}
-          <div className="space-y-6">
-            {/* Quick Actions */}
-            <div className="glass-card p-6">
-              <h2 className="text-xl font-bold text-foreground mb-4">Quick Actions</h2>
-              <div className="space-y-3">
-                <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50" asChild>
+          <div className="space-y-4 sm:space-y-6">
+            {/* Quick Actions - Hidden on mobile, show as horizontal on tablet */}
+            <div className="glass-card p-4 sm:p-6 hidden sm:block">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4">Quick Actions</h2>
+              <div className="space-y-2 sm:space-y-3">
+                <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50 text-sm" asChild>
                   <Link to="/upload">
                     <Plus className="w-4 h-4 mr-2" />
                     Upload New Track
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50" asChild>
+                <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50 text-sm" asChild>
                   <Link to="/artist/analytics">
                     <BarChart3 className="w-4 h-4 mr-2" />
                     View Analytics
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50" asChild>
+                <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50 text-sm" asChild>
                   <Link to="/artist/collectors">
                     <Users className="w-4 h-4 mr-2" />
                     Manage Collectors
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50" asChild>
+                <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50 text-sm" asChild>
                   <Link to="/wallet">
                     <Wallet className="w-4 h-4 mr-2" />
                     My Wallet
