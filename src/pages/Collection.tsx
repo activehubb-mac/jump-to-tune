@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Lock, Loader2, Plus, FolderPlus } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLibraryItems, LibraryFilterOption, LibrarySortOption } from "@/hooks/useLibraryItems";
 import { usePlaylists } from "@/hooks/usePlaylists";
@@ -28,7 +28,8 @@ import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { Heart, Play, Pause } from "lucide-react";
 
 export default function Collection() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const filterParam = searchParams.get("filter");
   const showLikedSongs = filterParam === "liked";
   
@@ -54,7 +55,7 @@ export default function Collection() {
 
   // Handle back navigation from liked songs view
   const handleBackToLibrary = () => {
-    setSearchParams({});
+    navigate("/library");
   };
 
   const handleRefresh = useCallback(async () => {
