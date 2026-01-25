@@ -334,7 +334,7 @@ export default function PlaylistDetail() {
   }
 
   return (
-    <Layout>
+    <Layout useBackground="subtle">
       <div className="container mx-auto px-4 py-8">
         {/* Back button */}
         <Button

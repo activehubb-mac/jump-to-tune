@@ -36,7 +36,7 @@ export default function AdminDashboard() {
 
   if (authLoading || adminLoading) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -46,7 +46,7 @@ export default function AdminDashboard() {
 
   if (!isAdmin) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
           <Shield className="w-16 h-16 text-destructive/50" />
           <h1 className="text-2xl font-bold">Access Denied</h1>
@@ -57,7 +57,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <Layout>
+    <Layout useBackground="subtle">
       <div className="container mx-auto px-3 sm:px-4 py-4 md:py-8">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6 md:mb-8">

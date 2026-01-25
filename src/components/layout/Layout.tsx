@@ -5,9 +5,12 @@ import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
 import { cn } from "@/lib/utils";
 
-// Lazy load particle overlay for performance
+// Lazy load effects for performance
 const ParticleOverlay = lazy(() => 
   import("@/components/effects/ParticleOverlay").then(mod => ({ default: mod.ParticleOverlay }))
+);
+const SpotlightOverlay = lazy(() => 
+  import("@/components/effects/SpotlightOverlay").then(mod => ({ default: mod.SpotlightOverlay }))
 );
 
 interface LayoutProps {
@@ -15,13 +18,15 @@ interface LayoutProps {
   showFooter?: boolean;
   useBackground?: "futuristic" | "subtle" | "none";
   showParticles?: boolean;
+  showSpotlight?: boolean;
 }
 
 export function Layout({ 
   children, 
   showFooter = true, 
   useBackground = "none",
-  showParticles = false 
+  showParticles = false,
+  showSpotlight = true 
 }: LayoutProps) {
   const { isPlayerVisible } = useAudioPlayer();
   
@@ -33,12 +38,21 @@ export function Layout({
 
   // Show particles on futuristic backgrounds by default, but allow override
   const shouldShowParticles = showParticles || useBackground === "futuristic";
+  // Show spotlight on any themed background by default
+  const shouldShowSpotlight = showSpotlight && useBackground !== "none";
   
   return (
     <div className={cn(
       "min-h-screen flex flex-col overflow-x-hidden w-full max-w-full",
       backgroundClass
     )}>
+      {/* Mouse-following spotlight effect for desktop */}
+      {shouldShowSpotlight && (
+        <Suspense fallback={null}>
+          <SpotlightOverlay />
+        </Suspense>
+      )}
+      
       {/* Particle effect overlay for immersive atmosphere */}
       {shouldShowParticles && (
         <Suspense fallback={null}>
