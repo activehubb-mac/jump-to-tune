@@ -3,6 +3,7 @@ import { Trash2, Pin, PinOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LibraryItem } from "@/hooks/useLibraryItems";
 import { LibraryListItem } from "./LibraryListItem";
+import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 
 interface SwipeableLibraryItemProps {
   item: LibraryItem;
@@ -28,11 +29,14 @@ export function SwipeableLibraryItem({
   const startXRef = useRef(0);
   const currentXRef = useRef(0);
   const isDraggingRef = useRef(false);
+  const hasTriggeredHapticRef = useRef(false);
+  const { mediumTap, selectionChanged, success, warning, isNative } = useHapticFeedback();
 
   const handleTouchStart = (e: TouchEvent) => {
     startXRef.current = e.touches[0].clientX;
     currentXRef.current = e.touches[0].clientX;
     isDraggingRef.current = false;
+    hasTriggeredHapticRef.current = false;
     setIsAnimating(false);
   };
 
@@ -46,6 +50,16 @@ export function SwipeableLibraryItem({
       isDraggingRef.current = true;
       const newTranslate = Math.max(-SWIPE_THRESHOLD * 2, -diff);
       setTranslateX(newTranslate);
+      
+      // Trigger haptic when crossing threshold
+      if (diff >= SWIPE_THRESHOLD && !hasTriggeredHapticRef.current) {
+        hasTriggeredHapticRef.current = true;
+        mediumTap();
+      } else if (diff < SWIPE_THRESHOLD && hasTriggeredHapticRef.current) {
+        // Provide feedback when swiping back below threshold
+        hasTriggeredHapticRef.current = false;
+        selectionChanged();
+      }
     } else if (diff < -10 && translateX < 0) {
       // Allow swipe back right
       isDraggingRef.current = true;
@@ -70,8 +84,12 @@ export function SwipeableLibraryItem({
     setTranslateX(0);
     
     if (action === "delete" && onDelete) {
+      // Warning haptic for destructive action
+      warning();
       onDelete();
     } else if (action === "pin" && onTogglePin) {
+      // Success haptic for pin/unpin
+      success();
       onTogglePin();
     }
   };

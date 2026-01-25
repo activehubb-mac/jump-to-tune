@@ -7,6 +7,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { useInstantPurchase, isInsufficientCreditsError } from "@/hooks/useInstantPurchase";
 import { InstantPurchaseModal } from "@/components/wallet/InstantPurchaseModal";
 import { InsufficientCreditsModal } from "@/components/wallet/InsufficientCreditsModal";
+import { DownloadProgressModal } from "@/components/download/DownloadProgressModal";
 import { useNavigate } from "react-router-dom";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 
@@ -38,7 +39,16 @@ export function DownloadButton({
 }: DownloadButtonProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { downloadOwnedTrack, isDownloading } = useDownload();
+  const { 
+    downloadOwnedTrack, 
+    isDownloading, 
+    downloadProgress, 
+    downloadFilename, 
+    showProgressModal, 
+    setShowProgressModal, 
+    downloadComplete,
+    downloadCoverUrl,
+  } = useDownload();
   const { balance } = useWallet();
   const { showFeedback } = useFeedbackSafe();
 
@@ -67,7 +77,7 @@ export function DownloadButton({
 
     // If user owns the track, download directly
     if (isOwned) {
-      downloadOwnedTrack(track.id);
+      downloadOwnedTrack(track.id, track.cover_art_url);
       return;
     }
 
@@ -111,6 +121,15 @@ export function DownloadButton({
         onOpenChange={setShowInsufficientModal}
         requiredCents={priceCents}
         trackTitle={track.title}
+      />
+
+      <DownloadProgressModal
+        open={showProgressModal}
+        onOpenChange={setShowProgressModal}
+        progress={downloadProgress}
+        filename={downloadFilename}
+        coverUrl={downloadCoverUrl || track.cover_art_url}
+        isComplete={downloadComplete}
       />
     </>
   );
