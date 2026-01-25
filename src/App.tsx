@@ -7,6 +7,7 @@ import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import { FeedbackModal } from "@/components/ui/feedback-modal";
 import { GlobalAudioPlayer } from "@/components/audio/GlobalAudioPlayer";
 import { useStatusBar } from "@/hooks/useStatusBar";
+import { useKeyboardConfig } from "@/hooks/useKeyboardConfig";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
@@ -66,6 +67,9 @@ const queryClient = new QueryClient();
 function AppContent() {
   // Initialize native status bar configuration
   useStatusBar();
+  
+  // Configure iOS keyboard - hides accessory bar for cleaner input experience
+  useKeyboardConfig();
 
   return (
     <>
