@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Heart, Music, User, Disc3, ListMusic, Pin, Play, Pause } from "lucide-react";
+import { Heart, Music, User, Disc3, ListMusic, Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LibraryItem } from "@/hooks/useLibraryItems";
 import { Button } from "@/components/ui/button";
@@ -80,13 +80,6 @@ export function LibraryGridItem({ item, onClick }: LibraryGridItemProps) {
             )}
           </Button>
         </div>
-
-        {/* Badges */}
-        {item.isPinned && (
-          <div className="absolute top-2 left-2 p-1.5 rounded-full bg-primary/80 backdrop-blur-sm">
-            <Pin className="w-3 h-3 text-primary-foreground fill-primary-foreground" />
-          </div>
-        )}
         
         {/* Futuristic owned indicator - pulses when playing */}
         {isDownloadedTrack && (

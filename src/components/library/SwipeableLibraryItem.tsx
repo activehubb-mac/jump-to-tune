@@ -1,5 +1,5 @@
 import { useState, useRef, TouchEvent } from "react";
-import { Trash2, Pin, PinOff } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LibraryItem } from "@/hooks/useLibraryItems";
 import { LibraryListItem } from "./LibraryListItem";
@@ -8,11 +8,8 @@ import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 interface SwipeableLibraryItemProps {
   item: LibraryItem;
   onDelete?: () => void;
-  onTogglePin?: () => void;
   onItemClick?: () => void;
-  isPinned?: boolean;
   canDelete?: boolean;
-  canPin?: boolean;
 }
 
 const SWIPE_THRESHOLD = 80;
@@ -20,11 +17,8 @@ const SWIPE_THRESHOLD = 80;
 export function SwipeableLibraryItem({
   item,
   onDelete,
-  onTogglePin,
   onItemClick,
-  isPinned = false,
   canDelete = false,
-  canPin = true,
 }: SwipeableLibraryItemProps) {
   const [translateX, setTranslateX] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -81,18 +75,13 @@ export function SwipeableLibraryItem({
     }
   };
 
-  const handleAction = (action: "delete" | "pin") => {
+  const handleDelete = () => {
     setIsAnimating(true);
     setTranslateX(0);
     
-    if (action === "delete" && onDelete) {
-      // Warning haptic for destructive action
+    if (onDelete) {
       warning();
       onDelete();
-    } else if (action === "pin" && onTogglePin) {
-      // Success haptic for pin/unpin
-      success();
-      onTogglePin();
     }
   };
 
@@ -103,34 +92,17 @@ export function SwipeableLibraryItem({
 
   return (
     <div className="relative overflow-hidden">
-      {/* Action buttons (revealed on swipe) */}
-      <div className="absolute inset-y-0 right-0 flex items-stretch">
-        {canPin && (
+      {/* Delete action button (revealed on swipe) */}
+      {canDelete && onDelete && (
+        <div className="absolute inset-y-0 right-0 flex items-stretch">
           <button
-            onClick={() => handleAction("pin")}
-            className={cn(
-              "w-16 flex items-center justify-center transition-colors",
-              isPinned 
-                ? "bg-muted hover:bg-muted/80" 
-                : "bg-primary hover:bg-primary/90"
-            )}
-          >
-            {isPinned ? (
-              <PinOff className="w-5 h-5 text-foreground" />
-            ) : (
-              <Pin className="w-5 h-5 text-primary-foreground" />
-            )}
-          </button>
-        )}
-        {canDelete && onDelete && (
-          <button
-            onClick={() => handleAction("delete")}
+            onClick={handleDelete}
             className="w-16 flex items-center justify-center bg-destructive hover:bg-destructive/90"
           >
             <Trash2 className="w-5 h-5 text-destructive-foreground" />
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Main content (swipeable) */}
       <div

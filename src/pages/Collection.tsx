@@ -483,33 +483,23 @@ export default function Collection() {
             viewMode === "list" ? (
               <div className="space-y-1">
                 {filteredItems.map((item) => (
-                  isMobile && (item.canDelete || item.canPin) ? (
+                  isMobile && item.canDelete ? (
                     <SwipeableLibraryItem
                       key={`${item.type}-${item.id}`}
                       item={item}
-                      onDelete={item.canDelete ? () => handleDeleteItem(item) : undefined}
-                      onTogglePin={item.canPin ? () => handleTogglePin(item) : undefined}
+                      onDelete={() => handleDeleteItem(item)}
                       onItemClick={item.type === "track" ? () => handlePlayTrack(item) : undefined}
-                      isPinned={item.isPinned}
                       canDelete={item.canDelete}
-                      canPin={item.canPin}
                     />
                   ) : (
                     <div 
                       key={`${item.type}-${item.id}`}
                       className="group relative"
-                      onContextMenu={(e) => {
-                        if (item.canPin) {
-                          e.preventDefault();
-                          handleTogglePin(item);
-                        }
-                      }}
                     >
                       <SwipeableLibraryItem
                         item={item}
                         onItemClick={item.type === "track" ? () => handlePlayTrack(item) : undefined}
                         canDelete={false}
-                        canPin={false}
                       />
                     </div>
                   )
