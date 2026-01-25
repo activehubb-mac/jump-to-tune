@@ -25,7 +25,8 @@ import { PlaylistInvitesSection } from "@/components/library/PlaylistInvitesSect
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLikedTracks } from "@/hooks/useLikes";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
-import { Heart, Play, Pause } from "lucide-react";
+import { useHapticFeedback } from "@/hooks/useHapticFeedback";
+import { Heart, Play, Pause, Sparkles, Download } from "lucide-react";
 
 export default function Collection() {
   const [searchParams] = useSearchParams();
@@ -52,6 +53,7 @@ export default function Collection() {
   const isMobile = useIsMobile();
   const { createPlaylist } = usePlaylists();
   const { playTrack, currentTrack, isPlaying, togglePlayPause } = useAudioPlayer();
+  const { mediumTap } = useHapticFeedback();
 
   // Handle back navigation from liked songs view
   const handleBackToLibrary = () => {
@@ -141,6 +143,9 @@ export default function Collection() {
 
   const handlePlayTrack = (item: typeof libraryItems[0]) => {
     if (item.type === "track" && item.trackData) {
+      // Trigger haptic feedback
+      mediumTap();
+      
       const track = item.trackData;
       const isCurrentTrack = currentTrack?.id === track.id;
       
@@ -162,6 +167,11 @@ export default function Collection() {
       }
     }
   };
+
+  // Get only downloaded tracks for the dedicated view
+  const downloadedTracks = useMemo(() => {
+    return libraryItems.filter(item => item.type === "track" && item.isDownloaded);
+  }, [libraryItems]);
 
   if (authLoading) {
     return (
@@ -413,6 +423,46 @@ export default function Collection() {
               </Button>
             )}
           </div>
+
+          {/* Futuristic Downloads Hero when filter is active */}
+          {activeFilter === "downloaded" && downloadedTracks.length > 0 && (
+            <div className="mb-6 p-6 rounded-lg relative overflow-hidden bg-gradient-to-br from-background via-primary/10 to-accent/10 border border-primary/20">
+              {/* Animated glow background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 animate-pulse" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-accent/10 rounded-full blur-2xl" />
+              
+              <div className="relative flex items-center gap-4">
+                <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center shrink-0 border border-primary/30 shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
+                  <Sparkles className="w-10 h-10 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-bold text-foreground mb-1 flex items-center gap-2">
+                    Your Owned Tracks
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30">
+                      {downloadedTracks.length}
+                    </span>
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
+                    Tracks you've purchased • Unlimited streaming & downloads
+                  </p>
+                </div>
+                {downloadedTracks.length > 0 && downloadedTracks[0].trackData && (
+                  <Button
+                    size="icon"
+                    className="w-12 h-12 rounded-full gradient-accent shadow-lg shadow-primary/30 shrink-0"
+                    onClick={() => handlePlayTrack(downloadedTracks[0])}
+                  >
+                    {currentTrack?.id === downloadedTracks[0].id && isPlaying ? (
+                      <Pause className="w-5 h-5" />
+                    ) : (
+                      <Play className="w-5 h-5 ml-0.5" />
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Sort & View Toggle */}
           <div className="flex items-center justify-between mb-4">
