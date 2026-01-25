@@ -371,7 +371,14 @@ export function Navbar() {
 
           {/* Mobile Navigation */}
           {isOpen && (
-            <div className="md:hidden py-4 max-h-[calc(100vh-4rem)] overflow-y-auto overscroll-contain touch-pan-y">
+            <div 
+              className="md:hidden py-4 overflow-y-auto overscroll-contain touch-pan-y"
+              style={{ 
+                maxHeight: 'calc(100vh - 4rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+                paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))',
+                WebkitOverflowScrolling: 'touch'
+              }}
+            >
               <div className="flex flex-col gap-2">
                 {navLinks.map((link) => {
                   // Skip auth-required links for non-authenticated users
