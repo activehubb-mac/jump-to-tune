@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform, Clock, FolderPlus } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform, Clock, FolderPlus, Hand } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -142,6 +142,7 @@ export function GlobalAudioPlayer() {
     previewTimeRemaining,
     currentPreviewLimit,
     showPreviewEndedModal,
+    isPlaybackBlocked,
     togglePlayPause,
     seek,
     setVolume,
@@ -161,6 +162,7 @@ export function GlobalAudioPlayer() {
     dismissPreviewEndedModal,
     restartPreview,
     grantFullAccess,
+    retryPlayback,
   } = useAudioPlayer();
 
   const { canUseFeature } = useFeatureGate();
@@ -553,6 +555,32 @@ export function GlobalAudioPlayer() {
               </div>
             )}
           </ScrollArea>
+        </div>
+      )}
+
+      {/* iOS Tap to Play Overlay */}
+      {isPlaybackBlocked && (
+        <div 
+          className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200"
+          onClick={retryPlayback}
+        >
+          <div className="text-center p-8 rounded-2xl glass-card border border-glass-border/30 max-w-xs mx-4 animate-in scale-in duration-300">
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-accent flex items-center justify-center neon-glow">
+              <Hand className="w-10 h-10 text-white animate-pulse" />
+            </div>
+            <h3 className="text-xl font-semibold text-foreground mb-2">Tap to Play</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              iOS requires a tap to start audio playback
+            </p>
+            <Button 
+              size="lg" 
+              className="gradient-accent neon-glow-subtle"
+              onClick={retryPlayback}
+            >
+              <Play className="w-5 h-5 mr-2" />
+              Start Playing
+            </Button>
+          </div>
         </div>
       )}
 
