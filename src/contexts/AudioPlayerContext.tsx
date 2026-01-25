@@ -458,7 +458,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     accessCache.current.clear();
   }, [user?.id]);
 
-  const playTrack = useCallback((track: AudioTrack) => {
+  const playTrack = useCallback(async (track: AudioTrack) => {
     const audio = ensureAudioElement();
 
     // If same track, just toggle play/pause
@@ -473,7 +473,8 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
     // Unlock audio on iOS FIRST (synchronously within user gesture)
     // This preserves the user interaction context before async operations
-    unlockAudioForIOS();
+    // We await to ensure unlock completes before proceeding
+    await unlockAudioForIOS();
 
     // Check if track is already in queue
     const existingIndex = queue.findIndex(t => t.id === track.id);
