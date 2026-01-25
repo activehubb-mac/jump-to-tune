@@ -5,6 +5,7 @@ import { useLikedTracks } from "@/hooks/useLikes";
 import { useFollowedArtists } from "@/hooks/useFollows";
 import { useRecentArtists } from "@/hooks/useRecentArtists";
 import { useRecentAlbums } from "@/hooks/useRecentAlbums";
+import { usePinnedLibraryItems } from "@/hooks/usePinnedLibraryItems";
 import { useAuth } from "@/contexts/AuthContext";
 
 export type LibraryItemType = "playlist" | "album" | "artist" | "track" | "liked-songs";
@@ -24,6 +25,9 @@ export interface LibraryItem {
   trackCount?: number;
   // Additional data for navigation
   linkTo: string;
+  // For actions
+  canDelete?: boolean;
+  canPin?: boolean;
 }
 
 export function useLibraryItems(filter: LibraryFilterOption = "all", sort: LibrarySortOption = "recents") {
@@ -34,6 +38,7 @@ export function useLibraryItems(filter: LibraryFilterOption = "all", sort: Libra
   const { data: followedArtists, isLoading: followedLoading } = useFollowedArtists();
   const { recentArtists, isLoading: recentArtistsLoading } = useRecentArtists(20);
   const { data: recentAlbums, isLoading: recentAlbumsLoading } = useRecentAlbums(20);
+  const { isPinned } = usePinnedLibraryItems();
 
   const isLoading = playlistsLoading || ownedLoading || likedLoading || followedLoading || recentArtistsLoading || recentAlbumsLoading;
 
@@ -49,10 +54,12 @@ export function useLibraryItems(filter: LibraryFilterOption = "all", sort: Libra
         subtitle: `${likedTracks.length} song${likedTracks.length !== 1 ? "s" : ""}`,
         imageUrl: null, // Special gradient treatment
         imageShape: "square",
-        isPinned: true,
+        isPinned: true, // Always pinned
         lastInteractedAt: Date.now(), // Always recent
         trackCount: likedTracks.length,
         linkTo: "/library?filter=liked",
+        canDelete: false,
+        canPin: false,
       });
     }
 
@@ -66,9 +73,12 @@ export function useLibraryItems(filter: LibraryFilterOption = "all", sort: Libra
           subtitle: `Playlist • ${playlist.track_count || 0} song${(playlist.track_count || 0) !== 1 ? "s" : ""}`,
           imageUrl: playlist.cover_image_url || playlist.cover_tracks?.[0]?.cover_art_url || null,
           imageShape: "square",
+          isPinned: isPinned(playlist.id, "playlist"),
           lastInteractedAt: new Date(playlist.updated_at).getTime(),
           trackCount: playlist.track_count,
           linkTo: `/playlist/${playlist.id}`,
+          canDelete: true,
+          canPin: true,
         });
       });
     }
@@ -83,8 +93,11 @@ export function useLibraryItems(filter: LibraryFilterOption = "all", sort: Libra
           subtitle: `${album.release_type} • ${album.artist?.display_name || "Unknown"}`,
           imageUrl: album.cover_art_url,
           imageShape: "square",
+          isPinned: isPinned(album.id, "album"),
           lastInteractedAt: album.lastInteractedAt,
           linkTo: `/album/${album.id}`,
+          canDelete: false,
+          canPin: true,
         });
       });
     }
@@ -103,8 +116,11 @@ export function useLibraryItems(filter: LibraryFilterOption = "all", sort: Libra
           subtitle: "Artist",
           imageUrl: artist.avatar_url,
           imageShape: "rounded",
+          isPinned: isPinned(artist.id, "artist"),
           lastInteractedAt: new Date(artist.followed_at).getTime(),
           linkTo: artist.role === "label" ? `/label/${artist.id}` : `/artist/${artist.id}`,
+          canDelete: true, // Can unfollow
+          canPin: true,
         });
       });
 
@@ -118,8 +134,11 @@ export function useLibraryItems(filter: LibraryFilterOption = "all", sort: Libra
             subtitle: "Artist",
             imageUrl: artist.avatar_url,
             imageShape: "rounded",
+            isPinned: isPinned(artist.id, "artist"),
             lastInteractedAt: artist.lastPlayedAt,
             linkTo: `/artist/${artist.id}`,
+            canDelete: false,
+            canPin: true,
           });
         }
       });
@@ -141,6 +160,8 @@ export function useLibraryItems(filter: LibraryFilterOption = "all", sort: Libra
             isDownloaded: true,
             lastInteractedAt: new Date(purchase.purchased_at).getTime(),
             linkTo: `/browse`, // Could navigate to track detail
+            canDelete: false,
+            canPin: false,
           });
         }
       });
@@ -167,8 +188,11 @@ export function useLibraryItems(filter: LibraryFilterOption = "all", sort: Libra
         break;
     }
 
+    // Sort pinned items by their pinned date (most recently pinned first)
+    pinnedItems.sort((a, b) => b.lastInteractedAt - a.lastInteractedAt);
+
     return [...pinnedItems, ...unpinnedItems];
-  }, [playlists, ownedTracks, likedTracks, followedArtists, recentArtists, recentAlbums, filter, sort]);
+  }, [playlists, ownedTracks, likedTracks, followedArtists, recentArtists, recentAlbums, filter, sort, isPinned]);
 
   return { libraryItems, isLoading };
 }
