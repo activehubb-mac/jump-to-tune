@@ -28,6 +28,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { ProfileEditModal } from "@/components/profile/ProfileEditModal";
 import { formatDistanceToNow } from "date-fns";
+import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 
 const navLinks = [
   { href: "/", label: "Home", icon: Home },
@@ -49,6 +50,7 @@ export function Navbar() {
   const { user, profile, role, signOut, isLoading } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { isAdmin } = useAdminAccess();
+  const { lightTap } = useHapticFeedback();
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -362,7 +364,10 @@ export function Navbar() {
             {/* Mobile Menu Button */}
             <button
               className="md:hidden p-3 min-w-[44px] min-h-[44px] flex items-center justify-center text-foreground touch-manipulation"
-              onClick={() => setIsOpen(!isOpen)}
+              onClick={() => {
+                lightTap();
+                setIsOpen(!isOpen);
+              }}
               aria-label={isOpen ? "Close menu" : "Open menu"}
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -390,7 +395,10 @@ export function Navbar() {
                     <Link
                       key={link.href}
                       to={link.href}
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => {
+                        lightTap();
+                        setIsOpen(false);
+                      }}
                       className={cn(
                         "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
                         isActive
@@ -499,7 +507,10 @@ export function Navbar() {
                     </div>
                     <Link
                       to={`/profile/${user.id}`}
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => {
+                        lightTap();
+                        setIsOpen(false);
+                      }}
                       className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
                     >
                       <User className="w-5 h-5" />
@@ -507,7 +518,10 @@ export function Navbar() {
                     </Link>
                     <Link
                       to={getDashboardLink()}
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => {
+                        lightTap();
+                        setIsOpen(false);
+                      }}
                       className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
                     >
                       <LayoutDashboard className="w-5 h-5" />
@@ -516,7 +530,10 @@ export function Navbar() {
                     {(role === "artist" || role === "label") && (
                       <Link
                         to="/upload"
-                        onClick={() => setIsOpen(false)}
+                        onClick={() => {
+                          lightTap();
+                          setIsOpen(false);
+                        }}
                         className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
                       >
                         <Upload className="w-5 h-5" />
@@ -525,7 +542,10 @@ export function Navbar() {
                     )}
                     <Link
                       to="/wallet"
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => {
+                        lightTap();
+                        setIsOpen(false);
+                      }}
                       className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
                     >
                       <Wallet className="w-5 h-5" />
@@ -533,7 +553,10 @@ export function Navbar() {
                     </Link>
                     <Link
                       to="/subscription"
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => {
+                        lightTap();
+                        setIsOpen(false);
+                      }}
                       className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
                     >
                       <Crown className="w-5 h-5" />
@@ -542,7 +565,10 @@ export function Navbar() {
                     {isAdmin && (
                       <Link
                         to="/admin"
-                        onClick={() => setIsOpen(false)}
+                        onClick={() => {
+                          lightTap();
+                          setIsOpen(false);
+                        }}
                         className="flex items-center gap-3 px-4 py-3 text-destructive hover:bg-destructive/10 rounded-lg"
                       >
                         <Shield className="w-5 h-5" />
@@ -551,7 +577,10 @@ export function Navbar() {
                     )}
                     <Link
                       to="/settings"
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => {
+                        lightTap();
+                        setIsOpen(false);
+                      }}
                       className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
                     >
                       <Settings className="w-5 h-5" />
@@ -559,7 +588,10 @@ export function Navbar() {
                     </Link>
                     <Link
                       to="/notifications"
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => {
+                        lightTap();
+                        setIsOpen(false);
+                      }}
                       className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
                     >
                       <Bell className="w-5 h-5" />
@@ -572,6 +604,7 @@ export function Navbar() {
                     </Link>
                     <button
                       onClick={() => {
+                        lightTap();
                         setIsOpen(false);
                         setIsProfileOpen(true);
                       }}
@@ -582,6 +615,7 @@ export function Navbar() {
                     </button>
                     <button
                       onClick={() => {
+                        lightTap();
                         handleSignOut();
                         setIsOpen(false);
                       }}
