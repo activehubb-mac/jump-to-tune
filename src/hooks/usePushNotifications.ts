@@ -221,7 +221,7 @@ export const usePushNotifications = () => {
         window.location.href = `/album/${id}`;
         break;
       case "purchase":
-        window.location.href = "/collection";
+        window.location.href = "/library";
         break;
       case "follow":
         window.location.href = `/artist/${id}`;

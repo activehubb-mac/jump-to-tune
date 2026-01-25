@@ -52,9 +52,9 @@ export function Footer({ className = "" }: FooterProps) {
           <div>
             <h4 className="font-semibold mb-4 text-foreground">Library</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/library?tab=liked" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"><Heart className="w-3.5 h-3.5" />Liked Tracks</Link></li>
-              <li><Link to="/library?tab=owned" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"><Music className="w-3.5 h-3.5" />Owned Music</Link></li>
-              <li><Link to="/library?tab=following" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"><Users className="w-3.5 h-3.5" />Following</Link></li>
+              <li><Link to="/library?filter=liked" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"><Heart className="w-3.5 h-3.5" />Liked Tracks</Link></li>
+              <li><Link to="/library" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"><Music className="w-3.5 h-3.5" />Owned Music</Link></li>
+              <li><Link to="/library" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"><Users className="w-3.5 h-3.5" />Following</Link></li>
             </ul>
           </div>
 

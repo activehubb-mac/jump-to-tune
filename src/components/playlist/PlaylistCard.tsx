@@ -37,7 +37,7 @@ export function PlaylistCard({
   const displayName = playlist?.name || name || "Untitled";
   const displayCount = playlist?.track_count ?? trackCount ?? 0;
   const coverTracks = playlist?.cover_tracks || [];
-  const linkTo = href || (playlist ? `/library/playlist/${playlist.id}` : "#");
+  const linkTo = href || (playlist ? `/playlist/${playlist.id}` : "#");
 
   // Generate mosaic cover from first 4 tracks
   const renderCover = () => {
