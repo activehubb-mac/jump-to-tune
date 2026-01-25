@@ -9,6 +9,7 @@ interface SwipeableLibraryItemProps {
   item: LibraryItem;
   onDelete?: () => void;
   onTogglePin?: () => void;
+  onItemClick?: () => void;
   isPinned?: boolean;
   canDelete?: boolean;
   canPin?: boolean;
@@ -20,6 +21,7 @@ export function SwipeableLibraryItem({
   item,
   onDelete,
   onTogglePin,
+  onItemClick,
   isPinned = false,
   canDelete = false,
   canPin = true,
@@ -142,7 +144,7 @@ export function SwipeableLibraryItem({
         onTouchEnd={handleTouchEnd}
         onClick={translateX < 0 ? resetSwipe : undefined}
       >
-        <LibraryListItem item={item} />
+        <LibraryListItem item={item} onClick={onItemClick} />
       </div>
     </div>
   );

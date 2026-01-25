@@ -12,6 +12,19 @@ export type LibraryItemType = "playlist" | "album" | "artist" | "track" | "liked
 export type LibrarySortOption = "recents" | "recently-added" | "alphabetical";
 export type LibraryFilterOption = "all" | "playlists" | "albums" | "artists" | "downloaded";
 
+export interface LibraryTrackData {
+  id: string;
+  title: string;
+  audio_url: string;
+  cover_art_url: string | null;
+  duration: number | null;
+  price?: number;
+  artist?: {
+    id: string;
+    display_name: string | null;
+  };
+}
+
 export interface LibraryItem {
   id: string;
   type: LibraryItemType;
@@ -28,6 +41,8 @@ export interface LibraryItem {
   // For actions
   canDelete?: boolean;
   canPin?: boolean;
+  // For playable tracks
+  trackData?: LibraryTrackData;
 }
 
 export function useLibraryItems(filter: LibraryFilterOption = "all", sort: LibrarySortOption = "recents") {
@@ -160,9 +175,21 @@ export function useLibraryItems(filter: LibraryFilterOption = "all", sort: Libra
             imageShape: "square",
             isDownloaded: true,
             lastInteractedAt: new Date(purchase.purchased_at).getTime(),
-            linkTo: `/browse`, // Could navigate to track detail
+            linkTo: "#", // No navigation - will play on click
             canDelete: false,
             canPin: false,
+            // Store track data for playback
+            trackData: {
+              id: purchase.track.id,
+              title: purchase.track.title,
+              audio_url: purchase.track.audio_url,
+              cover_art_url: purchase.track.cover_art_url,
+              duration: purchase.track.duration,
+              artist: purchase.track.artist ? {
+                id: purchase.track.artist.id,
+                display_name: purchase.track.artist.display_name,
+              } : undefined,
+            },
           });
         }
       });

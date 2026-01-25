@@ -139,6 +139,30 @@ export default function Collection() {
     }
   };
 
+  const handlePlayTrack = (item: typeof libraryItems[0]) => {
+    if (item.type === "track" && item.trackData) {
+      const track = item.trackData;
+      const isCurrentTrack = currentTrack?.id === track.id;
+      
+      if (isCurrentTrack) {
+        togglePlayPause();
+      } else {
+        playTrack({
+          id: track.id,
+          title: track.title,
+          audio_url: track.audio_url,
+          cover_art_url: track.cover_art_url,
+          duration: track.duration,
+          price: track.price || 0,
+          artist: track.artist ? {
+            id: track.artist.id,
+            display_name: track.artist.display_name,
+          } : undefined,
+        });
+      }
+    }
+  };
+
   if (authLoading) {
     return (
       <Layout useBackground="subtle">
@@ -415,6 +439,7 @@ export default function Collection() {
                       item={item}
                       onDelete={item.canDelete ? () => handleDeleteItem(item) : undefined}
                       onTogglePin={item.canPin ? () => handleTogglePin(item) : undefined}
+                      onItemClick={item.type === "track" ? () => handlePlayTrack(item) : undefined}
                       isPinned={item.isPinned}
                       canDelete={item.canDelete}
                       canPin={item.canPin}
@@ -432,6 +457,7 @@ export default function Collection() {
                     >
                       <SwipeableLibraryItem
                         item={item}
+                        onItemClick={item.type === "track" ? () => handlePlayTrack(item) : undefined}
                         canDelete={false}
                         canPin={false}
                       />
@@ -442,7 +468,11 @@ export default function Collection() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {filteredItems.map((item) => (
-                  <LibraryGridItem key={`${item.type}-${item.id}`} item={item} />
+                  <LibraryGridItem 
+                    key={`${item.type}-${item.id}`} 
+                    item={item} 
+                    onClick={item.type === "track" ? () => handlePlayTrack(item) : undefined}
+                  />
                 ))}
               </div>
             )
