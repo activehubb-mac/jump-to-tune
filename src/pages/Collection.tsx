@@ -1,15 +1,17 @@
 import { useState, useMemo, useCallback } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Lock, Loader2, Plus } from "lucide-react";
+import { Lock, Loader2, Plus, FolderPlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLibraryItems, LibraryFilterOption, LibrarySortOption } from "@/hooks/useLibraryItems";
 import { usePlaylists } from "@/hooks/usePlaylists";
 import { useFollow } from "@/hooks/useFollows";
 import { usePinnedLibraryItems } from "@/hooks/usePinnedLibraryItems";
+import { usePlaylistFolders } from "@/hooks/usePlaylistFolders";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { CreatePlaylistModal } from "@/components/playlist/CreatePlaylistModal";
+import { CreateFolderModal } from "@/components/playlist/CreateFolderModal";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useQueryClient } from "@tanstack/react-query";
 import { LibraryHeader } from "@/components/library/LibraryHeader";
@@ -18,6 +20,8 @@ import { LibrarySortMenu } from "@/components/library/LibrarySortMenu";
 import { LibraryGridItem } from "@/components/library/LibraryGridItem";
 import { SwipeableLibraryItem } from "@/components/library/SwipeableLibraryItem";
 import { RecentlyPlayedSection } from "@/components/library/RecentlyPlayedSection";
+import { FolderSection } from "@/components/library/FolderSection";
+import { PlaylistInvitesSection } from "@/components/library/PlaylistInvitesSection";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Collection() {
@@ -26,6 +30,7 @@ export default function Collection() {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
+  const [showCreateFolder, setShowCreateFolder] = useState(false);
   
   const queryClient = useQueryClient();
   const { user, isLoading: authLoading } = useAuth();
@@ -34,6 +39,7 @@ export default function Collection() {
   const { toggleFollow } = useFollow();
   const { togglePin, isPinned } = usePinnedLibraryItems();
   const { showFeedback } = useFeedbackSafe();
+  const { createFolder } = usePlaylistFolders();
   const isMobile = useIsMobile();
   const { createPlaylist } = usePlaylists();
 
@@ -65,6 +71,15 @@ export default function Collection() {
     showFeedback({
       type: "success",
       title: "Playlist created",
+      message: `"${data.name}" has been created`,
+    });
+  };
+
+  const handleCreateFolder = async (data: { name: string; color: string }) => {
+    await createFolder.mutateAsync(data);
+    showFeedback({
+      type: "success",
+      title: "Folder created",
       message: `"${data.name}" has been created`,
     });
   };
@@ -152,6 +167,11 @@ export default function Collection() {
         onOpenChange={setShowCreatePlaylist}
         onSubmit={handleCreatePlaylist}
       />
+      <CreateFolderModal
+        open={showCreateFolder}
+        onOpenChange={setShowCreateFolder}
+        onSubmit={handleCreateFolder}
+      />
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="container mx-auto px-4 py-6 sm:py-8">
           {/* Header */}
@@ -162,15 +182,33 @@ export default function Collection() {
             onSearchChange={setSearchQuery}
           />
 
+          {/* Playlist Invites */}
+          <PlaylistInvitesSection />
+
           {/* Recently Played Section */}
           <RecentlyPlayedSection />
 
+          {/* Folders Section */}
+          {activeFilter === "all" || activeFilter === "playlists" ? (
+            <FolderSection />
+          ) : null}
+
           {/* Filter Chips */}
-          <div className="mb-4">
+          <div className="mb-4 flex items-center gap-2">
             <LibraryFilterChips
               activeFilter={activeFilter}
               onFilterChange={setActiveFilter}
             />
+            {activeFilter === "playlists" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="shrink-0"
+                onClick={() => setShowCreateFolder(true)}
+              >
+                <FolderPlus className="w-4 h-4" />
+              </Button>
+            )}
           </div>
 
           {/* Sort & View Toggle */}
