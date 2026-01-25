@@ -178,11 +178,20 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     ? Math.max(0, currentPreviewLimit - currentTime)
     : 0;
 
+  // Track if audio context is unlocked (for iOS)
+  const isAudioUnlockedRef = useRef(false);
+
   const ensureAudioElement = useCallback(() => {
     if (audioRef.current) return audioRef.current;
 
     const audio = new Audio();
     audio.volume = 1;
+    
+    // iOS requires playsinline to play audio without fullscreen
+    audio.setAttribute('playsinline', 'true');
+    audio.setAttribute('webkit-playsinline', 'true');
+    // Preload metadata to ensure duration is available
+    audio.preload = 'auto';
 
     audio.addEventListener("timeupdate", () => {
       setCurrentTime(audio.currentTime || 0);
@@ -200,6 +209,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
     audio.addEventListener("play", () => {
       setIsPlaying(true);
+      isAudioUnlockedRef.current = true;
     });
 
     audio.addEventListener("pause", () => {
@@ -214,14 +224,44 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       setIsBuffering(false);
     });
 
-    audio.addEventListener("error", () => {
-      console.error("Audio playback error", audio.error);
+    audio.addEventListener("error", (e) => {
+      console.error("Audio playback error", audio.error, e);
       setIsPlaying(false);
+      setIsBuffering(false);
     });
 
     audioRef.current = audio;
     return audio;
   }, []);
+
+  // Unlock audio on iOS - must be called from user interaction
+  const unlockAudioForIOS = useCallback(() => {
+    if (isAudioUnlockedRef.current) return Promise.resolve();
+    
+    const audio = ensureAudioElement();
+    
+    // Play a silent sound to unlock audio context on iOS
+    // This must happen synchronously within the user gesture
+    audio.muted = true;
+    const playPromise = audio.play();
+    
+    if (playPromise !== undefined) {
+      return playPromise
+        .then(() => {
+          audio.pause();
+          audio.muted = false;
+          audio.currentTime = 0;
+          isAudioUnlockedRef.current = true;
+        })
+        .catch(() => {
+          audio.muted = false;
+          // Silently fail - will retry on next interaction
+        });
+    }
+    
+    audio.muted = false;
+    return Promise.resolve();
+  }, [ensureAudioElement]);
 
   // Enforce preview limit
   useEffect(() => {
@@ -327,7 +367,28 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     const resolvedUrl = getAudioUrl(audioUrl);
     audio.src = resolvedUrl;
     audio.load();
-    audio.play().catch(console.error);
+    
+    // Use canplaythrough event for more reliable playback on iOS
+    const startPlayback = () => {
+      audio.play().catch((err) => {
+        console.error("Playback failed:", err);
+        // On iOS, if play fails, user may need to tap again
+        setIsBuffering(false);
+      });
+      audio.removeEventListener('canplaythrough', startPlayback);
+    };
+    
+    // If already unlocked and can play, start immediately
+    if (isAudioUnlockedRef.current) {
+      audio.addEventListener('canplaythrough', startPlayback, { once: true });
+      // Also try immediate play in case audio is already ready
+      audio.play().catch(() => {
+        // Will be handled by canplaythrough event
+      });
+    } else {
+      // First time - wait for canplaythrough
+      audio.addEventListener('canplaythrough', startPlayback, { once: true });
+    }
   }, [getAudioUrl, ensureAudioElement, checkFullAccess]);
 
   // Handle track ended - auto-play next based on repeat/shuffle modes
@@ -389,6 +450,10 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       return;
     }
 
+    // Unlock audio on iOS FIRST (synchronously within user gesture)
+    // This preserves the user interaction context before async operations
+    unlockAudioForIOS();
+
     // Check if track is already in queue
     const existingIndex = queue.findIndex(t => t.id === track.id);
     if (existingIndex !== -1) {
@@ -400,7 +465,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     }
 
     playTrackInternal(track);
-  }, [currentTrack?.id, isPlaying, queue, ensureAudioElement, playTrackInternal]);
+  }, [currentTrack?.id, isPlaying, queue, ensureAudioElement, playTrackInternal, unlockAudioForIOS]);
 
   const addToQueue = useCallback((track: AudioTrack) => {
     // Don't add duplicates
