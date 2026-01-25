@@ -828,7 +828,7 @@ export default function Index() {
 
   if (authLoading || isCheckingOnboarding || needsOnboardingRedirect) {
     return (
-      <Layout>
+      <Layout useBackground="futuristic">
         <div className="min-h-screen flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -1063,7 +1063,7 @@ export default function Index() {
   const heroContent = getHeroContent();
 
   return (
-    <Layout>
+    <Layout useBackground="futuristic">
       <div className="animate-fade-in">
       {/* Hero Section - Split Layout */}
       <section className="relative min-h-[85vh] flex items-center overflow-hidden py-12 md:py-0">

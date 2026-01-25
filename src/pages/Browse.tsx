@@ -297,7 +297,7 @@ export default function Browse() {
   };
 
   return (
-    <Layout>
+    <Layout useBackground="subtle">
       <PremiumFeatureModal
         open={showPremiumModal}
         onOpenChange={setShowPremiumModal}
