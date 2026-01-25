@@ -159,7 +159,7 @@ export default function ForYou() {
   const totalDuration = tracks?.reduce((sum, t) => sum + (t.duration || 0), 0) || 0;
 
   return (
-    <Layout>
+    <Layout useBackground="subtle">
       <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Hero Section */}
         <div className="relative mb-6 sm:mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-accent/10 to-background p-4 sm:p-8">

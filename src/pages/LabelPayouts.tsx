@@ -53,7 +53,7 @@ export default function LabelPayouts() {
 
   if (!user) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24 text-center">
           <DollarSign className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
           <h1 className="text-2xl font-bold mb-2">Sign in to access payouts</h1>
@@ -67,7 +67,7 @@ export default function LabelPayouts() {
 
   if (role !== "label") {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24 text-center">
           <AlertCircle className="h-16 w-16 mx-auto mb-4 text-amber-500" />
           <h1 className="text-2xl font-bold mb-2">Label Account Required</h1>
@@ -96,7 +96,7 @@ export default function LabelPayouts() {
   };
 
   return (
-    <Layout>
+      <Layout useBackground="subtle">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">

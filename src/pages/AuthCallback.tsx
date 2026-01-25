@@ -226,7 +226,7 @@ export default function AuthCallback() {
   };
 
   return (
-    <Layout showFooter={false}>
+    <Layout showFooter={false} useBackground="futuristic">
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
