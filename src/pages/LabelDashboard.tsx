@@ -175,49 +175,49 @@ export default function LabelDashboard() {
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-4 sm:space-y-6">
             {/* Stats Grid - Clickable */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-              <div className="glass-card p-6 hover:border-accent/50 transition-colors">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-accent" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
+              <div className="glass-card p-3 sm:p-6 hover:border-accent/50 transition-colors">
+                <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-accent/20 flex items-center justify-center shrink-0">
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                   </div>
-                  <span className="text-muted-foreground text-sm">Artists</span>
+                  <span className="text-muted-foreground text-xs sm:text-sm">Artists</span>
                 </div>
-                <div className="text-3xl font-bold text-foreground">
-                  {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : `${activeArtistCount}/${artistLimit}`}
+                <div className="text-xl sm:text-3xl font-bold text-foreground">
+                  {isDataLoading ? <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" /> : `${activeArtistCount}/${artistLimit}`}
                 </div>
               </div>
 
               <Link 
                 to="/label/tracks"
-                className="glass-card p-6 hover:border-accent/50 transition-colors cursor-pointer group"
+                className="glass-card p-3 sm:p-6 hover:border-accent/50 transition-colors cursor-pointer group"
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                    <Music className="w-5 h-5 text-primary" />
+                <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+                    <Music className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   </div>
-                  <span className="text-muted-foreground text-sm">Total Tracks</span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="text-muted-foreground text-xs sm:text-sm">Tracks</span>
+                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
                 </div>
-                <div className="text-3xl font-bold text-foreground">
-                  {isDataLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats?.totalTracks ?? 0}
+                <div className="text-xl sm:text-3xl font-bold text-foreground">
+                  {isDataLoading ? <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" /> : stats?.totalTracks ?? 0}
                 </div>
               </Link>
 
               <Link 
                 to="/label/analytics"
-                className="glass-card p-6 hover:border-accent/50 transition-colors cursor-pointer group"
+                className="glass-card p-3 sm:p-6 hover:border-accent/50 transition-colors cursor-pointer group"
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-secondary" />
+                <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-secondary/20 flex items-center justify-center shrink-0">
+                    <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" />
                   </div>
-                  <span className="text-muted-foreground text-sm">Total Earnings</span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="text-muted-foreground text-xs sm:text-sm">Earnings</span>
+                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
                 </div>
-                <div className="text-3xl font-bold text-foreground">
+                <div className="text-xl sm:text-3xl font-bold text-foreground">
                   {isDataLoading ? (
-                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
                   ) : (
                     formatEarnings(stats?.totalEarnings ?? 0)
                   )}
@@ -226,18 +226,18 @@ export default function LabelDashboard() {
 
               <Link 
                 to="/label/collectors"
-                className="glass-card p-6 hover:border-accent/50 transition-colors cursor-pointer group"
+                className="glass-card p-3 sm:p-6 hover:border-accent/50 transition-colors cursor-pointer group"
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-green-500" />
+                <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-green-500/20 flex items-center justify-center shrink-0">
+                    <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
                   </div>
-                  <span className="text-muted-foreground text-sm">Collectors</span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="text-muted-foreground text-xs sm:text-sm">Collectors</span>
+                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
                 </div>
-                <div className="text-3xl font-bold text-foreground">
+                <div className="text-xl sm:text-3xl font-bold text-foreground">
                   {isDataLoading ? (
-                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
                   ) : (
                     stats?.collectorsCount ?? 0
                   )}
@@ -246,11 +246,11 @@ export default function LabelDashboard() {
             </div>
 
             {/* Artists Roster */}
-            <div className="glass-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-foreground">Artist Roster</h2>
-                <span className="text-sm text-muted-foreground">
-                  {activeArtistCount} of {artistLimit} artists with uploads
+            <div className="glass-card p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                <h2 className="text-lg sm:text-xl font-bold text-foreground">Artist Roster</h2>
+                <span className="text-xs sm:text-sm text-muted-foreground">
+                  {activeArtistCount} of {artistLimit} artists
                 </span>
               </div>
               
@@ -259,7 +259,7 @@ export default function LabelDashboard() {
                   <Loader2 className="w-8 h-8 animate-spin text-accent" />
                 </div>
               ) : roster && roster.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                   {roster.map((artist) => (
                     <div key={artist.id} className="flex items-center gap-4 p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0">
@@ -316,11 +316,11 @@ export default function LabelDashboard() {
             </div>
 
             {/* Recent Releases */}
-            <div className="glass-card p-6">
+            <div className="glass-card p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-foreground">Recent Releases</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-foreground">Recent Releases</h2>
                 {tracks && tracks.length > 0 && (
-                  <Button variant="ghost" size="sm" className="text-accent" asChild>
+                  <Button variant="ghost" size="sm" className="text-accent text-xs sm:text-sm" asChild>
                     <Link to="/label/tracks">View All</Link>
                   </Button>
                 )}
@@ -331,7 +331,7 @@ export default function LabelDashboard() {
                   <Loader2 className="w-8 h-8 animate-spin text-accent" />
                 </div>
               ) : tracks && tracks.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
                   {tracks.slice(0, 6).map((track) => (
                     <TrackCard
                       key={track.id}
@@ -359,9 +359,9 @@ export default function LabelDashboard() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6 hidden lg:block">
             {/* Quick Actions */}
-            <div className="glass-card p-6">
+            <div className="glass-card p-4 sm:p-6">
               <h3 className="font-semibold text-foreground mb-4">Quick Actions</h3>
               <div className="space-y-2">
                 <Button

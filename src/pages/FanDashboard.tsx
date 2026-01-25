@@ -86,80 +86,80 @@ export default function FanDashboard() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-6 sm:py-8">
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden box-border">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Your Dashboard</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1 sm:mb-2">Your Dashboard</h1>
+          <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
             Welcome back! Here's your personalized music overview.
           </p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-8">
           <Card className="bg-glass border-glass-border">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Library className="w-5 h-5 text-primary" />
+            <CardContent className="p-3 sm:pt-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 shrink-0">
+                  <Library className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">
-                    {statsLoading ? <Skeleton className="h-8 w-12" /> : stats?.tracksOwned || 0}
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold">
+                    {statsLoading ? <Skeleton className="h-6 sm:h-8 w-10 sm:w-12" /> : stats?.tracksOwned || 0}
                   </p>
-                  <p className="text-xs text-muted-foreground">Tracks Owned</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Owned</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-glass border-glass-border">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-accent/10">
-                  <Heart className="w-5 h-5 text-accent" />
+            <CardContent className="p-3 sm:pt-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-accent/10 shrink-0">
+                  <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">
-                    {likedLoading ? <Skeleton className="h-8 w-12" /> : likedTracks?.length || 0}
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold">
+                    {likedLoading ? <Skeleton className="h-6 sm:h-8 w-10 sm:w-12" /> : likedTracks?.length || 0}
                   </p>
-                  <p className="text-xs text-muted-foreground">Liked Tracks</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Liked</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-glass border-glass-border">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-cyan-500/10">
-                  <Users className="w-5 h-5 text-cyan-500" />
+            <CardContent className="p-3 sm:pt-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-cyan-500/10 shrink-0">
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-500" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">
-                    {statsLoading ? <Skeleton className="h-8 w-12" /> : stats?.artistsFollowed || 0}
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold">
+                    {statsLoading ? <Skeleton className="h-6 sm:h-8 w-10 sm:w-12" /> : stats?.artistsFollowed || 0}
                   </p>
-                  <p className="text-xs text-muted-foreground">Following</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Following</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-glass border-glass-border">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-green-500/10">
-                  <DollarSign className="w-5 h-5 text-green-500" />
+            <CardContent className="p-3 sm:pt-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-green-500/10 shrink-0">
+                  <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold truncate">
                     {statsLoading ? (
-                      <Skeleton className="h-8 w-16" />
+                      <Skeleton className="h-6 sm:h-8 w-12 sm:w-16" />
                     ) : (
                       `$${(stats?.totalSpent || 0).toFixed(2)}`
                     )}
                   </p>
-                  <p className="text-xs text-muted-foreground">Total Spent</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Spent</p>
                 </div>
               </div>
             </CardContent>
@@ -169,18 +169,18 @@ export default function FanDashboard() {
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Recently Played */}
           <Card className="lg:col-span-2 bg-glass border-glass-border">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-primary" />
+            <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-6 pb-0 sm:pb-0">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 Recently Played
               </CardTitle>
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant="ghost" size="sm" className="text-xs sm:text-sm" asChild>
                 <Link to="/library" className="text-muted-foreground hover:text-foreground">
-                  View All <ChevronRight className="w-4 h-4 ml-1" />
+                  View All <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
                 </Link>
               </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6">
               {recentlyPlayed.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Music className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -231,18 +231,18 @@ export default function FanDashboard() {
 
           {/* Discover Artists */}
           <Card className="bg-glass border-glass-border">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-accent" />
-                Discover Artists
+            <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-6 pb-0 sm:pb-0">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+                Discover
               </CardTitle>
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant="ghost" size="sm" className="text-xs sm:text-sm" asChild>
                 <Link to="/artists" className="text-muted-foreground hover:text-foreground">
-                  See All <ChevronRight className="w-4 h-4 ml-1" />
+                  All <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
                 </Link>
               </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6">
               {artistsLoading ? (
                 <div className="space-y-3">
                   {[1, 2, 3, 4].map((i) => (
@@ -291,21 +291,21 @@ export default function FanDashboard() {
         </div>
 
         {/* Recent Purchases */}
-        <Card className="mt-6 bg-glass border-glass-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-green-500" />
+        <Card className="mt-4 sm:mt-6 bg-glass border-glass-border">
+          <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-6 pb-0 sm:pb-0">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
               Recent Purchases
             </CardTitle>
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="ghost" size="sm" className="text-xs sm:text-sm" asChild>
               <Link to="/library" className="text-muted-foreground hover:text-foreground">
-                View Library <ChevronRight className="w-4 h-4 ml-1" />
+                Library <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
               </Link>
             </Button>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-6">
             {ownedLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <div key={i}>
                     <Skeleton className="aspect-square rounded-lg mb-2" />
@@ -315,7 +315,7 @@ export default function FanDashboard() {
                 ))}
               </div>
             ) : ownedTracks && ownedTracks.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4">
                 {ownedTracks.slice(0, 6).map((purchase) => (
                   <div
                     key={purchase.id}
@@ -364,29 +364,30 @@ export default function FanDashboard() {
           </CardContent>
         </Card>
 
-        <div className="mt-4 sm:mt-6 flex flex-wrap gap-2 sm:gap-3">
-          <Button asChild className="gradient-accent neon-glow-subtle">
+        {/* Quick Actions - Horizontal scroll on mobile */}
+        <div className="mt-4 sm:mt-6 flex flex-nowrap sm:flex-wrap gap-2 sm:gap-3 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:overflow-visible">
+          <Button asChild className="gradient-accent neon-glow-subtle shrink-0 text-xs sm:text-sm">
             <Link to="/for-you">
-              <Sparkles className="w-4 h-4 mr-2" />
-              For You Playlist
+              <Sparkles className="w-4 h-4 mr-1 sm:mr-2" />
+              For You
             </Link>
           </Button>
-          <Button asChild variant="outline" className="border-glass-border">
+          <Button asChild variant="outline" className="border-glass-border shrink-0 text-xs sm:text-sm">
             <Link to="/browse">
-              <Music className="w-4 h-4 mr-2" />
-              Browse Music
+              <Music className="w-4 h-4 mr-1 sm:mr-2" />
+              Browse
             </Link>
           </Button>
-          <Button asChild variant="outline" className="border-glass-border">
+          <Button asChild variant="outline" className="border-glass-border shrink-0 text-xs sm:text-sm">
             <Link to="/library">
-              <Library className="w-4 h-4 mr-2" />
-              My Library
+              <Library className="w-4 h-4 mr-1 sm:mr-2" />
+              Library
             </Link>
           </Button>
-          <Button asChild variant="outline" className="border-glass-border">
+          <Button asChild variant="outline" className="border-glass-border shrink-0 text-xs sm:text-sm">
             <Link to="/wallet">
-              <DollarSign className="w-4 h-4 mr-2" />
-              Credit Wallet
+              <DollarSign className="w-4 h-4 mr-1 sm:mr-2" />
+              Wallet
             </Link>
           </Button>
         </div>
