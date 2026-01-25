@@ -278,26 +278,26 @@ export default function Upload() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
+      <div className="w-full max-w-3xl mx-auto px-4 py-6 sm:py-8 overflow-x-hidden box-border">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-4xl font-bold text-foreground">Upload Track</h1>
-            <Button variant="outline" asChild className="border-glass-border">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+            <h1 className="text-2xl sm:text-4xl font-bold text-foreground">Upload Track</h1>
+            <Button variant="outline" asChild className="border-glass-border w-full sm:w-auto">
               <Link to="/upload/album">
                 <Disc3 className="w-4 h-4 mr-2" />
                 Upload Album/EP
               </Link>
             </Button>
           </div>
-          <p className="text-muted-foreground">Share your music with the world</p>
+          <p className="text-muted-foreground text-sm sm:text-base">Share your music with the world</p>
         </div>
 
         <Form {...form}>
           <form className="space-y-8">
             {/* Artist Selector for Labels */}
             {role === "label" && (
-              <div className="glass-card p-6">
+              <div className="glass-card p-4 sm:p-6">
                 <ArtistSelector
                   value={form.watch("artistId")}
                   onChange={(artistId) => form.setValue("artistId", artistId)}
@@ -335,7 +335,7 @@ export default function Upload() {
             </div>
 
             {/* Track Details */}
-            <div className="glass-card p-6 space-y-6">
+            <div className="glass-card p-4 sm:p-6 space-y-6">
               <h2 className="text-lg font-semibold text-foreground">Track Details</h2>
 
               <div className="grid md:grid-cols-2 gap-4">
@@ -433,7 +433,7 @@ export default function Upload() {
             <CreditsSection credits={credits} onChange={setCredits} />
 
             {/* Pricing */}
-            <div className="glass-card p-6 space-y-6">
+            <div className="glass-card p-4 sm:p-6 space-y-6">
               <h2 className="text-lg font-semibold text-foreground">Pricing & Access</h2>
               <div className="grid md:grid-cols-2 gap-4">
                 <FormField

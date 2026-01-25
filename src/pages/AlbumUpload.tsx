@@ -254,25 +254,25 @@ export default function AlbumUpload() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="w-full max-w-4xl mx-auto px-4 py-6 sm:py-8 overflow-x-hidden box-border">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <Link 
             to="/upload" 
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to single upload
           </Link>
-          <h1 className="text-4xl font-bold text-foreground mb-2">Upload Album / EP</h1>
-          <p className="text-muted-foreground">Release multiple tracks as a cohesive project</p>
+          <h1 className="text-2xl sm:text-4xl font-bold text-foreground mb-2">Upload Album / EP</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Release multiple tracks as a cohesive project</p>
         </div>
 
         <Form {...form}>
           <form className="space-y-8">
             {/* Artist Selector for Labels */}
             {role === "label" && (
-              <div className="glass-card p-6">
+              <div className="glass-card p-4 sm:p-6">
                 <ArtistSelector
                   value={form.watch("artistId")}
                   onChange={(artistId) => form.setValue("artistId", artistId)}
@@ -290,9 +290,9 @@ export default function AlbumUpload() {
 
             {/* Track Count Indicator */}
             {tracks.length > 0 && (
-              <div className={`glass-card p-4 flex items-center justify-between ${trackCountValid ? 'border-primary/50' : 'border-warning/50'}`}>
+              <div className={`glass-card p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${trackCountValid ? 'border-primary/50' : 'border-warning/50'}`}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
                     <Music className="w-5 h-5 text-primary" />
                   </div>
                   <div>
@@ -332,7 +332,7 @@ export default function AlbumUpload() {
             </div>
 
             {/* Album Details */}
-            <div className="glass-card p-6 space-y-6">
+            <div className="glass-card p-4 sm:p-6 space-y-6">
               <h2 className="text-lg font-semibold text-foreground">Release Details</h2>
 
               <div className="grid md:grid-cols-2 gap-4">
