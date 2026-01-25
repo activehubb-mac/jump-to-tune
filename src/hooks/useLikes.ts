@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { Capacitor } from "@capacitor/core";
 
 interface LikedTrack {
   id: string;
@@ -64,6 +66,15 @@ export function useLikes() {
       }
     },
     onMutate: async (trackId) => {
+      // Trigger haptic feedback for native feel
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await Haptics.impact({ style: ImpactStyle.Light });
+        } catch {
+          // Haptics not available
+        }
+      }
+
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["likes", user?.id] });
       await queryClient.cancelQueries({ queryKey: ["likedTracks", user?.id] });

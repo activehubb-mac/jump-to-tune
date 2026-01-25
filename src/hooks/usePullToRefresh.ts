@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useIsMobile } from "./use-mobile";
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
+import { Capacitor } from "@capacitor/core";
 
 interface UsePullToRefreshOptions {
   onRefresh: () => Promise<void>;
@@ -83,15 +84,25 @@ export function usePullToRefresh({
     if (state.canRefresh && !state.isRefreshing) {
       setState((prev) => ({ ...prev, isRefreshing: true, pullDistance: threshold }));
       
-      // Trigger haptic feedback for native feel
-      try {
-        await Haptics.impact({ style: ImpactStyle.Medium });
-      } catch {
-        // Haptics not available (web or unsupported device)
+      // Trigger haptic feedback for native feel - medium impact when refresh starts
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await Haptics.impact({ style: ImpactStyle.Medium });
+        } catch {
+          // Haptics not available
+        }
       }
       
       try {
         await onRefresh();
+        // Success haptic when refresh completes
+        if (Capacitor.isNativePlatform()) {
+          try {
+            await Haptics.notification({ type: NotificationType.Success });
+          } catch {
+            // Haptics not available
+          }
+        }
       } finally {
         setState({
           isPulling: false,
