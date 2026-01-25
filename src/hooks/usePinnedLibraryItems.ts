@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useSyncExternalStore } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const STORAGE_KEY = "jumtunes_pinned_library";
@@ -9,41 +9,20 @@ export interface PinnedItem {
   pinnedAt: number;
 }
 
-// Create a simple store for pinned items to enable real-time updates across components
-let pinnedItemsStore: Map<string, PinnedItem[]> = new Map();
-let listeners: Set<() => void> = new Set();
+// Simple event emitter for cross-component updates
+const pinnedItemsEventTarget = new EventTarget();
+const PINNED_CHANGE_EVENT = "pinned-items-changed";
 
-function notifyListeners() {
-  listeners.forEach((listener) => listener());
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
+function emitChange() {
+  pinnedItemsEventTarget.dispatchEvent(new Event(PINNED_CHANGE_EVENT));
 }
 
 function getStoredItems(userId: string): PinnedItem[] {
-  return pinnedItemsStore.get(userId) || [];
-}
-
-function setStoredItems(userId: string, items: PinnedItem[]) {
-  pinnedItemsStore.set(userId, items);
-  // Also persist to localStorage
-  try {
-    localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify(items));
-  } catch (e) {
-    console.error("Failed to save pinned items:", e);
-  }
-  notifyListeners();
-}
-
-function loadFromLocalStorage(userId: string): PinnedItem[] {
+  if (!userId) return [];
   try {
     const stored = localStorage.getItem(`${STORAGE_KEY}_${userId}`);
     if (stored) {
-      const items = JSON.parse(stored);
-      pinnedItemsStore.set(userId, items);
-      return items;
+      return JSON.parse(stored);
     }
   } catch (e) {
     console.error("Failed to load pinned items:", e);
@@ -51,34 +30,44 @@ function loadFromLocalStorage(userId: string): PinnedItem[] {
   return [];
 }
 
+function saveItems(userId: string, items: PinnedItem[]) {
+  try {
+    localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify(items));
+  } catch (e) {
+    console.error("Failed to save pinned items:", e);
+  }
+  emitChange();
+}
+
 export function usePinnedLibraryItems() {
   const { user } = useAuth();
   const userId = user?.id || "";
-
-  // Use useSyncExternalStore for real-time updates across all components
-  const pinnedItems = useSyncExternalStore(
-    subscribe,
-    () => getStoredItems(userId),
-    () => [] // Server snapshot (empty for SSR)
+  
+  // Local state that syncs with localStorage
+  const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>(() => 
+    getStoredItems(userId)
   );
 
-  // Load from localStorage on mount (user-scoped)
+  // Reload from localStorage when userId changes
   useEffect(() => {
-    if (!userId) {
-      return;
-    }
+    setPinnedItems(getStoredItems(userId));
+  }, [userId]);
 
-    // Load from localStorage if not already in store
-    if (!pinnedItemsStore.has(userId)) {
-      loadFromLocalStorage(userId);
-      notifyListeners();
-    }
+  // Listen for changes from other component instances
+  useEffect(() => {
+    const handleChange = () => {
+      setPinnedItems(getStoredItems(userId));
+    };
+    
+    pinnedItemsEventTarget.addEventListener(PINNED_CHANGE_EVENT, handleChange);
+    return () => {
+      pinnedItemsEventTarget.removeEventListener(PINNED_CHANGE_EVENT, handleChange);
+    };
   }, [userId]);
 
   const isPinned = useCallback((id: string, type: PinnedItem["type"]) => {
-    const items = getStoredItems(userId);
-    return items.some((item) => item.id === id && item.type === type);
-  }, [userId]);
+    return pinnedItems.some((item) => item.id === id && item.type === type);
+  }, [pinnedItems]);
 
   const togglePin = useCallback((id: string, type: PinnedItem["type"]) => {
     if (!userId) return;
@@ -97,16 +86,17 @@ export function usePinnedLibraryItems() {
       updated = [...current, { id, type, pinnedAt: Date.now() }];
     }
 
-    setStoredItems(userId, updated);
+    saveItems(userId, updated);
+    // Immediately update local state too
+    setPinnedItems(updated);
   }, [userId]);
 
   const getPinnedIds = useCallback((type?: PinnedItem["type"]) => {
-    const items = getStoredItems(userId);
     if (type) {
-      return items.filter((item) => item.type === type).map((item) => item.id);
+      return pinnedItems.filter((item) => item.type === type).map((item) => item.id);
     }
-    return items.map((item) => item.id);
-  }, [userId]);
+    return pinnedItems.map((item) => item.id);
+  }, [pinnedItems]);
 
   return {
     pinnedItems,
