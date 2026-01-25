@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { Heart, Music, User, Disc3, ListMusic, Pin, Play } from "lucide-react";
+import { Heart, Music, User, Disc3, ListMusic, Pin, Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LibraryItem } from "@/hooks/useLibraryItems";
 import { Button } from "@/components/ui/button";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 
 interface LibraryGridItemProps {
   item: LibraryItem;
@@ -12,6 +13,8 @@ interface LibraryGridItemProps {
 export function LibraryGridItem({ item, onClick }: LibraryGridItemProps) {
   const isLikedSongs = item.type === "liked-songs";
   const isDownloadedTrack = item.type === "track" && item.isDownloaded;
+  const { currentTrack, isPlaying } = useAudioPlayer();
+  const isCurrentlyPlaying = isDownloadedTrack && currentTrack?.id === item.id && isPlaying;
 
   const ImageContent = () => {
     if (isLikedSongs) {
@@ -48,7 +51,10 @@ export function LibraryGridItem({ item, onClick }: LibraryGridItemProps) {
   };
 
   const CardContent = () => (
-    <div className="glass-card p-4 hover:bg-primary/10 transition-all duration-300">
+    <div className={cn(
+      "glass-card p-4 hover:bg-primary/10 transition-all duration-300",
+      isCurrentlyPlaying && "bg-primary/5 ring-1 ring-primary/30"
+    )}>
       {/* Image */}
       <div
         className={cn(
@@ -59,12 +65,19 @@ export function LibraryGridItem({ item, onClick }: LibraryGridItemProps) {
         <ImageContent />
         
         {/* Play button overlay */}
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className={cn(
+          "absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity",
+          isCurrentlyPlaying ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        )}>
           <Button
             size="icon"
             className="w-12 h-12 rounded-full gradient-accent shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform"
           >
-            <Play className="w-5 h-5 ml-0.5" />
+            {isCurrentlyPlaying ? (
+              <Pause className="w-5 h-5" />
+            ) : (
+              <Play className="w-5 h-5 ml-0.5" />
+            )}
           </Button>
         </div>
 
@@ -75,24 +88,33 @@ export function LibraryGridItem({ item, onClick }: LibraryGridItemProps) {
           </div>
         )}
         
-        {/* Futuristic owned indicator - replaces download icon */}
+        {/* Futuristic owned indicator - pulses when playing */}
         {isDownloadedTrack && (
-          <div className="absolute inset-0 rounded-[inherit] ring-2 ring-primary/60 pointer-events-none" />
+          <div className={cn(
+            "absolute inset-0 rounded-[inherit] ring-2 ring-primary/60 pointer-events-none",
+            isCurrentlyPlaying && "animate-pulse shadow-[0_0_20px_hsl(var(--primary)/0.4)]"
+          )} />
         )}
       </div>
 
       {/* Content */}
       <div className={cn(item.imageShape === "rounded" ? "text-center" : "")}>
         <div className="flex items-center gap-1.5 justify-center">
-          <h3 className="font-semibold text-foreground truncate text-sm mb-1">
+          <h3 className={cn(
+            "font-semibold truncate text-sm mb-1",
+            isCurrentlyPlaying ? "text-primary" : "text-foreground"
+          )}>
             {item.title}
           </h3>
-          {isDownloadedTrack && (
-            <span className="text-[9px] font-bold uppercase tracking-wider px-1 py-0.5 rounded bg-primary/20 text-primary border border-primary/30 shrink-0">
-              Owned
-            </span>
-          )}
         </div>
+        {isDownloadedTrack && (
+          <span className={cn(
+            "inline-block text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/20 text-primary border border-primary/30 mb-1 transition-all",
+            isCurrentlyPlaying && "animate-pulse shadow-[0_0_8px_hsl(var(--primary)/0.6)]"
+          )}>
+            {isCurrentlyPlaying ? "Now Playing" : "Owned"}
+          </span>
+        )}
         <p className="text-xs text-muted-foreground truncate">
           {item.subtitle}
         </p>
