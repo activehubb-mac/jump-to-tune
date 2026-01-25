@@ -52,6 +52,7 @@ import {
 import { usePlaylistTracks, usePlaylists, PlaylistTrack } from "@/hooks/usePlaylists";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDuration } from "@/lib/formatters";
 import { TrackPickerModal } from "@/components/playlist/TrackPickerModal";
@@ -172,6 +173,7 @@ export default function PlaylistDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { showFeedback } = useFeedbackSafe();
+  const { lightTap, mediumTap, warning } = useHapticFeedback();
   const { playTrack, currentTrack, isPlaying, clearQueue, addToQueue } = useAudioPlayer();
 
   const { playlists, updatePlaylist, deletePlaylist } = usePlaylists();
@@ -199,6 +201,7 @@ export default function PlaylistDetail() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
+      mediumTap();
       const oldIndex = tracks.findIndex((t) => t.track_id === active.id);
       const newIndex = tracks.findIndex((t) => t.track_id === over.id);
       const newOrder = arrayMove(tracks, oldIndex, newIndex);
@@ -557,6 +560,7 @@ export default function PlaylistDetail() {
                             }
                           }}
                           onRemove={() => {
+                            warning();
                             removeTrack.mutate({ trackId: item.track_id });
                             showFeedback({
                               type: "success",
