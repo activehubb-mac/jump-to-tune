@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Heart, Music, User, Disc3, ListMusic, Pin } from "lucide-react";
+import { Heart, Music, User, Disc3, ListMusic } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LibraryItem } from "@/hooks/useLibraryItems";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -131,9 +131,6 @@ export function LibraryListItem({ item, onClick }: LibraryListItemProps) {
           <h3 className="font-medium text-foreground truncate text-sm">
             {item.title}
           </h3>
-          {item.isPinned && (
-            <Pin className="w-3 h-3 text-primary shrink-0 fill-primary" />
-          )}
         </div>
         <p className="text-xs text-muted-foreground truncate">{item.subtitle}</p>
       </div>
