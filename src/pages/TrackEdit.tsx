@@ -382,26 +382,26 @@ export default function TrackEdit() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <div className="w-full max-w-2xl mx-auto px-4 py-6 sm:py-8 overflow-x-hidden box-border">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="icon" asChild>
+        <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <Button variant="ghost" size="icon" className="shrink-0" asChild>
             <Link to={backLink}>
               <ArrowLeft className="w-5 h-5" />
             </Link>
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Edit Track</h1>
-            <p className="text-muted-foreground">Update your track details</p>
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground truncate">Edit Track</h1>
+            <p className="text-muted-foreground text-sm">Update your track details</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Cover Art */}
-          <div className="glass-card p-6">
+          <div className="glass-card p-4 sm:p-6">
             <Label className="text-base font-semibold mb-4 block">Cover Art</Label>
-            <div className="flex items-center gap-6">
-              <div className="w-32 h-32 rounded-lg overflow-hidden bg-muted/50 relative flex-shrink-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden bg-muted/50 relative flex-shrink-0">
                 {coverPreview ? (
                   <img
                     src={coverPreview}
@@ -410,11 +410,11 @@ export default function TrackEdit() {
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <Disc3 className="w-12 h-12 text-muted-foreground/50" />
+                    <Disc3 className="w-8 h-8 sm:w-12 sm:h-12 text-muted-foreground/50" />
                   </div>
                 )}
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0 w-full sm:w-auto">
                 <input
                   type="file"
                   id="cover"
@@ -425,6 +425,7 @@ export default function TrackEdit() {
                 <Button
                   type="button"
                   variant="outline"
+                  className="w-full sm:w-auto"
                   onClick={() => document.getElementById("cover")?.click()}
                 >
                   <Upload className="w-4 h-4 mr-2" />
@@ -438,7 +439,7 @@ export default function TrackEdit() {
           </div>
 
           {/* Basic Info */}
-          <div className="glass-card p-6 space-y-4">
+          <div className="glass-card p-4 sm:p-6 space-y-4">
             <h2 className="text-lg font-semibold text-foreground">Track Details</h2>
 
             <div className="grid md:grid-cols-2 gap-4">
@@ -499,10 +500,10 @@ export default function TrackEdit() {
           <CreditsSection credits={credits} onChange={setCredits} />
 
           {/* Pricing */}
-          <div className="glass-card p-6 space-y-4">
+          <div className="glass-card p-4 sm:p-6 space-y-4">
             <h2 className="text-lg font-semibold text-foreground">Pricing & Access</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="min-w-0">
                 <Label htmlFor="price">Price (USD)</Label>
                 <Input
                   id="price"
@@ -515,7 +516,7 @@ export default function TrackEdit() {
                   className="mt-1"
                 />
               </div>
-              <div>
+              <div className="min-w-0">
                 <Label htmlFor="editions">Total Editions</Label>
                 <Input
                   id="editions"
@@ -536,7 +537,7 @@ export default function TrackEdit() {
           </div>
 
           {/* Publish Status */}
-          <div className="glass-card p-6">
+          <div className="glass-card p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="draft" className="text-base font-semibold">

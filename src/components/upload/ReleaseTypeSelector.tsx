@@ -32,9 +32,9 @@ const releaseTypes = [
 
 export const ReleaseTypeSelector = ({ value, onChange, disabled }: ReleaseTypeSelectorProps) => {
   return (
-    <div className="glass-card p-6">
+    <div className="glass-card p-4 sm:p-6">
       <h2 className="text-lg font-semibold text-foreground mb-4">Release Type</h2>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {releaseTypes.map(({ type, label, description, icon: Icon }) => (
           <button
             key={type}
