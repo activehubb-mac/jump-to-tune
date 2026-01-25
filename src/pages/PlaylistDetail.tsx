@@ -47,6 +47,7 @@ import {
   Plus,
   Music,
   Settings,
+  Users,
 } from "lucide-react";
 import { usePlaylistTracks, usePlaylists, PlaylistTrack } from "@/hooks/usePlaylists";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -55,6 +56,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { formatDuration } from "@/lib/formatters";
 import { TrackPickerModal } from "@/components/playlist/TrackPickerModal";
 import { PlaylistEditModal } from "@/components/playlist/PlaylistEditModal";
+import { FolderSelector } from "@/components/playlist/FolderSelector";
+import { CollaboratorsModal } from "@/components/playlist/CollaboratorsModal";
+import { supabase } from "@/integrations/supabase/client";
 
 function SortableTrackRow({
   item,
@@ -180,6 +184,10 @@ export default function PlaylistDetail() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showTrackPicker, setShowTrackPicker] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showCollaborators, setShowCollaborators] = useState(false);
+  const [currentFolderId, setCurrentFolderId] = useState(playlist?.folder_id || null);
+  
+  const isOwner = playlist?.user_id === user?.id;
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -441,6 +449,26 @@ export default function PlaylistDetail() {
                   </p>
                 )}
 
+                {/* Folder & Collaborative badges */}
+                <div className="flex items-center gap-2 mb-3 flex-wrap justify-center md:justify-start">
+                  {isOwner && (
+                    <FolderSelector
+                      playlistId={playlistId || ""}
+                      currentFolderId={currentFolderId}
+                      onFolderChange={setCurrentFolderId}
+                    />
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setShowCollaborators(true)}
+                  >
+                    <Users className="w-4 h-4" />
+                    {playlist?.is_collaborative ? "Collaborative" : "Share"}
+                  </Button>
+                </div>
+
                 <p className="text-sm text-muted-foreground mb-6">
                   {tracks.length} {tracks.length === 1 ? "track" : "tracks"} · {formatDuration(totalDuration)}
                 </p>
@@ -589,6 +617,24 @@ export default function PlaylistDetail() {
             cover_image_url: playlist.cover_image_url,
           }}
           onSave={handleSavePlaylist}
+        />
+      )}
+
+      {/* Collaborators modal */}
+      {playlist && (
+        <CollaboratorsModal
+          open={showCollaborators}
+          onOpenChange={setShowCollaborators}
+          playlistId={playlist.id}
+          playlistName={playlist.name}
+          isOwner={isOwner}
+          isCollaborative={playlist.is_collaborative}
+          onToggleCollaborative={async (enabled) => {
+            await supabase
+              .from("playlists")
+              .update({ is_collaborative: enabled })
+              .eq("id", playlist.id);
+          }}
         />
       )}
     </Layout>
