@@ -36,7 +36,7 @@ export function Layout({
   
   return (
     <div className={cn(
-      "min-h-screen flex flex-col overflow-x-hidden w-full max-w-full relative",
+      "min-h-screen flex flex-col overflow-x-hidden w-full max-w-full",
       backgroundClass
     )}>
       {/* Particle effect overlay for immersive atmosphere */}
@@ -46,20 +46,23 @@ export function Layout({
         </Suspense>
       )}
       
+      {/* Fixed Navbar - z-50 ensures it stays above everything */}
       <Navbar />
+      
+      {/* Main content wrapper with proper spacing for fixed navbar */}
       <div 
-        className="pt-16 relative z-10"
+        className="flex-1 flex flex-col"
         style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))' }}
       >
         <EmailVerificationBanner />
+        <main className={cn(
+          "flex-1",
+          isPlayerVisible ? "pb-24 md:pb-20" : ""
+        )}>
+          {children}
+        </main>
+        {showFooter && <Footer />}
       </div>
-      <main className={cn(
-        "flex-1 relative z-10",
-        isPlayerVisible ? "pb-24 md:pb-20" : ""
-      )}>
-        {children}
-      </main>
-      {showFooter && <Footer className="relative z-10" />}
     </div>
   );
 }
