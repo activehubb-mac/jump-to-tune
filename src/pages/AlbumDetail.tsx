@@ -152,7 +152,7 @@ export default function AlbumDetail() {
 
   if (isLoading) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24 flex justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -162,7 +162,7 @@ export default function AlbumDetail() {
 
   if (!album) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24 text-center">
           <h1 className="text-2xl font-bold mb-4">Album not found</h1>
           <Button asChild>
@@ -174,7 +174,7 @@ export default function AlbumDetail() {
   }
 
   return (
-    <Layout>
+    <Layout useBackground="subtle">
       {/* Track Detail Modal */}
       {selectedTrack && (
         <TrackDetailModal

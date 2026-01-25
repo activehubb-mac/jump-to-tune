@@ -129,7 +129,7 @@ export default function AlbumUpload() {
   // Auth guards
   if (isLoading) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24 flex justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -139,7 +139,7 @@ export default function AlbumUpload() {
 
   if (!user) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-6">
@@ -165,7 +165,7 @@ export default function AlbumUpload() {
 
   if (role !== "artist" && role !== "label") {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-6">
@@ -186,7 +186,7 @@ export default function AlbumUpload() {
 
   if (!profile?.onboarding_completed) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-6">

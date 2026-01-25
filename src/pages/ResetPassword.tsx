@@ -112,7 +112,7 @@ export default function ResetPassword() {
   // Loading state
   if (pageState === "loading") {
     return (
-      <Layout showFooter={false}>
+      <Layout showFooter={false} useBackground="futuristic">
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-primary/20 rounded-full blur-[100px]" />
@@ -130,7 +130,7 @@ export default function ResetPassword() {
   // Expired/Invalid link state
   if (pageState === "expired") {
     return (
-      <Layout showFooter={false}>
+      <Layout showFooter={false} useBackground="futuristic">
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-primary/20 rounded-full blur-[100px]" />
@@ -181,7 +181,7 @@ export default function ResetPassword() {
   // Success state
   if (pageState === "success") {
     return (
-      <Layout showFooter={false}>
+      <Layout showFooter={false} useBackground="futuristic">
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-primary/20 rounded-full blur-[100px]" />
@@ -204,7 +204,7 @@ export default function ResetPassword() {
 
   // Ready state - show form
   return (
-    <Layout showFooter={false}>
+    <Layout showFooter={false} useBackground="futuristic">
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">

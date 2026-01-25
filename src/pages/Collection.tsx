@@ -85,7 +85,7 @@ export default function Collection() {
 
   if (isLoading) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24 flex justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -95,7 +95,7 @@ export default function Collection() {
 
   if (!user) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-6">

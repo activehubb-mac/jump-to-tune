@@ -62,7 +62,7 @@ export default function UserProfile() {
 
   if (isLoading) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24 flex justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -72,7 +72,7 @@ export default function UserProfile() {
 
   if (!profile) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24 text-center">
           <h1 className="text-2xl font-bold text-foreground">User not found</h1>
         </div>
@@ -123,7 +123,7 @@ export default function UserProfile() {
   const accentColor = getAccentColor();
 
   return (
-    <Layout>
+    <Layout useBackground="subtle">
       <PremiumFeatureModal
         open={showPremiumModal}
         onOpenChange={setShowPremiumModal}

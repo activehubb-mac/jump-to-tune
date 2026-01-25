@@ -23,7 +23,7 @@ export default function LabelAnalytics() {
 
   if (isLoading) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24 flex justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-accent" />
         </div>
@@ -33,7 +33,7 @@ export default function LabelAnalytics() {
 
   if (!user) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-accent/20 flex items-center justify-center mb-6">
@@ -52,7 +52,7 @@ export default function LabelAnalytics() {
 
   if (role !== "label") {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-6">
@@ -77,7 +77,7 @@ export default function LabelAnalytics() {
   const soldPercentage = totalEditions > 0 ? Math.round((totalEditionsSold / totalEditions) * 100) : 0;
 
   return (
-    <Layout>
+    <Layout useBackground="subtle">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">

@@ -89,7 +89,7 @@ export default function ArtistDashboard() {
   // Show loading state while checking auth
   if (isLoading) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24 flex justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -100,7 +100,7 @@ export default function ArtistDashboard() {
   // Not logged in - show sign in prompt
   if (!user) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-6">
@@ -122,7 +122,7 @@ export default function ArtistDashboard() {
   // Logged in but not an artist - show access denied
   if (role !== "artist") {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-6">
@@ -150,7 +150,7 @@ export default function ArtistDashboard() {
   const hasMoreTracks = (tracks?.length ?? 0) > MAX_DASHBOARD_TRACKS;
 
   return (
-    <Layout>
+    <Layout useBackground="subtle">
       <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden box-border">
         {/* Subscription Status Banner */}
         <SubscriptionStatusBanner className="mb-4 sm:mb-6" />

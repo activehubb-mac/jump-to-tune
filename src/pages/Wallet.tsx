@@ -37,7 +37,7 @@ export default function WalletPage() {
 
   if (!user) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24 text-center">
           <Wallet className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
           <h1 className="text-2xl font-bold mb-2">Sign in to access your wallet</h1>
@@ -57,7 +57,7 @@ export default function WalletPage() {
   }, [refetch]);
 
   return (
-    <Layout>
+    <Layout useBackground="subtle">
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 overflow-x-hidden box-border">
         {/* Header */}

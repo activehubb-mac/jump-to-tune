@@ -104,7 +104,7 @@ export default function PaymentSuccess() {
   };
 
   return (
-    <Layout>
+    <Layout useBackground="futuristic">
       <div className="container mx-auto px-4 py-24">
         <div className="max-w-md mx-auto text-center">
           {/* Success Icon - Different for credits */}

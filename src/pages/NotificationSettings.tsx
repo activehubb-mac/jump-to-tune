@@ -113,7 +113,7 @@ export default function NotificationSettings() {
   // Not logged in
   if (!authLoading && !user) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-6">
@@ -134,7 +134,7 @@ export default function NotificationSettings() {
 
   if (authLoading) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24 flex justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -145,7 +145,7 @@ export default function NotificationSettings() {
   const isArtistOrLabel = role === "artist" || role === "label";
 
   return (
-    <Layout>
+    <Layout useBackground="subtle">
       <TooltipProvider>
         <div className="container mx-auto px-4 py-6 sm:py-8 max-w-2xl">
           {/* Header */}
