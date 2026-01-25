@@ -298,7 +298,7 @@ export default function TrackEdit() {
   // Auth loading state
   if (authLoading) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24 flex justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -309,7 +309,7 @@ export default function TrackEdit() {
   // Not logged in
   if (!user) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-6">
@@ -329,7 +329,7 @@ export default function TrackEdit() {
   // Not an artist or label
   if (role !== "artist" && role !== "label") {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-6">
@@ -352,7 +352,7 @@ export default function TrackEdit() {
   
   if (track && !isOwner) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-6">
@@ -372,7 +372,7 @@ export default function TrackEdit() {
   // Loading track
   if (trackLoading) {
     return (
-      <Layout>
+      <Layout useBackground="subtle">
         <div className="container mx-auto px-4 py-24 flex justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -381,7 +381,7 @@ export default function TrackEdit() {
   }
 
   return (
-    <Layout>
+    <Layout useBackground="subtle">
       <div className="w-full max-w-2xl mx-auto px-4 py-6 sm:py-8 overflow-x-hidden box-border">
         {/* Header */}
         <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
