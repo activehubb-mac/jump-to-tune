@@ -38,7 +38,8 @@ export function useLibraryItems(filter: LibraryFilterOption = "all", sort: Libra
   const { data: followedArtists, isLoading: followedLoading } = useFollowedArtists();
   const { recentArtists, isLoading: recentArtistsLoading } = useRecentArtists(20);
   const { data: recentAlbums, isLoading: recentAlbumsLoading } = useRecentAlbums(20);
-  const { isPinned } = usePinnedLibraryItems();
+  // Get both isPinned function AND pinnedItems array to ensure useMemo recomputes when pins change
+  const { isPinned, pinnedItems } = usePinnedLibraryItems();
 
   const isLoading = playlistsLoading || ownedLoading || likedLoading || followedLoading || recentArtistsLoading || recentAlbumsLoading;
 
@@ -171,7 +172,7 @@ export function useLibraryItems(filter: LibraryFilterOption = "all", sort: Libra
     let sortedItems = [...items];
     
     // Always keep pinned items first
-    const pinnedItems = sortedItems.filter((item) => item.isPinned);
+    const pinnedItemsList = sortedItems.filter((item) => item.isPinned);
     const unpinnedItems = sortedItems.filter((item) => !item.isPinned);
 
     switch (sort) {
@@ -189,10 +190,10 @@ export function useLibraryItems(filter: LibraryFilterOption = "all", sort: Libra
     }
 
     // Sort pinned items by their pinned date (most recently pinned first)
-    pinnedItems.sort((a, b) => b.lastInteractedAt - a.lastInteractedAt);
+    pinnedItemsList.sort((a, b) => b.lastInteractedAt - a.lastInteractedAt);
 
-    return [...pinnedItems, ...unpinnedItems];
-  }, [playlists, ownedTracks, likedTracks, followedArtists, recentArtists, recentAlbums, filter, sort, isPinned]);
+    return [...pinnedItemsList, ...unpinnedItems];
+  }, [playlists, ownedTracks, likedTracks, followedArtists, recentArtists, recentAlbums, filter, sort, isPinned, pinnedItems]);
 
   return { libraryItems, isLoading };
 }
