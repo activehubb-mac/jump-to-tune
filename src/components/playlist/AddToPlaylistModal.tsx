@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Plus, Check, ListMusic } from "lucide-react";
 import { usePlaylists } from "@/hooks/usePlaylists";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -31,6 +32,7 @@ export function AddToPlaylistModal({
   const { playlists, isLoading } = usePlaylists();
   const [addingTo, setAddingTo] = useState<string | null>(null);
   const { showFeedback } = useFeedbackSafe();
+  const { lightTap, success } = useHapticFeedback();
   const queryClient = useQueryClient();
 
   // Check which playlists already contain this track
@@ -39,6 +41,7 @@ export function AddToPlaylistModal({
   );
 
   const handleAddToPlaylist = async (playlistId: string, playlistName: string) => {
+    lightTap();
     setAddingTo(playlistId);
     try {
       // Get the current max position
@@ -77,6 +80,7 @@ export function AddToPlaylistModal({
         queryClient.invalidateQueries({ queryKey: ["playlists"] });
         queryClient.invalidateQueries({ queryKey: ["playlist-tracks", playlistId] });
         
+        success();
         showFeedback({
           type: "success",
           title: "Added to playlist",

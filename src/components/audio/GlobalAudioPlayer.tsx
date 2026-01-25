@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAudioPlayer, AudioTrack } from "@/contexts/AudioPlayerContext";
 import { useAudioKeyboardShortcuts } from "@/hooks/useAudioKeyboardShortcuts";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
+import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { KaraokeLyricsPanel } from "@/components/audio/KaraokeLyricsPanel";
 import { UrlWaveformVisualizer } from "@/components/audio/UrlWaveformVisualizer";
@@ -166,6 +167,7 @@ export function GlobalAudioPlayer() {
   const { isOwned } = usePurchases();
   const { createPlaylist } = usePlaylists();
   const { showFeedback } = useFeedbackSafe();
+  const { lightTap, mediumTap, selectionChanged } = useHapticFeedback();
   const [showQueue, setShowQueue] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumFeatureName, setPremiumFeatureName] = useState("");
@@ -256,6 +258,7 @@ export function GlobalAudioPlayer() {
   if (!isPlayerVisible || !currentTrack) return null;
 
   const handleSeek = (value: number[]) => {
+    selectionChanged();
     seek(value[0]);
   };
 
@@ -264,6 +267,7 @@ export function GlobalAudioPlayer() {
   };
 
   const handleShuffleClick = () => {
+    lightTap();
     if (!canUseFeature("shuffle")) {
       setPremiumFeatureName("Shuffle mode");
       setShowPremiumModal(true);
@@ -273,6 +277,7 @@ export function GlobalAudioPlayer() {
   };
 
   const handleRepeatClick = () => {
+    lightTap();
     if (!canUseFeature("repeat")) {
       setPremiumFeatureName("Repeat mode");
       setShowPremiumModal(true);
@@ -282,12 +287,28 @@ export function GlobalAudioPlayer() {
   };
 
   const handleQueueClick = () => {
+    lightTap();
     if (!canUseFeature("queuePanel")) {
       setPremiumFeatureName("Queue management");
       setShowPremiumModal(true);
       return;
     }
     setShowQueue(!showQueue);
+  };
+
+  const handlePlayPause = () => {
+    mediumTap();
+    togglePlayPause();
+  };
+
+  const handleSkipNext = () => {
+    lightTap();
+    playNext();
+  };
+
+  const handleSkipPrevious = () => {
+    lightTap();
+    playPrevious();
   };
 
   const hasNext = queueIndex < queue.length - 1 || repeatMode === "all";
@@ -301,6 +322,7 @@ export function GlobalAudioPlayer() {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
+    mediumTap();
     const oldIndex = upcomingIds.indexOf(active.id as string);
     const newIndex = upcomingIds.indexOf(over.id as string);
 
@@ -619,7 +641,7 @@ export function GlobalAudioPlayer() {
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                  onClick={playPrevious}
+                  onClick={handleSkipPrevious}
                   disabled={!hasPrevious}
                 >
                   <SkipBack className="h-4 w-4" />
@@ -628,7 +650,7 @@ export function GlobalAudioPlayer() {
                 <Button
                   size="icon"
                   className="rounded-full w-10 h-10 gradient-accent neon-glow-subtle flex-shrink-0"
-                  onClick={togglePlayPause}
+                  onClick={handlePlayPause}
                   disabled={isBuffering}
                 >
                   {isBuffering ? (
@@ -644,7 +666,7 @@ export function GlobalAudioPlayer() {
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                  onClick={playNext}
+                  onClick={handleSkipNext}
                   disabled={!hasNext}
                 >
                   <SkipForward className="h-4 w-4" />
@@ -736,7 +758,7 @@ export function GlobalAudioPlayer() {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={playPrevious}
+                onClick={handleSkipPrevious}
                 disabled={!hasPrevious}
               >
                 <SkipBack className="h-4 w-4" />
@@ -744,7 +766,7 @@ export function GlobalAudioPlayer() {
               <Button
                 size="icon"
                 className="rounded-full w-10 h-10 gradient-accent neon-glow-subtle flex-shrink-0"
-                onClick={togglePlayPause}
+                onClick={handlePlayPause}
                 disabled={isBuffering}
               >
                 {isBuffering ? (
@@ -759,7 +781,7 @@ export function GlobalAudioPlayer() {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={playNext}
+                onClick={handleSkipNext}
                 disabled={!hasNext}
               >
                 <SkipForward className="h-4 w-4" />
