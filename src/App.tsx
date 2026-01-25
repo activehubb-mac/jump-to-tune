@@ -6,6 +6,7 @@ import { FeedbackProvider } from "@/contexts/FeedbackContext";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import { FeedbackModal } from "@/components/ui/feedback-modal";
 import { GlobalAudioPlayer } from "@/components/audio/GlobalAudioPlayer";
+import { useStatusBar } from "@/hooks/useStatusBar";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
@@ -62,73 +63,84 @@ import NotificationCenter from "./pages/NotificationCenter";
 
 const queryClient = new QueryClient();
 
+function AppContent() {
+  // Initialize native status bar configuration
+  useStatusBar();
+
+  return (
+    <>
+      <FeedbackModal />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/auth/reset-password" element={<ResetPassword />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/browse" element={<Browse />} />
+          <Route path="/karaoke" element={<Karaoke />} />
+          <Route path="/for-you" element={<ForYou />} />
+          <Route path="/artists" element={<Artists />} />
+          <Route path="/labels" element={<Labels />} />
+          <Route path="/artist/:id" element={<ArtistProfile />} />
+          <Route path="/label/:id" element={<LabelProfile />} />
+          <Route path="/profile/:id" element={<UserProfile />} />
+          <Route path="/library" element={<Collection />} />
+          <Route path="/collection" element={<Navigate to="/library" replace />} />
+          <Route path="/fan/dashboard" element={<FanDashboard />} />
+          <Route path="/artist/dashboard" element={<ArtistDashboard />} />
+          <Route path="/artist/analytics" element={<ArtistAnalytics />} />
+          <Route path="/artist/collectors" element={<ArtistCollectors />} />
+          <Route path="/artist/tracks" element={<ArtistTracks />} />
+          <Route path="/track/:id/edit" element={<TrackEdit />} />
+          <Route path="/label/dashboard" element={<LabelDashboard />} />
+          <Route path="/label/analytics" element={<LabelAnalytics />} />
+          <Route path="/label/collectors" element={<LabelCollectors />} />
+          <Route path="/label/tracks" element={<LabelTracks />} />
+          <Route path="/label/payouts" element={<LabelPayouts />} />
+          <Route path="/label/roster" element={<LabelRoster />} />
+          <Route path="/upload" element={<Upload />} />
+          <Route path="/upload/album" element={<AlbumUpload />} />
+          <Route path="/album/:id" element={<AlbumDetail />} />
+          <Route path="/library/playlist/:playlistId" element={<PlaylistDetail />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-canceled" element={<PaymentCanceled />} />
+          <Route path="/subscription" element={<Subscription />} />
+          <Route path="/wallet" element={<Wallet />} />
+          <Route path="/artist/payouts" element={<ArtistPayouts />} />
+          <Route path="/settings/notifications" element={<NotificationSettings />} />
+          <Route path="/settings" element={<AccountSettings />} />
+          <Route path="/theme-preview" element={<ThemePreview />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/help" element={<HelpCenter />} />
+          <Route path="/install" element={<Install />} />
+          <Route path="/notifications" element={<NotificationCenter />} />
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminDashboard />}>
+            <Route index element={<AdminOverview />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="tracks" element={<AdminTracks />} />
+            <Route path="featured" element={<AdminFeatured />} />
+            <Route path="finance" element={<AdminFinance />} />
+            <Route path="reports" element={<AdminReports />} />
+            <Route path="analytics" element={<AdminAnalytics />} />
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <GlobalAudioPlayer />
+      </BrowserRouter>
+    </>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <FeedbackProvider>
         <AudioPlayerProvider>
           <TooltipProvider>
-            <FeedbackModal />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/auth/reset-password" element={<ResetPassword />} />
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/browse" element={<Browse />} />
-                <Route path="/karaoke" element={<Karaoke />} />
-                <Route path="/for-you" element={<ForYou />} />
-                <Route path="/artists" element={<Artists />} />
-                <Route path="/labels" element={<Labels />} />
-                <Route path="/artist/:id" element={<ArtistProfile />} />
-                <Route path="/label/:id" element={<LabelProfile />} />
-                <Route path="/profile/:id" element={<UserProfile />} />
-                <Route path="/library" element={<Collection />} />
-                <Route path="/collection" element={<Navigate to="/library" replace />} />
-                <Route path="/fan/dashboard" element={<FanDashboard />} />
-                <Route path="/artist/dashboard" element={<ArtistDashboard />} />
-                <Route path="/artist/analytics" element={<ArtistAnalytics />} />
-                <Route path="/artist/collectors" element={<ArtistCollectors />} />
-                <Route path="/artist/tracks" element={<ArtistTracks />} />
-                <Route path="/track/:id/edit" element={<TrackEdit />} />
-                <Route path="/label/dashboard" element={<LabelDashboard />} />
-                <Route path="/label/analytics" element={<LabelAnalytics />} />
-                <Route path="/label/collectors" element={<LabelCollectors />} />
-                <Route path="/label/tracks" element={<LabelTracks />} />
-                <Route path="/label/payouts" element={<LabelPayouts />} />
-                <Route path="/label/roster" element={<LabelRoster />} />
-                <Route path="/upload" element={<Upload />} />
-                <Route path="/upload/album" element={<AlbumUpload />} />
-                <Route path="/album/:id" element={<AlbumDetail />} />
-                <Route path="/library/playlist/:playlistId" element={<PlaylistDetail />} />
-                <Route path="/payment-success" element={<PaymentSuccess />} />
-                <Route path="/payment-canceled" element={<PaymentCanceled />} />
-                <Route path="/subscription" element={<Subscription />} />
-                <Route path="/wallet" element={<Wallet />} />
-                <Route path="/artist/payouts" element={<ArtistPayouts />} />
-                <Route path="/settings/notifications" element={<NotificationSettings />} />
-                <Route path="/settings" element={<AccountSettings />} />
-                <Route path="/theme-preview" element={<ThemePreview />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/help" element={<HelpCenter />} />
-                <Route path="/install" element={<Install />} />
-                <Route path="/notifications" element={<NotificationCenter />} />
-                {/* Admin Routes */}
-                <Route path="/admin" element={<AdminDashboard />}>
-                  <Route index element={<AdminOverview />} />
-                  <Route path="users" element={<AdminUsers />} />
-                  <Route path="tracks" element={<AdminTracks />} />
-                  <Route path="featured" element={<AdminFeatured />} />
-                  <Route path="finance" element={<AdminFinance />} />
-                  <Route path="reports" element={<AdminReports />} />
-                  <Route path="analytics" element={<AdminAnalytics />} />
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <GlobalAudioPlayer />
-            </BrowserRouter>
+            <AppContent />
           </TooltipProvider>
         </AudioPlayerProvider>
       </FeedbackProvider>
