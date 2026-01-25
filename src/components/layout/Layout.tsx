@@ -3,17 +3,28 @@ import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
+import { cn } from "@/lib/utils";
 
 interface LayoutProps {
   children: ReactNode;
   showFooter?: boolean;
+  useBackground?: "futuristic" | "subtle" | "none";
 }
 
-export function Layout({ children, showFooter = true }: LayoutProps) {
+export function Layout({ children, showFooter = true, useBackground = "none" }: LayoutProps) {
   const { isPlayerVisible } = useAudioPlayer();
   
+  const backgroundClass = useBackground === "futuristic" 
+    ? "bg-futuristic" 
+    : useBackground === "subtle" 
+    ? "bg-futuristic-subtle" 
+    : "";
+  
   return (
-    <div className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full">
+    <div className={cn(
+      "min-h-screen flex flex-col overflow-x-hidden w-full max-w-full",
+      backgroundClass
+    )}>
       <Navbar />
       <div 
         className="pt-16"

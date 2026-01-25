@@ -118,11 +118,40 @@
   }
 
   .glass-card {
-    @apply bg-glass/40 backdrop-blur-xl rounded-xl;
+    @apply bg-glass/60 backdrop-blur-xl rounded-xl;
   }
 
   .glass-card-bordered {
-    @apply bg-glass/40 backdrop-blur-xl border border-glass-border/30 rounded-xl;
+    @apply bg-glass/60 backdrop-blur-xl border border-glass-border/40 rounded-xl;
+  }
+
+  /* Futuristic Background Utilities */
+  .bg-futuristic {
+    background-image: 
+      linear-gradient(to bottom, rgba(13, 10, 20, 0.75), rgba(13, 10, 20, 0.85)),
+      url('/images/bg-futuristic.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  .bg-futuristic-subtle {
+    background-image: 
+      linear-gradient(to bottom, rgba(13, 10, 20, 0.85), rgba(13, 10, 20, 0.92)),
+      url('/images/bg-futuristic.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  /* iOS Safari fallback for background-attachment: fixed */
+  @supports (-webkit-touch-callout: none) {
+    .bg-futuristic,
+    .bg-futuristic-subtle {
+      background-attachment: scroll;
+    }
   }
 
   .neon-glow {

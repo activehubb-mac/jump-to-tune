@@ -153,7 +153,7 @@ export default function Karaoke() {
   };
 
   return (
-    <Layout>
+    <Layout useBackground="futuristic">
       <PremiumFeatureModal
         open={showPremiumModal}
         onOpenChange={setShowPremiumModal}

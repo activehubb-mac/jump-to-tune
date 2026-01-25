@@ -275,7 +275,7 @@ export default function Auth() {
   // Show loading state while checking auth
   if (authLoading) {
     return (
-      <Layout showFooter={false}>
+      <Layout showFooter={false} useBackground="futuristic">
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -288,7 +288,7 @@ export default function Auth() {
     const emailProvider = getEmailProvider(pendingEmail);
     
     return (
-      <Layout showFooter={false}>
+      <Layout showFooter={false} useBackground="futuristic">
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
           {/* Background Effects */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -387,7 +387,7 @@ export default function Auth() {
   // Forgot Password Screen
   if (showForgotPassword) {
     return (
-      <Layout showFooter={false}>
+      <Layout showFooter={false} useBackground="futuristic">
         <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
           {/* Background Effects */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -497,7 +497,7 @@ export default function Auth() {
   }
 
   return (
-    <Layout showFooter={false}>
+    <Layout showFooter={false} useBackground="futuristic">
       {/* Signup Confirmation Modal */}
       <SignupConfirmationModal
         open={showSignupConfirmation}
