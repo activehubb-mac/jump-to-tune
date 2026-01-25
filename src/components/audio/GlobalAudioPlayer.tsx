@@ -402,7 +402,10 @@ export function GlobalAudioPlayer() {
 
       {/* Queue Panel */}
       {showQueue && canAccessQueue && (
-        <div className="fixed bottom-20 md:bottom-16 right-4 z-50 w-80 max-h-[28rem] glass-card border border-glass-border/30 backdrop-blur-xl rounded-lg overflow-hidden animate-in slide-in-from-bottom duration-200">
+        <div 
+          className="fixed right-4 z-50 w-80 max-h-[28rem] glass-card border border-glass-border/30 backdrop-blur-xl rounded-lg overflow-hidden animate-in slide-in-from-bottom duration-200"
+          style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
+        >
           <div className="p-3 border-b border-glass-border/30">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-foreground">Queue</h3>
