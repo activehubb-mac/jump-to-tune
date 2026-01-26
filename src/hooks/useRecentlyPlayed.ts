@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface RecentlyPlayedTrack {
   id: string;
@@ -29,6 +30,56 @@ export function useRecentlyPlayed(limit: number = 6) {
       console.error("Failed to load recently played:", e);
     }
   }, [limit]);
+
+  // Hydrate any older entries missing audio_url (pre-fetch so iOS play remains synchronous)
+  useEffect(() => {
+    let cancelled = false;
+
+    const hydrateMissingAudioUrls = async () => {
+      const missingIds = recentlyPlayed
+        .filter((t) => !t.audio_url)
+        .map((t) => t.id);
+
+      if (missingIds.length === 0) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("tracks")
+          .select("id,audio_url,duration")
+          .in("id", missingIds);
+
+        if (error) throw error;
+        if (!data || cancelled) return;
+
+        const map = new Map(data.map((t) => [t.id, t] as const));
+
+        const stored = localStorage.getItem(STORAGE_KEY);
+        const existing: RecentlyPlayedTrack[] = stored ? JSON.parse(stored) : [];
+
+        const updatedAll = existing.map((t) => {
+          if (t.audio_url) return t;
+          const found = map.get(t.id);
+          if (!found?.audio_url) return t;
+          return {
+            ...t,
+            audio_url: found.audio_url,
+            duration: t.duration ?? found.duration ?? null,
+          };
+        });
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedAll));
+        setRecentlyPlayed(updatedAll.slice(0, limit));
+      } catch (e) {
+        // Non-fatal: keep UI working; user can still play via other screens.
+        console.warn("Failed to hydrate recently played audio URLs:", e);
+      }
+    };
+
+    hydrateMissingAudioUrls();
+    return () => {
+      cancelled = true;
+    };
+  }, [recentlyPlayed, limit]);
 
   // Add a track to recently played
   const addToRecentlyPlayed = useCallback((track: {

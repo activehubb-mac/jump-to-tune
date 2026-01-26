@@ -73,11 +73,18 @@ export function RecentlyViewedSection({ onTrackClick }: RecentlyViewedSectionPro
                     className="rounded-full gradient-accent w-8 h-8"
                     onClick={(e) => {
                       e.stopPropagation();
-                      // Use stored audio_url for iOS gesture chain compatibility
+                      // iOS Safari requires a *synchronous* play call with a real URL.
+                      // If this history item is missing audio_url (older cache), fall back to
+                      // the parent click handler which can resolve a fully-hydrated track.
+                      if (!track.audio_url) {
+                        onTrackClick?.(track);
+                        return;
+                      }
+
                       playTrack({
                         id: track.id,
                         title: track.title,
-                        audio_url: track.audio_url || "",
+                        audio_url: track.audio_url,
                         cover_art_url: track.cover_art_url,
                         duration: track.duration,
                         artist: {

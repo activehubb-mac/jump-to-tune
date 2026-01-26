@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface RecentlyViewedTrack {
   id: string;
@@ -30,6 +31,56 @@ export function useRecentlyViewed(limit: number = 5) {
       console.error("Failed to load recently viewed:", e);
     }
   }, [limit]);
+
+  // Hydrate any older entries missing audio_url (pre-fetch so iOS play remains synchronous)
+  useEffect(() => {
+    let cancelled = false;
+
+    const hydrateMissingAudioUrls = async () => {
+      const missingIds = recentlyViewed
+        .filter((t) => !t.audio_url)
+        .map((t) => t.id);
+
+      if (missingIds.length === 0) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("tracks")
+          .select("id,audio_url,duration,price")
+          .in("id", missingIds);
+
+        if (error) throw error;
+        if (!data || cancelled) return;
+
+        const map = new Map(data.map((t) => [t.id, t] as const));
+
+        const stored = localStorage.getItem(STORAGE_KEY);
+        const existing: RecentlyViewedTrack[] = stored ? JSON.parse(stored) : [];
+
+        const updatedAll = existing.map((t) => {
+          if (t.audio_url) return t;
+          const found = map.get(t.id);
+          if (!found?.audio_url) return t;
+          return {
+            ...t,
+            audio_url: found.audio_url,
+            duration: t.duration ?? found.duration ?? null,
+            price: typeof t.price === "number" ? t.price : (found.price ?? 0),
+          };
+        });
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedAll));
+        setRecentlyViewed(updatedAll.slice(0, limit));
+      } catch (e) {
+        console.warn("Failed to hydrate recently viewed audio URLs:", e);
+      }
+    };
+
+    hydrateMissingAudioUrls();
+    return () => {
+      cancelled = true;
+    };
+  }, [recentlyViewed, limit]);
 
   // Listen for storage changes (cross-tab sync)
   useEffect(() => {
