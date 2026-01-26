@@ -1,4 +1,4 @@
-import { useEffect, useRef, memo } from "react";
+import { useEffect, useRef, memo, useState } from "react";
 
 interface Particle {
   x: number;
@@ -19,8 +19,19 @@ function ParticleOverlayComponent({ particleCount = 50, className = "" }: Partic
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animationRef = useRef<number>();
+  const [shouldRender, setShouldRender] = useState(true);
 
   useEffect(() => {
+    // CRITICAL: Disable on mobile/touch devices to prevent iOS Safari hanging
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isLowPowerMode = (navigator as any).deviceMemory && (navigator as any).deviceMemory < 4;
+    
+    if (isTouchDevice || prefersReducedMotion || isLowPowerMode) {
+      setShouldRender(false);
+      return;
+    }
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -105,6 +116,9 @@ function ParticleOverlayComponent({ particleCount = 50, className = "" }: Partic
       }
     };
   }, [particleCount]);
+
+  // Don't render canvas on mobile/touch devices
+  if (!shouldRender) return null;
 
   return (
     <canvas
