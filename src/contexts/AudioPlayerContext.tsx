@@ -197,8 +197,9 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     // iOS/Safari requires these attributes for proper playback
     audio.setAttribute('playsinline', 'true');
     audio.setAttribute('webkit-playsinline', 'true');
-    // Enable CORS for Safari (prevents some cross-origin audio issues)
-    audio.crossOrigin = 'anonymous';
+    // NOTE: Don't set crossOrigin='anonymous' - it causes CORS errors on Safari
+    // when the server doesn't explicitly send Access-Control-Allow-Origin headers
+    // Supabase storage is public and doesn't require CORS headers for same-origin
     // Preload metadata - use 'metadata' instead of 'auto' for faster initial load on mobile
     audio.preload = 'metadata';
 
@@ -213,10 +214,14 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       }
     };
 
-    audio.addEventListener("loadedmetadata", syncDuration);
+    audio.addEventListener("loadedmetadata", () => {
+      console.log("Audio metadata loaded, duration:", audio.duration);
+      syncDuration();
+    });
     audio.addEventListener("durationchange", syncDuration);
 
     audio.addEventListener("play", () => {
+      console.log("Audio play event fired");
       setIsPlaying(true);
       setIsBuffering(false);
       setIsPlaybackBlocked(false);
@@ -224,25 +229,45 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     });
 
     audio.addEventListener("pause", () => {
+      console.log("Audio pause event fired");
       setIsPlaying(false);
     });
 
     audio.addEventListener("waiting", () => {
+      console.log("Audio waiting/buffering");
       setIsBuffering(true);
     });
 
     audio.addEventListener("playing", () => {
+      console.log("Audio playing event fired");
       setIsBuffering(false);
     });
 
     audio.addEventListener("canplay", () => {
+      console.log("Audio can play");
       setIsBuffering(false);
     });
 
     audio.addEventListener("error", (e) => {
-      console.error("Audio playback error", audio.error, e);
+      const errorCode = audio.error?.code;
+      const errorMessage = audio.error?.message;
+      console.error("Audio error:", {
+        code: errorCode,
+        message: errorMessage,
+        src: audio.src,
+        event: e,
+      });
+      // Error codes: 1=MEDIA_ERR_ABORTED, 2=MEDIA_ERR_NETWORK, 3=MEDIA_ERR_DECODE, 4=MEDIA_ERR_SRC_NOT_SUPPORTED
       setIsPlaying(false);
       setIsBuffering(false);
+    });
+    
+    audio.addEventListener("stalled", () => {
+      console.warn("Audio stalled - network issue or slow connection");
+    });
+    
+    audio.addEventListener("abort", () => {
+      console.log("Audio load aborted");
     });
 
     audioRef.current = audio;
@@ -485,9 +510,33 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     // CRITICAL FOR iOS/Safari: Everything must be synchronous within user gesture
     // No awaits, no promises that block - gesture chain must be preserved
     
-    // Immediately set audio source and start loading (preserve gesture)
-    const audioUrl = track.audio_url || "";
+    // Validate audio_url - if missing, we need to hydrate from database
+    const audioUrl = track.audio_url?.trim() || "";
+    
+    if (!audioUrl) {
+      console.warn("No audio_url provided for track:", track.id, "- hydrating from database");
+      // Set UI state immediately for user feedback
+      setIsBuffering(true);
+      setIsPlayerVisible(true);
+      setCurrentTime(0);
+      setCurrentTrack({
+        ...track,
+        audio_url: "",
+      });
+      
+      // Fall back to async hydration (will lose gesture chain on iOS, but better than nothing)
+      playTrackInternal(track, true);
+      return;
+    }
+    
     const resolvedUrl = getAudioUrl(audioUrl);
+    
+    // Validate the resolved URL
+    if (!resolvedUrl || !resolvedUrl.startsWith('http')) {
+      console.error("Invalid audio URL after resolution:", resolvedUrl, "for track:", track.id);
+      setIsBuffering(false);
+      return;
+    }
     
     // Set UI state immediately (before any async)
     setIsPlaying(true);
@@ -519,12 +568,17 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       playPromise
         .then(() => {
           isAudioUnlockedRef.current = true;
+          console.log("Playback started successfully for:", track.title);
         })
         .catch((err) => {
-          console.error("Playback error:", err);
+          console.error("Playback error for track:", track.title, err.name, err.message);
           if (err.name === 'NotAllowedError') {
             // Safari blocked - show tap to play overlay
             setIsPlaybackBlocked(true);
+            setIsPlaying(false);
+          } else if (err.name === 'NotSupportedError') {
+            // Audio format not supported or bad URL
+            console.error("Audio source not supported:", resolvedUrl);
             setIsPlaying(false);
           }
           setIsBuffering(false);
@@ -547,7 +601,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     
     // Save to recently played
     saveToRecentlyPlayed(basicTrack);
-  }, [currentTrack?.id, isPlaying, queue, ensureAudioElement, getAudioUrl, checkFullAccess]);
+  }, [currentTrack?.id, isPlaying, queue, ensureAudioElement, getAudioUrl, checkFullAccess, playTrackInternal]);
 
   const addToQueue = useCallback((track: AudioTrack) => {
     // Don't add duplicates
