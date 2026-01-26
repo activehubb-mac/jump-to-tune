@@ -194,11 +194,13 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     const audio = new Audio();
     audio.volume = 1;
     
-    // iOS requires playsinline to play audio without fullscreen
+    // iOS/Safari requires these attributes for proper playback
     audio.setAttribute('playsinline', 'true');
     audio.setAttribute('webkit-playsinline', 'true');
-    // Preload metadata to ensure duration is available
-    audio.preload = 'auto';
+    // Enable CORS for Safari (prevents some cross-origin audio issues)
+    audio.crossOrigin = 'anonymous';
+    // Preload metadata - use 'metadata' instead of 'auto' for faster initial load on mobile
+    audio.preload = 'metadata';
 
     audio.addEventListener("timeupdate", () => {
       setCurrentTime(audio.currentTime || 0);
@@ -216,6 +218,8 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
     audio.addEventListener("play", () => {
       setIsPlaying(true);
+      setIsBuffering(false);
+      setIsPlaybackBlocked(false);
       isAudioUnlockedRef.current = true;
     });
 
@@ -225,6 +229,10 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
     audio.addEventListener("waiting", () => {
       setIsBuffering(true);
+    });
+
+    audio.addEventListener("playing", () => {
+      setIsBuffering(false);
     });
 
     audio.addEventListener("canplay", () => {
@@ -461,7 +469,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     accessCache.current.clear();
   }, [user?.id]);
 
-  const playTrack = useCallback(async (track: AudioTrack) => {
+  const playTrack = useCallback((track: AudioTrack) => {
     const audio = ensureAudioElement();
 
     // If same track, just toggle play/pause
@@ -474,37 +482,20 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       return;
     }
 
-    // CRITICAL FOR iOS: Unlock audio synchronously within user gesture
-    // Do NOT await - must preserve gesture chain for Safari/WKWebView
-    unlockAudioForIOS();
+    // CRITICAL FOR iOS/Safari: Everything must be synchronous within user gesture
+    // No awaits, no promises that block - gesture chain must be preserved
     
     // Immediately set audio source and start loading (preserve gesture)
     const audioUrl = track.audio_url || "";
     const resolvedUrl = getAudioUrl(audioUrl);
-    audio.src = resolvedUrl;
-    audio.load();
     
-    // Try to play immediately (must be in gesture chain for iOS)
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          setIsPlaybackBlocked(false);
-        })
-        .catch((err) => {
-          console.error("iOS playback error:", err);
-          if (err.name === 'NotAllowedError') {
-            setIsPlaybackBlocked(true);
-          }
-        });
-    }
-    
-    // Set playing state immediately
+    // Set UI state immediately (before any async)
     setIsPlaying(true);
     setIsBuffering(true);
     setIsPlayerVisible(true);
     setCurrentTime(0);
     setDuration(track.duration || 0);
+    setIsPlaybackBlocked(false);
     
     // Create basic hydrated track for immediate display
     const basicTrack: AudioTrack = {
@@ -519,7 +510,28 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     };
     setCurrentTrack(basicTrack);
     
-    // Now handle queue management (audio is already playing)
+    // Set audio source and play - MUST be synchronous with gesture
+    audio.src = resolvedUrl;
+    
+    // Single play call - Safari gets confused with multiple attempts
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          isAudioUnlockedRef.current = true;
+        })
+        .catch((err) => {
+          console.error("Playback error:", err);
+          if (err.name === 'NotAllowedError') {
+            // Safari blocked - show tap to play overlay
+            setIsPlaybackBlocked(true);
+            setIsPlaying(false);
+          }
+          setIsBuffering(false);
+        });
+    }
+    
+    // Queue management (sync, no await)
     const existingIndex = queue.findIndex(t => t.id === track.id);
     if (existingIndex !== -1) {
       setQueueIndex(existingIndex);
@@ -528,13 +540,14 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       setQueueIndex(queue.length);
     }
     
-    // Check access and set preview mode (async, in background)
-    const hasAccess = await checkFullAccess(track.id);
-    setIsPreviewMode(!hasAccess);
+    // Background async work - doesn't block playback
+    checkFullAccess(track.id).then(hasAccess => {
+      setIsPreviewMode(!hasAccess);
+    });
     
     // Save to recently played
     saveToRecentlyPlayed(basicTrack);
-  }, [currentTrack?.id, isPlaying, queue, ensureAudioElement, unlockAudioForIOS, getAudioUrl, checkFullAccess, saveToRecentlyPlayed]);
+  }, [currentTrack?.id, isPlaying, queue, ensureAudioElement, getAudioUrl, checkFullAccess]);
 
   const addToQueue = useCallback((track: AudioTrack) => {
     // Don't add duplicates
