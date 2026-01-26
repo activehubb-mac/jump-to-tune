@@ -6,6 +6,8 @@ export interface RecentlyViewedTrack {
   cover_art_url: string | null;
   artist_id: string;
   artist_name: string | null;
+  audio_url: string | null;
+  duration: number | null;
   price: number;
   viewedAt: number;
 }
@@ -52,6 +54,8 @@ export function useRecentlyViewed(limit: number = 5) {
     cover_art_url: string | null;
     artist_id: string;
     artist_name: string | null;
+    audio_url?: string | null;
+    duration?: number | null;
     price: number;
   }) => {
     try {
@@ -61,9 +65,16 @@ export function useRecentlyViewed(limit: number = 5) {
       // Remove if already exists
       existing = existing.filter((t) => t.id !== track.id);
       
-      // Add to front with timestamp
+      // Add to front with timestamp - include audio_url for iOS playback
       const newTrack: RecentlyViewedTrack = {
-        ...track,
+        id: track.id,
+        title: track.title,
+        cover_art_url: track.cover_art_url,
+        artist_id: track.artist_id,
+        artist_name: track.artist_name,
+        audio_url: track.audio_url || null,
+        duration: track.duration || null,
+        price: track.price,
         viewedAt: Date.now(),
       };
       
