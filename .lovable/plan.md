@@ -1,133 +1,132 @@
 
-# iOS Audio Playback Fix - Native Configuration Required
+# Theme Redesign: Spotify-Style Black Music Background
 
-## Summary
-After thorough research including Stack Overflow, GitHub issues, and Apple Developer forums, the persistent iOS audio buffering issue is caused by **missing native iOS configurations** in the Capacitor project. The JavaScript-level fixes already implemented are correct but insufficient.
+## Overview
+This change removes the performance-heavy visual effects (`ParticleOverlay` and `SpotlightOverlay`) and the futuristic background image, replacing them with a clean, solid black background inspired by Spotify's design aesthetic. This will improve performance across all devices, especially iOS Safari, while maintaining a modern music app look.
 
-## Root Cause (Confirmed)
+## Current State Analysis
+- **ParticleOverlay**: Canvas-based floating particles causing iOS Safari hangs
+- **SpotlightOverlay**: Mouse-following glow effect with requestAnimationFrame loop
+- **Background Image**: `bg-futuristic.jpg` with parallax effects
+- **Color Scheme**: Purple (#8B5CF6) primary, pink (#EC4899) accent, blue (#3B82F6) secondary
 
-### What's Already Fixed (JavaScript Layer)
-- Removed `await` from `unlockAudioForIOS()` to preserve gesture chain
-- Switched to `loadedmetadata` event instead of `canplaythrough`
-- Ensured `audio_url` is always passed with track data
+## Changes to Implement
 
-### What's Still Broken (Native Layer)
-1. **WKWebView Autoplay Policy**: Capacitor's WKWebView defaults to requiring user action for ALL media playback, and iOS 17+ is stricter than Safari browser about what qualifies as a "gesture"
-2. **AVAudioSession Cold Start**: WKWebView doesn't pre-activate the iOS audio session, causing the OS to buffer indefinitely while trying to activate the audio route
+### 1. Remove ParticleOverlay Component
+**File**: `src/components/layout/Layout.tsx`
+- Remove the lazy import for `ParticleOverlay`
+- Remove the `showParticles` prop and related logic
+- Remove the `shouldShowParticles` variable and JSX rendering
 
-## Required Native iOS Changes
+### 2. Remove SpotlightOverlay Component
+**File**: `src/components/layout/Layout.tsx`
+- Remove the lazy import for `SpotlightOverlay`
+- Remove the `showSpotlight` prop and related logic
+- Remove the `shouldShowSpotlight` variable and JSX rendering
 
-### Step 1: Pre-activate AVAudioSession in AppDelegate.swift
+### 3. Simplify Layout Props
+**File**: `src/components/layout/Layout.tsx`
+- Keep `useBackground` prop but simplify to just apply solid backgrounds
+- Remove `showParticles` and `showSpotlight` from the interface
 
-Location: `ios/App/App/AppDelegate.swift`
+### 4. Update CSS Theme to Spotify-Style Black
+**File**: `src/index.css`
 
-```swift
-import UIKit
-import Capacitor
-import AVFoundation  // ADD THIS
+**New Color Scheme (Spotify-inspired):**
+| Token | Current | New (Spotify-style) |
+|-------|---------|---------------------|
+| `--background` | Purple-tinted dark (`260 30% 6%`) | Pure black (`0 0% 4%`) |
+| `--card` | Purple-tinted (`260 25% 10%`) | Dark grey (`0 0% 7%`) |
+| `--muted` | Purple-tinted (`260 20% 15%`) | Dark grey (`0 0% 12%`) |
+| `--primary` | Purple (`270 70% 50%`) | Green (`142 70% 45%`) - Spotify green |
+| `--accent` | Pink (`330 85% 60%`) | Keep or change to green variant |
+| `--border` | Purple-tinted | Neutral grey (`0 0% 15%`) |
 
-@UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+**Remove from CSS:**
+- `.bg-futuristic` and `.bg-futuristic-subtle` classes
+- Related parallax and iOS fallback media queries
+- Neon glow effects (optional, can keep for accents)
 
-    var window: UIWindow?
+**Keep:**
+- `.glass-card` utilities (still useful for cards)
+- `.scrollbar-hide` utility
+- Safe area insets for mobile
 
-    func application(_ application: UIApplication, 
-                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        
-        // PRE-ACTIVATE AUDIO SESSION FOR iOS
-        // This prevents "infinite buffering" by warming up the audio route
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            print("Failed to set up audio session: \(error)")
-        }
-        
-        return true
-    }
-    
-    // ... rest of AppDelegate
-}
+### 5. Update Tailwind Config
+**File**: `tailwind.config.ts`
+- Remove `neon`, `electric`, `deep-purple` custom colors if no longer used
+- Update `glass` and `glass-border` colors to match new theme
+
+### 6. Update Default Theme Backup
+**File**: `src/themes/default-theme.css`
+- Update the backup file to reflect the new Spotify-style theme
+
+## Visual Comparison
+
+```text
+BEFORE (Futuristic Theme)          AFTER (Spotify-Style)
+┌─────────────────────────┐       ┌─────────────────────────┐
+│ ░░ Purple-tinted BG ░░░ │       │                         │
+│ ░░ + Floating Particles │       │   Solid Black #0A0A0A   │
+│ ░░ + Spotlight Effect ░░│       │                         │
+│ ░░ + BG Image Parallax ░│       │   Clean, Fast Loading   │
+│ ░░░░░░░░░░░░░░░░░░░░░░░ │       │                         │
+│    Glass Cards w/ Blur   │       │   Dark Grey Cards #121212
+│    Neon Pink Accents     │       │   Green Primary #1DB954 │
+└─────────────────────────┘       └─────────────────────────┘
 ```
 
-### Step 2: Configure WKWebView Media Playback Policy
+## Files to Modify
 
-Create a custom Capacitor plugin or modify the bridge configuration to set:
+| File | Changes |
+|------|---------|
+| `src/components/layout/Layout.tsx` | Remove ParticleOverlay, SpotlightOverlay imports and rendering |
+| `src/index.css` | Update color tokens, remove bg-futuristic classes |
+| `tailwind.config.ts` | Update/remove custom colors |
+| `src/themes/default-theme.css` | Update backup with new theme |
 
-```swift
-// Option A: Create ios/App/App/CustomWebViewPlugin.swift
-import Capacitor
+## Optional Cleanup (Can Do Later)
+- Delete `src/components/effects/ParticleOverlay.tsx`
+- Delete `src/components/effects/SpotlightOverlay.tsx`
+- Delete `public/images/bg-futuristic.jpg`
 
-@objc(CustomWebViewPlugin)
-public class CustomWebViewPlugin: CAPPlugin {
-    override public func load() {
-        // Configure WKWebView for audio playback
-        if let webView = self.webView {
-            webView.configuration.mediaTypesRequiringUserActionForPlayback = []
-            webView.configuration.allowsInlineMediaPlayback = true
-        }
-    }
-}
-```
+## Benefits
+1. **Performance**: No more canvas animations or RAF loops on any device
+2. **iOS Compatibility**: Eliminates the hanging/loading issues reported by iPhone users
+3. **Faster Load**: No background image to download
+4. **Modern Look**: Clean Spotify-style aesthetic that music app users recognize
+5. **Accessibility**: Better contrast, reduced motion preferences already respected
 
-OR modify the existing bridge by subclassing `CAPBridgeViewController`.
-
-### Step 3: Verify Info.plist Configuration
-
-Ensure these keys exist in `ios/App/App/Info.plist`:
-
-```xml
-<key>UIBackgroundModes</key>
-<array>
-    <string>audio</string>
-    <string>fetch</string>
-</array>
-```
-
-### Step 4: Update ios-config.md Documentation
-
-Add the new native configuration requirements to the documentation for future reference.
-
-## Implementation Steps for User
-
-Since native iOS code cannot be modified from Lovable, here's what you need to do:
-
-1. **Export project to GitHub** via "Export to GitHub" button
-2. **Clone the repository** to your local machine
-3. **Add iOS platform**: `npx cap add ios`
-4. **Open in Xcode**: `npx cap open ios`
-5. **Modify AppDelegate.swift** with the AVAudioSession code above
-6. **Add/verify Info.plist** background audio configuration
-7. **Optionally**: Create the custom WKWebView plugin for media autoplay
-8. **Build and test** on a real iOS device
-
-## Why This Will Work
-
-The research confirms that:
-- Supabase audio URLs work fine on iOS when properly configured (HTTP 206 byte-range support is present)
-- The JavaScript playback code is correct and works on Safari browser
-- The missing piece is purely native iOS configuration for WKWebView media policies
+---
 
 ## Technical Details
 
-### Files to Create/Modify (in local Xcode project)
-
-```text
-ios/
-├── App/
-│   ├── App/
-│   │   ├── AppDelegate.swift    <- MODIFY: Add AVAudioSession activation
-│   │   ├── Info.plist           <- VERIFY: UIBackgroundModes includes "audio"
-│   │   └── CustomWebViewPlugin.swift  <- CREATE: Optional, for autoplay policy
+### Updated Color Variables (Spotify-Style)
+```css
+:root {
+  /* Core - Spotify Black */
+  --background: 0 0% 4%;        /* #0A0A0A - near black */
+  --foreground: 0 0% 98%;       /* #FAFAFA - white text */
+  
+  /* Cards - Slightly lighter */
+  --card: 0 0% 7%;              /* #121212 - Spotify card color */
+  --popover: 0 0% 10%;          /* #1A1A1A */
+  
+  /* Primary - Spotify Green */
+  --primary: 142 70% 45%;       /* #1DB954 - Spotify green */
+  
+  /* Muted & Borders */
+  --muted: 0 0% 12%;            /* #1F1F1F */
+  --border: 0 0% 15%;           /* #262626 */
+  
+  /* Glass effect */
+  --glass: 0 0% 10%;
+  --glass-border: 0 0% 20%;
+}
 ```
 
-### Testing Checklist
-- [ ] Audio plays immediately on first tap (no gesture blocking)
-- [ ] Audio continues when app goes to background
-- [ ] No "infinite buffering" spinner
-- [ ] Playback works on iOS 17.4+
-- [ ] Playback works on older iOS versions (15, 16)
-
-## Alternative: Capacitor Plugin Approach
-
-If you prefer not to modify native code directly, consider using the `@nicholasbraun/capacitor-audio-toggle` plugin or similar that handles AVAudioSession configuration automatically. However, the native approach above is more reliable for streaming audio.
+### Layout Component Simplification
+The Layout component will be simplified to:
+- Remove all particle/spotlight logic
+- Keep the `useBackground` prop but only use it for semantic purposes (no visual effect)
+- The background will always be the solid black from CSS
