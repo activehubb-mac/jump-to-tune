@@ -62,6 +62,7 @@ interface AudioPlayerContextType {
   currentTrack: AudioTrack | null;
   isPlaying: boolean;
   isBuffering: boolean;
+  audioError: string | null;
   isPlaybackBlocked: boolean;
   currentTime: number;
   duration: number;
@@ -128,6 +129,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [showPreviewEndedModal, setShowPreviewEndedModal] = useState(false);
   const [isPlaybackBlocked, setIsPlaybackBlocked] = useState(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
   const accessCache = useRef<Map<string, boolean>>(new Map());
 
   // Check if user has full access to a track
@@ -251,13 +253,20 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     audio.addEventListener("error", (e) => {
       const errorCode = audio.error?.code;
       const errorMessage = audio.error?.message;
-      console.error("Audio error:", {
+      console.error("[AudioPlayer] Audio element error:", {
         code: errorCode,
         message: errorMessage,
         src: audio.src,
         event: e,
       });
       // Error codes: 1=MEDIA_ERR_ABORTED, 2=MEDIA_ERR_NETWORK, 3=MEDIA_ERR_DECODE, 4=MEDIA_ERR_SRC_NOT_SUPPORTED
+      const errorMessages: Record<number, string> = {
+        1: "Playback aborted",
+        2: "Network error - check connection",
+        3: "Audio decode failed",
+        4: "Audio format not supported",
+      };
+      setAudioError(errorMessages[errorCode || 0] || "Failed to load audio");
       setIsPlaying(false);
       setIsBuffering(false);
     });
@@ -323,12 +332,29 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     return () => audio.removeEventListener("timeupdate", checkPreviewLimit);
   }, [isPreviewMode, currentTrack?.preview_duration]);
 
-  const getAudioUrl = useCallback((url: string) => {
-    if (url.startsWith("http")) {
-      return url;
+  const getAudioUrl = useCallback((url: string): string => {
+    if (!url || url.trim() === "") {
+      console.error("[AudioPlayer] Empty audio URL provided");
+      return "";
     }
-    const { data } = supabase.storage.from("tracks").getPublicUrl(url);
-    return data.publicUrl;
+    
+    const trimmedUrl = url.trim();
+    
+    // Already a full URL
+    if (trimmedUrl.startsWith("http://") || trimmedUrl.startsWith("https://")) {
+      return trimmedUrl;
+    }
+    
+    // Relative path - convert to full Supabase storage URL
+    const { data } = supabase.storage.from("tracks").getPublicUrl(trimmedUrl);
+    const publicUrl = data.publicUrl;
+    
+    console.log("[AudioPlayer] Resolved relative URL:", { 
+      original: url, 
+      resolved: publicUrl 
+    });
+    
+    return publicUrl;
   }, []);
 
   const playTrackInternal = useCallback(async (track: AudioTrack, forcePreviewCheck = true) => {
@@ -532,11 +558,26 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     const resolvedUrl = getAudioUrl(audioUrl);
     
     // Validate the resolved URL
-    if (!resolvedUrl || !resolvedUrl.startsWith('http')) {
-      console.error("Invalid audio URL after resolution:", resolvedUrl, "for track:", track.id);
+    if (!resolvedUrl || (!resolvedUrl.startsWith('http://') && !resolvedUrl.startsWith('https://'))) {
+      console.error("[AudioPlayer] Invalid audio URL after resolution:", {
+        trackId: track.id,
+        trackTitle: track.title,
+        originalUrl: audioUrl,
+        resolvedUrl: resolvedUrl,
+      });
+      setAudioError("Invalid audio URL");
       setIsBuffering(false);
       return;
     }
+    
+    // Clear any previous error
+    setAudioError(null);
+    
+    console.log("[AudioPlayer] Playing track:", {
+      id: track.id,
+      title: track.title,
+      audioUrl: resolvedUrl.substring(0, 80) + "...",
+    });
     
     // Set UI state immediately (before any async)
     setIsPlaying(true);
@@ -562,23 +603,45 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     // Set audio source and play - MUST be synchronous with gesture
     audio.src = resolvedUrl;
     
+    // Add one-time error handler for this specific load
+    const handleLoadError = () => {
+      console.error("[AudioPlayer] Failed to load audio:", {
+        trackId: track.id,
+        trackTitle: track.title,
+        src: audio.src,
+        error: audio.error ? {
+          code: audio.error.code,
+          message: audio.error.message,
+        } : 'Unknown error',
+      });
+      setIsPlaying(false);
+      setIsBuffering(false);
+      audio.removeEventListener('error', handleLoadError);
+    };
+    audio.addEventListener('error', handleLoadError, { once: true });
+    
     // Single play call - Safari gets confused with multiple attempts
     const playPromise = audio.play();
     if (playPromise !== undefined) {
       playPromise
         .then(() => {
           isAudioUnlockedRef.current = true;
-          console.log("Playback started successfully for:", track.title);
+          audio.removeEventListener('error', handleLoadError);
+          console.log("[AudioPlayer] Playback started successfully:", track.title);
         })
         .catch((err) => {
-          console.error("Playback error for track:", track.title, err.name, err.message);
+          console.error("[AudioPlayer] Play promise rejected:", {
+            trackTitle: track.title,
+            errorName: err.name,
+            errorMessage: err.message,
+          });
           if (err.name === 'NotAllowedError') {
             // Safari blocked - show tap to play overlay
             setIsPlaybackBlocked(true);
             setIsPlaying(false);
-          } else if (err.name === 'NotSupportedError') {
-            // Audio format not supported or bad URL
-            console.error("Audio source not supported:", resolvedUrl);
+          } else if (err.name === 'NotSupportedError' || err.name === 'AbortError') {
+            // Audio format not supported or load was aborted
+            console.error("[AudioPlayer] Audio source issue:", resolvedUrl);
             setIsPlaying(false);
           }
           setIsBuffering(false);
@@ -904,6 +967,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     setIsPreviewMode(false);
     setShowPreviewEndedModal(false);
     setIsPlaybackBlocked(false);
+    setAudioError(null);
   }, []);
 
   return (
@@ -912,6 +976,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         currentTrack,
         isPlaying,
         isBuffering,
+        audioError,
         isPlaybackBlocked,
         currentTime,
         duration,
@@ -961,6 +1026,7 @@ const defaultAudioPlayerContext: AudioPlayerContextType = {
   currentTrack: null,
   isPlaying: false,
   isBuffering: false,
+  audioError: null,
   isPlaybackBlocked: false,
   currentTime: 0,
   duration: 0,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform, Clock, FolderPlus, Hand } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform, Clock, FolderPlus, Hand, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -127,6 +127,7 @@ export function GlobalAudioPlayer() {
     currentTrack,
     isPlaying,
     isBuffering,
+    audioError,
     currentTime,
     duration,
     volume,
@@ -580,6 +581,39 @@ export function GlobalAudioPlayer() {
               <Play className="w-5 h-5 mr-2" />
               Start Playing
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Audio Error Overlay */}
+      {audioError && !isPlaybackBlocked && (
+        <div 
+          className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200"
+        >
+          <div className="text-center p-8 rounded-2xl glass-card border border-destructive/30 max-w-xs mx-4 animate-in scale-in duration-300">
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-destructive/20 flex items-center justify-center">
+              <AlertCircle className="w-10 h-10 text-destructive" />
+            </div>
+            <h3 className="text-xl font-semibold text-foreground mb-2">Playback Error</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {audioError}
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Button 
+                variant="outline"
+                onClick={closePlayer}
+              >
+                <X className="w-4 h-4 mr-2" />
+                Close
+              </Button>
+              <Button 
+                className="bg-primary hover:bg-primary/90"
+                onClick={retryPlayback}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry
+              </Button>
+            </div>
           </div>
         </div>
       )}
