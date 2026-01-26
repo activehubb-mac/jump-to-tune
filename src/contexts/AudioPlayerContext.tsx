@@ -6,11 +6,13 @@ const RECENTLY_PLAYED_KEY = "jumtunes_recently_played";
 const MAX_RECENTLY_PLAYED = 20;
 const DEFAULT_PREVIEW_LIMIT_SECONDS = 30;
 
-// Helper to save recently played track
+// Helper to save recently played track - includes audio_url for iOS playback
 const saveToRecentlyPlayed = (track: { 
   id: string; 
   title: string; 
   cover_art_url: string | null;
+  audio_url?: string;
+  duration?: number | null;
   artist?: { id: string; display_name: string | null };
 }) => {
   try {
@@ -20,13 +22,15 @@ const saveToRecentlyPlayed = (track: {
     // Remove if already exists
     existing = existing.filter((t: { id: string }) => t.id !== track.id);
     
-    // Add to front with timestamp
+    // Add to front with timestamp - include audio_url for iOS gesture chain
     const newTrack = {
       id: track.id,
       title: track.title,
       cover_art_url: track.cover_art_url,
       artist_id: track.artist?.id || "",
       artist_name: track.artist?.display_name || null,
+      audio_url: track.audio_url || null,
+      duration: track.duration || null,
       playedAt: Date.now(),
     };
     
@@ -374,7 +378,8 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     // Reset blocked state
     setIsPlaybackBlocked(false);
     
-    // Use canplaythrough event for more reliable playback on iOS
+    // Use loadedmetadata event - more reliable on iOS 17.4+
+    // canplaythrough often fails to fire on iOS, causing infinite buffering
     const startPlayback = () => {
       audio.play()
         .then(() => {
@@ -382,18 +387,17 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         })
         .catch((err) => {
           console.error("Playback failed:", err);
-          // On iOS, if play fails due to user interaction requirement, show tap to play
           if (err.name === 'NotAllowedError') {
             setIsPlaybackBlocked(true);
           }
           setIsBuffering(false);
         });
-      audio.removeEventListener('canplaythrough', startPlayback);
+      audio.removeEventListener('loadedmetadata', startPlayback);
     };
     
     // If already unlocked and can play, start immediately
     if (isAudioUnlockedRef.current) {
-      audio.addEventListener('canplaythrough', startPlayback, { once: true });
+      audio.addEventListener('loadedmetadata', startPlayback, { once: true });
       // Also try immediate play in case audio is already ready
       audio.play()
         .then(() => {
@@ -404,11 +408,10 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
             setIsPlaybackBlocked(true);
             setIsBuffering(false);
           }
-          // Will be handled by canplaythrough event otherwise
         });
     } else {
-      // First time - wait for canplaythrough
-      audio.addEventListener('canplaythrough', startPlayback, { once: true });
+      // First time - wait for loadedmetadata
+      audio.addEventListener('loadedmetadata', startPlayback, { once: true });
     }
   }, [getAudioUrl, ensureAudioElement, checkFullAccess]);
 
@@ -471,9 +474,9 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       return;
     }
 
-    // CRITICAL FOR iOS: Unlock audio and immediately start playback
-    // This must happen synchronously within the user gesture context
-    await unlockAudioForIOS();
+    // CRITICAL FOR iOS: Unlock audio synchronously within user gesture
+    // Do NOT await - must preserve gesture chain for Safari/WKWebView
+    unlockAudioForIOS();
     
     // Immediately set audio source and start loading (preserve gesture)
     const audioUrl = track.audio_url || "";

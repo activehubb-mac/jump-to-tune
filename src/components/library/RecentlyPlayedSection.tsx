@@ -14,11 +14,13 @@ export function RecentlyPlayedSection() {
     if (currentTrack?.id === track.id) {
       togglePlayPause();
     } else {
+      // Pass actual audio_url if available (iOS needs this for gesture chain)
       playTrack({
         id: track.id,
         title: track.title,
-        audio_url: "", // Will be fetched when played
+        audio_url: track.audio_url || "", // Use stored URL if available
         cover_art_url: track.cover_art_url,
+        duration: track.duration,
         artist: {
           id: track.artist_id,
           display_name: track.artist_name,
