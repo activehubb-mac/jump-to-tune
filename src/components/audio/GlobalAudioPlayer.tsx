@@ -558,23 +558,23 @@ export function GlobalAudioPlayer() {
         </div>
       )}
 
-      {/* iOS Tap to Play Overlay */}
+      {/* iOS/Safari Tap to Play Overlay */}
       {isPlaybackBlocked && (
         <div 
           className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200"
           onClick={retryPlayback}
         >
           <div className="text-center p-8 rounded-2xl glass-card border border-glass-border/30 max-w-xs mx-4 animate-in scale-in duration-300">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full gradient-accent flex items-center justify-center neon-glow">
-              <Hand className="w-10 h-10 text-white animate-pulse" />
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+              <Hand className="w-10 h-10 text-primary-foreground animate-pulse" />
             </div>
             <h3 className="text-xl font-semibold text-foreground mb-2">Tap to Play</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              iOS requires a tap to start audio playback
+              Safari requires a tap to start audio playback
             </p>
             <Button 
               size="lg" 
-              className="gradient-accent neon-glow-subtle"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
               onClick={retryPlayback}
             >
               <Play className="w-5 h-5 mr-2" />
@@ -677,7 +677,7 @@ export function GlobalAudioPlayer() {
 
                 <Button
                   size="icon"
-                  className="rounded-full w-10 h-10 gradient-accent neon-glow-subtle flex-shrink-0"
+                  className="rounded-full w-10 h-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 flex-shrink-0"
                   onClick={handlePlayPause}
                   disabled={isBuffering}
                 >
@@ -793,7 +793,7 @@ export function GlobalAudioPlayer() {
               </Button>
               <Button
                 size="icon"
-                className="rounded-full w-10 h-10 gradient-accent neon-glow-subtle flex-shrink-0"
+                className="rounded-full w-10 h-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 flex-shrink-0"
                 onClick={handlePlayPause}
                 disabled={isBuffering}
               >
