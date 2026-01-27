@@ -118,13 +118,13 @@ export function HeroCarousel() {
                               </span>
                             )}
                           </div>
-                          <h3 className="text-xl font-bold text-foreground truncate">
+                          <h3 className="text-xl font-bold text-white truncate drop-shadow-md">
                             {item.title}
                           </h3>
                           <Link
                             to={`/artist/${item.artist_id}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                            className="text-sm text-white/80 hover:text-white transition-colors drop-shadow-sm"
                           >
                             {item.subtitle}
                           </Link>
@@ -188,10 +188,10 @@ export function HeroCarousel() {
                         <Users className="w-4 h-4 text-primary" />
                         <span className="text-xs text-primary font-medium">Artist</span>
                       </div>
-                      <h3 className="text-xl font-bold text-foreground truncate">
+                      <h3 className="text-xl font-bold text-white truncate drop-shadow-md">
                         {item.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground">{item.subtitle}</p>
+                      <p className="text-sm text-white/70 drop-shadow-sm">{item.subtitle}</p>
                     </div>
                   </Link>
                 )}
