@@ -136,6 +136,9 @@ export default function UserProfile() {
         <BannerUpload
           userId={user.id}
           currentBannerUrl={profile.banner_image_url}
+          onUploadSuccess={async () => {
+            // Profile will auto-refresh via the hook
+          }}
           className="relative h-64 md:h-80 overflow-hidden"
         >
           {/* Fallback gradient if no banner */}
