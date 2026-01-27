@@ -24,17 +24,17 @@
     --popover: 0 0% 100%;             /* #FFFFFF */
     --popover-foreground: 0 0% 10%;   /* #1A1A1A */
 
-    /* Brand Colors - Smoke-compatible Slate & Teal palette */
-    --primary: 210 40% 40%;           /* Slate blue - professional, calm */
+    /* Brand Colors - Muted for light theme */
+    --primary: 270 55% 45%;           /* Darker, less saturated purple */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 170 45% 42%;         /* Teal - fresh, modern */
+    --secondary: 217 70% 50%;         /* Calmer blue */
     --secondary-foreground: 0 0% 100%;
 
     --muted: 0 0% 85%;                /* #DADADA */
     --muted-foreground: 0 0% 45%;     /* Medium gray */
 
-    --accent: 25 55% 50%;             /* Warm copper - premium feel */
+    --accent: 330 65% 50%;            /* Muted pink */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -42,26 +42,26 @@
 
     --border: 0 0% 85%;               /* #DADADA */
     --input: 0 0% 90%;                /* Slightly darker for inputs */
-    --ring: 210 40% 40%;              /* Slate focus ring */
+    --ring: 270 70% 50%;              /* Purple focus ring */
 
     --radius: 0.75rem;
 
-    /* Updated JumTunes tokens - Slate & Teal */
-    --neon-glow: 210 40% 40%;         /* Match primary */
-    --electric-blue: 170 45% 42%;     /* Match secondary */
-    --deep-purple: 210 40% 35%;       /* Darker primary */
+    /* Updated JumTunes tokens for light theme */
+    --neon-glow: 270 70% 50%;         /* Use primary for glow */
+    --electric-blue: 217 91% 60%;
+    --deep-purple: 270 70% 45%;
     --glass: 0 0% 92%;                /* Light glass effect */
     --glass-border: 0 0% 80%;         /* Visible border on light */
 
     /* Sidebar - Light theme */
     --sidebar-background: 0 0% 92%;
     --sidebar-foreground: 0 0% 10%;
-    --sidebar-primary: 210 40% 40%;
+    --sidebar-primary: 270 70% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 88%;
     --sidebar-accent-foreground: 0 0% 10%;
     --sidebar-border: 0 0% 85%;
-    --sidebar-ring: 210 40% 40%;
+    --sidebar-ring: 270 70% 50%;
   }
 }
 

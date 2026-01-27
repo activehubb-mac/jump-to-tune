@@ -31,8 +31,8 @@ export function useConfetti() {
         });
       }
 
-      // Slate & Teal theme matching JumTunes smoke-gray
-      const colors = ["#3D5A73", "#3B8A7A", "#C27A45", "#527A8A"];
+      // Purple and pink theme matching JumTunes
+      const colors = ["#8b5cf6", "#ec4899", "#3b82f6", "#a855f7"];
 
       fire(0.25, {
         spread: 26,

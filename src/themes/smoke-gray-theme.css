@@ -1,6 +1,5 @@
-/* JumTunes Smoke Gray Theme - Slate & Teal Palette
+/* JumTunes Smoke Gray Theme Backup
    Created: 2026-01-27
-   Updated: 2026-01-27 (Slate & Teal accent colors)
    Purpose: Clean, modern, premium light theme
    
    To restore: Copy the :root section to src/index.css
@@ -17,17 +16,17 @@
   --popover: 0 0% 100%;             /* #FFFFFF */
   --popover-foreground: 0 0% 10%;   /* #1A1A1A */
 
-  /* Brand Colors - Slate & Teal Palette */
-  --primary: 210 40% 40%;           /* #3D5A73 - Slate blue */
+  /* Brand Colors */
+  --primary: 270 70% 50%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 170 45% 42%;         /* #3B8A7A - Teal */
+  --secondary: 217 91% 60%;
   --secondary-foreground: 0 0% 100%;
 
   --muted: 0 0% 85%;                /* #DADADA */
   --muted-foreground: 0 0% 45%;     /* Medium gray */
 
-  --accent: 25 55% 50%;             /* #C27A45 - Warm copper */
+  --accent: 330 85% 60%;
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84% 60%;
@@ -35,42 +34,24 @@
 
   --border: 0 0% 85%;               /* #DADADA */
   --input: 0 0% 90%;
-  --ring: 210 40% 40%;              /* Slate focus ring */
+  --ring: 270 70% 50%;
 
   --radius: 0.75rem;
 
-  /* JumTunes tokens - Slate & Teal */
-  --neon-glow: 210 40% 40%;
-  --electric-blue: 170 45% 42%;
-  --deep-purple: 210 40% 35%;
+  /* JumTunes tokens */
+  --neon-glow: 270 70% 50%;
+  --electric-blue: 217 91% 60%;
+  --deep-purple: 270 70% 45%;
   --glass: 0 0% 92%;
   --glass-border: 0 0% 80%;
 
   /* Sidebar */
   --sidebar-background: 0 0% 92%;
   --sidebar-foreground: 0 0% 10%;
-  --sidebar-primary: 210 40% 40%;
+  --sidebar-primary: 270 70% 50%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 0 0% 88%;
   --sidebar-accent-foreground: 0 0% 10%;
   --sidebar-border: 0 0% 85%;
-  --sidebar-ring: 210 40% 40%;
+  --sidebar-ring: 270 70% 50%;
 }
-
-/* Color Reference:
-   ================
-   
-   Primary (Slate Blue): #3D5A73 - Buttons, links, active states
-   Secondary (Teal): #3B8A7A - Icons, secondary actions
-   Accent (Copper): #C27A45 - CTAs, highlights, badges
-   
-   Gradients:
-   - gradient-primary: Slate → Teal
-   - gradient-accent: Slate → Copper
-   - text-gradient: Slate → Copper
-   
-   Contrast Ratios (on #F2F2F2):
-   - Slate: 5.8:1 (WCAG AA ✓)
-   - Teal: 4.6:1 (WCAG AA ✓)
-   - Copper: 4.5:1 (WCAG AA ✓)
-*/
