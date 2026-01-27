@@ -200,14 +200,14 @@ export function FeaturedHeroCarousel() {
             </div>
             <h3 
               key={currentTrack.id + "-title"}
-              className="text-xl md:text-3xl font-bold text-foreground truncate mb-1 animate-fade-in drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
+              className="text-xl md:text-3xl font-bold text-white truncate mb-1 animate-fade-in drop-shadow-md"
             >
               {currentTrack.title}
             </h3>
             <Link
               key={currentTrack.id + "-artist"}
               to={`/artist/${currentTrack.artist_id}`}
-              className="text-sm md:text-base text-muted-foreground hover:text-primary transition-colors animate-fade-in drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
+              className="text-sm md:text-base text-white/80 hover:text-white transition-colors animate-fade-in drop-shadow-sm"
               style={{ animationDelay: "0.1s" }}
             >
               {currentTrack.artist_name || "Unknown Artist"}
