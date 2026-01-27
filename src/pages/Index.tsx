@@ -887,9 +887,9 @@ export default function Index() {
   return <Layout>
       <div className="animate-fade-in">
       {/* Hero Section - Split Layout */}
-      <section className="relative min-h-[85vh] flex items-center overflow-hidden py-12 md:py-0">
+      <section className="relative min-h-[85vh] flex items-center overflow-hidden py-12 md:py-0 my-0">
         {/* Background Effects */}
-        <div className="absolute inset-0 overflow-hidden mx-0 my-[40px]">
+        <div className="absolute inset-0 overflow-hidden mx-0 my-0">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[150px] animate-pulse-glow" />
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-[150px] animate-pulse-glow" style={{
             animationDelay: "1s"
