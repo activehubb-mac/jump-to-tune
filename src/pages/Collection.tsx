@@ -1,14 +1,13 @@
 import { useState, useMemo, useCallback } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Loader2, Lock, Plus, Search, User } from "lucide-react";
+import { Loader2, Lock, Plus, User } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCollectionStats, useOwnedTracks } from "@/hooks/useCollectionStats";
 import { useLikedTracks } from "@/hooks/useLikes";
 import { useFollowedArtists } from "@/hooks/useFollows";
 import { usePlaylists } from "@/hooks/usePlaylists";
-import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { usePurchases } from "@/hooks/usePurchases";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { CreatePlaylistModal } from "@/components/playlist/CreatePlaylistModal";
@@ -20,8 +19,11 @@ import { LibraryListItem, LibraryItemType } from "@/components/library/LibraryLi
 import { SwipeableLibraryItem } from "@/components/library/SwipeableLibraryItem";
 import { OwnedTrackCard } from "@/components/library/OwnedTrackCard";
 import { PlaylistCard } from "@/components/playlist/PlaylistCard";
+import { RecentlyPlayedCarousel } from "@/components/library/RecentlyPlayedCarousel";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 interface UnifiedLibraryItem {
   id: string;
@@ -47,6 +49,14 @@ interface UnifiedLibraryItem {
   creator?: string;
 }
 
+interface OwnedAlbum {
+  id: string;
+  title: string;
+  cover_art_url: string | null;
+  artist_name: string | null;
+  trackCount: number;
+}
+
 export default function Collection() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialFilter = (searchParams.get("filter") as LibraryFilter) || "all";
@@ -67,6 +77,56 @@ export default function Collection() {
   
   const { isOwned } = usePurchases();
   const { showFeedback } = useFeedbackSafe();
+
+  // Fetch albums from owned tracks
+  const albumIds = useMemo(() => {
+    if (!ownedTracks) return [];
+    const ids = ownedTracks
+      .filter(p => p.track?.album_id)
+      .map(p => p.track!.album_id!);
+    return [...new Set(ids)];
+  }, [ownedTracks]);
+
+  const { data: ownedAlbums, isLoading: albumsLoading } = useQuery({
+    queryKey: ["owned-albums", albumIds],
+    queryFn: async (): Promise<OwnedAlbum[]> => {
+      if (albumIds.length === 0) return [];
+
+      const { data: albums, error } = await supabase
+        .from("albums")
+        .select("id, title, cover_art_url, artist_id")
+        .in("id", albumIds);
+
+      if (error) throw error;
+      if (!albums || albums.length === 0) return [];
+
+      // Get artist names
+      const artistIds = [...new Set(albums.map(a => a.artist_id))];
+      const { data: artists } = await supabase
+        .from("profiles_public")
+        .select("id, display_name")
+        .in("id", artistIds);
+
+      const artistMap = new Map(artists?.map(a => [a.id, a.display_name]) || []);
+
+      // Count tracks per album from owned tracks
+      const trackCountMap = new Map<string, number>();
+      ownedTracks?.forEach(p => {
+        if (p.track?.album_id) {
+          trackCountMap.set(p.track.album_id, (trackCountMap.get(p.track.album_id) || 0) + 1);
+        }
+      });
+
+      return albums.map(album => ({
+        id: album.id,
+        title: album.title,
+        cover_art_url: album.cover_art_url,
+        artist_name: artistMap.get(album.artist_id) || "Unknown Artist",
+        trackCount: trackCountMap.get(album.id) || 0,
+      }));
+    },
+    enabled: albumIds.length > 0,
+  });
 
   // Update URL when filter changes
   const handleFilterChange = useCallback((filter: LibraryFilter) => {
@@ -184,8 +244,8 @@ export default function Collection() {
         items = items.filter(i => i.type === "playlist" || i.type === "liked-songs");
         break;
       case "albums":
-        items = items.filter(i => i.type === "album");
-        break;
+        // Albums filter is handled separately
+        return [];
       case "artists":
         items = items.filter(i => i.type === "artist");
         break;
@@ -286,7 +346,75 @@ export default function Collection() {
     );
   }
 
-  const isDataLoading = statsLoading || tracksLoading || likedLoading || followingLoading || playlistsLoading;
+  const isDataLoading = statsLoading || tracksLoading || likedLoading || followingLoading || playlistsLoading || albumsLoading;
+
+  // Render albums grid when filter is "albums"
+  const renderAlbumsGrid = () => {
+    if (!ownedAlbums || ownedAlbums.length === 0) {
+      return (
+        <div className="text-center py-12 text-muted-foreground">
+          No albums from owned tracks yet
+        </div>
+      );
+    }
+
+    const filteredAlbums = searchQuery
+      ? ownedAlbums.filter(a => 
+          a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (a.artist_name?.toLowerCase().includes(searchQuery.toLowerCase()))
+        )
+      : ownedAlbums;
+
+    if (viewMode === "grid") {
+      return (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {filteredAlbums.map((album) => (
+            <Link
+              key={album.id}
+              to={`/album/${album.id}`}
+              className="glass-card p-4 group hover:bg-primary/10 transition-all"
+            >
+              <div className="aspect-square rounded-lg bg-muted/50 mb-3 overflow-hidden">
+                {album.cover_art_url ? (
+                  <img
+                    src={album.cover_art_url}
+                    alt={album.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-4xl">💿</span>
+                  </div>
+                )}
+              </div>
+              <h3 className="font-semibold text-foreground truncate">{album.title}</h3>
+              <p className="text-sm text-muted-foreground truncate">
+                {album.artist_name} • {album.trackCount} track{album.trackCount !== 1 ? "s" : ""}
+              </p>
+            </Link>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-1">
+        {filteredAlbums.map((album) => (
+          <LibraryListItem
+            key={album.id}
+            id={album.id}
+            title={album.title}
+            subtitle={`${album.artist_name} • ${album.trackCount} track${album.trackCount !== 1 ? "s" : ""}`}
+            type="album"
+            imageUrl={album.cover_art_url}
+            trackCount={album.trackCount}
+            linkTo={`/album/${album.id}`}
+          />
+        ))}
+      </div>
+    );
+  };
 
   // Render liked tracks grid when filter is "liked"
   const renderLikedTracksGrid = () => {
@@ -344,6 +472,10 @@ export default function Collection() {
 
   // Render grid view
   const renderGridView = () => {
+    if (activeFilter === "albums") {
+      return renderAlbumsGrid();
+    }
+
     if (activeFilter === "liked") {
       return renderLikedTracksGrid();
     }
@@ -428,6 +560,10 @@ export default function Collection() {
 
   // Render list view
   const renderListView = () => {
+    if (activeFilter === "albums") {
+      return renderAlbumsGrid();
+    }
+
     if (activeFilter === "liked") {
       return renderLikedTracksGrid();
     }
@@ -511,6 +647,9 @@ export default function Collection() {
             </div>
           </div>
 
+          {/* Recently Played Carousel */}
+          <RecentlyPlayedCarousel limit={10} showSeeAll={true} />
+
           {/* Filter Bar */}
           <div className="mb-2">
             <LibraryFilterBar
@@ -518,12 +657,12 @@ export default function Collection() {
               onFilterChange={handleFilterChange}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
-              onCreatePlaylist={() => setShowCreatePlaylist(true)}
               counts={{
                 playlists: playlists.length,
                 owned: ownedTracks?.length,
                 liked: likedTracks?.length,
                 artists: followedArtists?.length,
+                albums: ownedAlbums?.length,
               }}
             />
           </div>
