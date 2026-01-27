@@ -78,7 +78,7 @@
 
 @layer utilities {
   .glass {
-    @apply bg-card/80;
+    @apply bg-card;
   }
 
   .glass-card {
