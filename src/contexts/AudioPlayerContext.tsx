@@ -6,6 +6,9 @@ const RECENTLY_PLAYED_KEY = "jumtunes_recently_played";
 const MAX_RECENTLY_PLAYED = 20;
 const DEFAULT_PREVIEW_LIMIT_SECONDS = 30;
 
+// Silent WAV data URI for Safari unlock (separate element)
+const SILENT_DATA_URI = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+
 // Helper to save recently played track (includes audio_url for Safari gesture chain)
 const saveToRecentlyPlayed = (track: { 
   id: string; 
@@ -112,6 +115,14 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const bufferingRecoveryTimerRef = useRef<number | null>(null);
   const lastRecoverySrcRef = useRef<string | null>(null);
   const currentTrackRef = useRef<AudioTrack | null>(null);
+  
+  // Phase C: Play request token to prevent race conditions
+  const playRequestIdRef = useRef(0);
+  
+  // Phase D: Watchdog refs for stalled playback detection
+  const lastTimeUpdateRef = useRef<number>(0);
+  const lastCurrentTimeRef = useRef<number>(0);
+  const watchdogTimerRef = useRef<number | null>(null);
 
   const isSafari = (() => {
     if (typeof navigator === "undefined") return false;
@@ -119,6 +130,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     // Safari: has "Safari" but not Chrome/Chromium/Android
     return /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|Android/i.test(ua);
   })();
+  
   const [currentTrack, setCurrentTrack] = useState<AudioTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
@@ -203,44 +215,86 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     ? Math.max(0, currentPreviewLimit - currentTime)
     : 0;
 
-  // Safari/iOS audio unlock - must be called synchronously during user gesture
-  // This primes the audio element to allow future play() calls
-  const unlockAudio = useCallback((audio: HTMLAudioElement) => {
-    if (audioUnlockedRef.current) return;
-    
-    // Safari requires an actual src to be set before play() works
-    // Use a tiny silent audio data URI to unlock
-    const silentDataUri = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+  // Phase A: Safari/iOS audio unlock using SEPARATE throwaway element
+  // This NEVER touches audioRef.current.src - completely isolated
+  const unlockAudioEngine = useCallback(() => {
+    if (audioUnlockedRef.current) {
+      return; // Already unlocked
+    }
     
     try {
-      const prevSrc = audio.src;
-      const prevMuted = audio.muted;
+      // Create a completely separate throwaway audio element
+      const unlocker = new Audio(SILENT_DATA_URI);
+      unlocker.muted = true;
+      unlocker.volume = 0;
       
-      audio.muted = true;
-      audio.src = silentDataUri;
-      
-      const playPromise = audio.play();
+      const playPromise = unlocker.play();
       if (playPromise !== undefined) {
-        playPromise.then(() => {
-          audio.pause();
-          audioUnlockedRef.current = true;
-          audio.muted = prevMuted;
-          // Restore previous src if there was one
-          if (prevSrc && prevSrc !== silentDataUri) {
-            audio.src = prevSrc;
-          }
-          console.log("[Audio] Safari audio unlocked successfully");
-        }).catch((e) => {
-          audio.muted = prevMuted;
-          // Restore previous src
-          if (prevSrc && prevSrc !== silentDataUri) {
-            audio.src = prevSrc;
-          }
-          console.log("[Audio] Safari unlock attempt completed:", e?.name || "unknown");
-        });
+        playPromise
+          .then(() => {
+            unlocker.pause();
+            audioUnlockedRef.current = true;
+            console.log("[Audio] Safari audio engine unlocked via separate element");
+          })
+          .catch((e) => {
+            // Mark as unlocked anyway to prevent infinite retries
+            // The real play will fail with NotAllowedError if truly blocked
+            audioUnlockedRef.current = true;
+            console.log("[Audio] Safari unlock attempt completed:", e?.name || "unknown");
+          });
+      } else {
+        audioUnlockedRef.current = true;
       }
     } catch (e) {
-      console.log("[Audio] Unlock error:", e);
+      // Mark as unlocked to prevent retries
+      audioUnlockedRef.current = true;
+      console.log("[Audio] Unlock error (non-fatal):", e);
+    }
+  }, []);
+
+  // Phase C: Safe play with AbortError handling and retry logic
+  const safePlay = useCallback(async (audio: HTMLAudioElement, requestId: number): Promise<boolean> => {
+    try {
+      await audio.play();
+      return true;
+    } catch (error: any) {
+      // Check if this request is still current
+      if (requestId !== playRequestIdRef.current) {
+        console.log("[Audio] Play request superseded, ignoring error");
+        return false;
+      }
+      
+      if (error?.name === "AbortError") {
+        // Safari race condition - play was interrupted by pause/src change
+        // This is expected during rapid interactions, retry once after brief delay
+        console.log("[Audio] AbortError detected, will retry in 50ms");
+        
+        return new Promise((resolve) => {
+          setTimeout(async () => {
+            // Verify we're still the current request and user still wants to play
+            if (requestId !== playRequestIdRef.current) {
+              resolve(false);
+              return;
+            }
+            
+            // Only retry if audio is paused (user didn't manually pause)
+            if (audio.paused && audio.src && !audio.src.startsWith("data:")) {
+              try {
+                await audio.play();
+                resolve(true);
+              } catch (retryError: any) {
+                console.warn("[Audio] Retry also failed:", retryError?.name);
+                resolve(false);
+              }
+            } else {
+              resolve(false);
+            }
+          }, 50);
+        });
+      }
+      
+      // Re-throw other errors for normal handling
+      throw error;
     }
   }, []);
 
@@ -257,7 +311,12 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     // Note: Removing crossOrigin as it can cause CORS issues with Supabase storage on Safari
 
     audio.addEventListener("timeupdate", () => {
-      setCurrentTime(audio.currentTime || 0);
+      const time = audio.currentTime || 0;
+      setCurrentTime(time);
+      
+      // Phase D: Update watchdog tracking
+      lastTimeUpdateRef.current = Date.now();
+      lastCurrentTimeRef.current = time;
     });
 
     const syncDuration = () => {
@@ -273,6 +332,13 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     audio.addEventListener("play", () => {
       setIsPlaying(true);
       setIsBuffering(false);
+    });
+
+    // Phase D: Use "playing" event for more reliable state (fires when actually producing audio)
+    audio.addEventListener("playing", () => {
+      setIsPlaying(true);
+      setIsBuffering(false);
+      lastTimeUpdateRef.current = Date.now();
     });
 
     audio.addEventListener("pause", () => {
@@ -383,7 +449,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
           (error?.code === 3 || error?.code === 2) && 
           !safariRetryAttemptedRef.current) {
         const currentSrc = audio.src;
-        if (currentSrc && !currentSrc.includes('_nocache=')) {
+        if (currentSrc && !currentSrc.includes('_nocache=') && !currentSrc.startsWith('data:')) {
           console.log("[Audio] Safari cache-busting retry for decode/network error");
           safariRetryAttemptedRef.current = true;
           const separator = currentSrc.includes('?') ? '&' : '?';
@@ -403,7 +469,58 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
     audioRef.current = audio;
     return audio;
-  }, []);
+  }, [isSafari]);
+
+  // Phase D: Watchdog to detect stalled playback and attempt recovery
+  useEffect(() => {
+    if (!isPlaying) {
+      // Clear watchdog when not playing
+      if (watchdogTimerRef.current) {
+        window.clearInterval(watchdogTimerRef.current);
+        watchdogTimerRef.current = null;
+      }
+      return;
+    }
+
+    // Start watchdog - check every 2 seconds
+    watchdogTimerRef.current = window.setInterval(() => {
+      const audio = audioRef.current;
+      if (!audio || audio.paused) return;
+
+      const now = Date.now();
+      const timeSinceUpdate = now - lastTimeUpdateRef.current;
+      
+      // If no timeupdate in 3+ seconds while supposedly playing, we're stalled
+      if (timeSinceUpdate > 3000) {
+        console.warn("[Audio] Watchdog: Playback appears stalled, attempting recovery");
+        
+        // Check audio state
+        if (audio.readyState < 3) {
+          // Not enough data - show buffering
+          setIsBuffering(true);
+        } else {
+          // Has data but not advancing - try nudging playback
+          const currentPos = audio.currentTime;
+          audio.currentTime = currentPos; // Nudge
+          audio.play().catch((e) => {
+            console.warn("[Audio] Watchdog recovery play failed:", e?.name);
+            // Set buffering to give user feedback
+            setIsBuffering(true);
+          });
+        }
+        
+        // Reset timer to prevent spam
+        lastTimeUpdateRef.current = now;
+      }
+    }, 2000);
+
+    return () => {
+      if (watchdogTimerRef.current) {
+        window.clearInterval(watchdogTimerRef.current);
+        watchdogTimerRef.current = null;
+      }
+    };
+  }, [isPlaying]);
 
   // Enforce preview limit
   useEffect(() => {
@@ -438,6 +555,9 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const playTrackSafari = useCallback((track: AudioTrack, audio: HTMLAudioElement, audioUrl: string) => {
     const resolvedUrl = getAudioUrl(audioUrl);
     
+    // Phase C: Increment play request ID to invalidate any pending requests
+    const requestId = ++playRequestIdRef.current;
+    
     // Clear any previous buffering recovery state
     if (bufferingRecoveryTimerRef.current) {
       window.clearTimeout(bufferingRecoveryTimerRef.current);
@@ -456,45 +576,51 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       // iOS may block this until metadata loads - that's fine
     }
     
-    // Play immediately to maintain gesture chain
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
+    // Phase D: Reset watchdog state
+    lastTimeUpdateRef.current = Date.now();
+    lastCurrentTimeRef.current = 0;
+    
+    // Play using safePlay for AbortError handling
+    safePlay(audio, requestId)
+      .then((success) => {
+        if (success) {
           console.log("[Audio] Playback started successfully");
           setIsBuffering(false);
-        })
-        .catch((error) => {
-          console.warn("[Audio] Safari play rejected:", error.name, "-", error.message);
+        }
+      })
+      .catch((error: any) => {
+        // Check if still current request
+        if (requestId !== playRequestIdRef.current) return;
+        
+        console.warn("[Audio] Safari play rejected:", error?.name, "-", error?.message);
+        
+        if (error?.name === "NotAllowedError") {
+          // Autoplay blocked - store for retry on next interaction
+          pendingPlayRef.current = { track, forcePreviewCheck: true };
+          setNeedsUserGesture(true);
+          setIsBuffering(false);
+        } else if (error?.name === "NotSupportedError") {
+          // Safari NotSupportedError - try alternative approach
+          console.log("[Audio] Trying Safari fallback approach...");
           
-          if (error.name === "NotAllowedError") {
-            // Autoplay blocked - store for retry on next interaction
-            pendingPlayRef.current = { track, forcePreviewCheck: true };
-            setNeedsUserGesture(true);
-            setIsBuffering(false);
-          } else if (error.name === "NotSupportedError") {
-            // Safari NotSupportedError - try alternative approach
-            console.log("[Audio] Trying Safari fallback approach...");
-            
-            // Reset and try with a slight delay (allows Safari to process the src)
-            setTimeout(() => {
-              if (audioRef.current && audioRef.current.src === resolvedUrl) {
-                audioRef.current.play().catch((retryError) => {
-                  console.warn("[Audio] Safari retry also failed:", retryError.name);
-                  pendingPlayRef.current = { track, forcePreviewCheck: true };
-                  setNeedsUserGesture(true);
-                  setIsBuffering(false);
-                });
-              }
-            }, 100);
-          } else {
-            // Other error - log and stop buffering
-            console.error("[Audio] Playback error:", error);
-            setIsBuffering(false);
-          }
-        });
-    }
-  }, [getAudioUrl]);
+          // Reset and try with a slight delay (allows Safari to process the src)
+          setTimeout(() => {
+            if (audioRef.current && audioRef.current.src === resolvedUrl && requestId === playRequestIdRef.current) {
+              audioRef.current.play().catch((retryError) => {
+                console.warn("[Audio] Safari retry also failed:", retryError?.name);
+                pendingPlayRef.current = { track, forcePreviewCheck: true };
+                setNeedsUserGesture(true);
+                setIsBuffering(false);
+              });
+            }
+          }, 100);
+        } else {
+          // Other error - log and stop buffering
+          console.error("[Audio] Playback error:", error);
+          setIsBuffering(false);
+        }
+      });
+  }, [getAudioUrl, safePlay]);
 
   // Async hydration that happens AFTER playback starts
   const hydrateTrackAsync = useCallback(async (track: AudioTrack, forcePreviewCheck: boolean) => {
@@ -601,7 +727,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
           audio.src = resolvedUrl;
           // Safari auto-loads when src changes, calling load() throws NotSupportedError
           audio.play().catch((e) => {
-            console.warn("[Audio] Play after hydration failed:", e.name, "-", e.message);
+            console.warn("[Audio] Play after hydration failed:", e?.name, "-", e?.message);
             if (e?.name === "NotAllowedError" || e?.name === "NotSupportedError") {
               pendingPlayRef.current = { track: hydratedTrack, forcePreviewCheck };
               setNeedsUserGesture(true);
@@ -673,6 +799,11 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         window.clearTimeout(bufferingRecoveryTimerRef.current);
         bufferingRecoveryTimerRef.current = null;
       }
+      
+      if (watchdogTimerRef.current) {
+        window.clearInterval(watchdogTimerRef.current);
+        watchdogTimerRef.current = null;
+      }
     };
   }, [ensureAudioElement]);
 
@@ -690,23 +821,24 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
     // Otherwise just try to play the current source
     setNeedsUserGesture(false);
-    audio.play().catch((e: any) => {
+    
+    // Phase C: Use safePlay for resume too
+    const requestId = ++playRequestIdRef.current;
+    safePlay(audio, requestId).catch((e: any) => {
       if (e?.name === "NotAllowedError") {
         setNeedsUserGesture(true);
         setIsBuffering(false);
       }
     });
-  }, [ensureAudioElement, playTrackInternal]);
+  }, [ensureAudioElement, playTrackInternal, safePlay]);
 
-  // Safari audio unlock: Listen for first user interaction to unlock audio
+  // Phase A & B: Safari audio unlock via FIRST user interaction only
+  // Uses separate element, runs ONCE, then removes listeners
   useEffect(() => {
     const handleUserInteraction = () => {
-      const audio = audioRef.current;
-      if (!audio) return;
-
-      // Try to unlock audio on first interaction
+      // Phase A: Unlock using separate element (never touches audioRef)
       if (!audioUnlockedRef.current) {
-        unlockAudio(audio);
+        unlockAudioEngine();
       }
 
       // If there's a pending play that failed due to NotAllowedError, retry it
@@ -728,7 +860,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       document.removeEventListener("touchstart", handleUserInteraction);
       document.removeEventListener("keydown", handleUserInteraction);
     };
-  }, [unlockAudio, playTrackInternal]);
+  }, [unlockAudioEngine, playTrackInternal]);
 
   // Clear access cache on user change
   useEffect(() => {
@@ -738,15 +870,17 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const playTrack = useCallback((track: AudioTrack) => {
     const audio = ensureAudioElement();
 
-    // Attempt to unlock audio on every playTrack call (will no-op if already unlocked)
-    unlockAudio(audio);
+    // Phase B: Do NOT call unlockAudio here anymore
+    // Unlock is handled once via user interaction listeners (separate element)
 
     // If same track, just toggle play/pause
     if (currentTrack?.id === track.id) {
       if (isPlaying) {
         audio.pause();
       } else {
-        audio.play().catch((e: any) => {
+        // Phase C: Use safePlay for resume
+        const requestId = ++playRequestIdRef.current;
+        safePlay(audio, requestId).catch((e: any) => {
           console.warn("[Audio] Toggle play failed:", e);
           if (e?.name === "NotAllowedError") {
             setNeedsUserGesture(true);
@@ -768,7 +902,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     }
 
     playTrackInternal(track);
-  }, [currentTrack?.id, isPlaying, queue, ensureAudioElement, playTrackInternal, unlockAudio]);
+  }, [currentTrack?.id, isPlaying, queue, ensureAudioElement, playTrackInternal, safePlay]);
 
   const addToQueue = useCallback((track: AudioTrack) => {
     // Don't add duplicates
@@ -843,7 +977,9 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     if (isPlaying) {
       audio.pause();
     } else {
-      audio.play().catch((e: any) => {
+      // Phase C: Use safePlay
+      const requestId = ++playRequestIdRef.current;
+      safePlay(audio, requestId).catch((e: any) => {
         console.error(e);
         if (e?.name === "NotAllowedError") {
           setNeedsUserGesture(true);
@@ -851,7 +987,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         }
       });
     }
-  }, [isPlaying, ensureAudioElement]);
+  }, [isPlaying, ensureAudioElement, safePlay]);
 
   const seek = useCallback((time: number) => {
     const audio = ensureAudioElement();
@@ -1026,7 +1162,10 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     if (audio) {
       audio.currentTime = 0;
       setCurrentTime(0);
-      audio.play().catch((e: any) => {
+      
+      // Phase C: Use safePlay
+      const requestId = ++playRequestIdRef.current;
+      safePlay(audio, requestId).catch((e: any) => {
         console.error(e);
         if (e?.name === "NotAllowedError") {
           setNeedsUserGesture(true);
@@ -1035,7 +1174,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       });
     }
     setShowPreviewEndedModal(false);
-  }, []);
+  }, [safePlay]);
 
   const closePlayer = useCallback(() => {
     const audio = audioRef.current;
