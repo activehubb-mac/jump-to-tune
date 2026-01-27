@@ -46,7 +46,7 @@ export function TrendingCarousel({ onAddToQueue }: TrendingCarouselProps) {
 
   if (isLoading) {
     return (
-      <section className="py-24">
+      <section className="py-10 md:py-14">
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-3 mb-8">
             <TrendingUp className="w-8 h-8 text-accent" />
@@ -62,7 +62,7 @@ export function TrendingCarousel({ onAddToQueue }: TrendingCarouselProps) {
 
   if (!trendingTracks || trendingTracks.length === 0) {
     return (
-      <section className="py-24">
+      <section className="py-10 md:py-14">
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-3 mb-8">
             <TrendingUp className="w-8 h-8 text-accent" />
@@ -85,7 +85,7 @@ export function TrendingCarousel({ onAddToQueue }: TrendingCarouselProps) {
   }
 
   return (
-    <section className="py-24">
+    <section className="py-10 md:py-14">
       <PremiumFeatureModal
         open={showPremiumModal}
         onOpenChange={setShowPremiumModal}
