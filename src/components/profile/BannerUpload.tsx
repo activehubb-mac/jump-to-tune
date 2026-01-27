@@ -111,9 +111,10 @@ export function BannerUpload({
             <span className="text-sm font-medium">{progress}%</span>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-2 text-white">
+          <div className="flex flex-col items-center gap-1 text-white">
             <Camera className="w-8 h-8" />
             <span className="text-sm font-medium">Change Banner</span>
+            <span className="text-xs text-white/70">Recommended: 1920×480px</span>
           </div>
         )}
       </button>
