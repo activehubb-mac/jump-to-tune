@@ -133,7 +133,7 @@ export function FeaturedHeroCarousel() {
 
   return (
     <div
-      className="relative w-full aspect-[4/3] md:aspect-video rounded-2xl overflow-hidden group"
+      className="relative w-full aspect-[4/3] md:aspect-video rounded-2xl overflow-hidden group border border-border shadow-lg"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -149,8 +149,8 @@ export function FeaturedHeroCarousel() {
           <div className="w-full h-full bg-muted" />
         )}
         {/* Gradient overlays for readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent" />
       </div>
 
       {/* Content */}
@@ -158,7 +158,7 @@ export function FeaturedHeroCarousel() {
         {/* Track Info */}
         <div className="flex items-end gap-4 md:gap-6">
           {/* Small Cover Art */}
-          <div className="relative flex-shrink-0 w-20 h-20 md:w-28 md:h-28 rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/20">
+          <div className="relative flex-shrink-0 w-20 h-20 md:w-28 md:h-28 rounded-xl overflow-hidden shadow-2xl ring-2 ring-border">
             {currentTrack.cover_art_url ? (
               <img
                 src={currentTrack.cover_art_url}
@@ -181,15 +181,15 @@ export function FeaturedHeroCarousel() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className={cn(
-                "text-xs font-medium px-2 py-0.5 rounded-full",
+                "text-xs font-semibold px-3 py-1 rounded-full border",
                 currentTrack.isFeatured 
-                  ? "bg-yellow-500/20 text-yellow-400"
-                  : "bg-primary/20 text-primary"
+                  ? "bg-card text-foreground border-border shadow-sm"
+                  : "bg-card text-foreground border-border shadow-sm"
               )}>
                 {currentTrack.isFeatured ? "FEATURED" : "TRENDING"}
               </span>
               {currentTrack.has_karaoke && (
-                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent/20 text-accent flex items-center gap-1">
+                <span className="text-xs font-semibold px-3 py-1 rounded-full bg-card text-foreground border border-border shadow-sm flex items-center gap-1">
                   <Mic2 className="w-3 h-3" />
                   Karaoke
                 </span>
@@ -229,10 +229,10 @@ export function FeaturedHeroCarousel() {
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
                 className={cn(
-                  "w-2 h-2 rounded-full transition-all duration-300",
+                  "w-2 h-2 rounded-full transition-all duration-300 border border-border/50",
                   idx === currentIndex
                     ? "w-8 bg-primary"
-                    : "bg-white/30 hover:bg-white/50"
+                    : "bg-card/80 hover:bg-card"
                 )}
               />
             ))}
@@ -242,13 +242,13 @@ export function FeaturedHeroCarousel() {
           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={goToPrev}
-              className="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/20 transition-colors"
+              className="w-10 h-10 rounded-full bg-card border border-border shadow-sm flex items-center justify-center hover:bg-muted transition-colors"
             >
               <ChevronLeft className="w-5 h-5 text-foreground" />
             </button>
             <button
               onClick={goToNext}
-              className="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/20 transition-colors"
+              className="w-10 h-10 rounded-full bg-card border border-border shadow-sm flex items-center justify-center hover:bg-muted transition-colors"
             >
               <ChevronRight className="w-5 h-5 text-foreground" />
             </button>
