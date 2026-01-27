@@ -1,54 +1,118 @@
 
-# Plan: Make All Home Page Cards Pop Out
 
-Based on my analysis of the codebase, I've identified all the cards and sections on the home page that need the subtle "pop out" styling to match what we already applied to the Featured Artists, Featured Labels, and Karaoke Promo sections.
+# Plan: Improve Trending Now Section Layout
 
-## Summary
+## The Problem
+The current Trending Now carousel has cramped cards with navigation arrows positioned far apart on the sides, making the layout feel cluttered and different from other sections like "Recently Played".
 
-Apply a consistent `bg-card border border-border shadow-sm` styling to all cards that currently blend with the background. Using `shadow-sm` instead of `shadow-md` for individual track cards to keep them subtle, while larger banner sections will use `shadow-md`.
+## Solution Overview
+Redesign the Trending Now section to use a more spacious horizontal scrollable layout (like RecentlyPlayedCarousel) with stacked navigation arrows grouped together in the header area for a cleaner look.
+
+## Design Approach
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│  ↗ Trending Now              [←] [→] [View All]              │
+│  The hottest tracks on JumTunes right now                    │
+├──────────────────────────────────────────────────────────────┤
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ │
+│  │         │ │         │ │         │ │         │ │         │ │
+│  │  Cover  │ │  Cover  │ │  Cover  │ │  Cover  │ │  Cover  │ │
+│  │         │ │         │ │         │ │         │ │         │ │
+│  ├─────────┤ ├─────────┤ ├─────────┤ ├─────────┤ ├─────────┤ │
+│  │ Title   │ │ Title   │ │ Title   │ │ Title   │ │ Title   │ │
+│  │ Artist  │ │ Artist  │ │ Artist  │ │ Artist  │ │ Artist  │ │
+│  │ $0.10   │ │ $0.10   │ │ $0.10   │ │ $0.10   │ │ $0.10   │ │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘ │
+│                                            (scrollable →→→)  │
+└──────────────────────────────────────────────────────────────┘
+```
 
 ## Changes Required
 
-### 1. Featured Tracks Section (Index.tsx)
-**Line 505** - Update the container from `bg-muted/30` to `bg-card border border-border shadow-md`
+### File: `src/components/home/TrendingCarousel.tsx`
 
-### 2. Trending Carousel Individual Cards (TrendingCarousel.tsx)
-**Lines 71 and 122** - Update skeleton and actual track cards from `glass-card` to include a subtle shadow:
-- Change `glass-card p-4` to `bg-card border border-border shadow-sm rounded-xl p-4`
+**1. Update the header layout** (lines 94-105)
+- Move navigation arrows into the header alongside the "View All" button
+- Group arrows together horizontally (stacked side-by-side)
+- Add ChevronLeft and ChevronRight icons
 
-### 3. Discover Artists Cards (Index.tsx)
-**Line 988** - Update recommended artist cards from `glass-card` to:
-- `bg-card border border-border shadow-sm rounded-xl p-4`
+**2. Replace Embla Carousel with horizontal scroll container** (lines 107-218)
+- Remove the Carousel, CarouselContent, CarouselItem components
+- Use a native horizontal scroll container (`overflow-x-auto`) like RecentlyPlayedCarousel
+- Apply smooth scrolling behavior
 
-### 4. Recently Played Cards (Index.tsx)
-**Line 1042** - Update recently played track cards from `glass-card` to:
-- `bg-card border border-border shadow-sm rounded-xl p-4`
+**3. Add scroll navigation functions**
+- Create `scrollRef` to reference the scroll container
+- Add `scrollLeft` and `scrollRight` functions that scroll by a fixed amount
 
-### 5. Features Section Cards (Index.tsx)
-**Line 1126** - Update feature cards from `glass-card` to:
-- `bg-card border border-border shadow-sm rounded-xl p-6`
+**4. Update card sizing**
+- Increase card width from responsive carousel sizing to fixed `w-44 md:w-48` for more breathing room
+- Cards will be larger and less cramped
 
-### 6. Role CTA Cards (Index.tsx)
-**Lines 1152, 1166, 1180** - Update Fan/Artist/Label signup cards from `glass-card` to:
-- `bg-card border border-border shadow-sm rounded-xl p-8`
+**5. Remove the outer `px-12` padding** (line 107)
+- The side padding was only needed for the carousel arrows
+- The horizontal scroll will use edge-to-edge scrolling with `px-4` inner padding
 
-### 7. New Releases Cards (Index.tsx)
-**Line 1215** - Update new release track cards from `glass-card` to:
-- `bg-card border border-border shadow-sm rounded-xl p-4`
+## Technical Details
 
-## Visual Hierarchy
+### Imports to update
+- Remove: `Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext`
+- Add: `ChevronLeft, ChevronRight` (icons for header nav buttons)
+- Add: `useRef` (for scroll container reference)
 
-| Element Type | Shadow Level | Rationale |
-|-------------|-------------|-----------|
-| Large banner sections (Featured Tracks) | `shadow-md` | More prominent, section-level cards |
-| Individual track/artist cards | `shadow-sm` | Subtle, prevents visual overload |
+### Scroll behavior
+```tsx
+const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-## Files to Modify
-- `src/pages/Index.tsx` (Featured Tracks, Discover Artists, Recently Played, Features, Role CTAs, New Releases)
-- `src/components/home/TrendingCarousel.tsx` (Individual track cards)
+const scrollLeft = () => {
+  scrollContainerRef.current?.scrollBy({ left: -300, behavior: "smooth" });
+};
 
----
+const scrollRight = () => {
+  scrollContainerRef.current?.scrollBy({ left: 300, behavior: "smooth" });
+};
+```
 
-## Technical Notes
+### Header with stacked arrows
+```tsx
+<div className="flex items-center justify-between mb-8">
+  <div>
+    <h2>...</h2>
+    <p>...</p>
+  </div>
+  <div className="flex items-center gap-2">
+    <button onClick={scrollLeft}>
+      <ChevronLeft />
+    </button>
+    <button onClick={scrollRight}>
+      <ChevronRight />
+    </button>
+    <Button asChild>
+      <Link to="/browse">View All</Link>
+    </Button>
+  </div>
+</div>
+```
 
-The `glass-card` class uses a semi-transparent background that blends with the page background. Replacing it with `bg-card` (solid card background color: #E6E6E6) plus a border and subtle shadow will make cards visually distinct while maintaining the clean, modern aesthetic of the smoke-gray theme.
+### Horizontal scroll container
+```tsx
+<div 
+  ref={scrollContainerRef}
+  className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4"
+>
+  {trendingTracks.map((track) => (
+    <div className="flex-shrink-0 w-44 md:w-48 ...">
+      {/* Card content */}
+    </div>
+  ))}
+</div>
+```
+
+## Visual Improvements
+- Cards will be larger and more readable
+- Navigation arrows grouped cleanly in the header
+- Horizontal scroll matches the "Recently Played" pattern for consistency
+- Mobile-friendly swipe navigation preserved
+- Less visual clutter with arrows removed from the sides
+
