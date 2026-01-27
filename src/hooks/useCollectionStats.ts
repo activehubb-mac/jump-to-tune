@@ -20,6 +20,8 @@ interface OwnedTrack {
     audio_url: string | null;
     duration: number | null;
     total_editions: number;
+    album_id: string | null;
+    artist_id: string;
     artist: {
       id: string;
       display_name: string | null;
@@ -90,7 +92,8 @@ export function useOwnedTracks(userId: string | undefined) {
             audio_url,
             duration,
             total_editions,
-            artist_id
+            artist_id,
+            album_id
           )
         `)
         .eq("user_id", userId)

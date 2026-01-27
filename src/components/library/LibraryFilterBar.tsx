@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, X, SlidersHorizontal, Plus } from "lucide-react";
+import { Search, X, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -132,17 +132,6 @@ export function LibraryFilterBar({
           <Search className="w-4 h-4" />
         </Button>
 
-        {/* Create Playlist */}
-        {onCreatePlaylist && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-foreground"
-            onClick={onCreatePlaylist}
-          >
-            <Plus className="w-5 h-5" />
-          </Button>
-        )}
       </div>
     </div>
   );
