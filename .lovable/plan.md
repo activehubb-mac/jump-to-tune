@@ -1,169 +1,276 @@
 
-# iOS Safe Area & Scrolling Fixes
+# Spotify-Inspired Library UI and Interactions
 
 ## Current State Analysis
 
-After thorough review, I found that **most of the Theme Updates are already fully implemented** in the codebase:
-- All color variables, gradients, glass effects, neon glows are active
-- The futuristic background with iOS Safari fallbacks is working
+After reviewing the codebase, here's what already exists:
 
-For **iOS Safe Area**, the core structure is in place (Navbar, Layout, Player bar), but there are **specific gaps causing the scrolling issue you noticed** with queue tracks.
+### ✅ Already Implemented
+- **Basic Library Page** (`Collection.tsx`): Tabs for Playlists, Liked, Following
+- **Playlist System**: Create, delete, edit playlists with cover mosaics
+- **PlaylistCard Component**: Shows playlist with hover actions
+- **PlaylistDetail Page**: Drag-and-drop reordering with @dnd-kit
+- **Swipe Gesture Infrastructure**: `SwipeableNotification.tsx` uses framer-motion (portable pattern)
+- **Recently Played Hook**: Stores track history in localStorage
+- **Pull-to-Refresh**: Already integrated
+- **Owned Track Detection**: `usePurchases` hook with `isOwned()` function
+- **Sorting**: Premium feature for collection sorting
 
----
-
-## Identified Gaps
-
-| Component | Issue | Fix |
-|-----------|-------|-----|
-| **Queue Panel ScrollArea** | Missing `-webkit-overflow-scrolling: touch` | Add smooth scrolling CSS |
-| **Sheet Component** | No safe area padding for side/bottom variants | Add `env(safe-area-inset-*)` padding |
-| **Drawer Component** | No safe area bottom padding | Add `pb-[env(safe-area-inset-bottom)]` |
-| **Mobile Navigation Menu** | Missing `-webkit-overflow-scrolling: touch` | Add inline style for smooth scrolling |
-| **Notifications Sheet ScrollArea** | Potentially clipped content on notch devices | Ensure max-height accounts for safe areas |
+### ❌ Missing for Spotify-Style Experience
+- Horizontal filter chips (unified filter bar)
+- Real-time search across library items
+- Recently Played carousel on Library page
+- Mobile swipe-to-delete for playlists/tracks
+- Owned tracks visual highlighting (glowing ring, "OWNED" badge)
+- Direct playback on owned track click (without navigation)
+- Folder-based navigation for playlists
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Global Smooth Scrolling CSS
-Add a global utility class in `src/index.css` for iOS-friendly scrolling:
+### Phase 1: Library Filter Chips & Search Bar
+**Goal**: Replace tabs with Spotify-style horizontal filter chips and add real-time search
 
+**New Component**: `src/components/library/LibraryFilterBar.tsx`
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│ [🔍 Search...]                                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ [All] [Playlists] [Owned] [Liked] [Artists] [Albums]           │
+│  ↑ active chip has filled background                            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Changes to `Collection.tsx`**:
+- Replace `Tabs` component with horizontal scrollable filter chips
+- Add debounced search input that filters across all content types
+- Use `useMemo` to filter items based on active chip + search query
+
+---
+
+### Phase 2: Recently Played Carousel
+**Goal**: Show a horizontal carousel of recently played tracks at the top of the Library
+
+**New Component**: `src/components/library/RecentlyPlayedCarousel.tsx`
+
+- Uses existing `useRecentlyPlayed` hook
+- Horizontal scroll with momentum scrolling (ios-scroll class)
+- Compact track cards with cover art, title, artist
+- Click to play directly (no navigation)
+- Shows "No recent plays" message when empty
+
+**Layout Position**:
+```text
+┌────────────────────────────────────────────────────┐
+│ My Library                                         │
+├────────────────────────────────────────────────────┤
+│ Recently Played  ────────────────────────── See All│
+│ [Track 1] [Track 2] [Track 3] [Track 4] ...  ──>   │
+├────────────────────────────────────────────────────┤
+│ [Filter Chips]                                     │
+│ [Content Grid]                                     │
+└────────────────────────────────────────────────────┘
+```
+
+---
+
+### Phase 3: Owned Tracks Visual Highlighting
+**Goal**: Make owned tracks visually distinct with glowing ring and badge
+
+**Styling for Owned Tracks**:
+- **Glowing Ring**: `ring-2 ring-primary/50 ring-offset-2 ring-offset-background shadow-[0_0_15px_rgba(var(--primary),0.3)]`
+- **OWNED Badge**: Pulsing badge in top-left corner
+- **Playing State**: Badge text changes to "Playing" with different color when active
+
+**CSS Addition to `index.css`**:
 ```css
-.ios-scroll {
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+.owned-track-ring {
+  @apply ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
+  box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.25);
+}
+
+.owned-badge {
+  @apply animate-pulse bg-primary/90 text-primary-foreground;
+}
+
+.owned-badge-playing {
+  @apply bg-accent text-accent-foreground animate-none;
 }
 ```
 
+**Components to Update**:
+- Track cards in Library grid
+- Recently Played carousel items
+- Liked tracks grid
+
 ---
 
-### Phase 2: Fix Queue Panel Scrolling
-**File**: `src/components/audio/GlobalAudioPlayer.tsx`
+### Phase 4: Direct Playback on Owned Tracks
+**Goal**: Clicking an owned track plays immediately instead of navigating
 
-Update the queue `ScrollArea` (line 447) to include smooth scrolling:
-
-```tsx
-<ScrollArea className="max-h-80 ios-scroll">
+**Logic Change**:
+```typescript
+const handleTrackClick = (track) => {
+  if (isOwned(track.id)) {
+    // Trigger haptic feedback
+    Haptics.impact({ style: ImpactStyle.Medium });
+    
+    // Play directly
+    playTrack({
+      id: track.id,
+      title: track.title,
+      audio_url: track.audio_url,
+      // ...
+    });
+  } else {
+    // Navigate to browse/detail page
+    navigate(`/browse?track=${track.id}`);
+  }
+};
 ```
 
-Also add proper padding to prevent content from being cut off at the bottom of the queue panel.
+**Components to Update**:
+- Library owned tracks grid
+- Recently Played carousel
+- Liked tracks (if owned)
 
 ---
 
-### Phase 3: Fix Sheet Component
-**File**: `src/components/ui/sheet.tsx`
+### Phase 5: Mobile Swipe-to-Delete Gestures
+**Goal**: Allow swiping left to delete playlists and tracks on mobile
 
-Add safe area insets to the `sheetVariants` for each side:
-- **Top sheets**: Add `padding-top: env(safe-area-inset-top)`
-- **Bottom sheets**: Add `padding-bottom: env(safe-area-inset-bottom)`
-- **Left/Right sheets**: Add top AND bottom padding for full coverage
+**New Component**: `src/components/library/SwipeableLibraryItem.tsx`
 
-Update the close button position to account for top safe area on side sheets.
+Based on existing `SwipeableNotification.tsx` pattern:
+- Uses `framer-motion` for drag gestures
+- Threshold of 100px to trigger delete
+- Red destructive background revealed on swipe
+- Confirmation animation before delete
+- Desktop fallback: hover delete button
 
----
-
-### Phase 4: Fix Drawer Component
-**File**: `src/components/ui/drawer.tsx`
-
-Add bottom safe area padding to `DrawerContent`:
-
+**Usage**:
 ```tsx
-<DrawerPrimitive.Content
-  className={cn(
-    "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
-    className,
-  )}
-  style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+<SwipeableLibraryItem
+  onDelete={() => deletePlaylist(playlist.id)}
+  enabled={isMobile}
 >
-```
-
-Also add smooth scrolling to the drawer's implicit scroll container.
-
----
-
-### Phase 5: Fix Mobile Navigation Menu Scrolling
-**File**: `src/components/layout/Navbar.tsx`
-
-Update the mobile menu container (line 374) to add iOS smooth scrolling:
-
-Current:
-```tsx
-<div className="md:hidden py-4 max-h-[calc(100vh-4rem)] overflow-y-auto overscroll-contain touch-pan-y">
-```
-
-Updated:
-```tsx
-<div 
-  className="md:hidden py-4 overflow-y-auto overscroll-contain touch-pan-y"
-  style={{ 
-    maxHeight: 'calc(100vh - 4rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
-    WebkitOverflowScrolling: 'touch'
-  }}
->
+  <PlaylistCard playlist={playlist} />
+</SwipeableLibraryItem>
 ```
 
 ---
 
-### Phase 6: Fix Notifications Sheet in Navbar
-**File**: `src/components/layout/Navbar.tsx`
+### Phase 6: Folder-Based Playlist Organization
+**Goal**: Allow users to organize playlists into folders
 
-The notifications ScrollArea (line 440) should account for safe areas:
+**Database** (already exists):
+- `playlist_folders` table with `id`, `name`, `user_id`, `icon`, `color`
+- `playlists.folder_id` foreign key
 
-Current:
-```tsx
-<ScrollArea className="h-[calc(100vh-120px)] mt-4">
+**New Hook**: `src/hooks/usePlaylistFolders.ts`
+```typescript
+export function usePlaylistFolders() {
+  // Fetch folders for current user
+  // Create folder
+  // Delete folder
+  // Move playlist to folder
+}
 ```
 
-Updated:
-```tsx
-<ScrollArea 
-  className="mt-4"
-  style={{ 
-    height: 'calc(100vh - 120px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
-    WebkitOverflowScrolling: 'touch'
-  }}
->
-```
+**UI Changes to Library**:
+- Show folders as collapsible sections
+- Folder header with icon, name, playlist count
+- "Create Folder" button
+- Drag playlist onto folder to move
+- "Unfiled" section for playlists without folder
 
 ---
+
+## Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/components/library/LibraryFilterBar.tsx` | Horizontal filter chips + search |
+| `src/components/library/RecentlyPlayedCarousel.tsx` | Recently played horizontal scroll |
+| `src/components/library/SwipeableLibraryItem.tsx` | Swipe-to-delete wrapper |
+| `src/components/library/OwnedTrackCard.tsx` | Track card with glowing ring styling |
+| `src/components/library/FolderSection.tsx` | Collapsible folder with playlists |
+| `src/hooks/usePlaylistFolders.ts` | Folder management hook |
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/index.css` | Add `.ios-scroll` utility class |
-| `src/components/ui/scroll-area.tsx` | Add `-webkit-overflow-scrolling: touch` to viewport |
-| `src/components/ui/sheet.tsx` | Add safe area padding per side variant |
-| `src/components/ui/drawer.tsx` | Add bottom safe area padding |
-| `src/components/layout/Navbar.tsx` | Fix mobile menu + notifications scroll height |
-| `src/components/audio/GlobalAudioPlayer.tsx` | Fix queue panel scrolling |
+| `src/pages/Collection.tsx` | Major refactor: replace tabs with filter bar, add carousel, integrate all new components |
+| `src/index.css` | Add `.owned-track-ring`, `.owned-badge`, `.owned-badge-playing` classes |
+| `src/hooks/usePlaylists.ts` | Add `moveToFolder` mutation |
+| `src/components/playlist/PlaylistCard.tsx` | Add optional owned-style highlighting |
 
 ---
 
-## Technical Details
+## Spotify-Style Visual Design
 
-### Why `-webkit-overflow-scrolling: touch` Matters
-This property enables iOS Safari's native momentum scrolling. Without it, scroll containers feel "sticky" and unresponsive on iOS devices.
+### Color Palette (from existing theme)
+- **Background**: `#0A0A0A` (pure black)
+- **Cards**: `#121212` (dark grey)
+- **Primary**: Blue-purple gradient (from JumTunes logo)
+- **Accent**: Cyan highlight
 
-### Safe Area Insets
-These CSS environment variables (`env(safe-area-inset-*)`) dynamically adjust for:
-- iPhone notch (top)
-- iPhone home indicator (bottom)
-- Rounded corners on newer devices
+### Filter Chips Styling
+```css
+/* Inactive chip */
+.filter-chip {
+  @apply px-4 py-2 rounded-full text-sm font-medium 
+         bg-muted/30 text-muted-foreground 
+         hover:bg-muted/50 transition-all;
+}
 
-### Best Practice Pattern
-For any fixed-positioned overlay or bottom sheet:
-```tsx
-style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+/* Active chip */
+.filter-chip-active {
+  @apply bg-primary text-primary-foreground 
+         shadow-[0_0_10px_rgba(var(--primary-rgb),0.4)];
+}
+```
+
+### Library Grid Layout
+```text
+Mobile: 2 columns
+Tablet: 3 columns
+Desktop: 4-5 columns
 ```
 
 ---
 
-## Summary
+## Implementation Order
 
-No new features needed - just applying the existing safe area patterns consistently across all scrollable and fixed-position components. This ensures:
+1. **Phase 1**: Filter chips & search (foundation)
+2. **Phase 2**: Recently Played carousel (quick win, uses existing hook)
+3. **Phase 3**: Owned track highlighting (CSS + component updates)
+4. **Phase 4**: Direct playback logic (behavior change)
+5. **Phase 5**: Swipe-to-delete (mobile UX)
+6. **Phase 6**: Folder organization (most complex, requires UI for folder management)
 
-1. Queue tracks are scrollable on iOS
-2. Sheets and drawers don't hide content behind the home indicator
-3. Mobile navigation menus scroll smoothly
-4. Notification panels are fully accessible on notch devices
+---
+
+## Technical Considerations
+
+### Performance
+- Use `useMemo` for filtered content to avoid re-renders
+- Debounce search input (300ms)
+- Virtualize long lists if >100 items
+
+### Mobile Experience
+- Ensure 44x44px touch targets
+- Use `touch-manipulation` for immediate response
+- Apply `ios-scroll` class to horizontal carousels
+
+### Haptic Feedback Integration
+- Play track: `ImpactStyle.Medium`
+- Delete action: `NotificationType.Warning`
+- Folder open/close: `ImpactStyle.Light`
+
+### State Synchronization
+- Use React Query cache invalidation for folder/playlist updates
+- Optimistic updates for like/unlike actions
