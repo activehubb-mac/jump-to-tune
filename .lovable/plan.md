@@ -1,118 +1,169 @@
 
+# iOS Safe Area & Scrolling Fixes
 
-# Fix 400 Errors: profiles_public Foreign Key Join Issue
+## Current State Analysis
 
-## Problem Summary
+After thorough review, I found that **most of the Theme Updates are already fully implemented** in the codebase:
+- All color variables, gradients, glass effects, neon glows are active
+- The futuristic background with iOS Safari fallbacks is working
 
-Multiple pages are showing 400 errors in the console because they're trying to use Supabase's foreign key join syntax (`!table_fkey`) with `profiles_public`, which is a **VIEW** (not a table). Views don't support foreign key constraints, causing Supabase to reject these requests.
+For **iOS Safe Area**, the core structure is in place (Navbar, Layout, Player bar), but there are **specific gaps causing the scrolling issue you noticed** with queue tracks.
 
-## Root Cause
+---
 
-The `profiles_public` is a VIEW that exposes safe public fields from the `profiles` table. The actual foreign keys (`albums_artist_id_fkey`, `tracks_artist_id_fkey`) point to `auth.users`, not to any profile table.
+## Identified Gaps
 
-When you write:
-```typescript
-artist:profiles_public!albums_artist_id_fkey(id, display_name)
+| Component | Issue | Fix |
+|-----------|-------|-----|
+| **Queue Panel ScrollArea** | Missing `-webkit-overflow-scrolling: touch` | Add smooth scrolling CSS |
+| **Sheet Component** | No safe area padding for side/bottom variants | Add `env(safe-area-inset-*)` padding |
+| **Drawer Component** | No safe area bottom padding | Add `pb-[env(safe-area-inset-bottom)]` |
+| **Mobile Navigation Menu** | Missing `-webkit-overflow-scrolling: touch` | Add inline style for smooth scrolling |
+| **Notifications Sheet ScrollArea** | Potentially clipped content on notch devices | Ensure max-height accounts for safe areas |
+
+---
+
+## Implementation Plan
+
+### Phase 1: Global Smooth Scrolling CSS
+Add a global utility class in `src/index.css` for iOS-friendly scrolling:
+
+```css
+.ios-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
 ```
 
-Supabase looks for a foreign key named `albums_artist_id_fkey` that references `profiles_public` - but it doesn't exist, so it returns 400.
+---
 
-## Solution
+### Phase 2: Fix Queue Panel Scrolling
+**File**: `src/components/audio/GlobalAudioPlayer.tsx`
 
-Refactor the affected queries to use a two-step fetch pattern (like `useTracks.ts` already does correctly):
+Update the queue `ScrollArea` (line 447) to include smooth scrolling:
 
-1. Fetch the primary data (albums/tracks)
-2. Collect unique `artist_id` values
-3. Fetch artist profiles separately from `profiles_public` using `.in("id", artistIds)`
-4. Merge the results client-side
+```tsx
+<ScrollArea className="max-h-80 ios-scroll">
+```
 
-This is the same pattern used successfully in `useTracks.ts` and `useFeaturedContent.ts`.
+Also add proper padding to prevent content from being cut off at the bottom of the queue panel.
+
+---
+
+### Phase 3: Fix Sheet Component
+**File**: `src/components/ui/sheet.tsx`
+
+Add safe area insets to the `sheetVariants` for each side:
+- **Top sheets**: Add `padding-top: env(safe-area-inset-top)`
+- **Bottom sheets**: Add `padding-bottom: env(safe-area-inset-bottom)`
+- **Left/Right sheets**: Add top AND bottom padding for full coverage
+
+Update the close button position to account for top safe area on side sheets.
+
+---
+
+### Phase 4: Fix Drawer Component
+**File**: `src/components/ui/drawer.tsx`
+
+Add bottom safe area padding to `DrawerContent`:
+
+```tsx
+<DrawerPrimitive.Content
+  className={cn(
+    "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
+    className,
+  )}
+  style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+>
+```
+
+Also add smooth scrolling to the drawer's implicit scroll container.
+
+---
+
+### Phase 5: Fix Mobile Navigation Menu Scrolling
+**File**: `src/components/layout/Navbar.tsx`
+
+Update the mobile menu container (line 374) to add iOS smooth scrolling:
+
+Current:
+```tsx
+<div className="md:hidden py-4 max-h-[calc(100vh-4rem)] overflow-y-auto overscroll-contain touch-pan-y">
+```
+
+Updated:
+```tsx
+<div 
+  className="md:hidden py-4 overflow-y-auto overscroll-contain touch-pan-y"
+  style={{ 
+    maxHeight: 'calc(100vh - 4rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+    WebkitOverflowScrolling: 'touch'
+  }}
+>
+```
+
+---
+
+### Phase 6: Fix Notifications Sheet in Navbar
+**File**: `src/components/layout/Navbar.tsx`
+
+The notifications ScrollArea (line 440) should account for safe areas:
+
+Current:
+```tsx
+<ScrollArea className="h-[calc(100vh-120px)] mt-4">
+```
+
+Updated:
+```tsx
+<ScrollArea 
+  className="mt-4"
+  style={{ 
+    height: 'calc(100vh - 120px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+    WebkitOverflowScrolling: 'touch'
+  }}
+>
+```
+
+---
 
 ## Files to Modify
 
-| File | Current Issue | Fix |
-|------|--------------|-----|
-| `src/pages/Browse.tsx` | Line 181-184: Uses `!albums_artist_id_fkey` join | Refactor to fetch albums first, then profiles separately |
-| `src/pages/admin/AdminFeatured.tsx` | Line 82-85: Same issue | Same fix |
-| `src/components/browse/AlbumCard.tsx` | Line 34-37: Uses `!tracks_artist_id_fkey` join | Same fix |
+| File | Changes |
+|------|---------|
+| `src/index.css` | Add `.ios-scroll` utility class |
+| `src/components/ui/scroll-area.tsx` | Add `-webkit-overflow-scrolling: touch` to viewport |
+| `src/components/ui/sheet.tsx` | Add safe area padding per side variant |
+| `src/components/ui/drawer.tsx` | Add bottom safe area padding |
+| `src/components/layout/Navbar.tsx` | Fix mobile menu + notifications scroll height |
+| `src/components/audio/GlobalAudioPlayer.tsx` | Fix queue panel scrolling |
 
-## Implementation Details
+---
 
-### Browse.tsx - Albums Query
+## Technical Details
 
-Current (broken):
-```typescript
-const { data, error } = await supabase
-  .from("albums")
-  .select(`
-    id, title, cover_art_url, release_type, genre, total_price,
-    artist:profiles_public!albums_artist_id_fkey(id, display_name, avatar_url)
-  `)
+### Why `-webkit-overflow-scrolling: touch` Matters
+This property enables iOS Safari's native momentum scrolling. Without it, scroll containers feel "sticky" and unresponsive on iOS devices.
+
+### Safe Area Insets
+These CSS environment variables (`env(safe-area-inset-*)`) dynamically adjust for:
+- iPhone notch (top)
+- iPhone home indicator (bottom)
+- Rounded corners on newer devices
+
+### Best Practice Pattern
+For any fixed-positioned overlay or bottom sheet:
+```tsx
+style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
 ```
 
-Fixed:
-```typescript
-// Step 1: Fetch albums without join
-const { data: albumsData, error } = await supabase
-  .from("albums")
-  .select("id, title, cover_art_url, release_type, genre, total_price, artist_id")
-  .eq("is_draft", false)
-  .order("created_at", { ascending: false })
-  .limit(10);
-
-if (error) throw error;
-if (!albumsData || albumsData.length === 0) return [];
-
-// Step 2: Get unique artist IDs
-const artistIds = [...new Set(albumsData.map(a => a.artist_id).filter(Boolean))];
-
-// Step 3: Fetch artist profiles
-const { data: artists } = await supabase
-  .from("profiles_public")
-  .select("id, display_name, avatar_url")
-  .in("id", artistIds);
-
-// Step 4: Map artists to albums
-const artistMap = new Map(artists?.map(a => [a.id, a]) || []);
-return albumsData.map(album => ({
-  ...album,
-  artist: artistMap.get(album.artist_id) || null
-}));
-```
-
-### AlbumCard.tsx - Tracks Query
-
-Same pattern - fetch tracks first, then artist profiles separately.
-
-### AdminFeatured.tsx - Albums Query
-
-Same pattern - already have a reference implementation in `useFeaturedAlbums`.
-
-## Regarding Re-implementing Reverted Features
-
-The 37 reverted features are **safe to re-implement** because:
-
-1. **Audio fixes are preserved**: The Safari audio fixes we just implemented are in `AudioPlayerContext.tsx`, which is the current working version
-
-2. **Reverted features are UI/UX focused**: Things like:
-   - Library UI and interactions
-   - Haptic feedback
-   - Download UI
-   - Pin functionality
-   - iOS safe area scrolling
-   - Theme updates
-
-   These don't touch the core audio playback logic.
-
-3. **The audio-related reverts were replaced**: The old "Fix iOS audio" commits had the problematic unlock logic - we've now replaced that with a cleaner implementation using:
-   - Separate throwaway Audio element for unlocking
-   - Play request token pattern
-   - Safari AbortError recovery
-   - Stalled playback watchdog
+---
 
 ## Summary
 
-- Fix the 3 files with bad foreign key joins (quick fix)
-- Then you can safely proceed to re-implement the reverted features
-- The Safari audio fix will remain stable
+No new features needed - just applying the existing safe area patterns consistently across all scrollable and fixed-position components. This ensures:
 
+1. Queue tracks are scrollable on iOS
+2. Sheets and drawers don't hide content behind the home indicator
+3. Mobile navigation menus scroll smoothly
+4. Notification panels are fully accessible on notch devices
