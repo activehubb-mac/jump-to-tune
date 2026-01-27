@@ -118,7 +118,7 @@ function FeaturedArtistsSection() {
   const currentStats = artistStats[currentArtist.content_id];
   return <section className="py-8">
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden rounded-2xl bg-muted/30 p-6 md:p-10">
+        <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-md p-6 md:p-10">
           {/* Background decorative elements */}
           <div className="absolute top-0 left-0 w-72 h-72 bg-muted/30 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
           <div className="absolute bottom-0 right-0 w-64 h-64 bg-muted/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
@@ -306,7 +306,7 @@ function FeaturedLabelsSection() {
   const currentStats = labelStats[currentLabel.content_id];
   return <section className="py-8">
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden rounded-2xl bg-muted/30 p-6 md:p-10">
+        <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-md p-6 md:p-10">
           {/* Background decorative elements */}
           <div className="absolute top-0 left-0 w-72 h-72 bg-muted/30 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
           <div className="absolute bottom-0 right-0 w-64 h-64 bg-muted/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
