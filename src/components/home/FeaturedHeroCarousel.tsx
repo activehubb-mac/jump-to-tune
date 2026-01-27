@@ -148,9 +148,9 @@ export function FeaturedHeroCarousel() {
         ) : (
           <div className="w-full h-full bg-muted" />
         )}
-        {/* Gradient overlays for readability - lighter to show more image */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/25 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-background/10 to-transparent" />
+        {/* Gradient overlays for readability - dark charcoal for premium look */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a]/90 via-[#1a1a1a]/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1a1a1a]/50 via-[#1a1a1a]/15 to-transparent" />
       </div>
 
       {/* Content */}
