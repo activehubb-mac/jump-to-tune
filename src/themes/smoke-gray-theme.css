@@ -1,0 +1,57 @@
+/* JumTunes Smoke Gray Theme Backup
+   Created: 2026-01-27
+   Purpose: Clean, modern, premium light theme
+   
+   To restore: Copy the :root section to src/index.css
+*/
+
+:root {
+  /* Light Theme: Smoke Gray Base */
+  --background: 0 0% 95%;           /* #F2F2F2 */
+  --foreground: 0 0% 10%;           /* #1A1A1A */
+
+  --card: 0 0% 90%;                 /* #E6E6E6 */
+  --card-foreground: 0 0% 10%;      /* #1A1A1A */
+
+  --popover: 0 0% 100%;             /* #FFFFFF */
+  --popover-foreground: 0 0% 10%;   /* #1A1A1A */
+
+  /* Brand Colors */
+  --primary: 270 70% 50%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 217 91% 60%;
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 0 0% 85%;                /* #DADADA */
+  --muted-foreground: 0 0% 45%;     /* Medium gray */
+
+  --accent: 330 85% 60%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 0 0% 85%;               /* #DADADA */
+  --input: 0 0% 90%;
+  --ring: 270 70% 50%;
+
+  --radius: 0.75rem;
+
+  /* JumTunes tokens */
+  --neon-glow: 270 70% 50%;
+  --electric-blue: 217 91% 60%;
+  --deep-purple: 270 70% 45%;
+  --glass: 0 0% 92%;
+  --glass-border: 0 0% 80%;
+
+  /* Sidebar */
+  --sidebar-background: 0 0% 92%;
+  --sidebar-foreground: 0 0% 10%;
+  --sidebar-primary: 270 70% 50%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 0 0% 88%;
+  --sidebar-accent-foreground: 0 0% 10%;
+  --sidebar-border: 0 0% 85%;
+  --sidebar-ring: 270 70% 50%;
+}
