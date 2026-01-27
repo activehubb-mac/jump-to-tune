@@ -41,12 +41,13 @@ export function useUserProfile(userId: string | undefined) {
         throw profileError;
       }
 
-      // Get user role
+      // Get user role (excluding admin - it's a separate privilege)
       const { data: roleData } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
-        .single();
+        .neq("role", "admin")
+        .maybeSingle();
 
       const role: UserRole = roleData?.role || "fan";
 
