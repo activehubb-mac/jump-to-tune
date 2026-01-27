@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface LabelProfile {
   id: string;
   display_name: string | null;
+  display_name_font: string | null;
   avatar_url: string | null;
   banner_image_url: string | null;
   bio: string | null;
@@ -55,6 +56,7 @@ export function useLabelProfile(labelId: string | undefined) {
       return {
         id: profile.id,
         display_name: profile.display_name,
+        display_name_font: profile.display_name_font,
         avatar_url: profile.avatar_url,
         banner_image_url: profile.banner_image_url,
         bio: profile.bio,

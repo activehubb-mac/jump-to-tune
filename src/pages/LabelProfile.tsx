@@ -144,7 +144,10 @@ export default function LabelProfile() {
                 </span>
               </div>
             )}
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-2">
+            <h1 
+              className="text-4xl md:text-5xl font-bold text-foreground mb-2"
+              style={{ fontFamily: `'${label.display_name_font || 'Inter'}', sans-serif` }}
+            >
               {label.display_name || "Unknown Label"}
             </h1>
             <p className="text-muted-foreground max-w-2xl mb-4">

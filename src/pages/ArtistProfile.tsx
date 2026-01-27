@@ -110,7 +110,7 @@ export default function ArtistProfile() {
 
           <div className="flex-1">
             {artist.is_verified && <div className="flex items-center gap-3 mb-2"><span className="px-3 py-1 rounded-full bg-primary/20 text-primary text-sm font-medium">Verified Artist</span></div>}
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-2">{artist.display_name || "Unknown Artist"}</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-2" style={{ fontFamily: `'${artist.display_name_font || 'Inter'}', sans-serif` }}>{artist.display_name || "Unknown Artist"}</h1>
             <p className="text-muted-foreground max-w-2xl mb-4">{artist.bio || "No bio available"}</p>
 
             <div className="flex flex-wrap items-center gap-6 mb-6 text-sm">
