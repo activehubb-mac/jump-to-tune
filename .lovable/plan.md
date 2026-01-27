@@ -1,140 +1,118 @@
 
-## What the screenshots strongly indicate (why it happens “in the app overall”)
 
-From your Safari screenshots, two lines are the smoking gun:
+# Fix 400 Errors: profiles_public Foreign Key Join Issue
 
-- **`AbortError: The play() request was interrupted by a call to pause()`**
-- **`Data URL decoding failed`** (pointing to `data:audio/wav;base64,...`)
+## Problem Summary
 
-In your codebase, Safari is “unlocked” by temporarily swapping the real track URL for a tiny **base64 WAV data URL**, calling `audio.play()`, then immediately calling `audio.pause()`:
+Multiple pages are showing 400 errors in the console because they're trying to use Supabase's foreign key join syntax (`!table_fkey`) with `profiles_public`, which is a **VIEW** (not a table). Views don't support foreign key constraints, causing Supabase to reject these requests.
 
-- `src/contexts/AudioPlayerContext.tsx` → `unlockAudio()` sets:
-  - `audio.src = "data:audio/wav;base64,..."` (line ~213)
-  - then `audio.play().then(() => audio.pause())` (line ~225)
+## Root Cause
 
-That unlock attempt is triggered very frequently:
-- on **every** `playTrack()` call (`unlockAudio(audio)` line ~742)
-- and also from the global `click/touchstart/keydown` listeners (`handleUserInteraction` line ~709)
+The `profiles_public` is a VIEW that exposes safe public fields from the `profiles` table. The actual foreign keys (`albums_artist_id_fkey`, `tracks_artist_id_fkey`) point to `auth.users`, not to any profile table.
 
-### Why Chrome “plays anyway” but Safari gets stuck
-Chrome tends to tolerate the race conditions involved in:
-- swapping `audio.src` during interactions
-- calling `pause()` while a `play()` is still in-flight
-- quickly changing source and reusing the element
+When you write:
+```typescript
+artist:profiles_public!albums_artist_id_fkey(id, display_name)
+```
 
-Safari is much more strict, so it will:
-- throw **AbortError** if `pause()` happens while `play()` is pending
-- sometimes end up in a state where UI says “playing” (React state updated by events) but **the audio pipeline is stalled** and time doesn’t advance
+Supabase looks for a foreign key named `albums_artist_id_fkey` that references `profiles_public` - but it doesn't exist, so it returns 400.
 
-So even if PWA caching was one culprit, this *specific* “play interrupted by pause” error points to a **logic-level interruption** inside the app’s audio lifecycle (not just the network).
+## Solution
 
----
+Refactor the affected queries to use a two-step fetch pattern (like `useTracks.ts` already does correctly):
 
-## Goal
-Make Safari playback reliable by eliminating “unlock audio” side effects that can interrupt real playback, and add targeted debug signals so we can prove the fix.
+1. Fetch the primary data (albums/tracks)
+2. Collect unique `artist_id` values
+3. Fetch artist profiles separately from `profiles_public` using `.in("id", artistIds)`
+4. Merge the results client-side
 
----
+This is the same pattern used successfully in `useTracks.ts` and `useFeaturedContent.ts`.
 
-## Debug-first approach (what we’ll verify as we change)
-We will add very specific logging to confirm:
-1) When `unlockAudio()` runs and what it changes (`src`, `paused`, `readyState`, `networkState`)
-2) Whether `unlockAudio()` is ever firing during real playback or right before resume
-3) Whether a `pause()` is being called while a `play()` is pending (Safari’s AbortError condition)
-4) Whether the audio element is being left with `src=data:audio/wav...` at the wrong time
+## Files to Modify
 
-This will let us confirm “what paused it”.
+| File | Current Issue | Fix |
+|------|--------------|-----|
+| `src/pages/Browse.tsx` | Line 181-184: Uses `!albums_artist_id_fkey` join | Refactor to fetch albums first, then profiles separately |
+| `src/pages/admin/AdminFeatured.tsx` | Line 82-85: Same issue | Same fix |
+| `src/components/browse/AlbumCard.tsx` | Line 34-37: Uses `!tracks_artist_id_fkey` join | Same fix |
 
----
+## Implementation Details
 
-## Implementation changes (the actual fix)
+### Browse.tsx - Albums Query
 
-### Phase A — Stop `unlockAudio()` from interfering with real playback (most important)
-We will refactor unlocking so it cannot interrupt the main player element:
+Current (broken):
+```typescript
+const { data, error } = await supabase
+  .from("albums")
+  .select(`
+    id, title, cover_art_url, release_type, genre, total_price,
+    artist:profiles_public!albums_artist_id_fkey(id, display_name, avatar_url)
+  `)
+```
 
-**Option A (preferred): unlock with a separate, throwaway Audio element**
-- Create a new `const unlocker = new Audio(silentDataUri)`
-- `unlocker.muted = true; await unlocker.play(); unlocker.pause();`
-- Never touch `audioRef.current.src` during unlocking
-- Mark `audioUnlockedRef.current = true` even if the unlock attempt errors (to prevent infinite retries)
+Fixed:
+```typescript
+// Step 1: Fetch albums without join
+const { data: albumsData, error } = await supabase
+  .from("albums")
+  .select("id, title, cover_art_url, release_type, genre, total_price, artist_id")
+  .eq("is_draft", false)
+  .order("created_at", { ascending: false })
+  .limit(10);
 
-**Option B: keep current element but make it safe**
-If we must reuse the same audio element:
-- Only run unlock when `audio.src` is empty and nothing is playing
-- Never restore/overwrite `src` if `currentTrackRef.current` exists
-- Never call `pause()` if Safari already says it’s paused
-- Ensure unlock is attempted once per app load, not repeatedly
+if (error) throw error;
+if (!albumsData || albumsData.length === 0) return [];
 
-We’ll implement Option A to remove the entire class of “src swap” bugs.
+// Step 2: Get unique artist IDs
+const artistIds = [...new Set(albumsData.map(a => a.artist_id).filter(Boolean))];
 
-### Phase B — Don’t call `unlockAudio()` on every play attempt
-Change behavior:
-- Remove `unlockAudio(audio)` from `playTrack()` (or gate it behind `if (!audioUnlockedRef.current && !currentTrackRef.current)`)
-- Keep a single “first interaction” unlock, but once unlocked, remove listeners or no-op
+// Step 3: Fetch artist profiles
+const { data: artists } = await supabase
+  .from("profiles_public")
+  .select("id, display_name, avatar_url")
+  .in("id", artistIds);
 
-This prevents a pause/resume click from triggering unlock logic again.
+// Step 4: Map artists to albums
+const artistMap = new Map(artists?.map(a => [a.id, a]) || []);
+return albumsData.map(album => ({
+  ...album,
+  artist: artistMap.get(album.artist_id) || null
+}));
+```
 
-### Phase C — Add a Safari-safe “play request” guard (prevents play/pause races)
-Safari can throw AbortError if multiple play requests overlap or if pause happens mid-play promise.
+### AlbumCard.tsx - Tracks Query
 
-We’ll implement a “play token” (request id) pattern:
-- Every `play()` attempt increments a counter
-- If a later pause/track-switch occurs, older pending play promises are ignored
-- We’ll also explicitly handle AbortError by:
-  - logging it as expected in Safari race cases
-  - retrying play once after a short delay **only if the user still intends to play**
+Same pattern - fetch tracks first, then artist profiles separately.
 
-This also addresses the “pause then play again and it shows playing but no sound” symptom.
+### AdminFeatured.tsx - Albums Query
 
-### Phase D — Improve state truth: derive UI from audio events more reliably
-Right now, UI state can become “optimistic” and not reflect actual audio progression.
-We will:
-- ensure `isPlaying` is only set true on actual `audio.play` / `playing` events
-- add a watchdog: if UI says playing but `timeupdate` hasn’t advanced in N ms and `readyState` is low, set buffering state and attempt recovery
+Same pattern - already have a reference implementation in `useFeaturedAlbums`.
 
-This makes the app self-heal if Safari stalls.
+## Regarding Re-implementing Reverted Features
 
-### Phase E — Keep the PWA caching improvements, but don’t remove PWA yet
-You asked if you should remove the PWA.
-Recommendation: **do not remove the PWA yet** because:
-- you already improved Workbox audio caching (NetworkFirst + rangeRequests + bypass on `_nocache`)
-- the errors you’re showing (“play interrupted by pause” + “data URL decoding failed”) match the unlock logic, which exists regardless of PWA
+The 37 reverted features are **safe to re-implement** because:
 
-Instead:
-- fix the unlock/play lifecycle first
-- if issues persist after that, then we can A/B test “PWA disabled” as a last-resort isolation step
+1. **Audio fixes are preserved**: The Safari audio fixes we just implemented are in `AudioPlayerContext.tsx`, which is the current working version
 
----
+2. **Reverted features are UI/UX focused**: Things like:
+   - Library UI and interactions
+   - Haptic feedback
+   - Download UI
+   - Pin functionality
+   - iOS safe area scrolling
+   - Theme updates
 
-## Files we will update
-1) `src/contexts/AudioPlayerContext.tsx`
-   - refactor `unlockAudio()` to use a separate element (no `audioRef.current.src` mutation)
-   - reduce how often unlock runs (once per app load / once per user session)
-   - add “play request token” / AbortError-safe retries
-   - add debug logging instrumentation (temporary; we can later reduce)
+   These don't touch the core audio playback logic.
 
-2) (Optional after verifying) `src/components/audio/GlobalAudioPlayer.tsx`
-   - minor UI feedback improvements if “playing but stalled” is detected (show buffering / show “Tap to resume”)
+3. **The audio-related reverts were replaced**: The old "Fix iOS audio" commits had the problematic unlock logic - we've now replaced that with a cleaner implementation using:
+   - Separate throwaway Audio element for unlocking
+   - Play request token pattern
+   - Safari AbortError recovery
+   - Stalled playback watchdog
 
----
+## Summary
 
-## How we’ll confirm the fix worked (Safari)
-After deployment:
-1) Hard refresh Safari / clear website data once
-2) Play a track, let it run
-3) Pause, wait 5–10 seconds, play again
-4) Switch tracks while paused, then play
-5) Observe:
-   - No more `AbortError: ... interrupted by pause`
-   - No repeated `Data URL decoding failed` spam on every play click
-   - Progress bar/time continues advancing consistently
-
----
-
-## Why this matches your symptom pattern
-Your described behavior:
-- works after refresh
-- after some pause/play cycles it gets stuck “playing” with no progress and no sound
-- Safari shows abort/decode errors while Chrome does not fail
-
-This is exactly what happens when the audio element’s `src` or playback state is being disrupted by an internal pause/src-swap at the wrong time (and Safari is strict about it). Refactoring the unlock flow to stop touching the real player element is the cleanest way to stabilize playback.
+- Fix the 3 files with bad foreign key joins (quick fix)
+- Then you can safely proceed to re-implement the reverted features
+- The Safari audio fix will remain stable
 
