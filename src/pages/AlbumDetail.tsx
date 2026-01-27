@@ -110,6 +110,7 @@ export default function AlbumDetail() {
       audio_url: tracks[0].audio_url,
       cover_art_url: tracks[0].cover_art_url || album?.cover_art_url,
       duration: tracks[0].duration,
+      price: tracks[0].price,
       artist: artist ? { id: artist.id!, display_name: artist.display_name } : undefined,
     };
 
@@ -123,6 +124,7 @@ export default function AlbumDetail() {
         audio_url: track.audio_url,
         cover_art_url: track.cover_art_url || album?.cover_art_url,
         duration: track.duration,
+        price: track.price,
         artist: artist ? { id: artist.id!, display_name: artist.display_name } : undefined,
       });
     });
@@ -136,6 +138,7 @@ export default function AlbumDetail() {
         audio_url: track.audio_url,
         cover_art_url: track.cover_art_url || album?.cover_art_url || null,
         duration: track.duration,
+        price: track.price,
         artist: artist ? { id: artist.id!, display_name: artist.display_name } : undefined,
       });
     });
@@ -329,6 +332,7 @@ export default function AlbumDetail() {
                           audio_url: track.audio_url,
                           cover_art_url: track.cover_art_url || album.cover_art_url,
                           duration: track.duration,
+                          price: track.price,
                           artist: artist ? { id: artist.id!, display_name: artist.display_name } : undefined,
                         });
                       }}

@@ -268,6 +268,7 @@ export default function LabelProfile() {
                             audio_url: track.audio_url,
                             cover_art_url: track.cover_art_url,
                             duration: track.duration,
+                            price: track.price,
                             artist: { id: track.artist_id, display_name: track.artist?.display_name },
                           });
                         }}
