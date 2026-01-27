@@ -1,229 +1,242 @@
 
+# Smoke-Gray Light Theme Migration Plan
 
-# Safe Lightweight Optimization Plan
-
-This plan optimizes performance while preserving ALL functionality, including the mobile Safari audio player.
-
-## What This Plan Does NOT Touch (Safe Zones)
-
-These files/systems remain 100% unchanged:
-
-- `src/contexts/AudioPlayerContext.tsx` - All Safari audio logic intact
-- `src/hooks/useRecentlyPlayed.ts` - Recently played functionality
-- `src/hooks/usePushNotifications.ts` - Notification system
-- All Supabase edge functions
-- All database queries and API calls
-- All form logic and validation
-- All payment/subscription flows
-- All navigation and routing
+## Overview
+This plan migrates JumTunes from the current dark purple/blue cyberpunk theme to a clean, modern smoke-gray light theme. The change only affects CSS variables and utility classes - no functionality will be altered.
 
 ---
 
-## Phase 1: Remove Background Images & Particles
+## New Theme Color Palette
 
-### 1.1 Delete ParticleOverlay Component
-**File:** `src/components/effects/ParticleOverlay.tsx`
-- Delete entire file (canvas animation causing CPU usage)
+Based on your specifications, here's the complete color mapping:
 
-### 1.2 Delete Background Image
-**File:** `public/images/bg-futuristic.jpg`
-- Delete file (reduces bundle size)
+| Token | Current (Dark) | New (Smoke Gray) | Purpose |
+|-------|---------------|------------------|---------|
+| Background | `260 30% 6%` (near-black) | `0 0% 95%` (#F2F2F2) | Main page background |
+| Card | `260 25% 10%` (dark purple) | `0 0% 90%` (#E6E6E6) | Card backgrounds |
+| Foreground | `210 40% 98%` (white) | `0 0% 10%` (#1A1A1A) | Primary text |
+| Muted | `260 20% 15%` | `0 0% 85%` (#DADADA) | Muted backgrounds |
+| Muted Foreground | `215 20% 65%` | `0 0% 45%` | Secondary text |
+| Border | `260 20% 18%` | `0 0% 85%` (#DADADA) | Dividers/borders |
+| Popover | `260 25% 10%` | `0 0% 100%` (#FFFFFF) | Modals/dropdowns |
 
-### 1.3 Simplify Layout Component
-**File:** `src/components/layout/Layout.tsx`
-
-Changes:
-- Remove `useBackground` and `showParticles` props
-- Remove lazy-loaded ParticleOverlay import
-- Keep all other logic (navbar, footer, safe-area padding)
-
-```tsx
-// Before
-export function Layout({ children, showFooter = true, useBackground = "none", showParticles = false })
-
-// After
-export function Layout({ children, showFooter = true })
-```
-
-### 1.4 Update Pages Using Background Props
-Remove `useBackground="futuristic"` or `useBackground="subtle"` from:
-
-| File | Line | Change |
-|------|------|--------|
-| `src/pages/Index.tsx` | ~831 | Remove `useBackground="futuristic"` |
-| `src/pages/Auth.tsx` | Multiple | Remove `useBackground="futuristic"` |
-| `src/pages/Browse.tsx` | ~315 | Remove `useBackground="subtle"` |
-| `src/pages/Karaoke.tsx` | ~156 | Remove `useBackground="futuristic"` |
+### Accent Colors (Preserved for Brand Identity)
+| Token | Value | Purpose |
+|-------|-------|---------|
+| Primary | `270 70% 50%` (Purple) | Buttons, links, active states |
+| Secondary | `217 91% 60%` (Blue) | Secondary actions |
+| Accent | `330 85% 60%` (Pink) | Highlights, CTAs |
+| Destructive | `0 84% 60%` (Red) | Error states |
 
 ---
 
-## Phase 2: Simplify CSS Effects
+## Files to Modify
 
-### 2.1 Update index.css
-**File:** `src/index.css`
+### Phase 1: Core Theme Variables
+**File: `src/index.css`**
 
-Remove:
-- `.bg-futuristic` class (lines ~128-145)
-- `.bg-futuristic-subtle` class
-- Related `@media` queries
+Update the `:root` CSS variables to use light theme values:
 
-Simplify:
 ```css
-/* Before */
-.glass-card {
-  @apply bg-glass/60 backdrop-blur-xl rounded-xl;
+:root {
+  /* iOS Safe Area Insets - unchanged */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+
+  /* Light Theme: Smoke Gray Base */
+  --background: 0 0% 95%;           /* #F2F2F2 */
+  --foreground: 0 0% 10%;           /* #1A1A1A */
+
+  --card: 0 0% 90%;                 /* #E6E6E6 */
+  --card-foreground: 0 0% 10%;      /* #1A1A1A */
+
+  --popover: 0 0% 100%;             /* #FFFFFF */
+  --popover-foreground: 0 0% 10%;   /* #1A1A1A */
+
+  /* Brand Colors - Keep existing */
+  --primary: 270 70% 50%;
+  --primary-foreground: 0 0% 100%;  /* White text on purple */
+
+  --secondary: 217 91% 60%;
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 0 0% 85%;                /* #DADADA */
+  --muted-foreground: 0 0% 45%;     /* Medium gray */
+
+  --accent: 330 85% 60%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 0 0% 85%;               /* #DADADA */
+  --input: 0 0% 90%;                /* Slightly darker for inputs */
+  --ring: 270 70% 50%;              /* Purple focus ring */
+
+  --radius: 0.75rem;
+
+  /* Updated JumTunes tokens for light theme */
+  --neon-glow: 270 70% 50%;         /* Use primary for glow */
+  --electric-blue: 217 91% 60%;
+  --deep-purple: 270 70% 45%;
+  --glass: 0 0% 92%;                /* Light glass effect */
+  --glass-border: 0 0% 80%;         /* Visible border on light */
+
+  /* Sidebar - Light theme */
+  --sidebar-background: 0 0% 92%;
+  --sidebar-foreground: 0 0% 10%;
+  --sidebar-primary: 270 70% 50%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 0 0% 88%;
+  --sidebar-accent-foreground: 0 0% 10%;
+  --sidebar-border: 0 0% 85%;
+  --sidebar-ring: 270 70% 50%;
 }
+```
 
-/* After */
-.glass-card {
-  @apply bg-card rounded-xl;
+---
+
+### Phase 2: Update Utility Classes
+
+**File: `src/index.css`**
+
+Update custom utilities to work with light theme:
+
+```css
+@layer utilities {
+  .glass {
+    @apply bg-card/80;
+  }
+
+  .glass-card {
+    @apply bg-card rounded-xl shadow-sm;
+  }
+
+  .glass-card-bordered {
+    @apply bg-card border border-border rounded-xl shadow-sm;
+  }
+
+  /* Softer glow for light theme */
+  .neon-glow {
+    box-shadow: 0 4px 14px hsl(var(--primary) / 0.25),
+                0 2px 6px hsl(var(--primary) / 0.15);
+  }
+
+  .neon-glow-subtle {
+    box-shadow: 0 2px 8px hsl(var(--primary) / 0.15);
+  }
+
+  /* Gradients - adjusted for light backgrounds */
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--electric-blue)));
+  }
+
+  .gradient-accent {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  }
+
+  /* Text gradients - keep vibrant */
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+  }
 }
 ```
 
-### 2.2 Update GlobalAudioPlayer Styling
-**File:** `src/components/audio/GlobalAudioPlayer.tsx`
+---
 
-Visual change only (no logic affected):
-```tsx
-// Before (line ~618)
-className="glass-card border border-glass-border/30 backdrop-blur-xl"
+### Phase 3: Remove Dark Mode Duplicate
 
-// After
-className="bg-card border border-border"
-```
+**File: `src/index.css`**
 
-Also update queue panel (~line 425):
-```tsx
-// Before
-className="glass-card border border-glass-border/30 backdrop-blur-xl rounded-lg"
+Since we're going full light theme, either:
+- **Option A**: Remove the `.dark` class entirely (single theme)
+- **Option B**: Keep `.dark` class with original dark values for future toggle
 
-// After
-className="bg-card border border-border rounded-lg"
+I recommend **Option A** (remove dark mode) for simplicity and consistency.
+
+---
+
+### Phase 4: Create Theme Backup
+
+**File: `src/themes/smoke-gray-theme.css`** (new file)
+
+Create a backup of the new theme for reference and potential future theme switching.
+
+---
+
+### Phase 5: Update Tailwind Config (Optional)
+
+**File: `tailwind.config.ts`**
+
+Consider removing `darkMode: ["class"]` if we're committing to light-only:
+
+```ts
+export default {
+  // darkMode: ["class"],  // Remove or comment out
+  content: [...],
+  // rest unchanged
+}
 ```
 
 ---
 
-## Phase 3: Replace Framer Motion with CSS
+## Visual Impact Summary
 
-### 3.1 Update Browse.tsx
-**File:** `src/pages/Browse.tsx`
-
-Remove `motion` import and replace animated divs with CSS:
-
-```tsx
-// Before (line 2)
-import { motion, AnimatePresence } from "framer-motion";
-
-// After
-// Remove this import entirely
-
-// Before (track card)
-<motion.div
-  key={track.id}
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ delay: Math.min(index * 0.03, 0.3) }}
->
-
-// After
-<div
-  key={track.id}
-  className="animate-fade-in"
-  style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
->
-```
-
-### 3.2 Update ForYou.tsx
-**File:** `src/pages/ForYou.tsx`
-
-Remove motion wrapper:
-```tsx
-// Before (line 24)
-import { motion } from "framer-motion";
-
-// Before (line 245-249)
-<motion.div
-  key={track.id}
-  initial={{ opacity: 0, y: 10 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ delay: index * 0.03 }}
->
-
-// After
-<div key={track.id} className="animate-fade-in" style={{ animationDelay: `${index * 30}ms` }}>
-```
-
-### 3.3 Update RecentlyViewedSection.tsx
-**File:** `src/components/browse/RecentlyViewedSection.tsx`
-
-Replace motion animations with CSS:
-```tsx
-// Before
-import { motion, AnimatePresence } from "framer-motion";
-
-// After - use CSS animations instead
-```
+| Component | Before | After |
+|-----------|--------|-------|
+| Page Background | Near-black | Light smoke gray (#F2F2F2) |
+| Cards | Dark purple | Light gray (#E6E6E6) |
+| Text | White | Near-black (#1A1A1A) |
+| Modals/Popovers | Dark | Pure white (#FFFFFF) |
+| Buttons (Primary) | Purple on dark | Purple on light |
+| Glows | Neon pink shadows | Subtle purple shadows |
+| Borders | Dark purple | Light gray (#DADADA) |
 
 ---
 
-## Phase 4: Clean Up Tailwind Config
+## What Stays the Same
 
-### 4.1 Remove Unused Keyframes
-**File:** `tailwind.config.ts`
-
-Remove decorative animations that are no longer used:
-- `pulse-glow` keyframe
-- `float` keyframe
-- `gradient-shift` keyframe
+- All functionality and layouts
+- Button variants and component structure
+- Navigation and routing
+- Audio player logic
+- All page structures and grids
+- Primary/accent brand colors (purple/pink/blue)
 
 ---
 
-## Verification Checklist
+## Implementation Steps
 
-After implementation, verify these pages:
+1. **Backup current theme** to `src/themes/default-theme.css` (already exists)
+2. **Update `:root` variables** in `src/index.css` with smoke-gray values
+3. **Remove `.dark` class** or update with inverted values
+4. **Update utility classes** (`.glass`, `.neon-glow`) for light aesthetics
+5. **Create new theme backup** in `src/themes/smoke-gray-theme.css`
+6. **Test across all pages** to verify readability and contrast
 
-| Page | What to Check |
-|------|---------------|
-| `/` (Home) | Hero content displays, featured artists/labels load |
-| `/auth` | Sign in/up forms work, password reset works |
-| `/browse` | Track grid loads, filters work, play button works |
-| `/for-you` | Personalized playlist loads and plays |
-| `/karaoke` | Karaoke tracks list, lyrics panel works |
-| `/collection` | Library items display correctly |
-| `/artist/dashboard` | Stats and tracks load |
-| `/label/dashboard` | Roster and analytics display |
-| `/account` | Settings forms submit correctly |
-| **Audio Player** | Play/pause, seek, queue, karaoke mode all work |
+---
+
+## Accessibility Considerations
+
+- **Contrast ratios** will improve with dark text on light backgrounds
+- **Primary buttons** maintain good contrast (purple on gray)
+- **Muted text** (#737373) provides adequate contrast on #F2F2F2 (4.5:1 ratio)
+- **Focus rings** remain visible with purple color
 
 ---
 
 ## Files Modified Summary
 
-| File | Action | Risk Level |
-|------|--------|------------|
-| `src/components/effects/ParticleOverlay.tsx` | DELETE | None |
-| `public/images/bg-futuristic.jpg` | DELETE | None |
-| `src/components/layout/Layout.tsx` | Simplify props | Low (visual) |
-| `src/index.css` | Remove bg classes, simplify glass | Low (visual) |
-| `src/pages/Index.tsx` | Remove useBackground prop | Low (visual) |
-| `src/pages/Auth.tsx` | Remove useBackground prop | Low (visual) |
-| `src/pages/Browse.tsx` | Replace motion with CSS | Low (visual) |
-| `src/pages/ForYou.tsx` | Replace motion with CSS | Low (visual) |
-| `src/pages/Karaoke.tsx` | Remove useBackground prop | Low (visual) |
-| `src/components/browse/RecentlyViewedSection.tsx` | Replace motion with CSS | Low (visual) |
-| `src/components/audio/GlobalAudioPlayer.tsx` | Simplify CSS classes | Low (visual) |
-| `tailwind.config.ts` | Remove unused keyframes | None |
+| File | Change |
+|------|--------|
+| `src/index.css` | Update all CSS variables to light theme values |
+| `src/themes/smoke-gray-theme.css` | Create new file with theme backup |
+| `tailwind.config.ts` | Optional: Remove darkMode config |
 
----
-
-## What Stays Exactly The Same
-
-- All audio playback logic (Safari fixes, gesture handling, buffering recovery)
-- All page layouts and grid structures
-- All interactive functionality (buttons, forms, modals)
-- All API integrations and data fetching
-- All authentication flows
-- All payment and subscription logic
-- All navigation and routing
-- All mobile responsiveness and safe-area handling
-
+This is a CSS-only change with no impact on functionality, data, or audio playback.
