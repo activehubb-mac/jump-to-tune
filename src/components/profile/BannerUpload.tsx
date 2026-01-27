@@ -3,12 +3,12 @@ import { Camera, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBannerUpload } from "@/hooks/useBannerUpload";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface BannerUploadProps {
   userId: string;
   currentBannerUrl?: string | null;
   onBannerChange?: (url: string) => void;
+  onUploadSuccess?: () => Promise<void>;
   children: ReactNode;
   className?: string;
 }
@@ -17,20 +17,20 @@ export function BannerUpload({
   userId,
   currentBannerUrl,
   onBannerChange,
+  onUploadSuccess,
   children,
   className,
 }: BannerUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const { showFeedback } = useFeedbackSafe();
-  const { refreshProfile } = useAuth();
 
   const { uploadBanner, isUploading, progress } = useBannerUpload({
     userId,
     onSuccess: async (url) => {
       setPreviewUrl(null);
       onBannerChange?.(url);
-      await refreshProfile();
+      await onUploadSuccess?.();
       showFeedback({
         type: "success",
         title: "Banner Updated",
