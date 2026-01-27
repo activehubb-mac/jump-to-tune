@@ -6,11 +6,13 @@ const RECENTLY_PLAYED_KEY = "jumtunes_recently_played";
 const MAX_RECENTLY_PLAYED = 20;
 const DEFAULT_PREVIEW_LIMIT_SECONDS = 30;
 
-// Helper to save recently played track
+// Helper to save recently played track (includes audio_url for Safari gesture chain)
 const saveToRecentlyPlayed = (track: { 
   id: string; 
   title: string; 
+  audio_url: string;
   cover_art_url: string | null;
+  duration?: number | null;
   artist?: { id: string; display_name: string | null };
 }) => {
   try {
@@ -20,11 +22,13 @@ const saveToRecentlyPlayed = (track: {
     // Remove if already exists
     existing = existing.filter((t: { id: string }) => t.id !== track.id);
     
-    // Add to front with timestamp
+    // Add to front with timestamp (include audio_url for Safari compatibility)
     const newTrack = {
       id: track.id,
       title: track.title,
+      audio_url: track.audio_url,
       cover_art_url: track.cover_art_url,
+      duration: track.duration || null,
       artist_id: track.artist?.id || "",
       artist_name: track.artist?.display_name || null,
       playedAt: Date.now(),
@@ -100,6 +104,8 @@ const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(und
 export function AudioPlayerProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUnlockedRef = useRef(false);
+  const pendingPlayRef = useRef<{ track: AudioTrack; forcePreviewCheck: boolean } | null>(null);
   const [currentTrack, setCurrentTrack] = useState<AudioTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
@@ -178,11 +184,41 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     ? Math.max(0, currentPreviewLimit - currentTime)
     : 0;
 
+  // Safari/iOS audio unlock - must be called synchronously during user gesture
+  const unlockAudio = useCallback((audio: HTMLAudioElement) => {
+    if (audioUnlockedRef.current) return;
+    
+    // Create a silent audio context unlock for Safari
+    try {
+      // Trigger a play/pause to unlock the audio element
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          audioUnlockedRef.current = true;
+          console.log("[Audio] Safari audio unlocked");
+        }).catch(() => {
+          // Unlock failed, but we tried - some browsers may still work
+          console.log("[Audio] Safari unlock attempt completed");
+        });
+      }
+    } catch (e) {
+      console.log("[Audio] Unlock error:", e);
+    }
+  }, []);
+
   const ensureAudioElement = useCallback(() => {
     if (audioRef.current) return audioRef.current;
 
     const audio = new Audio();
     audio.volume = 1;
+    // Safari compatibility: set preload to auto for better loading behavior
+    audio.preload = "auto";
+    // Safari/iOS compatibility: set playsinline attribute
+    audio.setAttribute("playsinline", "true");
+    audio.setAttribute("webkit-playsinline", "true");
+    // Note: Removing crossOrigin as it can cause CORS issues with Supabase storage on Safari
 
     audio.addEventListener("timeupdate", () => {
       setCurrentTime(audio.currentTime || 0);
@@ -200,6 +236,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
     audio.addEventListener("play", () => {
       setIsPlaying(true);
+      setIsBuffering(false);
     });
 
     audio.addEventListener("pause", () => {
@@ -214,9 +251,20 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       setIsBuffering(false);
     });
 
-    audio.addEventListener("error", () => {
-      console.error("Audio playback error", audio.error);
+    // Safari: also listen to canplaythrough for better buffering handling
+    audio.addEventListener("canplaythrough", () => {
+      setIsBuffering(false);
+    });
+
+    audio.addEventListener("error", (e) => {
+      const error = audio.error;
+      console.error("[Audio] Playback error:", {
+        code: error?.code,
+        message: error?.message,
+        event: e
+      });
       setIsPlaying(false);
+      setIsBuffering(false);
     });
 
     audioRef.current = audio;
@@ -251,20 +299,34 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     return data.publicUrl;
   }, []);
 
-  const playTrackInternal = useCallback(async (track: AudioTrack, forcePreviewCheck = true) => {
-    const audio = ensureAudioElement();
+  // Safari-compatible play: starts playback SYNCHRONOUSLY, then hydrates data async
+  const playTrackSafari = useCallback((track: AudioTrack, audio: HTMLAudioElement, audioUrl: string) => {
+    const resolvedUrl = getAudioUrl(audioUrl);
+    
+    // Set source and play SYNCHRONOUSLY - critical for Safari gesture chain
+    audio.src = resolvedUrl;
+    audio.load();
+    
+    // Play immediately to maintain gesture chain
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((error) => {
+        // Safari may reject if user hasn't interacted yet
+        console.warn("[Audio] Safari play rejected:", error.name, error.message);
+        // Store pending play for retry on next user interaction
+        if (error.name === "NotAllowedError") {
+          pendingPlayRef.current = { track, forcePreviewCheck: true };
+        }
+      });
+    }
+  }, [getAudioUrl]);
 
-    setCurrentTime(0);
-    setDuration(track.duration || 0);
-    setIsPlayerVisible(true);
-    setIsBuffering(true);
-    setShowPreviewEndedModal(false);
-
+  // Async hydration that happens AFTER playback starts
+  const hydrateTrackAsync = useCallback(async (track: AudioTrack, forcePreviewCheck: boolean) => {
     let audioUrl = track.audio_url;
     let hasKaraoke = track.has_karaoke;
     let previewDuration = track.preview_duration;
 
-    // Hydrate missing fields (some callers only pass a subset of track fields)
     const needsAudioUrl = !audioUrl || audioUrl.trim() === "";
     const needsHasKaraoke = hasKaraoke === undefined || hasKaraoke === null;
     const needsPreviewDuration = previewDuration === undefined;
@@ -277,58 +339,96 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
           .eq("id", track.id)
           .maybeSingle();
 
-        if (error) {
-          console.error("Failed to hydrate track:", error);
-          setIsBuffering(false);
-          return;
-        }
-
-        if (needsAudioUrl) {
-          if (!data?.audio_url) {
-            console.error("No audio URL found for track:", track.id);
-            setIsBuffering(false);
-            return;
+        if (!error && data) {
+          if (needsHasKaraoke) {
+            hasKaraoke = data?.has_karaoke ?? null;
           }
-          audioUrl = data.audio_url;
-        }
-
-        if (needsHasKaraoke) {
-          hasKaraoke = data?.has_karaoke ?? null;
-        }
-
-        if (needsPreviewDuration) {
-          previewDuration = data?.preview_duration ?? DEFAULT_PREVIEW_LIMIT_SECONDS;
+          if (needsPreviewDuration) {
+            previewDuration = data?.preview_duration ?? DEFAULT_PREVIEW_LIMIT_SECONDS;
+          }
+          // Update track with hydrated data
+          setCurrentTrack(prev => prev?.id === track.id ? {
+            ...prev,
+            has_karaoke: hasKaraoke,
+            preview_duration: previewDuration || DEFAULT_PREVIEW_LIMIT_SECONDS,
+          } : prev);
         }
       } catch (e) {
         console.error("Error hydrating track:", e);
-        setIsBuffering(false);
-        return;
       }
     }
 
-    const hydratedTrack: AudioTrack = {
-      ...track,
-      audio_url: audioUrl,
-      has_karaoke: hasKaraoke,
-      preview_duration: previewDuration || DEFAULT_PREVIEW_LIMIT_SECONDS,
-    };
-
-    setCurrentTrack(hydratedTrack);
-
-    // Check access and set preview mode
+    // Check access and set preview mode (async is fine here)
     if (forcePreviewCheck) {
       const hasAccess = await checkFullAccess(track.id);
       setIsPreviewMode(!hasAccess);
     }
+  }, [checkFullAccess]);
+
+  const playTrackInternal = useCallback((track: AudioTrack, forcePreviewCheck = true) => {
+    const audio = ensureAudioElement();
+
+    // Reset state synchronously
+    setCurrentTime(0);
+    setDuration(track.duration || 0);
+    setIsPlayerVisible(true);
+    setIsBuffering(true);
+    setShowPreviewEndedModal(false);
+    setCurrentTrack(track);
 
     // Save to recently played
-    saveToRecentlyPlayed(hydratedTrack);
+    saveToRecentlyPlayed(track);
 
-    const resolvedUrl = getAudioUrl(audioUrl);
-    audio.src = resolvedUrl;
-    audio.load();
-    audio.play().catch(console.error);
-  }, [getAudioUrl, ensureAudioElement, checkFullAccess]);
+    let audioUrl = track.audio_url;
+    const needsAudioUrl = !audioUrl || audioUrl.trim() === "";
+
+    if (needsAudioUrl) {
+      // Need to fetch audio URL first - breaks gesture chain but necessary
+      // This path is for tracks without pre-hydrated audio_url
+      supabase
+        .from("tracks")
+        .select("audio_url, has_karaoke, preview_duration")
+        .eq("id", track.id)
+        .maybeSingle()
+        .then(({ data, error }) => {
+          if (error || !data?.audio_url) {
+            console.error("[Audio] Failed to get audio URL:", error);
+            setIsBuffering(false);
+            return;
+          }
+
+          const hydratedTrack: AudioTrack = {
+            ...track,
+            audio_url: data.audio_url,
+            has_karaoke: data.has_karaoke ?? null,
+            preview_duration: data.preview_duration ?? DEFAULT_PREVIEW_LIMIT_SECONDS,
+          };
+
+          setCurrentTrack(hydratedTrack);
+          
+          // Play with the fetched URL
+          const resolvedUrl = getAudioUrl(data.audio_url);
+          audio.src = resolvedUrl;
+          audio.load();
+          audio.play().catch((e) => {
+            console.warn("[Audio] Play after hydration failed:", e);
+          });
+
+          // Check access async
+          if (forcePreviewCheck) {
+            checkFullAccess(track.id).then(hasAccess => {
+              setIsPreviewMode(!hasAccess);
+            });
+          }
+        });
+    } else {
+      // We have audio URL - play SYNCHRONOUSLY to maintain Safari gesture chain
+      playTrackSafari(track, audio, audioUrl);
+      
+      // Hydrate additional data async (karaoke, preview duration, access check)
+      hydrateTrackAsync(track, forcePreviewCheck);
+    }
+  }, [getAudioUrl, ensureAudioElement, checkFullAccess, playTrackSafari, hydrateTrackAsync]);
 
   // Handle track ended - auto-play next based on repeat/shuffle modes
   useEffect(() => {
@@ -371,6 +471,37 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     };
   }, [ensureAudioElement]);
 
+  // Safari audio unlock: Listen for first user interaction to unlock audio
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      const audio = audioRef.current;
+      if (!audio) return;
+
+      // Try to unlock audio on first interaction
+      if (!audioUnlockedRef.current) {
+        unlockAudio(audio);
+      }
+
+      // If there's a pending play that failed due to NotAllowedError, retry it
+      if (pendingPlayRef.current) {
+        const { track, forcePreviewCheck } = pendingPlayRef.current;
+        pendingPlayRef.current = null;
+        playTrackInternal(track, forcePreviewCheck);
+      }
+    };
+
+    // Add listeners for various user interactions
+    document.addEventListener("click", handleUserInteraction, { once: false, passive: true });
+    document.addEventListener("touchstart", handleUserInteraction, { once: false, passive: true });
+    document.addEventListener("keydown", handleUserInteraction, { once: false, passive: true });
+
+    return () => {
+      document.removeEventListener("click", handleUserInteraction);
+      document.removeEventListener("touchstart", handleUserInteraction);
+      document.removeEventListener("keydown", handleUserInteraction);
+    };
+  }, [unlockAudio, playTrackInternal]);
+
   // Clear access cache on user change
   useEffect(() => {
     accessCache.current.clear();
@@ -379,12 +510,17 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const playTrack = useCallback((track: AudioTrack) => {
     const audio = ensureAudioElement();
 
+    // Attempt to unlock audio on every playTrack call (will no-op if already unlocked)
+    unlockAudio(audio);
+
     // If same track, just toggle play/pause
     if (currentTrack?.id === track.id) {
       if (isPlaying) {
         audio.pause();
       } else {
-        audio.play().catch(console.error);
+        audio.play().catch((e) => {
+          console.warn("[Audio] Toggle play failed:", e);
+        });
       }
       return;
     }
@@ -400,7 +536,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     }
 
     playTrackInternal(track);
-  }, [currentTrack?.id, isPlaying, queue, ensureAudioElement, playTrackInternal]);
+  }, [currentTrack?.id, isPlaying, queue, ensureAudioElement, playTrackInternal, unlockAudio]);
 
   const addToQueue = useCallback((track: AudioTrack) => {
     // Don't add duplicates

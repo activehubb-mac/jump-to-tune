@@ -422,6 +422,74 @@ export type Database = {
         }
         Relationships: []
       }
+      playlist_collaborators: {
+        Row: {
+          accepted_at: string | null
+          id: string
+          invited_at: string
+          invited_by: string
+          playlist_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          id?: string
+          invited_at?: string
+          invited_by: string
+          playlist_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          id?: string
+          invited_at?: string
+          invited_by?: string
+          playlist_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_collaborators_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playlist_folders: {
+        Row: {
+          color: string | null
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       playlist_tracks: {
         Row: {
           added_at: string
@@ -466,7 +534,9 @@ export type Database = {
           cover_image_url: string | null
           created_at: string
           description: string | null
+          folder_id: string | null
           id: string
+          is_collaborative: boolean
           is_public: boolean
           name: string
           updated_at: string
@@ -476,7 +546,9 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
+          folder_id?: string | null
           id?: string
+          is_collaborative?: boolean
           is_public?: boolean
           name: string
           updated_at?: string
@@ -486,13 +558,23 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
+          folder_id?: string | null
           id?: string
+          is_collaborative?: boolean
           is_public?: boolean
           name?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "playlists_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "playlist_folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profile_genres: {
         Row: {
@@ -1045,6 +1127,14 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_playlist_collaborator: {
+        Args: { _playlist_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_playlist_owner: {
+        Args: { _playlist_id: string; _user_id: string }
         Returns: boolean
       }
     }
