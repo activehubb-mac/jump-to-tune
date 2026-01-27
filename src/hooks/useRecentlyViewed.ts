@@ -18,18 +18,34 @@ const MAX_TRACKS = 10;
 export function useRecentlyViewed(limit: number = 5) {
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedTrack[]>([]);
 
+  // Helper to validate audio URL format
+  const isValidAudioUrl = (url: string): boolean => {
+    if (!url || url.trim() === "") return false;
+    const cleanUrl = url.split("?")[0].split("#")[0].toLowerCase();
+    return cleanUrl.endsWith(".mp3") || cleanUrl.endsWith(".wav") || cleanUrl.endsWith(".flac") || cleanUrl.endsWith(".m4a") || cleanUrl.endsWith(".aac");
+  };
+
   // Load from localStorage on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as RecentlyViewedTrack[];
-        // Filter out tracks without audio_url (old format)
-        const validTracks = parsed.filter(t => t.audio_url);
+        // Filter out tracks without valid audio_url (old format or corrupted URLs like .mo3)
+        const validTracks = parsed.filter(t => t.audio_url && isValidAudioUrl(t.audio_url));
+        
+        // If we filtered out corrupted data, update localStorage
+        if (validTracks.length !== parsed.length) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(validTracks));
+          console.log("[RecentlyViewed] Cleaned", parsed.length - validTracks.length, "corrupted entries");
+        }
+        
         setRecentlyViewed(validTracks.slice(0, limit));
       }
     } catch (e) {
       console.error("Failed to load recently viewed:", e);
+      // Clear corrupted localStorage
+      localStorage.removeItem(STORAGE_KEY);
     }
   }, [limit]);
 
