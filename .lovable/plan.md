@@ -1,97 +1,229 @@
 
 
-# Fix Preview Ended Modal - Price Not Being Passed
+# Safe Lightweight Optimization Plan
 
-## Problem
-The "Preview Ended" modal shows $0.00 because the `price` field is never being passed to `playTrack` or hydrated afterward.
+This plan optimizes performance while preserving ALL functionality, including the mobile Safari audio player.
 
-## Root Cause Analysis
+## What This Plan Does NOT Touch (Safe Zones)
 
-The data flow has three gaps:
+These files/systems remain 100% unchanged:
 
-1. **Call sites don't include `price`**: When `playTrack()` is called from pages like `Browse.tsx`, the price is not included in the track object
+- `src/contexts/AudioPlayerContext.tsx` - All Safari audio logic intact
+- `src/hooks/useRecentlyPlayed.ts` - Recently played functionality
+- `src/hooks/usePushNotifications.ts` - Notification system
+- All Supabase edge functions
+- All database queries and API calls
+- All form logic and validation
+- All payment/subscription flows
+- All navigation and routing
 
-2. **Hydration doesn't fetch `price`**: The `hydrateTrackAsync` function in `AudioPlayerContext.tsx` only fetches `audio_url, has_karaoke, preview_duration` - it does not fetch `price`
+---
 
-3. **GlobalAudioPlayer defaults to 0**: When passing the track to `PreviewEndedModal`, it uses `currentTrack.price || 0`, which is always 0 since price was never set
+## Phase 1: Remove Background Images & Particles
 
-## Solution
+### 1.1 Delete ParticleOverlay Component
+**File:** `src/components/effects/ParticleOverlay.tsx`
+- Delete entire file (canvas animation causing CPU usage)
 
-Two-part fix:
+### 1.2 Delete Background Image
+**File:** `public/images/bg-futuristic.jpg`
+- Delete file (reduces bundle size)
 
-### Part 1: Include `price` in hydration query
+### 1.3 Simplify Layout Component
+**File:** `src/components/layout/Layout.tsx`
 
-In `AudioPlayerContext.tsx`, update the database query to also fetch `price`:
+Changes:
+- Remove `useBackground` and `showParticles` props
+- Remove lazy-loaded ParticleOverlay import
+- Keep all other logic (navbar, footer, safe-area padding)
 
 ```tsx
-// Line ~637: Update the select query
-.select("audio_url, has_karaoke, preview_duration, price")
+// Before
+export function Layout({ children, showFooter = true, useBackground = "none", showParticles = false })
 
-// Line ~650-655: Update the state setter to include price
-setCurrentTrack(prev => prev?.id === track.id ? {
-  ...prev,
-  has_karaoke: hasKaraoke,
-  preview_duration: previewDuration || DEFAULT_PREVIEW_LIMIT_SECONDS,
-  price: data?.price ?? prev.price,  // Add this line
-} : prev);
+// After
+export function Layout({ children, showFooter = true })
 ```
 
-Also update the fallback fetch path (~line 704-720):
+### 1.4 Update Pages Using Background Props
+Remove `useBackground="futuristic"` or `useBackground="subtle"` from:
+
+| File | Line | Change |
+|------|------|--------|
+| `src/pages/Index.tsx` | ~831 | Remove `useBackground="futuristic"` |
+| `src/pages/Auth.tsx` | Multiple | Remove `useBackground="futuristic"` |
+| `src/pages/Browse.tsx` | ~315 | Remove `useBackground="subtle"` |
+| `src/pages/Karaoke.tsx` | ~156 | Remove `useBackground="futuristic"` |
+
+---
+
+## Phase 2: Simplify CSS Effects
+
+### 2.1 Update index.css
+**File:** `src/index.css`
+
+Remove:
+- `.bg-futuristic` class (lines ~128-145)
+- `.bg-futuristic-subtle` class
+- Related `@media` queries
+
+Simplify:
+```css
+/* Before */
+.glass-card {
+  @apply bg-glass/60 backdrop-blur-xl rounded-xl;
+}
+
+/* After */
+.glass-card {
+  @apply bg-card rounded-xl;
+}
+```
+
+### 2.2 Update GlobalAudioPlayer Styling
+**File:** `src/components/audio/GlobalAudioPlayer.tsx`
+
+Visual change only (no logic affected):
 ```tsx
-.select("audio_url, has_karaoke, preview_duration, price")
-// And include price in hydratedTrack
+// Before (line ~618)
+className="glass-card border border-glass-border/30 backdrop-blur-xl"
+
+// After
+className="bg-card border border-border"
 ```
 
-### Part 2: Ensure all `playTrack` call sites include `price`
-
-Update all locations that call `playTrack()` to include the `price` field. Key files:
-- `src/pages/Browse.tsx`
-- `src/pages/AlbumDetail.tsx`
-- `src/pages/ForYou.tsx`
-- `src/pages/LikedSongsDetail.tsx`
-- `src/pages/Karaoke.tsx`
-- `src/pages/LabelProfile.tsx`
-- `src/components/dashboard/TrackCard.tsx`
-- `src/components/browse/AlbumCard.tsx`
-- `src/components/browse/RecentlyViewedSection.tsx`
-- `src/components/home/FeaturedHeroCarousel.tsx`
-- `src/components/library/OwnedTrackCard.tsx`
-- `src/components/library/RecentlyPlayedCarousel.tsx`
-
-Example fix for `Browse.tsx`:
+Also update queue panel (~line 425):
 ```tsx
-playTrack({
-  id: track.id,
-  title: track.title,
-  audio_url: track.audio_url,
-  cover_art_url: track.cover_art_url,
-  duration: track.duration,
-  artist: track.artist,
-  price: track.price,  // Add this line
-});
+// Before
+className="glass-card border border-glass-border/30 backdrop-blur-xl rounded-lg"
+
+// After
+className="bg-card border border-border rounded-lg"
 ```
 
-## Files to Modify
+---
 
-| File | Change |
-|------|--------|
-| `src/contexts/AudioPlayerContext.tsx` | Add `price` to hydration queries and state updates |
-| `src/pages/Browse.tsx` | Include `price` in `playTrack()` call |
-| `src/pages/AlbumDetail.tsx` | Include `price` in `playTrack()` calls |
-| `src/pages/ForYou.tsx` | Include `price` in `playTrack()` calls |
-| `src/pages/LikedSongsDetail.tsx` | Include `price` in `playTrack()` calls |
-| `src/pages/Karaoke.tsx` | Include `price` in `playTrack()` call |
-| `src/pages/LabelProfile.tsx` | Include `price` in `playTrack()` call |
-| `src/components/dashboard/TrackCard.tsx` | Include `price` in `playTrack()` call |
-| `src/components/browse/AlbumCard.tsx` | Include `price` in `playTrack()` call |
-| `src/components/browse/RecentlyViewedSection.tsx` | Include `price` in `playTrack()` call |
-| `src/components/home/FeaturedHeroCarousel.tsx` | Include `price` in `playTrack()` call |
-| `src/components/library/OwnedTrackCard.tsx` | Include `price` in `playTrack()` call |
-| `src/components/library/RecentlyPlayedCarousel.tsx` | Include `price` in `playTrack()` call |
+## Phase 3: Replace Framer Motion with CSS
 
-## Technical Notes
+### 3.1 Update Browse.tsx
+**File:** `src/pages/Browse.tsx`
 
-- The `price` field is stored in the database as a `numeric` type in dollars (e.g., `0.25` = $0.25)
-- The `PreviewEndedModal` already uses `formatPrice(track.price)` which will correctly format the raw value as `$0.25`
-- No changes needed in `PreviewEndedModal.tsx` - the current code is correct once it receives the actual price value
+Remove `motion` import and replace animated divs with CSS:
+
+```tsx
+// Before (line 2)
+import { motion, AnimatePresence } from "framer-motion";
+
+// After
+// Remove this import entirely
+
+// Before (track card)
+<motion.div
+  key={track.id}
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: Math.min(index * 0.03, 0.3) }}
+>
+
+// After
+<div
+  key={track.id}
+  className="animate-fade-in"
+  style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
+>
+```
+
+### 3.2 Update ForYou.tsx
+**File:** `src/pages/ForYou.tsx`
+
+Remove motion wrapper:
+```tsx
+// Before (line 24)
+import { motion } from "framer-motion";
+
+// Before (line 245-249)
+<motion.div
+  key={track.id}
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: index * 0.03 }}
+>
+
+// After
+<div key={track.id} className="animate-fade-in" style={{ animationDelay: `${index * 30}ms` }}>
+```
+
+### 3.3 Update RecentlyViewedSection.tsx
+**File:** `src/components/browse/RecentlyViewedSection.tsx`
+
+Replace motion animations with CSS:
+```tsx
+// Before
+import { motion, AnimatePresence } from "framer-motion";
+
+// After - use CSS animations instead
+```
+
+---
+
+## Phase 4: Clean Up Tailwind Config
+
+### 4.1 Remove Unused Keyframes
+**File:** `tailwind.config.ts`
+
+Remove decorative animations that are no longer used:
+- `pulse-glow` keyframe
+- `float` keyframe
+- `gradient-shift` keyframe
+
+---
+
+## Verification Checklist
+
+After implementation, verify these pages:
+
+| Page | What to Check |
+|------|---------------|
+| `/` (Home) | Hero content displays, featured artists/labels load |
+| `/auth` | Sign in/up forms work, password reset works |
+| `/browse` | Track grid loads, filters work, play button works |
+| `/for-you` | Personalized playlist loads and plays |
+| `/karaoke` | Karaoke tracks list, lyrics panel works |
+| `/collection` | Library items display correctly |
+| `/artist/dashboard` | Stats and tracks load |
+| `/label/dashboard` | Roster and analytics display |
+| `/account` | Settings forms submit correctly |
+| **Audio Player** | Play/pause, seek, queue, karaoke mode all work |
+
+---
+
+## Files Modified Summary
+
+| File | Action | Risk Level |
+|------|--------|------------|
+| `src/components/effects/ParticleOverlay.tsx` | DELETE | None |
+| `public/images/bg-futuristic.jpg` | DELETE | None |
+| `src/components/layout/Layout.tsx` | Simplify props | Low (visual) |
+| `src/index.css` | Remove bg classes, simplify glass | Low (visual) |
+| `src/pages/Index.tsx` | Remove useBackground prop | Low (visual) |
+| `src/pages/Auth.tsx` | Remove useBackground prop | Low (visual) |
+| `src/pages/Browse.tsx` | Replace motion with CSS | Low (visual) |
+| `src/pages/ForYou.tsx` | Replace motion with CSS | Low (visual) |
+| `src/pages/Karaoke.tsx` | Remove useBackground prop | Low (visual) |
+| `src/components/browse/RecentlyViewedSection.tsx` | Replace motion with CSS | Low (visual) |
+| `src/components/audio/GlobalAudioPlayer.tsx` | Simplify CSS classes | Low (visual) |
+| `tailwind.config.ts` | Remove unused keyframes | None |
+
+---
+
+## What Stays Exactly The Same
+
+- All audio playback logic (Safari fixes, gesture handling, buffering recovery)
+- All page layouts and grid structures
+- All interactive functionality (buttons, forms, modals)
+- All API integrations and data fetching
+- All authentication flows
+- All payment and subscription logic
+- All navigation and routing
+- All mobile responsiveness and safe-area handling
 
