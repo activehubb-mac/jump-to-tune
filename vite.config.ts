@@ -54,15 +54,16 @@ export default defineConfig(({ mode }) => ({
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/ezamzkycxqrstuznqaha\.supabase\.co\/storage\/v1\/object\/public\/.*/i,
-            handler: "CacheFirst",
+            handler: "NetworkFirst", // Changed from CacheFirst for Safari compatibility
             options: {
               cacheName: "audio-cache",
+              networkTimeoutSeconds: 10, // Fallback to cache after 10s
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                maxEntries: 50, // Reduced from 100
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days instead of 30
               },
               cacheableResponse: {
-                statuses: [0, 200]
+                statuses: [200] // Only cache successful responses (removed status 0)
               }
             }
           }

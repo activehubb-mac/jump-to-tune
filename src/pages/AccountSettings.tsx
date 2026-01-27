@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { 
   User, Settings, Shield, CreditCard, Bell, LogOut, 
-  Loader2, ChevronRight, Trash2, Info
+  Loader2, ChevronRight, Trash2, Info, RefreshCw
 } from "lucide-react";
 
 declare const __BUILD_TIMESTAMP__: string;
@@ -23,6 +23,38 @@ export default function AccountSettings() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isClearingCache, setIsClearingCache] = useState(false);
+
+  const clearAudioCache = async () => {
+    setIsClearingCache(true);
+    try {
+      if ('caches' in window) {
+        await caches.delete('audio-cache');
+      }
+      // Also clear localStorage recently played/viewed
+      localStorage.removeItem('jumtunes_recently_played');
+      localStorage.removeItem('jumtunes_recently_viewed');
+      
+      showFeedback({
+        type: "success",
+        title: "Cache cleared",
+        message: "Audio cache has been cleared. Try playing a track again.",
+        autoClose: true,
+        autoCloseDelay: 2000,
+      });
+      // Reload to ensure clean state
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (e) {
+      console.error("Failed to clear cache:", e);
+      showFeedback({
+        type: "error",
+        title: "Failed",
+        message: "Could not clear cache. Please try again.",
+        autoClose: true,
+      });
+      setIsClearingCache(false);
+    }
+  };
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -190,6 +222,32 @@ export default function AccountSettings() {
               <Trash2 className="w-4 h-4 mr-2" />
               Delete Account
             </Button>
+          </div>
+
+          {/* Troubleshooting */}
+          <div className="glass-card p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h3 className="font-medium text-foreground text-sm">Audio Playback Issues?</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Clear cached audio files to fix playback problems
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearAudioCache}
+                disabled={isClearingCache}
+                className="shrink-0"
+              >
+                {isClearingCache ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+                <span className="ml-1.5">Clear Cache</span>
+              </Button>
+            </div>
           </div>
 
           {/* Version Info */}

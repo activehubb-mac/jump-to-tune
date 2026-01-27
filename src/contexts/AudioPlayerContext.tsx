@@ -317,7 +317,9 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
                   ext === "flac" ? "audio/flac" :
                   "audio/mpeg";
 
-                const res = await fetch(src);
+                // Use cache: 'no-store' on Safari to bypass service worker cache
+                const fetchOptions: RequestInit = { cache: 'no-store', mode: 'cors' };
+                const res = await fetch(src, fetchOptions);
                 const blob = await res.blob();
                 const fixedBlob = new Blob([blob], { type: inferredType });
 
@@ -364,6 +366,9 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       setIsBuffering(false);
     });
 
+    // Track Safari cache-busting retry attempts to prevent infinite loops
+    const safariRetryAttemptedRef = { current: false };
+    
     audio.addEventListener("error", (e) => {
       const error = audio.error;
       console.error("[Audio] Playback error:", {
@@ -371,6 +376,27 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         message: error?.message,
         event: e
       });
+      
+      // Safari-specific: Retry with cache-busting on decode/network errors
+      // MediaError codes: 1=ABORTED, 2=NETWORK, 3=DECODE, 4=SRC_NOT_SUPPORTED
+      if (isSafari && 
+          (error?.code === 3 || error?.code === 2) && 
+          !safariRetryAttemptedRef.current) {
+        const currentSrc = audio.src;
+        if (currentSrc && !currentSrc.includes('_nocache=')) {
+          console.log("[Audio] Safari cache-busting retry for decode/network error");
+          safariRetryAttemptedRef.current = true;
+          const separator = currentSrc.includes('?') ? '&' : '?';
+          audio.src = `${currentSrc}${separator}_nocache=${Date.now()}`;
+          audio.play().catch((retryErr) => {
+            console.warn("[Audio] Safari cache-busting retry failed:", retryErr?.name);
+            setIsPlaying(false);
+            setIsBuffering(false);
+          });
+          return; // Don't stop - retry in progress
+        }
+      }
+      
       setIsPlaying(false);
       setIsBuffering(false);
     });
