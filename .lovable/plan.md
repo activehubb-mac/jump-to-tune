@@ -1,53 +1,58 @@
 
-# Fix Queue Bottom Sheet Scrolling
+# Fix Preview Ended Modal Incorrect Price Display
 
 ## Problem
-When scrolling the queue track list in the music player, the background/parent page scrolls instead of the queue content. This happens because:
+The "Preview Ended" modal shows track prices incorrectly. For example, a track priced at $0.25 displays as "$0.00".
 
-1. The `ScrollArea` uses `max-h-80` which doesn't provide a fixed height for Radix to calculate overflow
-2. Touch and wheel events propagate to the parent container
+## Root Cause
+The `PreviewEndedModal.tsx` component has incorrect price formatting logic:
+
+```tsx
+const priceInDollars = (track.price / 100).toFixed(2);
+```
+
+This code assumes the price is stored in **cents** and divides by 100. However, the database stores prices in **dollars** (e.g., `0.25` means $0.25, not 25 cents).
+
+This causes:
+- `$0.25 / 100 = $0.0025` → displayed as `$0.00`
+- `$1.99 / 100 = $0.0199` → displayed as `$0.02`
 
 ## Solution
-Wrap the `ScrollArea` in a fixed-height container with scroll event containment to prevent event bubbling.
+Use the existing `formatPrice` utility from `src/lib/formatters.ts`, which correctly formats dollar amounts:
 
-## Implementation
-
-### File: `src/components/audio/GlobalAudioPlayer.tsx`
-
-**Change at line 447:**
-
-Replace:
 ```tsx
-<ScrollArea className="max-h-80 ios-scroll">
+import { formatPrice } from "@/lib/formatters";
+// ...
+<p className="text-lg font-bold text-primary mt-1">{formatPrice(track.price)}</p>
 ```
 
-With:
-```tsx
-<div 
-  className="h-80"
-  onTouchMove={(e) => e.stopPropagation()}
-  onWheel={(e) => e.stopPropagation()}
->
-  <ScrollArea className="h-full">
-```
+This matches how `InstantPurchaseModal` (which opens after clicking "Purchase Full Track") handles prices using `track.price.toFixed(2)` without dividing by 100.
 
-And add the closing `</div>` after `</ScrollArea>` at line 552.
+## Technical Changes
 
----
+**File: `src/components/audio/PreviewEndedModal.tsx`**
 
-## Why This Works
+1. Add import for `formatPrice`:
+   ```tsx
+   import { formatPrice } from "@/lib/formatters";
+   ```
 
-| Current Issue | Fix Applied |
-|--------------|-------------|
-| `max-h-80` doesn't create a scrollable boundary | `h-80` on wrapper gives fixed 320px height |
-| Touch events bubble to parent | `onTouchMove={(e) => e.stopPropagation()}` stops propagation |
-| Wheel events bubble to parent | `onWheel={(e) => e.stopPropagation()}` stops propagation |
-| `ScrollArea` doesn't know its height | `h-full` inherits the fixed height from wrapper |
+2. Remove the incorrect calculation on line 35:
+   ```tsx
+   // Remove this line
+   const priceInDollars = (track.price / 100).toFixed(2);
+   ```
 
----
+3. Update the price display on line 84:
+   ```tsx
+   // Change from
+   <p className="text-lg font-bold text-primary mt-1">${priceInDollars}</p>
+   
+   // To
+   <p className="text-lg font-bold text-primary mt-1">{formatPrice(track.price)}</p>
+   ```
 
-## Files to Modify
-
-| File | Lines | Change |
-|------|-------|--------|
-| `src/components/audio/GlobalAudioPlayer.tsx` | 447-552 | Wrap `ScrollArea` in fixed-height div with event containment |
+## Result
+- Track at $0.25 will display as **$0.25** (correct)
+- Track at $1.99 will display as **$1.99** (correct)
+- Consistent formatting with the rest of the application
