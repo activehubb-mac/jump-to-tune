@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { useConfetti } from "@/hooks/useConfetti";
 import { useLowBalanceWarning } from "@/components/wallet/LowBalanceWarningModal";
+import { openExternalUrl, getMobileHeaders } from "@/lib/platformBrowser";
 
 interface CreditTransaction {
   id: string;
@@ -178,6 +179,7 @@ export function useWallet() {
         body: { amount_cents: amountCents },
         headers: {
           Authorization: `Bearer ${sessionData.session.access_token}`,
+          ...getMobileHeaders(),
         },
       });
 
@@ -192,7 +194,7 @@ export function useWallet() {
       }
 
       if (data?.url) {
-        window.open(data.url, "_blank");
+        await openExternalUrl(data.url);
         return data.url;
       }
 

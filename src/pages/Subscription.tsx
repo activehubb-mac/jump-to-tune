@@ -43,6 +43,7 @@ import { cn } from "@/lib/utils";
 import { format, addMonths } from "date-fns";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { CheckoutLoadingOverlay } from "@/components/subscription/CheckoutLoadingOverlay";
+import { openPaymentUrl, openExternalUrl, isNativeApp } from "@/lib/platformBrowser";
 
 const SUBSCRIPTION_TIERS = [
   {
@@ -158,12 +159,12 @@ export default function Subscription() {
         showFeedback({ type: "info", title: "Proration Info", message: validation.prorationInfo.message });
       }
 
-      // Proceed with checkout - redirect in same tab to preserve session
+      // Proceed with checkout
       const url = await createSubscriptionCheckout(tier);
       if (url) {
         setIsRedirecting(true);
         setLoadingTier(null);
-        window.location.href = url;
+        await openPaymentUrl(url);
         return;
       }
     } catch (error) {
@@ -187,7 +188,7 @@ export default function Subscription() {
       if (url) {
         setIsRedirecting(true);
         setLoadingTier(null);
-        window.location.href = url;
+        await openPaymentUrl(url);
         return;
       }
     } catch (error) {
@@ -207,7 +208,7 @@ export default function Subscription() {
     try {
       const url = await openCustomerPortal();
       if (url) {
-        window.open(url, "_blank");
+        await openExternalUrl(url);
       }
     } finally {
       setOpeningPortal(false);
@@ -219,8 +220,8 @@ export default function Subscription() {
     try {
       const url = await openCustomerPortal();
       if (url) {
-        // Redirect to portal where user can cancel
-        window.location.href = url;
+        // On native: opens in external browser; on web: redirects
+        await openPaymentUrl(url);
       }
     } catch (error) {
       console.error("Cancel subscription error:", error);
