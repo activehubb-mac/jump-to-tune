@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -312,7 +311,7 @@ export default function Browse() {
   };
 
   return (
-    <Layout useBackground="subtle">
+    <Layout>
       <PremiumFeatureModal
         open={showPremiumModal}
         onOpenChange={setShowPremiumModal}
@@ -511,14 +510,10 @@ export default function Browse() {
         {isLoading ? (
           <TrackCardSkeletonGrid count={10} />
         ) : tracks && tracks.length > 0 ? (
-          <motion.div
+          <div
             key={`${selectedGenre}-${selectedMood}-${sortBy}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
           >
-            <AnimatePresence mode="popLayout">
               {tracks.map((track, index) => {
                 const artistId = track.artist?.id;
                 const artistName = track.artist?.display_name || "Unknown Artist";
@@ -527,13 +522,10 @@ export default function Browse() {
                 const artistFollowers = artistId ? followerCounts[artistId] || 0 : 0;
 
                 return (
-                  <motion.div
+                  <div
                     key={track.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: Math.min(index * 0.03, 0.3) }}
-                    className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
+                    className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300 animate-fade-in"
+                    style={{ animationDelay: `${Math.min(index * 30, 300)}ms`, animationFillMode: 'both' }}
                     onClick={() => handleTrackClick(track)}
                   >
                   {/* Album Art */}
@@ -693,11 +685,10 @@ export default function Browse() {
                       </span>
                     </div>
                   </div>
-                  </motion.div>
+                  </div>
                 );
               })}
-            </AnimatePresence>
-          </motion.div>
+          </div>
         ) : (
           <div className="text-center py-24">
             <Disc3 className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
