@@ -4,7 +4,7 @@ import { Mic2, Music, Sparkles } from "lucide-react";
 
 export function KaraokePromoBanner() {
   return (
-    <section className="py-12">
+    <section className="py-10 md:py-14">
       <div className="container mx-auto px-4">
         <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-md p-8 md:p-12">
           {/* Background decorative elements */}

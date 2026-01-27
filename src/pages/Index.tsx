@@ -102,7 +102,7 @@ function FeaturedArtistsSection() {
     return () => clearInterval(interval);
   }, [featuredArtists]);
   if (isLoading) {
-    return <section className="py-8">
+    return <section className="py-10 md:py-14">
         <div className="container mx-auto px-4">
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -116,7 +116,7 @@ function FeaturedArtistsSection() {
   const currentArtist = featuredArtists[currentIndex];
   const showCarouselControls = featuredArtists.length > 1;
   const currentStats = artistStats[currentArtist.content_id];
-  return <section className="py-8">
+  return <section className="py-10 md:py-14">
       <div className="container mx-auto px-4">
         <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-md p-6 md:p-10">
           {/* Background decorative elements */}
@@ -290,7 +290,7 @@ function FeaturedLabelsSection() {
     return () => clearInterval(interval);
   }, [featuredLabels]);
   if (isLoading) {
-    return <section className="py-8">
+    return <section className="py-10 md:py-14">
         <div className="container mx-auto px-4">
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-secondary" />
@@ -304,7 +304,7 @@ function FeaturedLabelsSection() {
   const currentLabel = featuredLabels[currentIndex];
   const showCarouselControls = featuredLabels.length > 1;
   const currentStats = labelStats[currentLabel.content_id];
-  return <section className="py-8">
+  return <section className="py-10 md:py-14">
       <div className="container mx-auto px-4">
         <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-md p-6 md:p-10">
           {/* Background decorative elements */}
@@ -486,7 +486,7 @@ function FeaturedTracksSection() {
     return () => clearInterval(interval);
   }, [featuredTracks]);
   if (isLoading) {
-    return <section className="py-8">
+    return <section className="py-10 md:py-14">
         <div className="container mx-auto px-4">
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -500,7 +500,7 @@ function FeaturedTracksSection() {
   const currentTrack = featuredTracks[currentIndex];
   const showCarouselControls = featuredTracks.length > 1;
   const currentStats = trackStats[currentTrack.content_id];
-  return <section className="py-8">
+  return <section className="py-10 md:py-14">
       <div className="container mx-auto px-4">
         <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-md p-6 md:p-10">
           {/* Background decorative elements */}
@@ -965,7 +965,7 @@ export default function Index() {
       <FeaturedLabelsSection />
 
       {/* Discover Section - Only show for authenticated users */}
-      {user && recommendedArtists && recommendedArtists.length > 0 && <section className="py-16 bg-card/20">
+      {user && recommendedArtists && recommendedArtists.length > 0 && <section className="py-10 md:py-14 bg-card/20">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -1026,7 +1026,7 @@ export default function Index() {
         </section>}
 
       {/* Recently Played Section - Only for logged-in users with history */}
-      {user && recentlyPlayed.length > 0 && <section className="py-16">
+      {user && recentlyPlayed.length > 0 && <section className="py-10 md:py-14">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -1096,7 +1096,7 @@ export default function Index() {
         </section>}
 
       {/* Stats Section - Only show for guests */}
-      {!user && <section className="py-16 bg-card/20">
+      {!user && <section className="py-10 md:py-14 bg-card/20">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {stats.map((stat, index) => <div key={index} className="text-center">
@@ -1108,7 +1108,7 @@ export default function Index() {
         </section>}
 
       {/* Features Section - Only show for guests */}
-      {!user && <section className="py-24">
+      {!user && <section className="py-10 md:py-14">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-5xl font-bold mb-4">
@@ -1136,7 +1136,7 @@ export default function Index() {
         </section>}
 
       {/* Role CTA Section - Only show for guests */}
-      {!user && <section className="py-24 bg-card/20">
+      {!user && <section className="py-10 md:py-14 bg-card/20">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">
@@ -1194,7 +1194,7 @@ export default function Index() {
         </section>}
 
       {/* New Releases Section */}
-      {newReleases && newReleases.length > 0 && <section className="py-24 bg-card/20">
+      {newReleases && newReleases.length > 0 && <section className="py-10 md:py-14 bg-card/20">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
               <div>
