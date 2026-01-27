@@ -358,7 +358,7 @@ export function GlobalAudioPlayer() {
       {/* Safari/iOS gesture prompt (prevents “infinite buffering” when play is blocked) */}
       {needsUserGesture && !isPlaying && (
         <div
-          className="fixed left-1/2 z-50 -translate-x-1/2 glass-card border border-glass-border/30 backdrop-blur-xl rounded-full px-4 py-2 text-sm text-foreground"
+          className="fixed left-1/2 z-50 -translate-x-1/2 bg-card border border-border rounded-full px-4 py-2 text-sm text-foreground"
           style={{ bottom: 'calc(6.25rem + env(safe-area-inset-bottom, 0px))' }}
         >
           <button
@@ -422,7 +422,7 @@ export function GlobalAudioPlayer() {
       {/* Queue Panel */}
       {showQueue && canAccessQueue && (
         <div 
-          className="fixed right-4 z-50 w-80 max-h-[28rem] glass-card border border-glass-border/30 backdrop-blur-xl rounded-lg overflow-hidden animate-in slide-in-from-bottom duration-200"
+          className="fixed right-4 z-50 w-80 max-h-[28rem] bg-card border border-border rounded-lg overflow-hidden animate-in slide-in-from-bottom duration-200"
           style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
         >
           <div className="p-3 border-b border-glass-border/30">

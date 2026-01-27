@@ -21,7 +21,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { formatDuration } from "@/lib/formatters";
-import { motion } from "framer-motion";
+
 
 export default function ForYou() {
   const { user } = useAuth();
@@ -242,11 +242,10 @@ export default function ForYou() {
               const isTrackPlaying = isCurrentTrack && isPlaying;
 
               return (
-                <motion.div
+                <div
                   key={track.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03 }}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${index * 30}ms`, animationFillMode: 'both' }}
                 >
                   <Card
                     className={`group cursor-pointer transition-all duration-200 hover:bg-muted/50 ${
@@ -335,7 +334,7 @@ export default function ForYou() {
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               );
             })}
           </div>
