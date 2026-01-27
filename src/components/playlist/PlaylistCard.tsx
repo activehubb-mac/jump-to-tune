@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Play, Shuffle, MoreVertical, Trash2, Edit, ListMusic, Sparkles, Disc3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CardHoverOverlay } from "@/components/ui/card-hover-overlay";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,7 +104,7 @@ export function PlaylistCard({
         {renderCover()}
 
         {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-[#1a1a1a]/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <CardHoverOverlay>
           <Button
             size="icon"
             className="rounded-full gradient-accent neon-glow w-10 h-10"
@@ -127,7 +128,7 @@ export function PlaylistCard({
           >
             <Shuffle className="w-4 h-4" />
           </Button>
-        </div>
+        </CardHoverOverlay>
 
         {/* Special badge */}
         {isSpecial && (
