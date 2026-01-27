@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Loader2, Camera, ImageIcon, Trash2 } from "lucide-react";
+import { Loader2, Camera, ImageIcon, Trash2, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AvatarUpload } from "./AvatarUpload";
 import { useBannerUpload } from "@/hooks/useBannerUpload";
 import { cn } from "@/lib/utils";
+import { PROFILE_FONTS } from "@/lib/profileFonts";
 import {
   Sheet,
   SheetContent,
@@ -28,6 +29,7 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
   const { showFeedback } = useFeedbackSafe();
 
   const [displayName, setDisplayName] = useState("");
+  const [displayNameFont, setDisplayNameFont] = useState("Inter");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
@@ -60,6 +62,7 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
   useEffect(() => {
     if (open && profile) {
       setDisplayName(profile.display_name || "");
+      setDisplayNameFont(profile.display_name_font || "Inter");
       setBio(profile.bio || "");
       setAvatarUrl(profile.avatar_url);
       setBannerUrl(profile.banner_image_url);
@@ -90,6 +93,7 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
       .from("profiles")
       .update({
         display_name: displayName.trim() || null,
+        display_name_font: displayNameFont,
         bio: bio.trim() || null,
       })
       .eq("id", user.id);
@@ -226,6 +230,45 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
               placeholder="Your name"
               className="bg-muted/50 border-glass-border"
             />
+          </div>
+
+          {/* Name Style / Font Selector */}
+          <div className="space-y-3">
+            <Label>Name Style</Label>
+            <p className="text-xs text-muted-foreground">
+              Choose how your name appears on your profile
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {PROFILE_FONTS.map((font) => (
+                <button
+                  key={font.id}
+                  type="button"
+                  onClick={() => setDisplayNameFont(font.id)}
+                  className={cn(
+                    "relative p-3 rounded-lg border text-left transition-all",
+                    "hover:border-primary/50 hover:bg-primary/5",
+                    displayNameFont === font.id
+                      ? "border-primary bg-primary/10"
+                      : "border-glass-border bg-muted/30"
+                  )}
+                >
+                  <span
+                    className="text-lg text-foreground truncate block"
+                    style={{ fontFamily: `'${font.id}', sans-serif` }}
+                  >
+                    {displayName || "Your Name"}
+                  </span>
+                  <span className="text-xs text-muted-foreground mt-1 block">
+                    {font.label}
+                  </span>
+                  {displayNameFont === font.id && (
+                    <div className="absolute top-2 right-2">
+                      <Check className="w-4 h-4 text-primary" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Bio */}

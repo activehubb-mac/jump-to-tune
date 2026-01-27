@@ -7,6 +7,7 @@ type AppRole = "fan" | "artist" | "label";
 interface Profile {
   id: string;
   display_name: string | null;
+  display_name_font: string | null;
   avatar_url: string | null;
   banner_image_url: string | null;
   bio: string | null;

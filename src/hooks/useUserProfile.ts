@@ -11,6 +11,7 @@ interface UserProfile {
   bio: string | null;
   website_url: string | null;
   is_verified: boolean | null;
+  display_name_font: string | null;
   role: UserRole;
   // Stats
   trackCount: number;
@@ -126,6 +127,7 @@ export function useUserProfile(userId: string | undefined) {
       return {
         id: profile.id,
         display_name: profile.display_name,
+        display_name_font: profile.display_name_font,
         avatar_url: profile.avatar_url,
         banner_image_url: profile.banner_image_url,
         bio: profile.bio,

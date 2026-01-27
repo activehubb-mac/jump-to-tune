@@ -191,7 +191,10 @@ export default function UserProfile() {
                 </Badge>
               )}
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-2">
+            <h1 
+              className="text-4xl md:text-5xl font-bold text-foreground mb-2"
+              style={{ fontFamily: `'${profile.display_name_font || 'Inter'}', sans-serif` }}
+            >
               {profile.display_name || "Unknown User"}
             </h1>
             <p className="text-muted-foreground max-w-2xl mb-4">
