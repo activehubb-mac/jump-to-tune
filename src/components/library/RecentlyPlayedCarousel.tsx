@@ -96,7 +96,7 @@ export function RecentlyPlayedCarousel({
                 
                 {/* Play overlay */}
                 <div className={cn(
-                  "absolute inset-0 bg-background/60 flex items-center justify-center",
+                  "absolute inset-0 bg-[#1a1a1a]/80 flex items-center justify-center",
                   "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
                   isCurrentlyPlaying && "opacity-100"
                 )}>
