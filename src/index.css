@@ -211,4 +211,10 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* iOS Smooth Scrolling Utility */
+  .ios-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
 }
