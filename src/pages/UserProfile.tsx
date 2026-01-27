@@ -16,6 +16,7 @@ import { formatCompactNumber, formatPrice, formatEditions } from "@/lib/formatte
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
+import { BannerUpload } from "@/components/profile/BannerUpload";
 
 export default function UserProfile() {
   const { id } = useParams();
@@ -131,15 +132,33 @@ export default function UserProfile() {
       />
 
       {/* Hero Banner */}
-      <div className={`relative h-64 md:h-80 bg-gradient-to-b from-${accentColor}/30 to-background overflow-hidden`}>
-        {profile.banner_image_url && (
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-40"
-            style={{ backgroundImage: `url(${profile.banner_image_url})` }}
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-      </div>
+      {isOwnProfile ? (
+        <BannerUpload
+          userId={user.id}
+          currentBannerUrl={profile.banner_image_url}
+          className="relative h-64 md:h-80 overflow-hidden"
+        >
+          {/* Fallback gradient if no banner */}
+          {!profile.banner_image_url && (
+            <div className={`absolute inset-0 bg-gradient-to-b from-${accentColor}/30 to-background`} />
+          )}
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-black/30" />
+        </BannerUpload>
+      ) : (
+        <div className={`relative h-64 md:h-80 overflow-hidden`}>
+          {profile.banner_image_url ? (
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${profile.banner_image_url})` }}
+            />
+          ) : (
+            <div className={`absolute inset-0 bg-gradient-to-b from-${accentColor}/30 to-background`} />
+          )}
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-black/30" />
+        </div>
+      )}
 
       <div className="container mx-auto px-4 -mt-32 relative z-10">
         {/* Profile Header */}
