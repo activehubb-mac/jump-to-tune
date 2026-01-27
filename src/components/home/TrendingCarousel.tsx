@@ -68,7 +68,7 @@ export function TrendingCarousel({ onAddToQueue }: TrendingCarouselProps) {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="glass-card p-4">
+              <div key={i} className="bg-card border border-border shadow-sm rounded-xl p-4">
                 <div className="aspect-square rounded-lg bg-muted/50 mb-3 flex items-center justify-center">
                   <Disc3 className="w-12 h-12 text-muted-foreground" />
                 </div>
@@ -119,7 +119,7 @@ export function TrendingCarousel({ onAddToQueue }: TrendingCarouselProps) {
                   className="pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6"
                 >
                   <div
-                    className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
+                    className="bg-card border border-border shadow-sm rounded-xl p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
                     onClick={() =>
                       playTrack({
                         id: track.id,

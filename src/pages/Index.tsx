@@ -502,7 +502,7 @@ function FeaturedTracksSection() {
   const currentStats = trackStats[currentTrack.content_id];
   return <section className="py-8">
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden rounded-2xl bg-muted/30 p-6 md:p-10">
+        <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-md p-6 md:p-10">
           {/* Background decorative elements */}
           <div className="absolute top-0 left-0 w-72 h-72 bg-muted/30 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
           <div className="absolute bottom-0 right-0 w-64 h-64 bg-muted/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
@@ -985,7 +985,7 @@ export default function Index() {
               </div> : <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {recommendedArtists.map(artist => {
               const following = isFollowing(artist.id);
-              return <div key={artist.id} className="glass-card p-4 text-center group hover:bg-primary/10 transition-all duration-300">
+              return <div key={artist.id} className="bg-card border border-border shadow-sm rounded-xl p-4 text-center group hover:bg-primary/10 transition-all duration-300">
                       <Link to={`/artist/${artist.id}`}>
                         <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform overflow-hidden">
                           {artist.avatar_url ? <img src={artist.avatar_url} alt={artist.display_name || "Artist"} className="w-full h-full object-cover" /> : <Music className="w-8 h-8 text-muted-foreground" />}
@@ -1039,7 +1039,7 @@ export default function Index() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {recentlyPlayed.map(track => <div key={track.id} className="glass-card p-4 group cursor-pointer hover:bg-secondary/10 transition-all duration-300" onClick={() => playTrack({
+              {recentlyPlayed.map(track => <div key={track.id} className="bg-card border border-border shadow-sm rounded-xl p-4 group cursor-pointer hover:bg-secondary/10 transition-all duration-300" onClick={() => playTrack({
               id: track.id,
               title: track.title,
               audio_url: "",
@@ -1123,7 +1123,7 @@ export default function Index() {
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {features.map((feature, index) => {
               const Icon = feature.icon;
-              return <div key={index} className="glass-card p-6 group hover:bg-primary/10 transition-all duration-300">
+              return <div key={index} className="bg-card border border-border shadow-sm rounded-xl p-6 group hover:bg-primary/10 transition-all duration-300">
                     <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                       <Icon className="w-6 h-6 text-primary-foreground" />
                     </div>
@@ -1149,7 +1149,7 @@ export default function Index() {
 
             <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
               {/* Fan Card */}
-              <div className="glass-card p-8 text-center group hover:bg-secondary/10 transition-all duration-300">
+              <div className="bg-card border border-border shadow-sm rounded-xl p-8 text-center group hover:bg-secondary/10 transition-all duration-300">
                 <div className="w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                   <Headphones className="w-8 h-8 text-secondary" />
                 </div>
@@ -1163,7 +1163,7 @@ export default function Index() {
               </div>
 
               {/* Artist Card */}
-              <div className="glass-card p-8 text-center group hover:bg-primary/10 transition-all duration-300">
+              <div className="bg-card border border-border shadow-sm rounded-xl p-8 text-center group hover:bg-primary/10 transition-all duration-300">
                 <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                   <Music className="w-8 h-8 text-primary" />
                 </div>
@@ -1177,7 +1177,7 @@ export default function Index() {
               </div>
 
               {/* Label Card */}
-              <div className="glass-card p-8 text-center group hover:bg-accent/10 transition-all duration-300">
+              <div className="bg-card border border-border shadow-sm rounded-xl p-8 text-center group hover:bg-accent/10 transition-all duration-300">
                 <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                   <Building2 className="w-8 h-8 text-accent" />
                 </div>
@@ -1212,7 +1212,7 @@ export default function Index() {
             {newReleasesLoading ? <div className="flex justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div> : <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {newReleases.map(track => <div key={track.id} className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300" onClick={() => playTrack({
+                {newReleases.map(track => <div key={track.id} className="bg-card border border-border shadow-sm rounded-xl p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300" onClick={() => playTrack({
               id: track.id,
               title: track.title,
               audio_url: track.audio_url,
