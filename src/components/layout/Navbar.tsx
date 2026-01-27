@@ -372,11 +372,13 @@ export function Navbar() {
           {/* Mobile Navigation */}
           {isOpen && (
             <div 
-              className="md:hidden fixed inset-x-0 top-[calc(4rem+env(safe-area-inset-top,0px))] bottom-0 z-40"
+              className="md:hidden fixed inset-x-0 top-[calc(4rem+env(safe-area-inset-top,0px))] bottom-0 z-40 bg-background/[0.98]"
               style={{ 
-                backgroundColor: 'hsl(var(--background) / 0.98)',
+                backgroundColor: '#0d0a14',
                 WebkitBackdropFilter: 'blur(24px)',
                 backdropFilter: 'blur(24px)',
+                WebkitTransform: 'translateZ(0)',
+                transform: 'translateZ(0)',
               }}
             >
               <div 
