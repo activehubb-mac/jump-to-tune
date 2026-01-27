@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
+import { CardHoverOverlay } from "@/components/ui/card-hover-overlay";
 import { Disc3, Play, Pause, Heart, Loader2, ListPlus, UserPlus, UserMinus, Users, Lock, Album, Star } from "lucide-react";
 import { TrackCardSkeletonGrid } from "@/components/dashboard/TrackCardSkeleton";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
@@ -450,7 +451,7 @@ export default function Browse() {
                           </div>
                         )}
                         {/* Hover Overlay */}
-                        <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <CardHoverOverlay>
                           <Button 
                             size="icon" 
                             className="rounded-full gradient-accent neon-glow w-12 h-12"
@@ -473,7 +474,7 @@ export default function Browse() {
                               <Play className="w-5 h-5 ml-0.5" />
                             )}
                           </Button>
-                        </div>
+                        </CardHoverOverlay>
                         {/* Like Button with Count */}
                         <button 
                           className={`absolute top-2 right-2 px-2 py-1.5 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all hover:scale-105 flex items-center gap-1 ${
