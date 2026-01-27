@@ -24,19 +24,19 @@ const getEmailProvider = (email: string) => {
   if (!domain) return null;
   
   if (domain.includes("gmail") || domain.includes("googlemail")) {
-    return { name: "Gmail", url: "https://mail.google.com", color: "text-red-400" };
+    return { name: "Gmail", url: "https://mail.google.com", color: "text-primary" };
   }
   if (domain.includes("outlook") || domain.includes("hotmail") || domain.includes("live")) {
-    return { name: "Outlook", url: "https://outlook.live.com", color: "text-blue-400" };
+    return { name: "Outlook", url: "https://outlook.live.com", color: "text-primary" };
   }
   if (domain.includes("yahoo")) {
-    return { name: "Yahoo Mail", url: "https://mail.yahoo.com", color: "text-purple-400" };
+    return { name: "Yahoo Mail", url: "https://mail.yahoo.com", color: "text-primary" };
   }
   if (domain.includes("icloud") || domain.includes("me.com") || domain.includes("mac.com")) {
-    return { name: "iCloud Mail", url: "https://www.icloud.com/mail", color: "text-sky-400" };
+    return { name: "iCloud Mail", url: "https://www.icloud.com/mail", color: "text-primary" };
   }
   if (domain.includes("proton") || domain.includes("protonmail")) {
-    return { name: "ProtonMail", url: "https://mail.proton.me", color: "text-violet-400" };
+    return { name: "ProtonMail", url: "https://mail.proton.me", color: "text-primary" };
   }
   return null;
 };
@@ -300,7 +300,7 @@ export default function Auth() {
             {/* Logo */}
             <div className="text-center mb-8">
               <div className="inline-flex items-center gap-2 mb-4">
-                <div className="w-16 h-16 rounded-full gradient-accent flex items-center justify-center neon-glow animate-pulse">
+                <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center animate-pulse">
                   <Mail className="w-8 h-8 text-foreground" />
                 </div>
               </div>
@@ -399,7 +399,7 @@ export default function Auth() {
             {/* Header */}
             <div className="text-center mb-8">
               <div className="inline-flex items-center gap-2 mb-4">
-                <div className="w-16 h-16 rounded-full gradient-accent flex items-center justify-center neon-glow-subtle">
+                <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
                   {resetEmailSent ? (
                     <Mail className="w-8 h-8 text-foreground" />
                   ) : (

@@ -206,7 +206,7 @@ export function TrendingCarousel({ onAddToQueue }: TrendingCarouselProps) {
                     >
                       {track.artist_name || "Unknown Artist"}
                     </Link>
-                    <div className="text-xs text-accent font-medium mt-1">
+                    <div className="text-xs text-primary font-semibold mt-1">
                       ${track.price.toFixed(2)}
                     </div>
                   </div>

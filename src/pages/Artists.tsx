@@ -111,8 +111,8 @@ export default function Artists() {
                     return (
                       <Link key={artist.id} to={`/artist/${artist.id}`} className="glass-card p-6 group hover:bg-primary/10 transition-all duration-300">
                         <div className="flex items-start gap-4">
-                          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 overflow-hidden">
-                            {artist.avatar_url ? <img src={artist.avatar_url} alt={artist.display_name || ""} className="w-full h-full object-cover" /> : <Music className="w-8 h-8 text-foreground" />}
+                          <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            {artist.avatar_url ? <img src={artist.avatar_url} alt={artist.display_name || ""} className="w-full h-full object-cover" /> : <Music className="w-8 h-8 text-primary-foreground" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">

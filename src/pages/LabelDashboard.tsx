@@ -262,7 +262,7 @@ export default function LabelDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                   {roster.map((artist) => (
                     <div key={artist.id} className="flex items-center gap-4 p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0">
                         {artist.artist?.avatar_url ? (
                           <img
                             src={artist.artist.avatar_url}
@@ -270,7 +270,7 @@ export default function LabelDashboard() {
                             className="w-full h-full rounded-full object-cover"
                           />
                         ) : (
-                          <Music className="w-6 h-6 text-foreground" />
+                          <Music className="w-6 h-6 text-primary-foreground" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">

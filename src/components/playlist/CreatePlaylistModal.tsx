@@ -88,7 +88,7 @@ export function CreatePlaylistModal({
             </Button>
             <Button
               type="submit"
-              className="gradient-accent"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
               disabled={!name.trim() || isSubmitting}
             >
               {isSubmitting ? (

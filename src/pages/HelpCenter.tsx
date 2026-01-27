@@ -206,7 +206,7 @@ export default function HelpCenter() {
     <Layout>
       <div className="min-h-screen">
         {/* Hero Section */}
-        <div className="bg-gradient-to-b from-primary/10 to-background py-16">
+        <div className="bg-muted/30 py-16">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
               How can we help you?

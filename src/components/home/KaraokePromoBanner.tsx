@@ -6,10 +6,10 @@ export function KaraokePromoBanner() {
   return (
     <section className="py-12">
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 p-8 md:p-12">
+        <div className="relative overflow-hidden rounded-2xl bg-muted/30 p-8 md:p-12">
           {/* Background decorative elements */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/30 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/30 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-muted/40 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-muted/30 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
           
           {/* Floating music notes decoration */}
           <div className="absolute top-4 right-8 opacity-20">
@@ -45,7 +45,7 @@ export function KaraokePromoBanner() {
             <div className="shrink-0">
               <Button
                 size="lg"
-                className="gradient-accent neon-glow-subtle hover:scale-105 transition-all duration-300"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300"
                 asChild
               >
                 <Link to="/karaoke">
