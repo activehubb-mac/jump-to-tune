@@ -221,7 +221,7 @@ export function FeaturedHeroCarousel() {
                 <Play className="w-5 h-5 mr-2" />
                 Play Now
               </Button>
-              <span className="text-lg md:text-xl font-semibold text-foreground mr-2 md:mr-0">
+              <span className="text-lg md:text-xl font-semibold text-white drop-shadow-sm mr-2 md:mr-0">
                 ${currentTrack.price.toFixed(2)}
               </span>
             </div>
