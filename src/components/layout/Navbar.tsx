@@ -371,12 +371,22 @@ export function Navbar() {
 
           {/* Mobile Navigation */}
           {isOpen && (
-            <div className="md:hidden fixed inset-x-0 top-[calc(4rem+env(safe-area-inset-top,0px))] bottom-0 bg-background/95 backdrop-blur-xl z-40">
-              <ScrollArea className="h-full">
-                <div 
-                  className="flex flex-col gap-2 py-4 px-4"
-                  style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}
-                >
+            <div 
+              className="md:hidden fixed inset-x-0 top-[calc(4rem+env(safe-area-inset-top,0px))] bottom-0 z-40"
+              style={{ 
+                backgroundColor: 'hsl(var(--background) / 0.98)',
+                WebkitBackdropFilter: 'blur(24px)',
+                backdropFilter: 'blur(24px)',
+              }}
+            >
+              <div 
+                className="h-full overflow-y-auto overscroll-contain"
+                style={{ 
+                  WebkitOverflowScrolling: 'touch',
+                  paddingBottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))'
+                }}
+              >
+                <div className="flex flex-col gap-2 py-4 px-4">
                 {navLinks.map((link) => {
                   // Skip auth-required links for non-authenticated users
                   if (link.authRequired && !user) return null;
@@ -599,7 +609,7 @@ export function Navbar() {
                   </div>
                 )}
                 </div>
-              </ScrollArea>
+              </div>
             </div>
           )}
         </div>
