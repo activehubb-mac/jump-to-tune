@@ -77,12 +77,10 @@ export default function AdminFeatured() {
   const { data: albums, isLoading: albumsLoading } = useQuery({
     queryKey: ["admin-albums", searchQuery],
     queryFn: async () => {
+      // Step 1: Fetch albums without profile join
       let query = supabase
         .from("albums")
-        .select(`
-          id, title, cover_art_url, release_type,
-          artist:profiles_public!albums_artist_id_fkey(id, display_name)
-        `)
+        .select("id, title, cover_art_url, release_type, artist_id")
         .eq("is_draft", false)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -91,9 +89,24 @@ export default function AdminFeatured() {
         query = query.ilike("title", `%${searchQuery}%`);
       }
 
-      const { data, error } = await query;
+      const { data: albumsData, error } = await query;
       if (error) throw error;
-      return data;
+      if (!albumsData || albumsData.length === 0) return [];
+
+      // Step 2: Get unique artist IDs and fetch profiles separately
+      const artistIds = [...new Set(albumsData.map(a => a.artist_id).filter(Boolean))];
+      
+      const { data: artists } = await supabase
+        .from("profiles_public")
+        .select("id, display_name")
+        .in("id", artistIds);
+
+      // Step 3: Map artists to albums
+      const artistMap = new Map(artists?.map(a => [a.id, a]) || []);
+      return albumsData.map(album => ({
+        ...album,
+        artist: artistMap.get(album.artist_id) || null
+      }));
     },
   });
   
@@ -130,7 +143,7 @@ export default function AdminFeatured() {
           id: a.id, 
           name: a.title, 
           avatar: a.cover_art_url,
-          subtitle: a.artist?.[0]?.display_name || "Unknown Artist"
+          subtitle: a.artist?.display_name || "Unknown Artist"
         })) || [];
       default:
         return [];
@@ -229,7 +242,7 @@ export default function AdminFeatured() {
       case "track":
         return tracks?.find(t => t.id === contentId)?.artist?.display_name || null;
       case "album":
-        return albums?.find(a => a.id === contentId)?.artist?.[0]?.display_name || null;
+        return albums?.find(a => a.id === contentId)?.artist?.display_name || null;
       default:
         return null;
     }

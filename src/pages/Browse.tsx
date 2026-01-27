@@ -172,16 +172,14 @@ export default function Browse() {
     return data?.pages.flatMap((page) => page.tracks) || [];
   }, [data]);
 
-  // Fetch published albums
+  // Fetch published albums (two-step pattern for profiles_public view)
   const { data: albums = [] } = useQuery({
     queryKey: ["browse-albums", selectedGenre],
     queryFn: async () => {
+      // Step 1: Fetch albums without profile join
       let query = supabase
         .from("albums")
-        .select(`
-          id, title, cover_art_url, release_type, genre, total_price,
-          artist:profiles_public!albums_artist_id_fkey(id, display_name, avatar_url)
-        `)
+        .select("id, title, cover_art_url, release_type, genre, total_price, artist_id")
         .eq("is_draft", false)
         .order("created_at", { ascending: false })
         .limit(10);
@@ -190,9 +188,24 @@ export default function Browse() {
         query = query.eq("genre", selectedGenre);
       }
 
-      const { data, error } = await query;
+      const { data: albumsData, error } = await query;
       if (error) throw error;
-      return data;
+      if (!albumsData || albumsData.length === 0) return [];
+
+      // Step 2: Get unique artist IDs and fetch profiles separately
+      const artistIds = [...new Set(albumsData.map(a => a.artist_id).filter(Boolean))];
+      
+      const { data: artists } = await supabase
+        .from("profiles_public")
+        .select("id, display_name, avatar_url")
+        .in("id", artistIds);
+
+      // Step 3: Map artists to albums
+      const artistMap = new Map(artists?.map(a => [a.id, a]) || []);
+      return albumsData.map(album => ({
+        ...album,
+        artist: artistMap.get(album.artist_id) || null
+      }));
     },
   });
 
