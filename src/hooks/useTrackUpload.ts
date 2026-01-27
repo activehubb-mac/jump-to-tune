@@ -68,9 +68,18 @@ export const useTrackUpload = (): UseTrackUploadReturn => {
       // Simulate progress (Supabase doesn't provide upload progress)
       setUploadProgress((prev) => ({ ...prev, [progressKey]: 30 }));
 
+      // IMPORTANT: Provide contentType so Safari can stream reliably.
+      // Supabase defaults to application/octet-stream if omitted, which can cause
+      // Safari/iOS to buffer indefinitely.
+      const contentType = file.type || (bucket === 'tracks' ? 'audio/mpeg' : undefined);
+
       const { error } = await supabase.storage
         .from(bucket)
-        .upload(path, file, { upsert: true });
+        .upload(path, file, {
+          upsert: true,
+          ...(contentType ? { contentType } : {}),
+          cacheControl: '3600',
+        });
 
       if (error) throw error;
 
