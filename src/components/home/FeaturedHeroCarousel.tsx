@@ -200,15 +200,16 @@ export function FeaturedHeroCarousel() {
             </div>
             <h3 
               key={currentTrack.id + "-title"}
-              className="text-xl md:text-3xl font-bold text-white truncate mb-1 animate-fade-in drop-shadow-md"
+              className="text-xl md:text-3xl font-bold text-white truncate mb-1 animate-fade-in"
+              style={{ textShadow: '0 2px 8px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.5)' }}
             >
               {currentTrack.title}
             </h3>
             <Link
               key={currentTrack.id + "-artist"}
               to={`/artist/${currentTrack.artist_id}`}
-              className="text-sm md:text-base text-white/80 hover:text-white transition-colors animate-fade-in drop-shadow-sm"
-              style={{ animationDelay: "0.1s" }}
+              className="text-sm md:text-base text-white/90 hover:text-white transition-colors animate-fade-in"
+              style={{ animationDelay: "0.1s", textShadow: '0 1px 6px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4)' }}
             >
               {currentTrack.artist_name || "Unknown Artist"}
             </Link>
@@ -221,7 +222,7 @@ export function FeaturedHeroCarousel() {
                 <Play className="w-5 h-5 mr-2" />
                 Play Now
               </Button>
-              <span className="text-lg md:text-xl font-semibold text-white drop-shadow-sm mr-2 md:mr-0">
+              <span className="text-lg md:text-xl font-semibold text-white mr-2 md:mr-0" style={{ textShadow: '0 1px 6px rgba(0,0,0,0.6)' }}>
                 ${currentTrack.price.toFixed(2)}
               </span>
             </div>
