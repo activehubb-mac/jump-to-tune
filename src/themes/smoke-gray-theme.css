@@ -16,17 +16,17 @@
   --popover: 0 0% 100%;             /* #FFFFFF */
   --popover-foreground: 0 0% 10%;   /* #1A1A1A */
 
-  /* Brand Colors */
-  --primary: 270 70% 50%;
+  /* Brand Colors - Charcoal & Olive */
+  --primary: 0 0% 25%;              /* Charcoal */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 217 91% 60%;
+  --secondary: 85 25% 42%;          /* Olive */
   --secondary-foreground: 0 0% 100%;
 
   --muted: 0 0% 85%;                /* #DADADA */
   --muted-foreground: 0 0% 45%;     /* Medium gray */
 
-  --accent: 330 85% 60%;
+  --accent: 35 45% 52%;             /* Gold/bronze */
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84% 60%;
@@ -34,24 +34,24 @@
 
   --border: 0 0% 85%;               /* #DADADA */
   --input: 0 0% 90%;
-  --ring: 270 70% 50%;
+  --ring: 0 0% 25%;
 
   --radius: 0.75rem;
 
   /* JumTunes tokens */
-  --neon-glow: 270 70% 50%;
-  --electric-blue: 217 91% 60%;
-  --deep-purple: 270 70% 45%;
+  --neon-glow: 0 0% 25%;
+  --electric-blue: 85 25% 42%;
+  --deep-purple: 0 0% 20%;
   --glass: 0 0% 92%;
   --glass-border: 0 0% 80%;
 
   /* Sidebar */
   --sidebar-background: 0 0% 92%;
   --sidebar-foreground: 0 0% 10%;
-  --sidebar-primary: 270 70% 50%;
+  --sidebar-primary: 0 0% 25%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 0 0% 88%;
   --sidebar-accent-foreground: 0 0% 10%;
   --sidebar-border: 0 0% 85%;
-  --sidebar-ring: 270 70% 50%;
+  --sidebar-ring: 0 0% 25%;
 }

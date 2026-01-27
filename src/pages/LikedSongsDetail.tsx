@@ -280,7 +280,7 @@ export default function LikedSongsDetail() {
             {/* Header */}
             <div className="flex flex-col md:flex-row gap-6 mb-8">
               {/* Gradient Heart Cover */}
-              <div className="w-48 h-48 rounded-lg overflow-hidden flex-shrink-0 mx-auto md:mx-0 bg-gradient-to-br from-primary via-purple-500 to-accent flex items-center justify-center shadow-lg">
+              <div className="w-48 h-48 rounded-lg overflow-hidden flex-shrink-0 mx-auto md:mx-0 bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center shadow-lg">
                 <Heart className="w-20 h-20 text-white fill-white" />
               </div>
 
