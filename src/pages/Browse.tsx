@@ -290,6 +290,8 @@ export default function Browse() {
       id: track.id,
       title: track.title,
       cover_art_url: track.cover_art_url,
+      audio_url: track.audio_url,
+      duration: track.duration,
       artist_id: track.artist?.id || "",
       artist_name: track.artist?.display_name || "Unknown Artist",
       price: track.price,

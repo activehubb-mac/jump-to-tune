@@ -4,6 +4,8 @@ export interface RecentlyViewedTrack {
   id: string;
   title: string;
   cover_art_url: string | null;
+  audio_url: string;
+  duration?: number | null;
   artist_id: string;
   artist_name: string | null;
   price: number;
@@ -22,7 +24,9 @@ export function useRecentlyViewed(limit: number = 5) {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as RecentlyViewedTrack[];
-        setRecentlyViewed(parsed.slice(0, limit));
+        // Filter out tracks without audio_url (old format)
+        const validTracks = parsed.filter(t => t.audio_url);
+        setRecentlyViewed(validTracks.slice(0, limit));
       }
     } catch (e) {
       console.error("Failed to load recently viewed:", e);
@@ -35,7 +39,8 @@ export function useRecentlyViewed(limit: number = 5) {
       if (e.key === STORAGE_KEY && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue) as RecentlyViewedTrack[];
-          setRecentlyViewed(parsed.slice(0, limit));
+          const validTracks = parsed.filter(t => t.audio_url);
+          setRecentlyViewed(validTracks.slice(0, limit));
         } catch (err) {
           console.error("Failed to parse recently viewed:", err);
         }
@@ -45,15 +50,23 @@ export function useRecentlyViewed(limit: number = 5) {
     return () => window.removeEventListener("storage", handleStorage);
   }, [limit]);
 
-  // Add a track to recently viewed
+  // Add a track to recently viewed (now requires audio_url for Safari compatibility)
   const addToRecentlyViewed = useCallback((track: {
     id: string;
     title: string;
     cover_art_url: string | null;
+    audio_url: string;
+    duration?: number | null;
     artist_id: string;
     artist_name: string | null;
     price: number;
   }) => {
+    // Don't save tracks without audio_url
+    if (!track.audio_url) {
+      console.warn("Skipping recently viewed - no audio_url");
+      return;
+    }
+    
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       let existing: RecentlyViewedTrack[] = stored ? JSON.parse(stored) : [];

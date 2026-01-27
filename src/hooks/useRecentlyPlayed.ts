@@ -4,6 +4,8 @@ export interface RecentlyPlayedTrack {
   id: string;
   title: string;
   cover_art_url: string | null;
+  audio_url: string;
+  duration?: number | null;
   artist_id: string;
   artist_name: string | null;
   playedAt: number;
@@ -21,7 +23,9 @@ export function useRecentlyPlayed(limit: number = 6) {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as RecentlyPlayedTrack[];
-        setRecentlyPlayed(parsed.slice(0, limit));
+        // Filter out tracks without audio_url (old format)
+        const validTracks = parsed.filter(t => t.audio_url);
+        setRecentlyPlayed(validTracks.slice(0, limit));
       }
     } catch (e) {
       console.error("Failed to load recently played:", e);
@@ -33,6 +37,8 @@ export function useRecentlyPlayed(limit: number = 6) {
     id: string;
     title: string;
     cover_art_url: string | null;
+    audio_url: string;
+    duration?: number | null;
     artist_id: string;
     artist_name: string | null;
   }) => {
