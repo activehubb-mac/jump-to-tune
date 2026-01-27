@@ -444,7 +444,7 @@ export function GlobalAudioPlayer() {
             </div>
           </div>
           
-          <ScrollArea className="max-h-80">
+          <ScrollArea className="max-h-80 ios-scroll">
             {queue.length === 0 ? (
               <div className="p-6 text-center">
                 <ListMusic className="w-10 h-10 mx-auto text-muted-foreground/30 mb-2" />
