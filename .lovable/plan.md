@@ -1,58 +1,97 @@
 
-# Fix Preview Ended Modal Incorrect Price Display
+
+# Fix Preview Ended Modal - Price Not Being Passed
 
 ## Problem
-The "Preview Ended" modal shows track prices incorrectly. For example, a track priced at $0.25 displays as "$0.00".
+The "Preview Ended" modal shows $0.00 because the `price` field is never being passed to `playTrack` or hydrated afterward.
 
-## Root Cause
-The `PreviewEndedModal.tsx` component has incorrect price formatting logic:
+## Root Cause Analysis
 
-```tsx
-const priceInDollars = (track.price / 100).toFixed(2);
-```
+The data flow has three gaps:
 
-This code assumes the price is stored in **cents** and divides by 100. However, the database stores prices in **dollars** (e.g., `0.25` means $0.25, not 25 cents).
+1. **Call sites don't include `price`**: When `playTrack()` is called from pages like `Browse.tsx`, the price is not included in the track object
 
-This causes:
-- `$0.25 / 100 = $0.0025` → displayed as `$0.00`
-- `$1.99 / 100 = $0.0199` → displayed as `$0.02`
+2. **Hydration doesn't fetch `price`**: The `hydrateTrackAsync` function in `AudioPlayerContext.tsx` only fetches `audio_url, has_karaoke, preview_duration` - it does not fetch `price`
+
+3. **GlobalAudioPlayer defaults to 0**: When passing the track to `PreviewEndedModal`, it uses `currentTrack.price || 0`, which is always 0 since price was never set
 
 ## Solution
-Use the existing `formatPrice` utility from `src/lib/formatters.ts`, which correctly formats dollar amounts:
+
+Two-part fix:
+
+### Part 1: Include `price` in hydration query
+
+In `AudioPlayerContext.tsx`, update the database query to also fetch `price`:
 
 ```tsx
-import { formatPrice } from "@/lib/formatters";
-// ...
-<p className="text-lg font-bold text-primary mt-1">{formatPrice(track.price)}</p>
+// Line ~637: Update the select query
+.select("audio_url, has_karaoke, preview_duration, price")
+
+// Line ~650-655: Update the state setter to include price
+setCurrentTrack(prev => prev?.id === track.id ? {
+  ...prev,
+  has_karaoke: hasKaraoke,
+  preview_duration: previewDuration || DEFAULT_PREVIEW_LIMIT_SECONDS,
+  price: data?.price ?? prev.price,  // Add this line
+} : prev);
 ```
 
-This matches how `InstantPurchaseModal` (which opens after clicking "Purchase Full Track") handles prices using `track.price.toFixed(2)` without dividing by 100.
+Also update the fallback fetch path (~line 704-720):
+```tsx
+.select("audio_url, has_karaoke, preview_duration, price")
+// And include price in hydratedTrack
+```
 
-## Technical Changes
+### Part 2: Ensure all `playTrack` call sites include `price`
 
-**File: `src/components/audio/PreviewEndedModal.tsx`**
+Update all locations that call `playTrack()` to include the `price` field. Key files:
+- `src/pages/Browse.tsx`
+- `src/pages/AlbumDetail.tsx`
+- `src/pages/ForYou.tsx`
+- `src/pages/LikedSongsDetail.tsx`
+- `src/pages/Karaoke.tsx`
+- `src/pages/LabelProfile.tsx`
+- `src/components/dashboard/TrackCard.tsx`
+- `src/components/browse/AlbumCard.tsx`
+- `src/components/browse/RecentlyViewedSection.tsx`
+- `src/components/home/FeaturedHeroCarousel.tsx`
+- `src/components/library/OwnedTrackCard.tsx`
+- `src/components/library/RecentlyPlayedCarousel.tsx`
 
-1. Add import for `formatPrice`:
-   ```tsx
-   import { formatPrice } from "@/lib/formatters";
-   ```
+Example fix for `Browse.tsx`:
+```tsx
+playTrack({
+  id: track.id,
+  title: track.title,
+  audio_url: track.audio_url,
+  cover_art_url: track.cover_art_url,
+  duration: track.duration,
+  artist: track.artist,
+  price: track.price,  // Add this line
+});
+```
 
-2. Remove the incorrect calculation on line 35:
-   ```tsx
-   // Remove this line
-   const priceInDollars = (track.price / 100).toFixed(2);
-   ```
+## Files to Modify
 
-3. Update the price display on line 84:
-   ```tsx
-   // Change from
-   <p className="text-lg font-bold text-primary mt-1">${priceInDollars}</p>
-   
-   // To
-   <p className="text-lg font-bold text-primary mt-1">{formatPrice(track.price)}</p>
-   ```
+| File | Change |
+|------|--------|
+| `src/contexts/AudioPlayerContext.tsx` | Add `price` to hydration queries and state updates |
+| `src/pages/Browse.tsx` | Include `price` in `playTrack()` call |
+| `src/pages/AlbumDetail.tsx` | Include `price` in `playTrack()` calls |
+| `src/pages/ForYou.tsx` | Include `price` in `playTrack()` calls |
+| `src/pages/LikedSongsDetail.tsx` | Include `price` in `playTrack()` calls |
+| `src/pages/Karaoke.tsx` | Include `price` in `playTrack()` call |
+| `src/pages/LabelProfile.tsx` | Include `price` in `playTrack()` call |
+| `src/components/dashboard/TrackCard.tsx` | Include `price` in `playTrack()` call |
+| `src/components/browse/AlbumCard.tsx` | Include `price` in `playTrack()` call |
+| `src/components/browse/RecentlyViewedSection.tsx` | Include `price` in `playTrack()` call |
+| `src/components/home/FeaturedHeroCarousel.tsx` | Include `price` in `playTrack()` call |
+| `src/components/library/OwnedTrackCard.tsx` | Include `price` in `playTrack()` call |
+| `src/components/library/RecentlyPlayedCarousel.tsx` | Include `price` in `playTrack()` call |
 
-## Result
-- Track at $0.25 will display as **$0.25** (correct)
-- Track at $1.99 will display as **$1.99** (correct)
-- Consistent formatting with the rest of the application
+## Technical Notes
+
+- The `price` field is stored in the database as a `numeric` type in dollars (e.g., `0.25` = $0.25)
+- The `PreviewEndedModal` already uses `formatPrice(track.price)` which will correctly format the raw value as `$0.25`
+- No changes needed in `PreviewEndedModal.tsx` - the current code is correct once it receives the actual price value
+
