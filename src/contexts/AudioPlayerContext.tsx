@@ -106,6 +106,17 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUnlockedRef = useRef(false);
   const pendingPlayRef = useRef<{ track: AudioTrack; forcePreviewCheck: boolean } | null>(null);
+  const activeObjectUrlRef = useRef<string | null>(null);
+  const bufferingRecoveryTimerRef = useRef<number | null>(null);
+  const lastRecoverySrcRef = useRef<string | null>(null);
+  const currentTrackRef = useRef<AudioTrack | null>(null);
+
+  const isSafari = (() => {
+    if (typeof navigator === "undefined") return false;
+    const ua = navigator.userAgent;
+    // Safari: has "Safari" but not Chrome/Chromium/Android
+    return /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|Android/i.test(ua);
+  })();
   const [currentTrack, setCurrentTrack] = useState<AudioTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
@@ -128,6 +139,11 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [showPreviewEndedModal, setShowPreviewEndedModal] = useState(false);
   const accessCache = useRef<Map<string, boolean>>(new Map());
+
+  // Keep a ref to currentTrack for event handlers that shouldn't re-bind.
+  useEffect(() => {
+    currentTrackRef.current = currentTrack;
+  }, [currentTrack]);
 
   // Check if user has full access to a track
   const checkFullAccess = useCallback(async (trackId: string): Promise<boolean> => {
@@ -245,6 +261,74 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
     audio.addEventListener("waiting", () => {
       setIsBuffering(true);
+
+      // Safari sometimes buffers indefinitely if the stored object content-type is wrong
+      // (e.g., application/octet-stream). Add a recovery attempt after a short delay.
+      if (isSafari) {
+        if (bufferingRecoveryTimerRef.current) {
+          window.clearTimeout(bufferingRecoveryTimerRef.current);
+        }
+        bufferingRecoveryTimerRef.current = window.setTimeout(() => {
+          const a = audioRef.current;
+          const track = currentTrackRef.current;
+          if (!a || !track) return;
+
+          // If we already recovered this exact src, don't loop.
+          if (a.src && lastRecoverySrcRef.current === a.src) return;
+
+          // Only attempt if still buffering and not progressing.
+          if (!a.paused && (a.readyState === 0 || a.readyState === 1 || a.networkState === a.NETWORK_LOADING)) {
+            void (async () => {
+              try {
+                // HEAD the audio src and check content-type
+                const src = a.src;
+                if (!src) return;
+
+                const head = await fetch(src, { method: "HEAD" });
+                const contentType = (head.headers.get("content-type") || "").toLowerCase();
+
+                const looksWrong = !contentType.startsWith("audio/") || contentType.includes("octet-stream");
+                if (!looksWrong) return;
+
+                // Fetch as blob and re-create an object URL with a correct mime.
+                const ext = src.split("?")[0].split("#")[0].split(".").pop()?.toLowerCase();
+                const inferredType =
+                  ext === "wav" ? "audio/wav" :
+                  ext === "flac" ? "audio/flac" :
+                  "audio/mpeg";
+
+                const res = await fetch(src);
+                const blob = await res.blob();
+                const fixedBlob = new Blob([blob], { type: inferredType });
+
+                if (activeObjectUrlRef.current) {
+                  URL.revokeObjectURL(activeObjectUrlRef.current);
+                }
+                const objectUrl = URL.createObjectURL(fixedBlob);
+                activeObjectUrlRef.current = objectUrl;
+                lastRecoverySrcRef.current = src;
+
+                const resumeAt = Number.isFinite(a.currentTime) ? a.currentTime : 0;
+
+                a.src = objectUrl;
+                a.load();
+
+                try {
+                  // Restore time after metadata is ready
+                  a.currentTime = Math.max(0, resumeAt);
+                } catch {
+                  // iOS may block setting currentTime until metadata is loaded
+                }
+
+                const p = a.play();
+                if (p) await p;
+              } catch (e) {
+                console.warn("[Audio] Safari recovery failed:", e);
+              }
+            })();
+          }
+        }, 2500);
+      }
     });
 
     audio.addEventListener("canplay", () => {
@@ -368,6 +452,12 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const playTrackInternal = useCallback((track: AudioTrack, forcePreviewCheck = true) => {
     const audio = ensureAudioElement();
 
+    // Clean up any previous blob URL (Safari recovery path)
+    if (activeObjectUrlRef.current) {
+      URL.revokeObjectURL(activeObjectUrlRef.current);
+      activeObjectUrlRef.current = null;
+    }
+
     // Reset state synchronously
     setCurrentTime(0);
     setDuration(track.duration || 0);
@@ -467,6 +557,16 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         audioRef.current.pause();
         audioRef.current.src = "";
         audioRef.current = null;
+      }
+
+      if (activeObjectUrlRef.current) {
+        URL.revokeObjectURL(activeObjectUrlRef.current);
+        activeObjectUrlRef.current = null;
+      }
+
+      if (bufferingRecoveryTimerRef.current) {
+        window.clearTimeout(bufferingRecoveryTimerRef.current);
+        bufferingRecoveryTimerRef.current = null;
       }
     };
   }, [ensureAudioElement]);

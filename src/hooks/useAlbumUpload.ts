@@ -52,9 +52,16 @@ export const useAlbumUpload = (): UseAlbumUploadReturn => {
     file: File
   ): Promise<string | null> => {
     try {
+      // IMPORTANT: Provide contentType so Safari can stream reliably.
+      const contentType = file.type || (bucket === 'tracks' ? 'audio/mpeg' : undefined);
+
       const { error } = await supabase.storage
         .from(bucket)
-        .upload(path, file, { upsert: true });
+        .upload(path, file, {
+          upsert: true,
+          ...(contentType ? { contentType } : {}),
+          cacheControl: '3600',
+        });
 
       if (error) throw error;
 
