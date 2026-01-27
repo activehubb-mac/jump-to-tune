@@ -4,6 +4,7 @@ import { Disc3, Edit, Trash2, Play, Pause, ListPlus, Lock, Mic2, CheckCircle, Ey
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CardHoverOverlay } from "@/components/ui/card-hover-overlay";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { DownloadButton } from "@/components/download/DownloadButton";
@@ -201,7 +202,7 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
 
             {/* Play overlay for fan-facing cards */}
             {showPlayButton && (
-              <div className="absolute inset-0 bg-[#1a1a1a]/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <CardHoverOverlay>
                 <Button 
                   size="icon" 
                   className="rounded-full gradient-accent w-10 h-10"
@@ -246,7 +247,7 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
                   size="icon"
                   className="rounded-full w-10 h-10 border-glass-border/50 hover:border-primary/50"
                 />
-              </div>
+              </CardHoverOverlay>
             )}
 
             {/* Actions for owner - Edit and Delete only */}

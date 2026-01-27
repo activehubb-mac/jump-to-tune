@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Disc3, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CardHoverOverlay } from "@/components/ui/card-hover-overlay";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -120,7 +121,7 @@ export function AlbumCard({ album }: AlbumCardProps) {
         </div>
 
         {/* Play Button Overlay */}
-        <div className="absolute inset-0 bg-[#1a1a1a]/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <CardHoverOverlay>
           <Button 
             size="icon" 
             className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 w-12 h-12"
@@ -128,7 +129,7 @@ export function AlbumCard({ album }: AlbumCardProps) {
           >
             <Play className="w-5 h-5 ml-0.5" />
           </Button>
-        </div>
+        </CardHoverOverlay>
       </div>
 
       {/* Album Info */}
