@@ -8,6 +8,7 @@ interface Profile {
   id: string;
   display_name: string | null;
   avatar_url: string | null;
+  banner_image_url: string | null;
   bio: string | null;
   onboarding_completed: boolean | null;
 }
