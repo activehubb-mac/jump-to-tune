@@ -137,7 +137,7 @@ export function FeaturedHeroCarousel() {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Background Image - No heavy overlays */}
+      {/* Background Image with Gradient Overlay */}
       <div className="absolute inset-0 transition-all duration-700">
         {currentTrack.cover_art_url ? (
           <img
@@ -148,16 +148,15 @@ export function FeaturedHeroCarousel() {
         ) : (
           <div className="w-full h-full bg-muted" />
         )}
-        {/* Subtle vignette only at bottom for transition */}
-        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background/60 to-transparent" />
+        {/* Gradient overlays for readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent" />
       </div>
 
-      {/* Content with frosted glass backdrop */}
-      <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
-        {/* Frosted glass panel behind content */}
-        <div className="absolute inset-0 bg-card/70 backdrop-blur-md rounded-t-2xl border-t border-x border-border/50" />
-        {/* Track Info - positioned above frosted glass */}
-        <div className="relative z-10 flex items-end gap-4 md:gap-6">
+      {/* Content */}
+      <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
+        {/* Track Info */}
+        <div className="flex items-end gap-4 md:gap-6">
           {/* Small Cover Art */}
           <div className="relative flex-shrink-0 w-20 h-20 md:w-28 md:h-28 rounded-xl overflow-hidden shadow-2xl ring-2 ring-border">
             {currentTrack.cover_art_url ? (
@@ -221,8 +220,8 @@ export function FeaturedHeroCarousel() {
           </div>
         </div>
 
-        {/* Navigation - positioned above frosted glass */}
-        <div className="relative z-10 flex items-center justify-between mt-6">
+        {/* Navigation */}
+        <div className="flex items-center justify-between mt-6">
           {/* Dots */}
           <div className="flex items-center gap-2">
             {tracks.map((_, idx) => (
