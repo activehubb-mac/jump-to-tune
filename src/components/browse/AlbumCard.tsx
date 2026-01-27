@@ -120,7 +120,7 @@ export function AlbumCard({ album }: AlbumCardProps) {
         </div>
 
         {/* Play Button Overlay */}
-        <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute inset-0 bg-[#1a1a1a]/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button 
             size="icon" 
             className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 w-12 h-12"
