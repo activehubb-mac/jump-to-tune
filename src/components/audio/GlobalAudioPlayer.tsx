@@ -126,6 +126,7 @@ export function GlobalAudioPlayer() {
     currentTrack,
     isPlaying,
     isBuffering,
+    needsUserGesture,
     currentTime,
     duration,
     volume,
@@ -142,6 +143,7 @@ export function GlobalAudioPlayer() {
     currentPreviewLimit,
     showPreviewEndedModal,
     togglePlayPause,
+    resumePlayback,
     seek,
     setVolume,
     toggleMute,
@@ -352,6 +354,23 @@ export function GlobalAudioPlayer() {
         onOpenChange={setShowPremiumModal}
         feature={premiumFeatureName}
       />
+
+      {/* Safari/iOS gesture prompt (prevents “infinite buffering” when play is blocked) */}
+      {needsUserGesture && !isPlaying && (
+        <div
+          className="fixed left-1/2 z-50 -translate-x-1/2 glass-card border border-glass-border/30 backdrop-blur-xl rounded-full px-4 py-2 text-sm text-foreground"
+          style={{ bottom: 'calc(6.25rem + env(safe-area-inset-bottom, 0px))' }}
+        >
+          <button
+            className="flex items-center gap-2"
+            onClick={resumePlayback}
+            type="button"
+          >
+            <Play className="h-4 w-4" />
+            <span>Tap to start audio</span>
+          </button>
+        </div>
+      )}
 
       {/* Preview Ended Modal */}
       <PreviewEndedModal
@@ -628,10 +647,10 @@ export function GlobalAudioPlayer() {
                 <Button
                   size="icon"
                   className="rounded-full w-10 h-10 gradient-accent neon-glow-subtle flex-shrink-0"
-                  onClick={togglePlayPause}
-                  disabled={isBuffering}
+                  onClick={needsUserGesture ? resumePlayback : togglePlayPause}
+                  disabled={isBuffering && !needsUserGesture}
                 >
-                  {isBuffering ? (
+                  {isBuffering && !needsUserGesture ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : isPlaying ? (
                     <Pause className="h-5 w-5" />
@@ -744,10 +763,10 @@ export function GlobalAudioPlayer() {
               <Button
                 size="icon"
                 className="rounded-full w-10 h-10 gradient-accent neon-glow-subtle flex-shrink-0"
-                onClick={togglePlayPause}
-                disabled={isBuffering}
+                onClick={needsUserGesture ? resumePlayback : togglePlayPause}
+                disabled={isBuffering && !needsUserGesture}
               >
-                {isBuffering ? (
+                {isBuffering && !needsUserGesture ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : isPlaying ? (
                   <Pause className="h-5 w-5" />

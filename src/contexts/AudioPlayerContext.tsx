@@ -62,6 +62,7 @@ interface AudioPlayerContextType {
   currentTrack: AudioTrack | null;
   isPlaying: boolean;
   isBuffering: boolean;
+  needsUserGesture: boolean;
   currentTime: number;
   duration: number;
   volume: number;
@@ -97,6 +98,7 @@ interface AudioPlayerContextType {
   dismissPreviewEndedModal: () => void;
   restartPreview: () => void;
   grantFullAccess: (trackId: string) => void;
+  resumePlayback: () => void;
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined);
@@ -120,6 +122,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const [currentTrack, setCurrentTrack] = useState<AudioTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
+  const [needsUserGesture, setNeedsUserGesture] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(1);
@@ -204,17 +207,22 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   const unlockAudio = useCallback((audio: HTMLAudioElement) => {
     if (audioUnlockedRef.current) return;
     
-    // Create a silent audio context unlock for Safari
+    // Create a silent unlock for Safari/iOS
     try {
-      // Trigger a play/pause to unlock the audio element
+      // Safari is more likely to allow an unlock play if muted.
+      const prevMuted = audio.muted;
+      audio.muted = true;
+
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
           audio.pause();
           audio.currentTime = 0;
           audioUnlockedRef.current = true;
+          audio.muted = prevMuted;
           console.log("[Audio] Safari audio unlocked");
         }).catch(() => {
+          audio.muted = prevMuted;
           // Unlock failed, but we tried - some browsers may still work
           console.log("[Audio] Safari unlock attempt completed");
         });
@@ -400,6 +408,8 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         // Store pending play for retry on next user interaction
         if (error.name === "NotAllowedError") {
           pendingPlayRef.current = { track, forcePreviewCheck: true };
+          setNeedsUserGesture(true);
+          setIsBuffering(false);
         }
       });
     }
@@ -571,6 +581,28 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     };
   }, [ensureAudioElement]);
 
+  const resumePlayback = useCallback(() => {
+    const audio = ensureAudioElement();
+
+    // If we have a stored pending track, replay that (best chance to preserve user intent)
+    if (pendingPlayRef.current) {
+      const { track, forcePreviewCheck } = pendingPlayRef.current;
+      pendingPlayRef.current = null;
+      setNeedsUserGesture(false);
+      playTrackInternal(track, forcePreviewCheck);
+      return;
+    }
+
+    // Otherwise just try to play the current source
+    setNeedsUserGesture(false);
+    audio.play().catch((e: any) => {
+      if (e?.name === "NotAllowedError") {
+        setNeedsUserGesture(true);
+        setIsBuffering(false);
+      }
+    });
+  }, [ensureAudioElement, playTrackInternal]);
+
   // Safari audio unlock: Listen for first user interaction to unlock audio
   useEffect(() => {
     const handleUserInteraction = () => {
@@ -586,6 +618,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       if (pendingPlayRef.current) {
         const { track, forcePreviewCheck } = pendingPlayRef.current;
         pendingPlayRef.current = null;
+        setNeedsUserGesture(false);
         playTrackInternal(track, forcePreviewCheck);
       }
     };
@@ -618,8 +651,12 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       if (isPlaying) {
         audio.pause();
       } else {
-        audio.play().catch((e) => {
+        audio.play().catch((e: any) => {
           console.warn("[Audio] Toggle play failed:", e);
+          if (e?.name === "NotAllowedError") {
+            setNeedsUserGesture(true);
+            setIsBuffering(false);
+          }
         });
       }
       return;
@@ -711,7 +748,13 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     if (isPlaying) {
       audio.pause();
     } else {
-      audio.play().catch(console.error);
+      audio.play().catch((e: any) => {
+        console.error(e);
+        if (e?.name === "NotAllowedError") {
+          setNeedsUserGesture(true);
+          setIsBuffering(false);
+        }
+      });
     }
   }, [isPlaying, ensureAudioElement]);
 
@@ -888,7 +931,13 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     if (audio) {
       audio.currentTime = 0;
       setCurrentTime(0);
-      audio.play().catch(console.error);
+      audio.play().catch((e: any) => {
+        console.error(e);
+        if (e?.name === "NotAllowedError") {
+          setNeedsUserGesture(true);
+          setIsBuffering(false);
+        }
+      });
     }
     setShowPreviewEndedModal(false);
   }, []);
@@ -923,6 +972,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         currentTrack,
         isPlaying,
         isBuffering,
+        needsUserGesture,
         currentTime,
         duration,
         volume,
@@ -958,6 +1008,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         dismissPreviewEndedModal,
         restartPreview,
         grantFullAccess,
+        resumePlayback,
       }}
     >
       {children}
@@ -970,6 +1021,7 @@ const defaultAudioPlayerContext: AudioPlayerContextType = {
   currentTrack: null,
   isPlaying: false,
   isBuffering: false,
+  needsUserGesture: false,
   currentTime: 0,
   duration: 0,
   volume: 1,
@@ -1005,6 +1057,7 @@ const defaultAudioPlayerContext: AudioPlayerContextType = {
   dismissPreviewEndedModal: () => {},
   restartPreview: () => {},
   grantFullAccess: () => {},
+  resumePlayback: () => {},
 };
 
 export function useAudioPlayer() {
