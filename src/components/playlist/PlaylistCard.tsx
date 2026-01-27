@@ -103,7 +103,7 @@ export function PlaylistCard({
         {renderCover()}
 
         {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-background/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute inset-0 bg-[#1a1a1a]/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button
             size="icon"
             className="rounded-full gradient-accent neon-glow w-10 h-10"
