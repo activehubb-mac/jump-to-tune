@@ -53,8 +53,8 @@ export function LibraryListItem({
       return;
     }
     
-    // Direct playback for owned tracks
-    if (audioData && (isOwned || type === "track")) {
+    // Direct playback for owned tracks only (not playlists, albums, artists, liked-songs)
+    if (audioData && type === "track" && isOwned) {
       try {
         await Haptics.impact({ style: ImpactStyle.Medium });
       } catch {}
@@ -191,8 +191,8 @@ export function LibraryListItem({
     </div>
   );
 
-  // Wrap in Link if we have a destination and it's not a direct playback item
-  if (linkTo && !(audioData && (isOwned || type === "track"))) {
+  // Wrap in Link if we have a destination and it's not a direct playback owned track
+  if (linkTo && !(audioData && type === "track" && isOwned)) {
     return (
       <Link to={linkTo} className="block">
         {content}
