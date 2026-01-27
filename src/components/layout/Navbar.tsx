@@ -371,14 +371,12 @@ export function Navbar() {
 
           {/* Mobile Navigation */}
           {isOpen && (
-            <div 
-              className="md:hidden py-4 overflow-y-auto overscroll-contain touch-pan-y"
-              style={{ 
-                maxHeight: 'calc(100vh - 4rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
-                WebkitOverflowScrolling: 'touch'
-              }}
-            >
-              <div className="flex flex-col gap-2">
+            <div className="md:hidden fixed inset-x-0 top-[calc(4rem+env(safe-area-inset-top,0px))] bottom-0 bg-background/95 backdrop-blur-xl z-40">
+              <ScrollArea className="h-full">
+                <div 
+                  className="flex flex-col gap-2 py-4 px-4"
+                  style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}
+                >
                 {navLinks.map((link) => {
                   // Skip auth-required links for non-authenticated users
                   if (link.authRequired && !user) return null;
@@ -600,7 +598,8 @@ export function Navbar() {
                     </Button>
                   </div>
                 )}
-              </div>
+                </div>
+              </ScrollArea>
             </div>
           )}
         </div>
