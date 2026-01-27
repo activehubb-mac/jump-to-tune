@@ -51,20 +51,31 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MiB limit
+        // Skip caching audio URLs with cache-busting params (Safari retry mechanism)
+        navigateFallbackDenylist: [/_nocache=/],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/ezamzkycxqrstuznqaha\.supabase\.co\/storage\/v1\/object\/public\/.*/i,
-            handler: "NetworkFirst", // Changed from CacheFirst for Safari compatibility
+            // Match Supabase storage audio BUT exclude cache-busting URLs
+            urlPattern: ({ url }) => {
+              const isSupabaseStorage = url.hostname === 'ezamzkycxqrstuznqaha.supabase.co' && 
+                                        url.pathname.includes('/storage/v1/object/public/');
+              const hasCacheBuster = url.search.includes('_nocache=');
+              // Don't cache URLs with cache-busting param - let them hit network directly
+              return isSupabaseStorage && !hasCacheBuster;
+            },
+            handler: "NetworkFirst",
             options: {
               cacheName: "audio-cache",
-              networkTimeoutSeconds: 10, // Fallback to cache after 10s
+              networkTimeoutSeconds: 10,
               expiration: {
-                maxEntries: 50, // Reduced from 100
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days instead of 30
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
               },
               cacheableResponse: {
-                statuses: [200] // Only cache successful responses (removed status 0)
-              }
+                statuses: [200]
+              },
+              // Handle Safari range requests properly
+              rangeRequests: true
             }
           }
         ]
