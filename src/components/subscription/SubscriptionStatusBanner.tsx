@@ -32,7 +32,7 @@ export function SubscriptionStatusBanner({ className }: SubscriptionStatusBanner
 
   if (!subscription) {
     return (
-      <div className={cn("glass-card p-4 bg-gradient-to-r from-primary/10 to-accent/10", className)}>
+      <div className={cn("glass-card p-4 bg-muted/30", className)}>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
@@ -43,7 +43,7 @@ export function SubscriptionStatusBanner({ className }: SubscriptionStatusBanner
               <p className="text-sm text-muted-foreground">Start your 3-month free trial today!</p>
             </div>
           </div>
-          <Button className="gradient-accent neon-glow-subtle" size="sm" asChild>
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90" size="sm" asChild>
             <Link to="/subscription">
               Start Free Trial
               <ArrowRight className="w-4 h-4 ml-2" />
@@ -82,7 +82,7 @@ export function SubscriptionStatusBanner({ className }: SubscriptionStatusBanner
         "glass-card p-4 transition-all",
         isUrgent && "border-destructive/50 bg-destructive/5",
         isWarning && "border-yellow-500/30 bg-yellow-500/5",
-        !isUrgent && !isWarning && "bg-gradient-to-r from-primary/5 to-accent/5",
+        !isUrgent && !isWarning && "bg-muted/30",
         className
       )}
     >

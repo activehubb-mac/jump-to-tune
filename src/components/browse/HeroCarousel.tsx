@@ -67,7 +67,7 @@ export function HeroCarousel() {
   return (
     <section className="mb-10">
       <div className="flex items-center gap-3 mb-6">
-        <div className="h-6 w-1 bg-gradient-to-b from-primary to-accent rounded-full" />
+        <div className="h-6 w-1 bg-primary rounded-full" />
         <h2 className="text-xl font-bold text-foreground">Featured</h2>
       </div>
 
@@ -95,7 +95,7 @@ export function HeroCarousel() {
                         className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/30 to-accent/30">
+                      <div className="absolute inset-0 flex items-center justify-center bg-muted">
                         <Disc3 className="w-20 h-20 text-muted-foreground/50" />
                       </div>
                     )}
@@ -163,7 +163,7 @@ export function HeroCarousel() {
                     className="block relative aspect-[16/9] rounded-xl overflow-hidden group"
                   >
                     {/* Background */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-secondary/30 to-accent/40" />
+                    <div className="absolute inset-0 bg-muted/50" />
                     
                     {/* Avatar */}
                     <div className="absolute inset-0 flex items-center justify-center">

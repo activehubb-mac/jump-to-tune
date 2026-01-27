@@ -123,7 +123,7 @@ export function AlbumCard({ album }: AlbumCardProps) {
         <div className="absolute inset-0 bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button 
             size="icon" 
-            className="rounded-full gradient-accent neon-glow w-12 h-12"
+            className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 w-12 h-12"
             onClick={handlePlayAlbum}
           >
             <Play className="w-5 h-5 ml-0.5" />

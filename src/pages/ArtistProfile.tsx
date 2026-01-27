@@ -73,15 +73,15 @@ export default function ArtistProfile() {
         onOpenChange={setShowPremiumModal}
         feature="Add to Queue"
       />
-      <div className="relative h-64 md:h-80 bg-gradient-to-b from-primary/30 to-background overflow-hidden">
+      <div className="relative h-64 md:h-80 bg-muted/30 overflow-hidden">
         {artist.banner_image_url && <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: `url(${artist.banner_image_url})` }} />}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+        <div className="absolute inset-0 bg-background/50" />
       </div>
 
       <div className="container mx-auto px-4 -mt-32 relative z-10">
         <div className="flex flex-col md:flex-row items-start gap-6 mb-8">
-          <div className="w-40 h-40 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center neon-glow border-4 border-background overflow-hidden">
-            {artist.avatar_url ? <img src={artist.avatar_url} alt={artist.display_name || ""} className="w-full h-full object-cover" /> : <Music className="w-16 h-16 text-foreground" />}
+          <div className="w-40 h-40 rounded-full bg-primary flex items-center justify-center border-4 border-background overflow-hidden">
+            {artist.avatar_url ? <img src={artist.avatar_url} alt={artist.display_name || ""} className="w-full h-full object-cover" /> : <Music className="w-16 h-16 text-primary-foreground" />}
           </div>
 
           <div className="flex-1">
@@ -98,7 +98,7 @@ export default function ArtistProfile() {
             <div className="flex flex-wrap gap-3">
               {!isOwnProfile && (
                 <Button 
-                  className={following ? "border-glass-border" : "gradient-accent neon-glow-subtle hover:neon-glow"}
+                  className={following ? "border-glass-border" : "bg-primary text-primary-foreground hover:bg-primary/90"}
                   variant={following ? "outline" : "default"}
                   onClick={handleFollow}
                   disabled={isToggling}

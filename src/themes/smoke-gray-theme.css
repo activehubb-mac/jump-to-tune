@@ -1,6 +1,17 @@
-/* JumTunes Smoke Gray Theme Backup
-   Created: 2026-01-27
-   Purpose: Clean, modern, premium light theme
+/* JumTunes Smoke Gray Theme - Charcoal & Olive Palette
+   Updated: 2026-01-27
+   Purpose: Clean, modern, premium light theme with NO gradients
+   
+   Color Palette:
+   - Primary: Charcoal (#404040) - Strong, neutral
+   - Secondary: Olive (#5F7353) - Organic, calming  
+   - Accent: Gold/Bronze (#BF9358) - Warmth (used sparingly)
+   
+   Design Philosophy:
+   - No gradients anywhere - all solid colors
+   - Charcoal primary for buttons and CTAs
+   - Muted backgrounds for sections
+   - Professional, sophisticated appearance
    
    To restore: Copy the :root section to src/index.css
 */
@@ -17,16 +28,16 @@
   --popover-foreground: 0 0% 10%;   /* #1A1A1A */
 
   /* Brand Colors - Charcoal & Olive */
-  --primary: 0 0% 25%;              /* Charcoal */
+  --primary: 0 0% 25%;              /* Charcoal #404040 */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 85 25% 42%;          /* Olive */
+  --secondary: 85 25% 42%;          /* Olive #5F7353 */
   --secondary-foreground: 0 0% 100%;
 
   --muted: 0 0% 85%;                /* #DADADA */
   --muted-foreground: 0 0% 45%;     /* Medium gray */
 
-  --accent: 35 45% 52%;             /* Gold/bronze */
+  --accent: 35 45% 52%;             /* Gold/bronze #BF9358 */
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84% 60%;
@@ -55,3 +66,15 @@
   --sidebar-border: 0 0% 85%;
   --sidebar-ring: 0 0% 25%;
 }
+
+/* 
+  UTILITY CLASSES (Reference - defined in index.css)
+  
+  Solid buttons (NO gradients):
+  .gradient-accent → bg-primary text-primary-foreground hover:bg-primary/90
+  .gradient-primary → bg-primary text-primary-foreground
+  
+  Solid text (NO gradients):
+  .text-gradient → text-primary font-semibold
+  .text-gradient-blue → text-secondary font-semibold
+*/

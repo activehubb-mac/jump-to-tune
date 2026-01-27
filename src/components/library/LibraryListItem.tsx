@@ -123,7 +123,7 @@ export function LibraryListItem({
         isOwned && "ring-2 ring-primary/50 ring-offset-1 ring-offset-background"
       )}>
         {isLikedSongs ? (
-          <div className="w-full h-full bg-gradient-to-br from-primary via-purple-500 to-accent flex items-center justify-center">
+          <div className="w-full h-full bg-primary flex items-center justify-center">
             <svg
               className="w-7 h-7 text-white"
               fill="currentColor"

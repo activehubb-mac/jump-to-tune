@@ -175,7 +175,7 @@ export default function Karaoke() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+            <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center">
               <Mic2 className="w-7 h-7 text-primary-foreground" />
             </div>
             <div>
@@ -248,7 +248,7 @@ export default function Karaoke() {
                               artist: track.artist ? { id: track.artist.id, display_name: track.artist.display_name } : undefined,
                             });
                           }}
-                          className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center neon-glow"
+                          className="w-12 h-12 rounded-full bg-primary flex items-center justify-center"
                         >
                           {currentTrack?.id === track.id && isPlaying ? (
                             <Pause className="w-5 h-5 text-white" />

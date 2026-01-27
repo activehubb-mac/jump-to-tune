@@ -146,7 +146,7 @@ export function FeaturedHeroCarousel() {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30" />
+          <div className="w-full h-full bg-muted" />
         )}
         {/* Gradient overlays for readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />

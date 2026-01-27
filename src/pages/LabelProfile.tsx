@@ -101,7 +101,7 @@ export default function LabelProfile() {
         {/* Profile Header */}
         <div className="flex flex-col md:flex-row items-start gap-6 mb-8">
           {/* Logo */}
-          <div className="w-40 h-40 rounded-2xl bg-gradient-to-br from-accent to-primary flex items-center justify-center neon-glow border-4 border-background overflow-hidden">
+          <div className="w-40 h-40 rounded-2xl bg-primary flex items-center justify-center border-4 border-background overflow-hidden">
             {label.avatar_url ? (
               <img
                 src={label.avatar_url}
@@ -109,7 +109,7 @@ export default function LabelProfile() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <Building2 className="w-16 h-16 text-foreground" />
+              <Building2 className="w-16 h-16 text-primary-foreground" />
             )}
           </div>
 
@@ -152,7 +152,7 @@ export default function LabelProfile() {
             <div className="flex flex-wrap gap-3">
               {!isOwnProfile && (
                 <Button
-                  className={following ? "border-glass-border" : "bg-accent hover:bg-accent/90 neon-glow-subtle hover:neon-glow"}
+                  className={following ? "border-glass-border" : "bg-primary text-primary-foreground hover:bg-primary/90"}
                   variant={following ? "outline" : "default"}
                   onClick={handleFollow}
                   disabled={isToggling}

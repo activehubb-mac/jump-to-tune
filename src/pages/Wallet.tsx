@@ -44,7 +44,7 @@ export default function WalletPage() {
           <p className="text-muted-foreground mb-6">
             Your credit wallet allows you to make instant purchases
           </p>
-          <Button asChild className="gradient-accent">
+          <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
             <Link to="/auth">Sign In</Link>
           </Button>
         </div>
@@ -79,7 +79,7 @@ export default function WalletPage() {
           {/* Balance Card */}
           <div className="lg:col-span-1 space-y-4 sm:space-y-6 min-h-[280px] w-full min-w-0">
             <Card className="glass overflow-hidden min-h-[200px]">
-              <div className="gradient-accent p-6">
+              <div className="bg-primary p-6">
                 <div className="flex items-center justify-between mb-4">
                   <Wallet className="h-8 w-8 text-foreground" />
                   <Button

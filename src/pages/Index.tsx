@@ -126,14 +126,14 @@ function FeaturedArtistsSection() {
   return (
     <section className="py-8">
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-accent/20 via-primary/10 to-accent/20 p-6 md:p-10">
+        <div className="relative overflow-hidden rounded-2xl bg-muted/30 p-6 md:p-10">
           {/* Background decorative elements */}
-          <div className="absolute top-0 left-0 w-72 h-72 bg-accent/20 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
-          <div className="absolute bottom-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
+          <div className="absolute top-0 left-0 w-72 h-72 bg-muted/30 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
+          <div className="absolute bottom-0 right-0 w-64 h-64 bg-muted/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
           
           {/* Floating decoration */}
           <div className="absolute top-6 right-10 opacity-20">
-            <Sparkles className="w-10 h-10 text-accent animate-pulse" />
+            <Sparkles className="w-10 h-10 text-primary animate-pulse" />
           </div>
           <div className="absolute bottom-6 left-10 opacity-15">
             <Music className="w-8 h-8 text-primary animate-bounce" style={{ animationDuration: "3s" }} />
@@ -223,7 +223,7 @@ function FeaturedArtistsSection() {
                 
                 <div className="flex items-center justify-center md:justify-start gap-4">
                   <Button 
-                    className="gradient-accent neon-glow-subtle hover:scale-105 transition-all duration-300"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Users className="w-4 h-4 mr-2" />
@@ -361,10 +361,10 @@ function FeaturedLabelsSection() {
   return (
     <section className="py-8">
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-secondary/20 via-primary/10 to-secondary/20 p-6 md:p-10">
+        <div className="relative overflow-hidden rounded-2xl bg-muted/30 p-6 md:p-10">
           {/* Background decorative elements */}
-          <div className="absolute top-0 left-0 w-72 h-72 bg-secondary/20 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
-          <div className="absolute bottom-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
+          <div className="absolute top-0 left-0 w-72 h-72 bg-muted/30 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
+          <div className="absolute bottom-0 right-0 w-64 h-64 bg-muted/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
           
           {/* Floating decoration */}
           <div className="absolute top-6 right-10 opacity-20">
@@ -603,17 +603,17 @@ function FeaturedTracksSection() {
   return (
     <section className="py-8">
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/20 via-accent/10 to-primary/20 p-6 md:p-10">
+        <div className="relative overflow-hidden rounded-2xl bg-muted/30 p-6 md:p-10">
           {/* Background decorative elements */}
-          <div className="absolute top-0 left-0 w-72 h-72 bg-primary/20 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
-          <div className="absolute bottom-0 right-0 w-64 h-64 bg-accent/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
+          <div className="absolute top-0 left-0 w-72 h-72 bg-muted/30 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
+          <div className="absolute bottom-0 right-0 w-64 h-64 bg-muted/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
           
           {/* Floating decoration */}
           <div className="absolute top-6 right-10 opacity-20">
             <Sparkles className="w-10 h-10 text-primary animate-pulse" />
           </div>
           <div className="absolute bottom-6 left-10 opacity-15">
-            <Disc3 className="w-8 h-8 text-accent animate-spin" style={{ animationDuration: "8s" }} />
+            <Disc3 className="w-8 h-8 text-primary animate-spin" style={{ animationDuration: "8s" }} />
           </div>
           
           {/* Header */}
@@ -715,7 +715,7 @@ function FeaturedTracksSection() {
                 
                 <div className="flex items-center justify-center md:justify-start gap-4">
                   <Button 
-                    className="gradient-accent neon-glow-subtle hover:scale-105 transition-all duration-300"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Play className="w-4 h-4 mr-2" />
@@ -891,7 +891,7 @@ export default function Index() {
           <>
             <Button
               size="lg"
-              className="gradient-accent neon-glow hover:scale-105 transition-all duration-300 text-lg px-8"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 text-lg px-8"
               asChild
             >
               <Link to="/auth?mode=signup">
@@ -932,7 +932,7 @@ export default function Index() {
           <>
             <Button
               size="lg"
-              className="gradient-accent neon-glow hover:scale-105 transition-all duration-300 text-lg px-8"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 text-lg px-8"
               asChild
             >
               <Link to="/browse">
@@ -971,7 +971,7 @@ export default function Index() {
           <>
             <Button
               size="lg"
-              className="gradient-accent neon-glow hover:scale-105 transition-all duration-300 text-lg px-8"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 text-lg px-8"
               asChild
             >
               <Link to="/upload">
@@ -1010,7 +1010,7 @@ export default function Index() {
           <>
             <Button
               size="lg"
-              className="gradient-accent neon-glow hover:scale-105 transition-all duration-300 text-lg px-8"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 text-lg px-8"
               asChild
             >
               <Link to="/upload">
@@ -1048,7 +1048,7 @@ export default function Index() {
       ctas: (
         <Button
           size="lg"
-          className="gradient-accent neon-glow hover:scale-105 transition-all duration-300 text-lg px-8"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 text-lg px-8"
           asChild
         >
           <Link to="/browse">
@@ -1219,7 +1219,7 @@ export default function Index() {
                       <Button
                         size="sm"
                         variant={following ? "outline" : "default"}
-                        className={`mt-3 w-full ${following ? "border-glass-border" : "gradient-accent"}`}
+                        className={`mt-3 w-full ${following ? "border-glass-border" : "bg-primary text-primary-foreground hover:bg-primary/90"}`}
                         onClick={() => handleFollow(artist.id, artist.display_name || "Artist")}
                       >
                         {following ? (
@@ -1382,8 +1382,8 @@ export default function Index() {
                     key={index}
                     className="glass-card p-6 group hover:bg-primary/10 transition-all duration-300"
                   >
-                    <div className="w-12 h-12 rounded-lg gradient-accent flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <Icon className="w-6 h-6 text-foreground" />
+                    <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                      <Icon className="w-6 h-6 text-primary-foreground" />
                     </div>
                     <h3 className="text-xl font-semibold mb-2 text-foreground">{feature.title}</h3>
                     <p className="text-muted-foreground">{feature.description}</p>
