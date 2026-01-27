@@ -1,116 +1,191 @@
 
-# Fix Sidebar/Mobile Menu Opacity Plan
 
-## Problem
+# Featured Hero Carousel Visual Improvements Plan
 
-The mobile navigation menu uses the `glass` utility class which has a semi-transparent background (`bg-card/80` = 80% opacity). This causes the content behind the menu to show through, creating visual confusion as seen in the screenshot.
+## Problem Analysis
+
+Looking at the screenshots, there are several visual issues with the Featured Hero Carousel:
+
+1. **Poor text contrast** - The "TRENDING" badge and track title/artist text are hard to read when overlaid on various cover art images (especially light or busy backgrounds)
+2. **Transparent/semi-opaque pills** - The badge pills use `bg-primary/20` which doesn't provide enough contrast against diverse image backgrounds
+3. **No container border** - The entire section blends into the page background without visual separation
+4. **Gradient overlays insufficient** - The current gradient overlays don't always provide enough darkness for text readability
 
 ---
 
 ## Solution
 
-Make the mobile menu background fully opaque so it completely covers the content below, while keeping the desktop navbar with its subtle glass effect.
+Enhance the Featured Hero Carousel with:
+- Stronger, solid background pills with proper contrast
+- Better text shadow for legibility
+- A subtle border around the carousel container
+- Enhanced overlay for consistent text readability
 
 ---
 
 ## Changes
 
-### File: `src/index.css`
+### File: `src/components/home/FeaturedHeroCarousel.tsx`
 
-Update the glass utility to be fully opaque:
-
-```css
-/* Before */
-.glass {
-  @apply bg-card/80;
-}
-
-/* After */
-.glass {
-  @apply bg-card;
-}
-```
-
-This change makes the glass class use 100% opaque card background instead of 80%.
-
-### Alternative: Mobile-Only Fix
-
-If you want to keep the desktop navbar semi-transparent but make mobile fully opaque:
-
-**File: `src/components/layout/Navbar.tsx`**
-
-Add a specific solid background class to the mobile navigation container:
+#### 1. Add border to main container
 
 ```tsx
-{/* Before */}
-<div 
-  className="md:hidden py-4 overflow-y-auto overscroll-contain touch-pan-y"
-  ...
->
+// Line 136 - Add border and shadow to container
+// Before
+<div className="relative w-full aspect-[4/3] md:aspect-video rounded-2xl overflow-hidden group"
 
-{/* After */}
-<div 
-  className="md:hidden py-4 overflow-y-auto overscroll-contain touch-pan-y bg-card"
-  ...
->
+// After
+<div className="relative w-full aspect-[4/3] md:aspect-video rounded-2xl overflow-hidden group border border-border shadow-lg"
 ```
 
-And update the main nav wrapper to have a solid background on mobile:
+#### 2. Enhance background overlays for better text contrast
 
 ```tsx
-{/* Before */}
-<nav className="fixed top-0 left-0 right-0 z-50 glass" ...>
+// Lines 151-153 - Strengthen the gradient overlays
+// Before
+<div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+<div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
 
-{/* After - solid on mobile, glass on desktop */}
-<nav className="fixed top-0 left-0 right-0 z-50 bg-card md:bg-card/80" ...>
+// After
+<div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+<div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent" />
+```
+
+#### 3. Improve TRENDING/FEATURED badge styling
+
+```tsx
+// Lines 183-190 - Use solid backgrounds with proper contrast
+// Before
+<span className={cn(
+  "text-xs font-medium px-2 py-0.5 rounded-full",
+  currentTrack.isFeatured 
+    ? "bg-yellow-500/20 text-yellow-400"
+    : "bg-primary/20 text-primary"
+)}>
+
+// After
+<span className={cn(
+  "text-xs font-semibold px-3 py-1 rounded-full border",
+  currentTrack.isFeatured 
+    ? "bg-card text-foreground border-border shadow-sm"
+    : "bg-card text-foreground border-border shadow-sm"
+)}>
+```
+
+#### 4. Improve Karaoke badge styling
+
+```tsx
+// Lines 191-196 - Solid background for karaoke badge
+// Before
+<span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent/20 text-accent flex items-center gap-1">
+
+// After
+<span className="text-xs font-semibold px-3 py-1 rounded-full bg-card text-foreground border border-border shadow-sm flex items-center gap-1">
+```
+
+#### 5. Improve cover art thumbnail ring
+
+```tsx
+// Line 161 - Better border visibility
+// Before
+<div className="relative flex-shrink-0 w-20 h-20 md:w-28 md:h-28 rounded-xl overflow-hidden shadow-2xl ring-2 ring-white/20">
+
+// After
+<div className="relative flex-shrink-0 w-20 h-20 md:w-28 md:h-28 rounded-xl overflow-hidden shadow-2xl ring-2 ring-border">
+```
+
+#### 6. Improve navigation dots visibility
+
+```tsx
+// Lines 231-237 - Better contrast for dots
+// Before
+className={cn(
+  "w-2 h-2 rounded-full transition-all duration-300",
+  idx === currentIndex
+    ? "w-8 bg-primary"
+    : "bg-white/30 hover:bg-white/50"
+)}
+
+// After
+className={cn(
+  "w-2 h-2 rounded-full transition-all duration-300 border border-border/50",
+  idx === currentIndex
+    ? "w-8 bg-primary"
+    : "bg-card/80 hover:bg-card"
+)}
+```
+
+#### 7. Improve navigation arrow buttons
+
+```tsx
+// Lines 243-254 - Better button backgrounds
+// Before
+className="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/20 transition-colors"
+
+// After
+className="w-10 h-10 rounded-full bg-card border border-border shadow-sm flex items-center justify-center hover:bg-muted transition-colors"
 ```
 
 ---
 
-## Recommended Approach
-
-**Option 1 (Simplest)**: Make `glass` class fully opaque everywhere - cleaner look that matches the smoke-gray theme direction.
-
-**Option 2 (Targeted)**: Keep desktop glass effect but override mobile to be solid - more complexity but preserves desktop aesthetic.
-
----
-
-## Visual Result
+## Visual Comparison
 
 ```text
 BEFORE:
-┌─────────────────────┐
-│ Menu (transparent)  │  ← Content bleeding through
-│ ▒▒▒ Home ▒▒▒▒▒▒▒▒▒ │
-│ ▒▒▒ Browse ▒▒▒▒▒▒▒ │
-│ (confusing visuals) │
-└─────────────────────┘
+┌───────────────────────────────────────┐
+│ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│ ← No border
+│  [TRENDING]  (semi-transparent)       │ ← Hard to read
+│  Track Title                          │ ← Poor contrast
+│  Artist Name                          │
+│  ┌─────┐                              │
+│  │░░░░░│  [Play Now]  $0.10          │
+│  └─────┘                              │
+│  ○ ━━━ ○ ○                            │ ← Low visibility dots
+└───────────────────────────────────────┘
 
 AFTER:
-┌─────────────────────┐
-│ Menu (solid card)   │  ← Clean, no bleed-through
-│     Home            │
-│     Browse          │
-│ (clear separation)  │
-└─────────────────────┘
+┌───────────────────────────────────────┐ ← Border added
+│ ████████████████████████████████████ │ ← Stronger overlay
+│  ╭─────────╮                          │
+│  │TRENDING │  (solid card bg)         │ ← Clear, readable
+│  ╰─────────╯                          │
+│  Track Title                          │ ← High contrast
+│  Artist Name                          │
+│  ┌─────┐                              │
+│  │█████│  [Play Now]  $0.10          │ ← Bordered thumbnail
+│  └─────┘                              │
+│  ● ━━━ ○ ○                            │ ← Visible dots
+└───────────────────────────────────────┘
 ```
+
+---
+
+## Theme-Consistent Colors Used
+
+| Element | Background | Text | Border |
+|---------|------------|------|--------|
+| Badges | `bg-card` (#E6E6E6) | `text-foreground` (#1A1A1A) | `border-border` (#DADADA) |
+| Container | Image + overlays | — | `border-border` (#DADADA) |
+| Navigation buttons | `bg-card` | `text-foreground` | `border-border` |
+| Dots (inactive) | `bg-card/80` | — | `border-border/50` |
+| Dots (active) | `bg-primary` | — | — |
 
 ---
 
 ## Files Modified
 
-| File | Change |
-|------|--------|
-| `src/index.css` | Update `.glass` to use solid `bg-card` instead of `bg-card/80` |
-
-OR (alternative approach):
-
-| File | Change |
-|------|--------|
-| `src/components/layout/Navbar.tsx` | Add `bg-card` override for mobile menu container |
+| File | Changes |
+|------|---------|
+| `src/components/home/FeaturedHeroCarousel.tsx` | Add container border, enhance overlays, update badge/button styles |
 
 ---
 
-## Technical Note
+## Result
 
-The `/80` suffix in Tailwind represents 80% opacity. Removing it makes the background 100% opaque, providing a solid visual barrier between the menu and the content below.
+After these changes:
+- **Badges will pop** with solid card backgrounds and subtle borders
+- **Container will stand out** with a visible border and shadow
+- **Text will be readable** on any cover art background
+- **Navigation will be visible** with proper contrast
+- **Overall section will "pop out"** from the smoke-gray background
+
