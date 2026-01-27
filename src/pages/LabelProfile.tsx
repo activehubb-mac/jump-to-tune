@@ -312,7 +312,7 @@ export default function LabelProfile() {
                     {track.artist?.display_name || "Unknown Artist"}
                   </p>
                   <div className="flex items-center justify-between mt-1">
-                    <span className="text-sm text-accent">{formatPrice(track.price)}</span>
+                    <span className="text-sm text-primary font-medium">{formatPrice(track.price)}</span>
                     <span className="text-xs text-muted-foreground">
                       {formatEditions(track.editions_sold, track.total_editions)}
                     </span>

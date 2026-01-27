@@ -138,7 +138,7 @@ export default function LabelCollectors() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-accent">{formatPrice(collector.total_spent)}</p>
+                      <p className="font-bold text-primary">{formatPrice(collector.total_spent)}</p>
                       <p className="text-sm text-muted-foreground">
                         {collector.tracks_owned} edition{collector.tracks_owned !== 1 ? "s" : ""}
                       </p>
