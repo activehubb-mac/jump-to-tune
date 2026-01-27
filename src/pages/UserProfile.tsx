@@ -88,21 +88,21 @@ export default function UserProfile() {
     switch (profile.role) {
       case "artist":
         return (
-          <Badge variant="default" className="bg-primary/20 text-primary border-primary/30">
+          <Badge variant="default" className="bg-[#404040] text-white border-[#404040]">
             <Music className="w-3 h-3 mr-1" />
             Artist
           </Badge>
         );
       case "label":
         return (
-          <Badge variant="default" className="bg-accent/20 text-accent border-accent/30">
+          <Badge variant="default" className="bg-[#404040] text-white border-[#404040]">
             <Building2 className="w-3 h-3 mr-1" />
             Label
           </Badge>
         );
       default:
         return (
-          <Badge variant="secondary" className="bg-muted text-muted-foreground">
+          <Badge variant="default" className="bg-[#404040] text-white border-[#404040]">
             <Heart className="w-3 h-3 mr-1" />
             Fan
           </Badge>
