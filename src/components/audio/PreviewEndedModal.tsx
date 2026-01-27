@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Disc3, Play, ShoppingCart } from "lucide-react";
+import { formatPrice } from "@/lib/formatters";
 import { useState } from "react";
 import { InstantPurchaseModal } from "@/components/wallet/InstantPurchaseModal";
 
@@ -31,8 +32,6 @@ export function PreviewEndedModal({
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
   if (!track) return null;
-
-  const priceInDollars = (track.price / 100).toFixed(2);
 
   const handlePurchaseClick = () => {
     onOpenChange(false);
@@ -81,7 +80,7 @@ export function PreviewEndedModal({
                 <p className="text-sm text-muted-foreground truncate">
                   {track.artist?.display_name || "Unknown Artist"}
                 </p>
-                <p className="text-lg font-bold text-primary mt-1">${priceInDollars}</p>
+                <p className="text-lg font-bold text-primary mt-1">{formatPrice(track.price)}</p>
               </div>
             </div>
 
