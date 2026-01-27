@@ -46,6 +46,7 @@ import NotFound from "./pages/NotFound";
 import AlbumDetail from "./pages/AlbumDetail";
 import AccountSettings from "./pages/AccountSettings";
 import PlaylistDetail from "./pages/PlaylistDetail";
+import LikedSongsDetail from "./pages/LikedSongsDetail";
 // Admin pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOverview from "./pages/admin/AdminOverview";
@@ -102,6 +103,7 @@ function AppContent() {
           <Route path="/upload" element={<Upload />} />
           <Route path="/upload/album" element={<AlbumUpload />} />
           <Route path="/album/:id" element={<AlbumDetail />} />
+          <Route path="/library/liked" element={<LikedSongsDetail />} />
           <Route path="/library/playlist/:playlistId" element={<PlaylistDetail />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-canceled" element={<PaymentCanceled />} />
