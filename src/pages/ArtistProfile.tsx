@@ -140,7 +140,7 @@ export default function ArtistProfile() {
                   )}
                 </Button>
               )}
-              <Button variant="outline" className="border-glass-border hover:border-primary/50"><Share2 className="w-4 h-4 mr-2" />Share</Button>
+              <Button variant="outline" className="border-glass-border hover:border-primary/50" onClick={() => { navigator.clipboard.writeText(window.location.href); showFeedback({ type: "success", title: "Link copied!", message: "Profile link copied to clipboard", autoCloseDelay: 2000 }); }}><Share2 className="w-4 h-4 mr-2" />Share</Button>
               {artist.website_url && <Button variant="ghost" className="text-muted-foreground hover:text-foreground" asChild><a href={artist.website_url} target="_blank" rel="noopener noreferrer"><ExternalLink className="w-4 h-4 mr-2" />Website</a></Button>}
             </div>
           </div>
@@ -167,7 +167,7 @@ export default function ArtistProfile() {
                 <div key={track.id} className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300">
                   <div className="aspect-square rounded-lg bg-muted/50 mb-3 relative overflow-hidden">
                     {track.cover_art_url ? <img src={track.cover_art_url} alt={track.title} className="absolute inset-0 w-full h-full object-cover" /> : <div className="absolute inset-0 flex items-center justify-center"><Disc3 className="w-12 h-12 text-muted-foreground/50" /></div>}
-                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute inset-0 bg-[#1a1a1a]/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button 
                         size="icon" 
                         className="rounded-full gradient-accent w-10 h-10"

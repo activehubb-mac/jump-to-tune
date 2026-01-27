@@ -275,7 +275,7 @@ export default function UserProfile() {
                   )}
                 </Button>
               )}
-              <Button variant="outline" className="border-glass-border hover:border-primary/50">
+              <Button variant="outline" className="border-glass-border hover:border-primary/50" onClick={() => { navigator.clipboard.writeText(window.location.href); showFeedback({ type: "success", title: "Link copied!", message: "Profile link copied to clipboard", autoCloseDelay: 2000 }); }}>
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
               </Button>

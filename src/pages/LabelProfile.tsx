@@ -192,7 +192,7 @@ export default function LabelProfile() {
                   )}
                 </Button>
               )}
-              <Button variant="outline" className="border-glass-border hover:border-accent/50">
+              <Button variant="outline" className="border-glass-border hover:border-accent/50" onClick={() => { navigator.clipboard.writeText(window.location.href); showFeedback({ type: "success", title: "Link copied!", message: "Profile link copied to clipboard", autoCloseDelay: 2000 }); }}>
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
               </Button>
@@ -278,7 +278,7 @@ export default function LabelProfile() {
                         <Disc3 className="w-12 h-12 text-muted-foreground/50" />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute inset-0 bg-[#1a1a1a]/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         size="icon"
                         className="rounded-full gradient-accent w-10 h-10"
