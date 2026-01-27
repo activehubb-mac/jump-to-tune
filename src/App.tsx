@@ -7,6 +7,7 @@ import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import { FeedbackModal } from "@/components/ui/feedback-modal";
 import { GlobalAudioPlayer } from "@/components/audio/GlobalAudioPlayer";
 import { useStatusBar } from "@/hooks/useStatusBar";
+import { useDeepLinkHandler } from "@/hooks/useDeepLinkHandler";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
@@ -67,6 +68,8 @@ const queryClient = new QueryClient();
 function AppContent() {
   // Initialize native status bar configuration
   useStatusBar();
+  // Handle deep links from jumtunes:// URL scheme (iOS/Android)
+  useDeepLinkHandler();
 
   return (
     <>

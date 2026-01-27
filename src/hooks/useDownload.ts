@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { isNativeApp, openExternalUrl, openPaymentUrl, getMobileHeaders } from "@/lib/platformBrowser";
 
 interface DownloadOptions {
   trackId: string;
@@ -31,15 +32,20 @@ export function useDownload() {
 
       if (error) throw error;
 
-      // Trigger browser download
-      const link = document.createElement("a");
-      link.href = data.downloadUrl;
-      link.download = data.filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      showFeedback({ type: "success", title: "Download Started", message: "Your track is downloading" });
+      // iOS native app: Open in browser to trigger "Save to Files"
+      if (isNativeApp()) {
+        await openExternalUrl(data.downloadUrl);
+        showFeedback({ type: "success", title: "Download Ready", message: "Choose 'Save to Files' when prompted" });
+      } else {
+        // Web: Use anchor element approach
+        const link = document.createElement("a");
+        link.href = data.downloadUrl;
+        link.download = data.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showFeedback({ type: "success", title: "Download Started", message: "Your track is downloading" });
+      }
     } catch (err) {
       console.error("Download error:", err);
       showFeedback({ type: "error", title: "Download Failed", message: err instanceof Error ? err.message : "Failed to download track" });
@@ -65,6 +71,7 @@ export function useDownload() {
         },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
+          ...getMobileHeaders(),
         },
       });
 
@@ -92,6 +99,7 @@ export function useDownload() {
         },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
+          ...getMobileHeaders(),
         },
       });
 
@@ -115,6 +123,7 @@ export function useDownload() {
       const { data, error } = await supabase.functions.invoke("customer-portal", {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
+          ...getMobileHeaders(),
         },
       });
 
