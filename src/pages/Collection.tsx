@@ -163,7 +163,7 @@ export default function Collection() {
         trackCount: likedTracks.length,
         isPinned: true,
         isDownloaded: false,
-        linkTo: "/library?filter=liked",
+        linkTo: "/library/liked",
         createdAt: new Date().toISOString(),
         sortName: "Liked Songs",
         creator: "You",
