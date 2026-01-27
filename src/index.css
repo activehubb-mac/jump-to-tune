@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* JumTunes Design System - Futuristic Music Platform
-   Dark mode with glass-morphism, purple to blue gradient with neon pink accents
+/* JumTunes Design System - Smoke Gray Light Theme
+   Clean, modern, premium neutral palette
 */
 
 @layer base {
@@ -14,89 +14,53 @@
     --safe-area-left: env(safe-area-inset-left, 0px);
     --safe-area-right: env(safe-area-inset-right, 0px);
 
-    --background: 260 30% 6%;
-    --foreground: 210 40% 98%;
+    /* Light Theme: Smoke Gray Base */
+    --background: 0 0% 95%;           /* #F2F2F2 */
+    --foreground: 0 0% 10%;           /* #1A1A1A */
 
-    --card: 260 25% 10%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 90%;                 /* #E6E6E6 */
+    --card-foreground: 0 0% 10%;      /* #1A1A1A */
 
-    --popover: 260 25% 10%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;             /* #FFFFFF */
+    --popover-foreground: 0 0% 10%;   /* #1A1A1A */
 
+    /* Brand Colors - Keep vibrant */
     --primary: 270 70% 50%;
-    --primary-foreground: 210 40% 98%;
+    --primary-foreground: 0 0% 100%;  /* White text on purple */
 
     --secondary: 217 91% 60%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 260 20% 15%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 85%;                /* #DADADA */
+    --muted-foreground: 0 0% 45%;     /* Medium gray */
 
     --accent: 330 85% 60%;
-    --accent-foreground: 210 40% 98%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 260 20% 18%;
-    --input: 260 20% 18%;
-    --ring: 270 70% 50%;
+    --border: 0 0% 85%;               /* #DADADA */
+    --input: 0 0% 90%;                /* Slightly darker for inputs */
+    --ring: 270 70% 50%;              /* Purple focus ring */
 
     --radius: 0.75rem;
 
-    /* Custom JumTunes tokens */
-    --neon-glow: 330 85% 60%;
+    /* Updated JumTunes tokens for light theme */
+    --neon-glow: 270 70% 50%;         /* Use primary for glow */
     --electric-blue: 217 91% 60%;
-    --deep-purple: 270 70% 35%;
-    --glass: 260 25% 12%;
-    --glass-border: 260 30% 25%;
+    --deep-purple: 270 70% 45%;
+    --glass: 0 0% 92%;                /* Light glass effect */
+    --glass-border: 0 0% 80%;         /* Visible border on light */
 
-    --sidebar-background: 260 30% 8%;
-    --sidebar-foreground: 210 40% 98%;
+    /* Sidebar - Light theme */
+    --sidebar-background: 0 0% 92%;
+    --sidebar-foreground: 0 0% 10%;
     --sidebar-primary: 270 70% 50%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 260 20% 15%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 260 20% 18%;
-    --sidebar-ring: 270 70% 50%;
-  }
-
-  .dark {
-    --background: 260 30% 6%;
-    --foreground: 210 40% 98%;
-
-    --card: 260 25% 10%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 260 25% 10%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 270 70% 50%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 217 91% 60%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 260 20% 15%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 330 85% 60%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 260 20% 18%;
-    --input: 260 20% 18%;
-    --ring: 270 70% 50%;
-
-    --sidebar-background: 260 30% 8%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 270 70% 50%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 260 20% 15%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 260 20% 18%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 88%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 0 0% 85%;
     --sidebar-ring: 270 70% 50%;
   }
 }
@@ -118,30 +82,33 @@
   }
 
   .glass-card {
-    @apply bg-card rounded-xl;
+    @apply bg-card rounded-xl shadow-sm;
   }
 
   .glass-card-bordered {
-    @apply bg-card border border-border rounded-xl;
+    @apply bg-card border border-border rounded-xl shadow-sm;
   }
 
+  /* Softer glow for light theme */
   .neon-glow {
-    box-shadow: 0 0 20px hsl(var(--neon-glow) / 0.4),
-                0 0 40px hsl(var(--neon-glow) / 0.2);
+    box-shadow: 0 4px 14px hsl(var(--primary) / 0.25),
+                0 2px 6px hsl(var(--primary) / 0.15);
   }
 
   .neon-glow-subtle {
-    box-shadow: 0 0 10px hsl(var(--neon-glow) / 0.3);
+    box-shadow: 0 2px 8px hsl(var(--primary) / 0.15);
   }
 
+  /* Gradients - adjusted for light backgrounds */
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(var(--deep-purple)), hsl(var(--electric-blue)));
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--electric-blue)));
   }
 
   .gradient-accent {
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
   }
 
+  /* Text gradients - keep vibrant */
   .text-gradient {
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
     -webkit-background-clip: text;
