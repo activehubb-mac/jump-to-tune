@@ -32,7 +32,7 @@ export function AlbumCard({ album }: AlbumCardProps) {
       // Step 1: Fetch tracks without profile join
       const { data: tracksData, error } = await supabase
         .from("tracks")
-        .select("id, title, audio_url, cover_art_url, duration, artist_id")
+        .select("id, title, audio_url, cover_art_url, duration, artist_id, price")
         .eq("album_id", album.id)
         .eq("is_draft", false)
         .order("track_number", { ascending: true })
@@ -73,6 +73,7 @@ export function AlbumCard({ album }: AlbumCardProps) {
       audio_url: tracks[0].audio_url,
       cover_art_url: tracks[0].cover_art_url || album.cover_art_url,
       duration: tracks[0].duration,
+      price: tracks[0].price,
       artist: tracks[0].artist,
     };
 
@@ -86,6 +87,7 @@ export function AlbumCard({ album }: AlbumCardProps) {
         audio_url: track.audio_url,
         cover_art_url: track.cover_art_url || album.cover_art_url,
         duration: track.duration,
+        price: track.price,
         artist: track.artist,
       });
     });

@@ -6,6 +6,7 @@ export interface RecentlyPlayedTrack {
   cover_art_url: string | null;
   audio_url: string;
   duration?: number | null;
+  price?: number;
   artist_id: string;
   artist_name: string | null;
   playedAt: number;
@@ -55,6 +56,7 @@ export function useRecentlyPlayed(limit: number = 6) {
     cover_art_url: string | null;
     audio_url: string;
     duration?: number | null;
+    price?: number;
     artist_id: string;
     artist_name: string | null;
   }) => {

@@ -16,6 +16,7 @@ const saveToRecentlyPlayed = (track: {
   audio_url: string;
   cover_art_url: string | null;
   duration?: number | null;
+  price?: number;
   artist?: { id: string; display_name: string | null };
 }) => {
   try {
@@ -32,6 +33,7 @@ const saveToRecentlyPlayed = (track: {
       audio_url: track.audio_url,
       cover_art_url: track.cover_art_url,
       duration: track.duration || null,
+      price: track.price,
       artist_id: track.artist?.id || "",
       artist_name: track.artist?.display_name || null,
       playedAt: Date.now(),
@@ -636,7 +638,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       try {
         const { data, error } = await supabase
           .from("tracks")
-          .select("audio_url, has_karaoke, preview_duration")
+          .select("audio_url, has_karaoke, preview_duration, price")
           .eq("id", track.id)
           .maybeSingle();
 
@@ -647,11 +649,12 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
           if (needsPreviewDuration) {
             previewDuration = data?.preview_duration ?? DEFAULT_PREVIEW_LIMIT_SECONDS;
           }
-          // Update track with hydrated data
+          // Update track with hydrated data including price
           setCurrentTrack(prev => prev?.id === track.id ? {
             ...prev,
             has_karaoke: hasKaraoke,
             preview_duration: previewDuration || DEFAULT_PREVIEW_LIMIT_SECONDS,
+            price: data?.price ?? prev.price,
           } : prev);
         }
       } catch (e) {
@@ -703,7 +706,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       // This path is for tracks without pre-hydrated audio_url or corrupted URLs
       supabase
         .from("tracks")
-        .select("audio_url, has_karaoke, preview_duration")
+        .select("audio_url, has_karaoke, preview_duration, price")
         .eq("id", track.id)
         .maybeSingle()
         .then(({ data, error }) => {
@@ -718,6 +721,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
             audio_url: data.audio_url,
             has_karaoke: data.has_karaoke ?? null,
             preview_duration: data.preview_duration ?? DEFAULT_PREVIEW_LIMIT_SECONDS,
+            price: data.price ?? track.price,
           };
 
           setCurrentTrack(hydratedTrack);

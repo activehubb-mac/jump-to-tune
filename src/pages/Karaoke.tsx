@@ -253,6 +253,7 @@ export default function Karaoke() {
                               title: track.title,
                               audio_url: track.audio_url,
                               cover_art_url: track.cover_art_url,
+                              price: track.price,
                               has_karaoke: track.has_karaoke,
                               artist: track.artist ? { id: track.artist.id, display_name: track.artist.display_name } : undefined,
                             });

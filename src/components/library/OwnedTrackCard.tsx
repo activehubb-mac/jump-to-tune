@@ -43,6 +43,7 @@ export function OwnedTrackCard({
       audio_url: track.audio_url,
       cover_art_url: track.cover_art_url,
       duration: track.duration,
+      price: track.price,
       artist: track.artist || undefined,
     });
   };

@@ -175,6 +175,7 @@ export default function LikedSongsDetail() {
       audio_url: track.audio_url,
       cover_art_url: track.cover_art_url,
       duration: track.duration,
+      price: track.price,
       artist: track.artist,
     });
   };
@@ -190,6 +191,7 @@ export default function LikedSongsDetail() {
       audio_url: firstTrack.audio_url,
       cover_art_url: firstTrack.cover_art_url,
       duration: firstTrack.duration,
+      price: firstTrack.price,
       artist: firstTrack.artist,
     });
     sortedTracks.slice(1).forEach((track) => {
@@ -199,6 +201,7 @@ export default function LikedSongsDetail() {
         audio_url: track.audio_url,
         cover_art_url: track.cover_art_url,
         duration: track.duration,
+        price: track.price,
         artist: track.artist,
       });
     });
@@ -220,6 +223,7 @@ export default function LikedSongsDetail() {
       audio_url: firstTrack.audio_url,
       cover_art_url: firstTrack.cover_art_url,
       duration: firstTrack.duration,
+      price: firstTrack.price,
       artist: firstTrack.artist,
     });
     shuffled.slice(1).forEach((track) => {
@@ -229,6 +233,7 @@ export default function LikedSongsDetail() {
         audio_url: track.audio_url,
         cover_art_url: track.cover_art_url,
         duration: track.duration,
+        price: track.price,
         artist: track.artist,
       });
     });

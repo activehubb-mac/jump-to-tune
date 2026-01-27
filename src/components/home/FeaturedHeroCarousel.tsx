@@ -105,6 +105,7 @@ export function FeaturedHeroCarousel() {
       title: track.title,
       audio_url: track.audio_url,
       cover_art_url: track.cover_art_url,
+      price: track.price,
       artist: {
         id: track.artist_id,
         display_name: track.artist_name,
