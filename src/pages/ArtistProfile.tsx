@@ -14,6 +14,8 @@ import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { FeaturedOnCarousel } from "@/components/artist/FeaturedOnCarousel";
+import { BannerUpload } from "@/components/profile/BannerUpload";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function ArtistProfile() {
   const { id } = useParams();
@@ -26,6 +28,7 @@ export default function ArtistProfile() {
   const { showFeedback } = useFeedbackSafe();
   const { canUseFeature } = useFeatureGate();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleFollow = async () => {
     if (!user) {
@@ -66,6 +69,15 @@ export default function ArtistProfile() {
   const isOwnProfile = user?.id === id;
   const following = id ? isFollowing(id) : false;
 
+  const bannerContent = (
+    <>
+      {!isOwnProfile && artist.banner_image_url && (
+        <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: `url(${artist.banner_image_url})` }} />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-black/30" />
+    </>
+  );
+
   return (
     <Layout>
       <PremiumFeatureModal
@@ -73,10 +85,22 @@ export default function ArtistProfile() {
         onOpenChange={setShowPremiumModal}
         feature="Add to Queue"
       />
-      <div className="relative h-64 md:h-80 bg-muted/30 overflow-hidden">
-        {artist.banner_image_url && <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: `url(${artist.banner_image_url})` }} />}
-        <div className="absolute inset-0 bg-background/50" />
-      </div>
+      {isOwnProfile && id ? (
+        <BannerUpload
+          userId={id}
+          currentBannerUrl={artist.banner_image_url}
+          onUploadSuccess={async () => {
+            queryClient.invalidateQueries({ queryKey: ["artist-profile", id] });
+          }}
+          className="relative h-64 md:h-80 bg-muted/30 overflow-hidden"
+        >
+          {bannerContent}
+        </BannerUpload>
+      ) : (
+        <div className="relative h-64 md:h-80 bg-muted/30 overflow-hidden">
+          {bannerContent}
+        </div>
+      )}
 
       <div className="container mx-auto px-4 -mt-32 relative z-10">
         <div className="flex flex-col md:flex-row items-start gap-6 mb-8">

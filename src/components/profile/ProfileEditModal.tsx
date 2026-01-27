@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Loader2, Camera, ImageIcon } from "lucide-react";
+import { Loader2, Camera, ImageIcon, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,7 +25,7 @@ interface ProfileEditModalProps {
 
 export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) {
   const { user, profile, refreshProfile } = useAuth();
-  const { showFeedback, closeFeedback } = useFeedbackSafe();
+  const { showFeedback } = useFeedbackSafe();
 
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
@@ -34,15 +34,15 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
   const [isSaving, setIsSaving] = useState(false);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
-  const { uploadBanner, isUploading: isBannerUploading, progress: bannerProgress } = useBannerUpload({
+  const { uploadBanner, removeBanner, isUploading: isBannerUploading, isRemoving: isBannerRemoving, progress: bannerProgress } = useBannerUpload({
     userId: user?.id || "",
     onSuccess: async (url) => {
       setBannerUrl(url);
       await refreshProfile();
       showFeedback({
         type: "success",
-        title: "Banner Updated",
-        message: "Your profile banner has been updated.",
+        title: url ? "Banner Updated" : "Banner Removed",
+        message: url ? "Your profile banner has been updated." : "Your profile banner has been removed.",
         autoClose: true,
         autoCloseDelay: 3000,
       });
@@ -50,8 +50,8 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
     onError: (error) => {
       showFeedback({
         type: "error",
-        title: "Upload Failed",
-        message: error.message || "Failed to upload banner.",
+        title: "Action Failed",
+        message: error.message || "Failed to update banner.",
       });
     },
   });
@@ -74,6 +74,12 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
       bannerInputRef.current.value = "";
     }
   };
+
+  const handleBannerRemove = async () => {
+    await removeBanner();
+  };
+
+  const isBannerProcessing = isBannerUploading || isBannerRemoving;
 
   const handleSave = async () => {
     if (!user) return;
@@ -135,15 +141,10 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
               onChange={handleBannerSelect}
               disabled={isBannerUploading}
             />
-            <button
-              type="button"
-              onClick={() => bannerInputRef.current?.click()}
-              disabled={isBannerUploading}
+            <div
               className={cn(
                 "relative w-full h-24 rounded-lg overflow-hidden group",
-                "bg-muted/50 border border-glass-border",
-                "hover:border-primary/50 transition-colors",
-                "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
+                "bg-muted/50 border border-glass-border"
               )}
             >
               {bannerUrl ? (
@@ -159,26 +160,46 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
               )}
               <div
                 className={cn(
-                  "absolute inset-0 bg-black/50 flex items-center justify-center",
+                  "absolute inset-0 bg-black/50 flex items-center justify-center gap-2",
                   "opacity-0 group-hover:opacity-100 transition-opacity",
-                  isBannerUploading && "opacity-100"
+                  isBannerProcessing && "opacity-100"
                 )}
               >
-                {isBannerUploading ? (
+                {isBannerProcessing ? (
                   <div className="flex flex-col items-center gap-1">
                     <Loader2 className="w-6 h-6 text-white animate-spin" />
-                    <span className="text-xs text-white">{bannerProgress}%</span>
+                    <span className="text-xs text-white">
+                      {isBannerRemoving ? "Removing..." : `${bannerProgress}%`}
+                    </span>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center gap-1">
-                    <Camera className="w-6 h-6 text-white" />
-                    <span className="text-xs text-white">Change Banner</span>
-                  </div>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => bannerInputRef.current?.click()}
+                      disabled={isBannerProcessing}
+                      className="flex flex-col items-center gap-1 p-2 rounded hover:bg-white/10 transition-colors"
+                    >
+                      <Camera className="w-5 h-5 text-white" />
+                      <span className="text-xs text-white">Change</span>
+                    </button>
+                    {bannerUrl && (
+                      <button
+                        type="button"
+                        onClick={handleBannerRemove}
+                        disabled={isBannerProcessing}
+                        className="flex flex-col items-center gap-1 p-2 rounded hover:bg-red-500/20 transition-colors"
+                      >
+                        <Trash2 className="w-5 h-5 text-white" />
+                        <span className="text-xs text-white">Remove</span>
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
-            </button>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Recommended: 1920×480 or wider aspect ratio
+              Recommended: 1920×480px or wider aspect ratio
             </p>
           </div>
 

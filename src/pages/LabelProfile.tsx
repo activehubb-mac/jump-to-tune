@@ -13,6 +13,8 @@ import { formatPrice, formatEditions, formatCompactNumber } from "@/lib/formatte
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
+import { BannerUpload } from "@/components/profile/BannerUpload";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function LabelProfile() {
   const { id } = useParams();
@@ -25,6 +27,7 @@ export default function LabelProfile() {
   const { showFeedback } = useFeedbackSafe();
   const { canUseFeature } = useFeatureGate();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleFollow = async () => {
     if (!user) {
@@ -78,6 +81,18 @@ export default function LabelProfile() {
   const following = id ? isFollowing(id) : false;
   const activeRoster = roster?.filter((r) => r.status === "active") || [];
 
+  const bannerContent = (
+    <>
+      {!isOwnProfile && label.banner_image_url && (
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-40"
+          style={{ backgroundImage: `url(${label.banner_image_url})` }}
+        />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-black/30" />
+    </>
+  );
+
   return (
     <Layout>
       <PremiumFeatureModal
@@ -87,15 +102,22 @@ export default function LabelProfile() {
       />
 
       {/* Hero Banner */}
-      <div className="relative h-64 md:h-80 bg-gradient-to-b from-accent/30 to-background overflow-hidden">
-        {label.banner_image_url && (
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-40"
-            style={{ backgroundImage: `url(${label.banner_image_url})` }}
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-      </div>
+      {isOwnProfile && id ? (
+        <BannerUpload
+          userId={id}
+          currentBannerUrl={label.banner_image_url}
+          onUploadSuccess={async () => {
+            queryClient.invalidateQueries({ queryKey: ["label-profile", id] });
+          }}
+          className="relative h-64 md:h-80 bg-gradient-to-b from-accent/30 to-background overflow-hidden"
+        >
+          {bannerContent}
+        </BannerUpload>
+      ) : (
+        <div className="relative h-64 md:h-80 bg-gradient-to-b from-accent/30 to-background overflow-hidden">
+          {bannerContent}
+        </div>
+      )}
 
       <div className="container mx-auto px-4 -mt-32 relative z-10">
         {/* Profile Header */}

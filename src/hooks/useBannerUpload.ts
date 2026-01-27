@@ -3,12 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface UseBannerUploadOptions {
   userId: string;
-  onSuccess?: (url: string) => void;
+  onSuccess?: (url: string | null) => void;
   onError?: (error: Error) => void;
 }
 
 export function useBannerUpload({ userId, onSuccess, onError }: UseBannerUploadOptions) {
   const [isUploading, setIsUploading] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const uploadBanner = async (file: File) => {
@@ -91,9 +92,48 @@ export function useBannerUpload({ userId, onSuccess, onError }: UseBannerUploadO
     }
   };
 
+  const removeBanner = async () => {
+    if (!userId) {
+      onError?.(new Error("User not authenticated"));
+      return false;
+    }
+
+    setIsRemoving(true);
+
+    try {
+      // Delete existing banner files
+      const { data: existingFiles } = await supabase.storage
+        .from("banners")
+        .list(userId);
+
+      if (existingFiles && existingFiles.length > 0) {
+        const filesToDelete = existingFiles.map((f) => `${userId}/${f.name}`);
+        await supabase.storage.from("banners").remove(filesToDelete);
+      }
+
+      // Clear banner URL from profile
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ banner_image_url: null })
+        .eq("id", userId);
+
+      if (updateError) throw updateError;
+
+      onSuccess?.(null);
+      return true;
+    } catch (error) {
+      onError?.(error as Error);
+      return false;
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
   return {
     uploadBanner,
+    removeBanner,
     isUploading,
+    isRemoving,
     progress,
   };
 }
