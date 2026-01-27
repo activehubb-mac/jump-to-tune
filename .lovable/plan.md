@@ -1,213 +1,140 @@
 
-# Safari Audio Playback Emergency Fix
+## What the screenshots strongly indicate (why it happens “in the app overall”)
 
-## Problem Confirmed
+From your Safari screenshots, two lines are the smoking gun:
 
-Based on the detailed console screenshots you provided, I can now see the exact error sequence:
+- **`AbortError: The play() request was interrupted by a call to pause()`**
+- **`Data URL decoding failed`** (pointing to `data:audio/wav;base64,...`)
 
-1. **`NotSupportedError: "The operation is not supported"`** - Safari rejecting the initial play attempt
-2. **`AbortError: The operation was aborted`** - The request was killed mid-stream (shown in the stack trace)
-3. **`MediaError code: 3`** - MEDIA_ERR_DECODE with message "Media failed to decode"
-4. **`Failed to load resource`** - The Supabase audio URL failing to load
+In your codebase, Safari is “unlocked” by temporarily swapping the real track URL for a tiny **base64 WAV data URL**, calling `audio.play()`, then immediately calling `audio.pause()`:
 
-This happens on all Safari environments (tab, PWA, Capacitor iOS) but **not** on Chrome.
+- `src/contexts/AudioPlayerContext.tsx` → `unlockAudio()` sets:
+  - `audio.src = "data:audio/wav;base64,..."` (line ~213)
+  - then `audio.play().then(() => audio.pause())` (line ~225)
 
----
+That unlock attempt is triggered very frequently:
+- on **every** `playTrack()` call (`unlockAudio(audio)` line ~742)
+- and also from the global `click/touchstart/keydown` listeners (`handleUserInteraction` line ~709)
 
-## Root Cause: PWA Service Worker Cache Corruption
+### Why Chrome “plays anyway” but Safari gets stuck
+Chrome tends to tolerate the race conditions involved in:
+- swapping `audio.src` during interactions
+- calling `pause()` while a `play()` is still in-flight
+- quickly changing source and reusing the element
 
-The investigation confirms the culprit is the **Workbox service worker audio cache** in your PWA configuration.
+Safari is much more strict, so it will:
+- throw **AbortError** if `pause()` happens while `play()` is pending
+- sometimes end up in a state where UI says “playing” (React state updated by events) but **the audio pipeline is stalled** and time doesn’t advance
 
-### Why It Breaks on Safari
-
-Your current `vite.config.ts` uses:
-
-```typescript
-handler: "CacheFirst",  // <-- Problem #1: Serves stale/corrupted cache
-cacheableResponse: {
-  statuses: [0, 200]    // <-- Problem #2: Caches opaque responses (status 0)
-}
-```
-
-Safari is extremely strict about:
-
-1. **Range Requests**: Safari sends `Range` headers for audio streaming. When Workbox caches a partial 206 response and later tries to serve it as a full response, Safari aborts the request.
-
-2. **Opaque Responses**: Status `0` responses (from cross-origin requests) cannot be inspected. Workbox caches them blindly, but Safari fails to play corrupted entries.
-
-3. **Cache Persistence After Updates**: When the PWA auto-updates, the new service worker activates but the old `audio-cache` persists with potentially corrupted entries from the previous version.
-
-### Why Chrome Works
-
-Chrome is more forgiving with range request handling and cached audio blobs. It will often play partial/corrupted cache entries that Safari refuses.
+So even if PWA caching was one culprit, this *specific* “play interrupted by pause” error points to a **logic-level interruption** inside the app’s audio lifecycle (not just the network).
 
 ---
 
-## Solution: 5-Phase Fix
-
-### Phase 1: Fix PWA Caching Strategy
-
-**File: `vite.config.ts`**
-
-Change the audio caching from `CacheFirst` to `NetworkFirst`:
-
-| Current | Fixed |
-|---------|-------|
-| `handler: "CacheFirst"` | `handler: "NetworkFirst"` |
-| `statuses: [0, 200]` | `statuses: [200]` |
-| `maxEntries: 100` | `maxEntries: 50` |
-| `maxAgeSeconds: 30 days` | `maxAgeSeconds: 7 days` |
-| No timeout | `networkTimeoutSeconds: 10` |
-
-This ensures:
-- Safari always tries the network first (avoids corrupted cache)
-- Only successful 200 responses are cached (no opaque/partial responses)
-- Shorter cache lifetime reduces corruption risk
-- Network timeout provides offline fallback
-
-### Phase 2: Auto-Clear Cache on App Update
-
-**File: `src/main.tsx`**
-
-Add service worker lifecycle handling:
-
-- Listen for `controllerchange` event (new service worker activating)
-- When detected, delete the `audio-cache` via `caches.delete('audio-cache')`
-- This ensures corrupted caches from old versions don't persist
-
-### Phase 3: Safari-Specific Error Recovery
-
-**File: `src/contexts/AudioPlayerContext.tsx`**
-
-Add intelligent error handling in the audio element:
-
-- Detect `MEDIA_ERR_DECODE` (code 3) and `MEDIA_ERR_NETWORK` (code 2) errors
-- On Safari, automatically retry with a cache-busting URL parameter (e.g., `?no-cache=timestamp`)
-- This forces Safari to bypass the service worker cache and fetch fresh from network
-- Only retry once per URL to prevent infinite loops
-
-### Phase 4: Bypass Service Worker for Safari Audio Fetches
-
-**File: `src/contexts/AudioPlayerContext.tsx`**
-
-In the Safari buffering recovery section:
-
-- Use `fetch(url, { cache: 'no-store', mode: 'cors' })` for Safari
-- This explicitly tells the browser to bypass all caches (including service worker)
-- Ensures the recovery mechanism fetches fresh data directly from Supabase
-
-### Phase 5: Manual Cache Clear Button
-
-**File: `src/pages/AccountSettings.tsx`**
-
-Add a troubleshooting option for users:
-
-- "Clear Audio Cache" button that:
-  - Deletes `audio-cache` via `caches.delete()`
-  - Clears localStorage for recently played/viewed
-  - Reloads the page
-- This gives stuck users an immediate recovery path
+## Goal
+Make Safari playback reliable by eliminating “unlock audio” side effects that can interrupt real playback, and add targeted debug signals so we can prove the fix.
 
 ---
 
-## Files to Modify
+## Debug-first approach (what we’ll verify as we change)
+We will add very specific logging to confirm:
+1) When `unlockAudio()` runs and what it changes (`src`, `paused`, `readyState`, `networkState`)
+2) Whether `unlockAudio()` is ever firing during real playback or right before resume
+3) Whether a `pause()` is being called while a `play()` is pending (Safari’s AbortError condition)
+4) Whether the audio element is being left with `src=data:audio/wav...` at the wrong time
 
-| File | Changes |
-|------|---------|
-| `vite.config.ts` | Change `CacheFirst` → `NetworkFirst`, remove status 0, add timeout, add cache key plugin |
-| `src/main.tsx` | Add service worker `controllerchange` listener to clear audio cache on update |
-| `src/contexts/AudioPlayerContext.tsx` | Add Safari error retry with cache-busting, use `cache: 'no-store'` for recovery fetches |
-| `src/pages/AccountSettings.tsx` | Add "Clear Audio Cache" troubleshooting button |
-
----
-
-## Technical Details
-
-### vite.config.ts Changes
-
-```typescript
-runtimeCaching: [
-  {
-    urlPattern: /^https:\/\/ezamzkycxqrstuznqaha\.supabase\.co\/storage\/v1\/object\/public\/.*/i,
-    handler: "NetworkFirst",  // Changed from CacheFirst
-    options: {
-      cacheName: "audio-cache",
-      networkTimeoutSeconds: 10,  // Fallback to cache after 10s
-      expiration: {
-        maxEntries: 50,  // Reduced from 100
-        maxAgeSeconds: 60 * 60 * 24 * 7  // 7 days instead of 30
-      },
-      cacheableResponse: {
-        statuses: [200]  // Removed status 0
-      }
-    }
-  }
-]
-```
-
-### src/main.tsx Changes
-
-```typescript
-// Clear audio cache when new service worker activates
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.ready.then((registration) => {
-    navigator.serviceWorker.addEventListener('controllerchange', async () => {
-      if ('caches' in window) {
-        try {
-          await caches.delete('audio-cache');
-          console.log('[PWA] Audio cache cleared on update');
-        } catch (e) {
-          console.warn('[PWA] Failed to clear audio cache:', e);
-        }
-      }
-    });
-  });
-}
-```
-
-### AudioPlayerContext.tsx Error Handler
-
-```typescript
-audio.addEventListener("error", (e) => {
-  const error = audio.error;
-  
-  // Safari-specific: Retry with cache-busting on decode/network errors
-  if (isSafari && 
-      (error?.code === MediaError.MEDIA_ERR_DECODE || 
-       error?.code === MediaError.MEDIA_ERR_NETWORK)) {
-    const currentSrc = audio.src;
-    if (currentSrc && !currentSrc.includes('_nocache=')) {
-      const separator = currentSrc.includes('?') ? '&' : '?';
-      audio.src = `${currentSrc}${separator}_nocache=${Date.now()}`;
-      audio.play().catch(console.warn);
-      return; // Don't stop buffering - retry in progress
-    }
-  }
-  
-  // Normal error handling
-  setIsPlaying(false);
-  setIsBuffering(false);
-});
-```
+This will let us confirm “what paused it”.
 
 ---
 
-## Immediate User Workaround
+## Implementation changes (the actual fix)
 
-Until the fix is deployed, users can manually clear the corrupted cache:
+### Phase A — Stop `unlockAudio()` from interfering with real playback (most important)
+We will refactor unlocking so it cannot interrupt the main player element:
 
-1. **Safari Tab/PWA**: Safari Settings → Advanced → Website Data → Remove All (or just jumtunes.com)
-2. **Capacitor iOS**: Delete and reinstall the app
+**Option A (preferred): unlock with a separate, throwaway Audio element**
+- Create a new `const unlocker = new Audio(silentDataUri)`
+- `unlocker.muted = true; await unlocker.play(); unlocker.pause();`
+- Never touch `audioRef.current.src` during unlocking
+- Mark `audioUnlockedRef.current = true` even if the unlock attempt errors (to prevent infinite retries)
+
+**Option B: keep current element but make it safe**
+If we must reuse the same audio element:
+- Only run unlock when `audio.src` is empty and nothing is playing
+- Never restore/overwrite `src` if `currentTrackRef.current` exists
+- Never call `pause()` if Safari already says it’s paused
+- Ensure unlock is attempted once per app load, not repeatedly
+
+We’ll implement Option A to remove the entire class of “src swap” bugs.
+
+### Phase B — Don’t call `unlockAudio()` on every play attempt
+Change behavior:
+- Remove `unlockAudio(audio)` from `playTrack()` (or gate it behind `if (!audioUnlockedRef.current && !currentTrackRef.current)`)
+- Keep a single “first interaction” unlock, but once unlocked, remove listeners or no-op
+
+This prevents a pause/resume click from triggering unlock logic again.
+
+### Phase C — Add a Safari-safe “play request” guard (prevents play/pause races)
+Safari can throw AbortError if multiple play requests overlap or if pause happens mid-play promise.
+
+We’ll implement a “play token” (request id) pattern:
+- Every `play()` attempt increments a counter
+- If a later pause/track-switch occurs, older pending play promises are ignored
+- We’ll also explicitly handle AbortError by:
+  - logging it as expected in Safari race cases
+  - retrying play once after a short delay **only if the user still intends to play**
+
+This also addresses the “pause then play again and it shows playing but no sound” symptom.
+
+### Phase D — Improve state truth: derive UI from audio events more reliably
+Right now, UI state can become “optimistic” and not reflect actual audio progression.
+We will:
+- ensure `isPlaying` is only set true on actual `audio.play` / `playing` events
+- add a watchdog: if UI says playing but `timeupdate` hasn’t advanced in N ms and `readyState` is low, set buffering state and attempt recovery
+
+This makes the app self-heal if Safari stalls.
+
+### Phase E — Keep the PWA caching improvements, but don’t remove PWA yet
+You asked if you should remove the PWA.
+Recommendation: **do not remove the PWA yet** because:
+- you already improved Workbox audio caching (NetworkFirst + rangeRequests + bypass on `_nocache`)
+- the errors you’re showing (“play interrupted by pause” + “data URL decoding failed”) match the unlock logic, which exists regardless of PWA
+
+Instead:
+- fix the unlock/play lifecycle first
+- if issues persist after that, then we can A/B test “PWA disabled” as a last-resort isolation step
 
 ---
 
-## Verification Steps
+## Files we will update
+1) `src/contexts/AudioPlayerContext.tsx`
+   - refactor `unlockAudio()` to use a separate element (no `audioRef.current.src` mutation)
+   - reduce how often unlock runs (once per app load / once per user session)
+   - add “play request token” / AbortError-safe retries
+   - add debug logging instrumentation (temporary; we can later reduce)
 
-After implementation:
+2) (Optional after verifying) `src/components/audio/GlobalAudioPlayer.tsx`
+   - minor UI feedback improvements if “playing but stalled” is detected (show buffering / show “Tap to resume”)
 
-1. Deploy the fix
-2. Clear Safari's website data for jumtunes.com
-3. Hard refresh the page (Cmd+Shift+R)
-4. Play any track - should work immediately
-5. Reload and play again - should still work (`NetworkFirst` fetches fresh)
-6. Test the "Clear Audio Cache" button in Account Settings
+---
+
+## How we’ll confirm the fix worked (Safari)
+After deployment:
+1) Hard refresh Safari / clear website data once
+2) Play a track, let it run
+3) Pause, wait 5–10 seconds, play again
+4) Switch tracks while paused, then play
+5) Observe:
+   - No more `AbortError: ... interrupted by pause`
+   - No repeated `Data URL decoding failed` spam on every play click
+   - Progress bar/time continues advancing consistently
+
+---
+
+## Why this matches your symptom pattern
+Your described behavior:
+- works after refresh
+- after some pause/play cycles it gets stuck “playing” with no progress and no sound
+- Safari shows abort/decode errors while Chrome does not fail
+
+This is exactly what happens when the audio element’s `src` or playback state is being disrupted by an internal pause/src-swap at the wrong time (and Safari is strict about it). Refactoring the unlock flow to stop touching the real player element is the cleanest way to stabilize playback.
+
