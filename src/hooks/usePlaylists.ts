@@ -9,8 +9,6 @@ export interface Playlist {
   description: string | null;
   cover_image_url: string | null;
   is_public: boolean;
-  is_collaborative: boolean;
-  folder_id: string | null;
   created_at: string;
   updated_at: string;
   track_count?: number;

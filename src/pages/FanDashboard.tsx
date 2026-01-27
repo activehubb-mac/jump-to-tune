@@ -43,7 +43,7 @@ export default function FanDashboard() {
   // Loading state
   if (authLoading) {
     return (
-      <Layout useBackground="subtle">
+      <Layout>
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -56,7 +56,7 @@ export default function FanDashboard() {
   // Not logged in
   if (!user) {
     return (
-      <Layout useBackground="subtle">
+      <Layout>
         <div className="container mx-auto px-4 py-16 text-center">
           <Headphones className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
           <h1 className="text-2xl font-bold mb-2">Sign in to view your dashboard</h1>
@@ -85,7 +85,7 @@ export default function FanDashboard() {
   };
 
   return (
-    <Layout useBackground="subtle">
+    <Layout>
       <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden box-border">
         {/* Header */}
         <div className="mb-6 sm:mb-8">

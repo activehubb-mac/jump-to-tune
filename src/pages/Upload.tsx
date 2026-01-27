@@ -126,7 +126,7 @@ export default function Upload() {
   // Show loading state while checking auth
   if (isLoading) {
     return (
-      <Layout useBackground="subtle">
+      <Layout>
         <div className="container mx-auto px-4 py-24 flex justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -137,7 +137,7 @@ export default function Upload() {
   // Not logged in - show sign in prompt
   if (!user) {
     return (
-      <Layout useBackground="subtle">
+      <Layout>
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-6">
@@ -164,7 +164,7 @@ export default function Upload() {
   // Logged in but not an artist or label - show access denied
   if (role !== "artist" && role !== "label") {
     return (
-      <Layout useBackground="subtle">
+      <Layout>
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-6">
@@ -186,7 +186,7 @@ export default function Upload() {
   // Profile not completed - prompt to complete onboarding
   if (!profile?.onboarding_completed) {
     return (
-      <Layout useBackground="subtle">
+      <Layout>
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-6">

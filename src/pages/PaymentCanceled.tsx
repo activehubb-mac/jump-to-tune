@@ -5,7 +5,7 @@ import { XCircle, ArrowLeft, HelpCircle } from "lucide-react";
 
 export default function PaymentCanceled() {
   return (
-    <Layout useBackground="futuristic">
+    <Layout>
       <div className="container mx-auto px-4 py-24">
         <div className="max-w-md mx-auto text-center">
           {/* Canceled Icon */}

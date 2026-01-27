@@ -65,7 +65,7 @@ export default function LabelRoster() {
   // Loading state
   if (isLoading) {
     return (
-      <Layout useBackground="subtle">
+      <Layout>
         <div className="container mx-auto px-4 py-24 flex justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-accent" />
         </div>
@@ -76,7 +76,7 @@ export default function LabelRoster() {
   // Not logged in
   if (!user) {
     return (
-      <Layout useBackground="subtle">
+      <Layout>
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-accent/20 flex items-center justify-center mb-6">
@@ -98,7 +98,7 @@ export default function LabelRoster() {
   // Not a label
   if (role !== "label") {
     return (
-      <Layout useBackground="subtle">
+      <Layout>
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-6">

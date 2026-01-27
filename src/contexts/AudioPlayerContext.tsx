@@ -6,13 +6,11 @@ const RECENTLY_PLAYED_KEY = "jumtunes_recently_played";
 const MAX_RECENTLY_PLAYED = 20;
 const DEFAULT_PREVIEW_LIMIT_SECONDS = 30;
 
-// Helper to save recently played track - includes audio_url for iOS playback
+// Helper to save recently played track
 const saveToRecentlyPlayed = (track: { 
   id: string; 
   title: string; 
   cover_art_url: string | null;
-  audio_url?: string;
-  duration?: number | null;
   artist?: { id: string; display_name: string | null };
 }) => {
   try {
@@ -22,15 +20,13 @@ const saveToRecentlyPlayed = (track: {
     // Remove if already exists
     existing = existing.filter((t: { id: string }) => t.id !== track.id);
     
-    // Add to front with timestamp - include audio_url for iOS gesture chain
+    // Add to front with timestamp
     const newTrack = {
       id: track.id,
       title: track.title,
       cover_art_url: track.cover_art_url,
       artist_id: track.artist?.id || "",
       artist_name: track.artist?.display_name || null,
-      audio_url: track.audio_url || null,
-      duration: track.duration || null,
       playedAt: Date.now(),
     };
     
@@ -62,8 +58,6 @@ interface AudioPlayerContextType {
   currentTrack: AudioTrack | null;
   isPlaying: boolean;
   isBuffering: boolean;
-  audioError: string | null;
-  isPlaybackBlocked: boolean;
   currentTime: number;
   duration: number;
   volume: number;
@@ -99,7 +93,6 @@ interface AudioPlayerContextType {
   dismissPreviewEndedModal: () => void;
   restartPreview: () => void;
   grantFullAccess: (trackId: string) => void;
-  retryPlayback: () => void;
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined);
@@ -128,8 +121,6 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   // Preview mode state
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [showPreviewEndedModal, setShowPreviewEndedModal] = useState(false);
-  const [isPlaybackBlocked, setIsPlaybackBlocked] = useState(false);
-  const [audioError, setAudioError] = useState<string | null>(null);
   const accessCache = useRef<Map<string, boolean>>(new Map());
 
   // Check if user has full access to a track
@@ -187,23 +178,11 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     ? Math.max(0, currentPreviewLimit - currentTime)
     : 0;
 
-  // Track if audio context is unlocked (for iOS)
-  const isAudioUnlockedRef = useRef(false);
-
   const ensureAudioElement = useCallback(() => {
     if (audioRef.current) return audioRef.current;
 
     const audio = new Audio();
     audio.volume = 1;
-    
-    // iOS/Safari requires these attributes for proper playback
-    audio.setAttribute('playsinline', 'true');
-    audio.setAttribute('webkit-playsinline', 'true');
-    // NOTE: Don't set crossOrigin='anonymous' - it causes CORS errors on Safari
-    // when the server doesn't explicitly send Access-Control-Allow-Origin headers
-    // Supabase storage is public and doesn't require CORS headers for same-origin
-    // Preload metadata - use 'metadata' instead of 'auto' for faster initial load on mobile
-    audio.preload = 'metadata';
 
     audio.addEventListener("timeupdate", () => {
       setCurrentTime(audio.currentTime || 0);
@@ -216,101 +195,33 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       }
     };
 
-    audio.addEventListener("loadedmetadata", () => {
-      console.log("Audio metadata loaded, duration:", audio.duration);
-      syncDuration();
-    });
+    audio.addEventListener("loadedmetadata", syncDuration);
     audio.addEventListener("durationchange", syncDuration);
 
     audio.addEventListener("play", () => {
-      console.log("Audio play event fired");
       setIsPlaying(true);
-      setIsBuffering(false);
-      setIsPlaybackBlocked(false);
-      isAudioUnlockedRef.current = true;
     });
 
     audio.addEventListener("pause", () => {
-      console.log("Audio pause event fired");
       setIsPlaying(false);
     });
 
     audio.addEventListener("waiting", () => {
-      console.log("Audio waiting/buffering");
       setIsBuffering(true);
     });
 
-    audio.addEventListener("playing", () => {
-      console.log("Audio playing event fired");
-      setIsBuffering(false);
-    });
-
     audio.addEventListener("canplay", () => {
-      console.log("Audio can play");
       setIsBuffering(false);
     });
 
-    audio.addEventListener("error", (e) => {
-      const errorCode = audio.error?.code;
-      const errorMessage = audio.error?.message;
-      console.error("[AudioPlayer] Audio element error:", {
-        code: errorCode,
-        message: errorMessage,
-        src: audio.src,
-        event: e,
-      });
-      // Error codes: 1=MEDIA_ERR_ABORTED, 2=MEDIA_ERR_NETWORK, 3=MEDIA_ERR_DECODE, 4=MEDIA_ERR_SRC_NOT_SUPPORTED
-      const errorMessages: Record<number, string> = {
-        1: "Playback aborted",
-        2: "Network error - check connection",
-        3: "Audio decode failed",
-        4: "Audio format not supported",
-      };
-      setAudioError(errorMessages[errorCode || 0] || "Failed to load audio");
+    audio.addEventListener("error", () => {
+      console.error("Audio playback error", audio.error);
       setIsPlaying(false);
-      setIsBuffering(false);
-    });
-    
-    audio.addEventListener("stalled", () => {
-      console.warn("Audio stalled - network issue or slow connection");
-    });
-    
-    audio.addEventListener("abort", () => {
-      console.log("Audio load aborted");
     });
 
     audioRef.current = audio;
     return audio;
   }, []);
-
-  // Unlock audio on iOS - must be called from user interaction
-  const unlockAudioForIOS = useCallback(() => {
-    if (isAudioUnlockedRef.current) return Promise.resolve();
-    
-    const audio = ensureAudioElement();
-    
-    // Play a silent sound to unlock audio context on iOS
-    // This must happen synchronously within the user gesture
-    audio.muted = true;
-    const playPromise = audio.play();
-    
-    if (playPromise !== undefined) {
-      return playPromise
-        .then(() => {
-          audio.pause();
-          audio.muted = false;
-          audio.currentTime = 0;
-          isAudioUnlockedRef.current = true;
-        })
-        .catch(() => {
-          audio.muted = false;
-          // Silently fail - will retry on next interaction
-        });
-    }
-    
-    audio.muted = false;
-    return Promise.resolve();
-  }, [ensureAudioElement]);
 
   // Enforce preview limit
   useEffect(() => {
@@ -332,29 +243,12 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     return () => audio.removeEventListener("timeupdate", checkPreviewLimit);
   }, [isPreviewMode, currentTrack?.preview_duration]);
 
-  const getAudioUrl = useCallback((url: string): string => {
-    if (!url || url.trim() === "") {
-      console.error("[AudioPlayer] Empty audio URL provided");
-      return "";
+  const getAudioUrl = useCallback((url: string) => {
+    if (url.startsWith("http")) {
+      return url;
     }
-    
-    const trimmedUrl = url.trim();
-    
-    // Already a full URL
-    if (trimmedUrl.startsWith("http://") || trimmedUrl.startsWith("https://")) {
-      return trimmedUrl;
-    }
-    
-    // Relative path - convert to full Supabase storage URL
-    const { data } = supabase.storage.from("tracks").getPublicUrl(trimmedUrl);
-    const publicUrl = data.publicUrl;
-    
-    console.log("[AudioPlayer] Resolved relative URL:", { 
-      original: url, 
-      resolved: publicUrl 
-    });
-    
-    return publicUrl;
+    const { data } = supabase.storage.from("tracks").getPublicUrl(url);
+    return data.publicUrl;
   }, []);
 
   const playTrackInternal = useCallback(async (track: AudioTrack, forcePreviewCheck = true) => {
@@ -433,45 +327,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     const resolvedUrl = getAudioUrl(audioUrl);
     audio.src = resolvedUrl;
     audio.load();
-    
-    // Reset blocked state
-    setIsPlaybackBlocked(false);
-    
-    // Use loadedmetadata event - more reliable on iOS 17.4+
-    // canplaythrough often fails to fire on iOS, causing infinite buffering
-    const startPlayback = () => {
-      audio.play()
-        .then(() => {
-          setIsPlaybackBlocked(false);
-        })
-        .catch((err) => {
-          console.error("Playback failed:", err);
-          if (err.name === 'NotAllowedError') {
-            setIsPlaybackBlocked(true);
-          }
-          setIsBuffering(false);
-        });
-      audio.removeEventListener('loadedmetadata', startPlayback);
-    };
-    
-    // If already unlocked and can play, start immediately
-    if (isAudioUnlockedRef.current) {
-      audio.addEventListener('loadedmetadata', startPlayback, { once: true });
-      // Also try immediate play in case audio is already ready
-      audio.play()
-        .then(() => {
-          setIsPlaybackBlocked(false);
-        })
-        .catch((err) => {
-          if (err.name === 'NotAllowedError') {
-            setIsPlaybackBlocked(true);
-            setIsBuffering(false);
-          }
-        });
-    } else {
-      // First time - wait for loadedmetadata
-      audio.addEventListener('loadedmetadata', startPlayback, { once: true });
-    }
+    audio.play().catch(console.error);
   }, [getAudioUrl, ensureAudioElement, checkFullAccess]);
 
   // Handle track ended - auto-play next based on repeat/shuffle modes
@@ -533,138 +389,18 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
       return;
     }
 
-    // CRITICAL FOR iOS/Safari: Everything must be synchronous within user gesture
-    // No awaits, no promises that block - gesture chain must be preserved
-    
-    // Validate audio_url - if missing, we need to hydrate from database
-    const audioUrl = track.audio_url?.trim() || "";
-    
-    if (!audioUrl) {
-      console.warn("No audio_url provided for track:", track.id, "- hydrating from database");
-      // Set UI state immediately for user feedback
-      setIsBuffering(true);
-      setIsPlayerVisible(true);
-      setCurrentTime(0);
-      setCurrentTrack({
-        ...track,
-        audio_url: "",
-      });
-      
-      // Fall back to async hydration (will lose gesture chain on iOS, but better than nothing)
-      playTrackInternal(track, true);
-      return;
-    }
-    
-    const resolvedUrl = getAudioUrl(audioUrl);
-    
-    // Validate the resolved URL
-    if (!resolvedUrl || (!resolvedUrl.startsWith('http://') && !resolvedUrl.startsWith('https://'))) {
-      console.error("[AudioPlayer] Invalid audio URL after resolution:", {
-        trackId: track.id,
-        trackTitle: track.title,
-        originalUrl: audioUrl,
-        resolvedUrl: resolvedUrl,
-      });
-      setAudioError("Invalid audio URL");
-      setIsBuffering(false);
-      return;
-    }
-    
-    // Clear any previous error
-    setAudioError(null);
-    
-    console.log("[AudioPlayer] Playing track:", {
-      id: track.id,
-      title: track.title,
-      audioUrl: resolvedUrl.substring(0, 80) + "...",
-    });
-    
-    // Set UI state immediately (before any async)
-    setIsPlaying(true);
-    setIsBuffering(true);
-    setIsPlayerVisible(true);
-    setCurrentTime(0);
-    setDuration(track.duration || 0);
-    setIsPlaybackBlocked(false);
-    
-    // Create basic hydrated track for immediate display
-    const basicTrack: AudioTrack = {
-      id: track.id,
-      title: track.title || "",
-      audio_url: resolvedUrl,
-      cover_art_url: track.cover_art_url,
-      duration: track.duration || 0,
-      has_karaoke: track.has_karaoke || null,
-      preview_duration: track.preview_duration || DEFAULT_PREVIEW_LIMIT_SECONDS,
-      artist: track.artist,
-    };
-    setCurrentTrack(basicTrack);
-    
-    // Set audio source and play - MUST be synchronous with gesture
-    audio.src = resolvedUrl;
-    
-    // Add one-time error handler for this specific load
-    const handleLoadError = () => {
-      console.error("[AudioPlayer] Failed to load audio:", {
-        trackId: track.id,
-        trackTitle: track.title,
-        src: audio.src,
-        error: audio.error ? {
-          code: audio.error.code,
-          message: audio.error.message,
-        } : 'Unknown error',
-      });
-      setIsPlaying(false);
-      setIsBuffering(false);
-      audio.removeEventListener('error', handleLoadError);
-    };
-    audio.addEventListener('error', handleLoadError, { once: true });
-    
-    // Single play call - Safari gets confused with multiple attempts
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          isAudioUnlockedRef.current = true;
-          audio.removeEventListener('error', handleLoadError);
-          console.log("[AudioPlayer] Playback started successfully:", track.title);
-        })
-        .catch((err) => {
-          console.error("[AudioPlayer] Play promise rejected:", {
-            trackTitle: track.title,
-            errorName: err.name,
-            errorMessage: err.message,
-          });
-          if (err.name === 'NotAllowedError') {
-            // Safari blocked - show tap to play overlay
-            setIsPlaybackBlocked(true);
-            setIsPlaying(false);
-          } else if (err.name === 'NotSupportedError' || err.name === 'AbortError') {
-            // Audio format not supported or load was aborted
-            console.error("[AudioPlayer] Audio source issue:", resolvedUrl);
-            setIsPlaying(false);
-          }
-          setIsBuffering(false);
-        });
-    }
-    
-    // Queue management (sync, no await)
+    // Check if track is already in queue
     const existingIndex = queue.findIndex(t => t.id === track.id);
     if (existingIndex !== -1) {
       setQueueIndex(existingIndex);
     } else {
+      // Add to queue and set as current
       setQueue(prev => [...prev, track]);
       setQueueIndex(queue.length);
     }
-    
-    // Background async work - doesn't block playback
-    checkFullAccess(track.id).then(hasAccess => {
-      setIsPreviewMode(!hasAccess);
-    });
-    
-    // Save to recently played
-    saveToRecentlyPlayed(basicTrack);
-  }, [currentTrack?.id, isPlaying, queue, ensureAudioElement, getAudioUrl, checkFullAccess, playTrackInternal]);
+
+    playTrackInternal(track);
+  }, [currentTrack?.id, isPlaying, queue, ensureAudioElement, playTrackInternal]);
 
   const addToQueue = useCallback((track: AudioTrack) => {
     // Don't add duplicates
@@ -921,29 +657,6 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     setShowPreviewEndedModal(false);
   }, []);
 
-  // Retry playback when blocked (iOS tap to play)
-  const retryPlayback = useCallback(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      setIsPlaybackBlocked(false);
-      setIsBuffering(true);
-      audio.play()
-        .then(() => {
-          setIsPlaybackBlocked(false);
-          isAudioUnlockedRef.current = true;
-        })
-        .catch((err) => {
-          console.error("Retry playback failed:", err);
-          if (err.name === 'NotAllowedError') {
-            setIsPlaybackBlocked(true);
-          }
-        })
-        .finally(() => {
-          setIsBuffering(false);
-        });
-    }
-  }, []);
-
   const closePlayer = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
@@ -966,8 +679,6 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     setOriginalAudioUrl(null);
     setIsPreviewMode(false);
     setShowPreviewEndedModal(false);
-    setIsPlaybackBlocked(false);
-    setAudioError(null);
   }, []);
 
   return (
@@ -976,8 +687,6 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         currentTrack,
         isPlaying,
         isBuffering,
-        audioError,
-        isPlaybackBlocked,
         currentTime,
         duration,
         volume,
@@ -1013,7 +722,6 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
         dismissPreviewEndedModal,
         restartPreview,
         grantFullAccess,
-        retryPlayback,
       }}
     >
       {children}
@@ -1026,8 +734,6 @@ const defaultAudioPlayerContext: AudioPlayerContextType = {
   currentTrack: null,
   isPlaying: false,
   isBuffering: false,
-  audioError: null,
-  isPlaybackBlocked: false,
   currentTime: 0,
   duration: 0,
   volume: 1,
@@ -1063,7 +769,6 @@ const defaultAudioPlayerContext: AudioPlayerContextType = {
   dismissPreviewEndedModal: () => {},
   restartPreview: () => {},
   grantFullAccess: () => {},
-  retryPlayback: () => {},
 };
 
 export function useAudioPlayer() {

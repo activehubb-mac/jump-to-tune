@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 export interface RecentlyViewedTrack {
   id: string;
@@ -7,8 +6,6 @@ export interface RecentlyViewedTrack {
   cover_art_url: string | null;
   artist_id: string;
   artist_name: string | null;
-  audio_url: string | null;
-  duration: number | null;
   price: number;
   viewedAt: number;
 }
@@ -31,56 +28,6 @@ export function useRecentlyViewed(limit: number = 5) {
       console.error("Failed to load recently viewed:", e);
     }
   }, [limit]);
-
-  // Hydrate any older entries missing audio_url (pre-fetch so iOS play remains synchronous)
-  useEffect(() => {
-    let cancelled = false;
-
-    const hydrateMissingAudioUrls = async () => {
-      const missingIds = recentlyViewed
-        .filter((t) => !t.audio_url)
-        .map((t) => t.id);
-
-      if (missingIds.length === 0) return;
-
-      try {
-        const { data, error } = await supabase
-          .from("tracks")
-          .select("id,audio_url,duration,price")
-          .in("id", missingIds);
-
-        if (error) throw error;
-        if (!data || cancelled) return;
-
-        const map = new Map(data.map((t) => [t.id, t] as const));
-
-        const stored = localStorage.getItem(STORAGE_KEY);
-        const existing: RecentlyViewedTrack[] = stored ? JSON.parse(stored) : [];
-
-        const updatedAll = existing.map((t) => {
-          if (t.audio_url) return t;
-          const found = map.get(t.id);
-          if (!found?.audio_url) return t;
-          return {
-            ...t,
-            audio_url: found.audio_url,
-            duration: t.duration ?? found.duration ?? null,
-            price: typeof t.price === "number" ? t.price : (found.price ?? 0),
-          };
-        });
-
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedAll));
-        setRecentlyViewed(updatedAll.slice(0, limit));
-      } catch (e) {
-        console.warn("Failed to hydrate recently viewed audio URLs:", e);
-      }
-    };
-
-    hydrateMissingAudioUrls();
-    return () => {
-      cancelled = true;
-    };
-  }, [recentlyViewed, limit]);
 
   // Listen for storage changes (cross-tab sync)
   useEffect(() => {
@@ -105,8 +52,6 @@ export function useRecentlyViewed(limit: number = 5) {
     cover_art_url: string | null;
     artist_id: string;
     artist_name: string | null;
-    audio_url?: string | null;
-    duration?: number | null;
     price: number;
   }) => {
     try {
@@ -116,16 +61,9 @@ export function useRecentlyViewed(limit: number = 5) {
       // Remove if already exists
       existing = existing.filter((t) => t.id !== track.id);
       
-      // Add to front with timestamp - include audio_url for iOS playback
+      // Add to front with timestamp
       const newTrack: RecentlyViewedTrack = {
-        id: track.id,
-        title: track.title,
-        cover_art_url: track.cover_art_url,
-        artist_id: track.artist_id,
-        artist_name: track.artist_name,
-        audio_url: track.audio_url || null,
-        duration: track.duration || null,
-        price: track.price,
+        ...track,
         viewedAt: Date.now(),
       };
       

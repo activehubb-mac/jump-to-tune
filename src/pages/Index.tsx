@@ -1271,10 +1271,8 @@ export default function Index() {
                   onClick={() => playTrack({
                     id: track.id,
                     title: track.title,
-                    // IMPORTANT for iOS Safari: must be pre-hydrated (no async fetch during click)
-                    audio_url: track.audio_url || "",
+                    audio_url: "",
                     cover_art_url: track.cover_art_url,
-                    duration: track.duration,
                     artist: {
                       id: track.artist_id,
                       display_name: track.artist_name,
@@ -1298,9 +1296,8 @@ export default function Index() {
                           playTrack({
                             id: track.id,
                             title: track.title,
-                            audio_url: track.audio_url || "",
+                            audio_url: "",
                             cover_art_url: track.cover_art_url,
-                            duration: track.duration,
                             artist: { id: track.artist_id, display_name: track.artist_name },
                           });
                         }}
@@ -1314,9 +1311,8 @@ export default function Index() {
                           handleAddToQueue({
                             id: track.id,
                             title: track.title,
-                            audio_url: track.audio_url || "",
+                            audio_url: "",
                             cover_art_url: track.cover_art_url,
-                            duration: track.duration,
                             artist: { id: track.artist_id, display_name: track.artist_name },
                           });
                         }}

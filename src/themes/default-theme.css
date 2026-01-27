@@ -1,62 +1,65 @@
-/* JumTunes Brand Theme Backup
-   Created: 2026-01-26
-   Purpose: Backup of JumTunes brand color scheme for safe rollback
+/* JumTunes Default Theme Backup
+   Created: 2026-01-19
+   Purpose: Backup of original color scheme for safe rollback
    
    To restore: Copy the :root section to src/index.css
 */
 
 :root {
-  /* Core - Black Background */
-  --background: 0 0% 4%;
-  --foreground: 0 0% 98%;
+  /* Background & Foreground */
+  --background: 260 30% 6%;
+  --foreground: 210 40% 98%;
 
-  /* Cards */
-  --card: 0 0% 7%;
-  --card-foreground: 0 0% 98%;
+  /* Card */
+  --card: 260 25% 10%;
+  --card-foreground: 210 40% 98%;
 
   /* Popover */
-  --popover: 0 0% 10%;
-  --popover-foreground: 0 0% 98%;
+  --popover: 260 25% 10%;
+  --popover-foreground: 210 40% 98%;
 
-  /* Primary - JumTunes Blue-Purple */
-  --primary: 255 85% 63%;
-  --primary-foreground: 0 0% 100%;
+  /* Primary - Purple */
+  --primary: 270 70% 50%;
+  --primary-foreground: 210 40% 98%;
 
-  /* Secondary */
-  --secondary: 0 0% 18%;
-  --secondary-foreground: 0 0% 98%;
+  /* Secondary - Blue */
+  --secondary: 217 91% 60%;
+  --secondary-foreground: 210 40% 98%;
 
   /* Muted */
-  --muted: 0 0% 12%;
-  --muted-foreground: 0 0% 65%;
+  --muted: 260 20% 15%;
+  --muted-foreground: 215 20% 65%;
 
-  /* Accent - JumTunes Cyan */
-  --accent: 200 90% 55%;
-  --accent-foreground: 0 0% 100%;
+  /* Accent - Pink */
+  --accent: 330 85% 60%;
+  --accent-foreground: 210 40% 98%;
 
   /* Destructive */
   --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 98%;
+  --destructive-foreground: 210 40% 98%;
 
   /* Border & Input */
-  --border: 0 0% 15%;
-  --input: 0 0% 15%;
-  --ring: 255 85% 63%;
+  --border: 260 20% 18%;
+  --input: 260 20% 18%;
+  --ring: 270 70% 50%;
 
   /* Radius */
   --radius: 0.75rem;
 
-  /* Glass effect tokens */
-  --glass: 0 0% 10%;
-  --glass-border: 0 0% 20%;
+  /* Custom JumTunes tokens */
+  --neon-glow: 330 85% 60%;
+  --electric-blue: 217 91% 60%;
+  --deep-purple: 270 70% 35%;
+  --glass: 260 25% 12%;
+  --glass-border: 260 30% 25%;
 
   /* Sidebar */
-  --sidebar-background: 0 0% 5%;
-  --sidebar-foreground: 0 0% 98%;
-  --sidebar-primary: 255 85% 63%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 0 0% 12%;
-  --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-border: 0 0% 15%;
-  --sidebar-ring: 255 85% 63%;
+  --sidebar-background: 260 30% 8%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 270 70% 50%;
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 260 20% 15%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 260 20% 18%;
+  --sidebar-ring: 270 70% 50%;
 }

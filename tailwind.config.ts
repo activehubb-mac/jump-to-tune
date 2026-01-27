@@ -57,7 +57,10 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Glass effect colors
+        // JumTunes custom colors
+        neon: "hsl(var(--neon-glow))",
+        electric: "hsl(var(--electric-blue))",
+        "deep-purple": "hsl(var(--deep-purple))",
         glass: "hsl(var(--glass))",
         "glass-border": "hsl(var(--glass-border))",
       },
@@ -83,12 +86,21 @@ export default {
           "0%, 100%": { transform: "translateY(0px)" },
           "50%": { transform: "translateY(-10px)" },
         },
+        "gradient-shift": {
+          "0%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+          "100%": { backgroundPosition: "0% 50%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         "float": "float 3s ease-in-out infinite",
+        "gradient-shift": "gradient-shift 3s ease infinite",
+      },
+      backgroundSize: {
+        "200%": "200% 200%",
       },
     },
   },

@@ -90,7 +90,7 @@ export default function NotificationCenter() {
   };
 
   return (
-    <Layout useBackground="subtle">
+    <Layout>
       <div className="container mx-auto px-4 py-6 sm:py-8 max-w-2xl">
         {/* Header */}
         <div className="flex items-center gap-3 sm:gap-4 mb-6">

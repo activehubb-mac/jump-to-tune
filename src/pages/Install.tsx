@@ -80,7 +80,7 @@ const Install = () => {
   };
 
   return (
-    <Layout useBackground="subtle">
+    <Layout>
       <div className="container max-w-2xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">

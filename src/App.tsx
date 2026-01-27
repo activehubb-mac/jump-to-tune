@@ -7,8 +7,6 @@ import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import { FeedbackModal } from "@/components/ui/feedback-modal";
 import { GlobalAudioPlayer } from "@/components/audio/GlobalAudioPlayer";
 import { useStatusBar } from "@/hooks/useStatusBar";
-import { useKeyboardConfig } from "@/hooks/useKeyboardConfig";
-import { useDeepLinkHandler } from "@/hooks/useDeepLinkHandler";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
@@ -65,20 +63,15 @@ import NotificationCenter from "./pages/NotificationCenter";
 
 const queryClient = new QueryClient();
 
-function AppWithRouter() {
+function AppContent() {
   // Initialize native status bar configuration
   useStatusBar();
-  
-  // Configure iOS keyboard - hides accessory bar for cleaner input experience
-  useKeyboardConfig();
-  
-  // Handle deep links when app resumes from Stripe/external flows
-  useDeepLinkHandler();
 
   return (
     <>
       <FeedbackModal />
-      <Routes>
+      <BrowserRouter>
+        <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
@@ -110,7 +103,6 @@ function AppWithRouter() {
           <Route path="/upload/album" element={<AlbumUpload />} />
           <Route path="/album/:id" element={<AlbumDetail />} />
           <Route path="/library/playlist/:playlistId" element={<PlaylistDetail />} />
-          <Route path="/playlist/:playlistId" element={<PlaylistDetail />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-canceled" element={<PaymentCanceled />} />
           <Route path="/subscription" element={<Subscription />} />
@@ -137,15 +129,8 @@ function AppWithRouter() {
           <Route path="*" element={<NotFound />} />
         </Routes>
         <GlobalAudioPlayer />
+      </BrowserRouter>
     </>
-  );
-}
-
-function AppContent() {
-  return (
-    <BrowserRouter>
-      <AppWithRouter />
-    </BrowserRouter>
   );
 }
 

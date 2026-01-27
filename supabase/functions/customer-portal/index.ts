@@ -51,17 +51,10 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
-    const origin = req.headers.get("origin") || "https://jump-to-tune.lovable.app";
-    
-    // Detect if request is from mobile app
-    const isMobileApp = req.headers.get("x-jumtunes-mobile") === "true";
-    const returnUrl = isMobileApp ? "jumtunes://subscription" : `${origin}/subscription`;
-    
-    logStep("URL configuration", { origin, isMobileApp, returnUrl });
-
+    const origin = req.headers.get("origin") || "https://lovable.dev";
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: returnUrl,
+      return_url: `${origin}/subscription`,
     });
     logStep("Customer portal session created", { sessionId: portalSession.id });
 

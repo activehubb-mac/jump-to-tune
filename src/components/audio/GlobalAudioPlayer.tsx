@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform, Clock, FolderPlus, Hand, AlertCircle, RefreshCw } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform, Clock, FolderPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { useAudioPlayer, AudioTrack } from "@/contexts/AudioPlayerContext";
 import { useAudioKeyboardShortcuts } from "@/hooks/useAudioKeyboardShortcuts";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
-import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { KaraokeLyricsPanel } from "@/components/audio/KaraokeLyricsPanel";
 import { UrlWaveformVisualizer } from "@/components/audio/UrlWaveformVisualizer";
@@ -127,7 +126,6 @@ export function GlobalAudioPlayer() {
     currentTrack,
     isPlaying,
     isBuffering,
-    audioError,
     currentTime,
     duration,
     volume,
@@ -143,7 +141,6 @@ export function GlobalAudioPlayer() {
     previewTimeRemaining,
     currentPreviewLimit,
     showPreviewEndedModal,
-    isPlaybackBlocked,
     togglePlayPause,
     seek,
     setVolume,
@@ -163,14 +160,12 @@ export function GlobalAudioPlayer() {
     dismissPreviewEndedModal,
     restartPreview,
     grantFullAccess,
-    retryPlayback,
   } = useAudioPlayer();
 
   const { canUseFeature } = useFeatureGate();
   const { isOwned } = usePurchases();
   const { createPlaylist } = usePlaylists();
   const { showFeedback } = useFeedbackSafe();
-  const { lightTap, mediumTap, selectionChanged } = useHapticFeedback();
   const [showQueue, setShowQueue] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumFeatureName, setPremiumFeatureName] = useState("");
@@ -261,7 +256,6 @@ export function GlobalAudioPlayer() {
   if (!isPlayerVisible || !currentTrack) return null;
 
   const handleSeek = (value: number[]) => {
-    selectionChanged();
     seek(value[0]);
   };
 
@@ -270,7 +264,6 @@ export function GlobalAudioPlayer() {
   };
 
   const handleShuffleClick = () => {
-    lightTap();
     if (!canUseFeature("shuffle")) {
       setPremiumFeatureName("Shuffle mode");
       setShowPremiumModal(true);
@@ -280,7 +273,6 @@ export function GlobalAudioPlayer() {
   };
 
   const handleRepeatClick = () => {
-    lightTap();
     if (!canUseFeature("repeat")) {
       setPremiumFeatureName("Repeat mode");
       setShowPremiumModal(true);
@@ -290,28 +282,12 @@ export function GlobalAudioPlayer() {
   };
 
   const handleQueueClick = () => {
-    lightTap();
     if (!canUseFeature("queuePanel")) {
       setPremiumFeatureName("Queue management");
       setShowPremiumModal(true);
       return;
     }
     setShowQueue(!showQueue);
-  };
-
-  const handlePlayPause = () => {
-    mediumTap();
-    togglePlayPause();
-  };
-
-  const handleSkipNext = () => {
-    lightTap();
-    playNext();
-  };
-
-  const handleSkipPrevious = () => {
-    lightTap();
-    playPrevious();
   };
 
   const hasNext = queueIndex < queue.length - 1 || repeatMode === "all";
@@ -325,7 +301,6 @@ export function GlobalAudioPlayer() {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    mediumTap();
     const oldIndex = upcomingIds.indexOf(active.id as string);
     const newIndex = upcomingIds.indexOf(over.id as string);
 
@@ -559,65 +534,6 @@ export function GlobalAudioPlayer() {
         </div>
       )}
 
-      {/* iOS/Safari Tap to Play Overlay */}
-      {isPlaybackBlocked && (
-        <div 
-          className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200"
-          onClick={retryPlayback}
-        >
-          <div className="text-center p-8 rounded-2xl glass-card border border-glass-border/30 max-w-xs mx-4 animate-in scale-in duration-300">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-              <Hand className="w-10 h-10 text-primary-foreground animate-pulse" />
-            </div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">Tap to Play</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Safari requires a tap to start audio playback
-            </p>
-            <Button 
-              size="lg" 
-              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
-              onClick={retryPlayback}
-            >
-              <Play className="w-5 h-5 mr-2" />
-              Start Playing
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Audio Error Overlay */}
-      {audioError && !isPlaybackBlocked && (
-        <div 
-          className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200"
-        >
-          <div className="text-center p-8 rounded-2xl glass-card border border-destructive/30 max-w-xs mx-4 animate-in scale-in duration-300">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-destructive/20 flex items-center justify-center">
-              <AlertCircle className="w-10 h-10 text-destructive" />
-            </div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">Playback Error</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {audioError}
-            </p>
-            <div className="flex gap-3 justify-center">
-              <Button 
-                variant="outline"
-                onClick={closePlayer}
-              >
-                <X className="w-4 h-4 mr-2" />
-                Close
-              </Button>
-              <Button 
-                className="bg-primary hover:bg-primary/90"
-                onClick={retryPlayback}
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Retry
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Player Bar */}
       <div 
         className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-glass-border/30 backdrop-blur-xl animate-in slide-in-from-bottom duration-300"
@@ -703,7 +619,7 @@ export function GlobalAudioPlayer() {
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                  onClick={handleSkipPrevious}
+                  onClick={playPrevious}
                   disabled={!hasPrevious}
                 >
                   <SkipBack className="h-4 w-4" />
@@ -711,8 +627,8 @@ export function GlobalAudioPlayer() {
 
                 <Button
                   size="icon"
-                  className="rounded-full w-10 h-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 flex-shrink-0"
-                  onClick={handlePlayPause}
+                  className="rounded-full w-10 h-10 gradient-accent neon-glow-subtle flex-shrink-0"
+                  onClick={togglePlayPause}
                   disabled={isBuffering}
                 >
                   {isBuffering ? (
@@ -728,7 +644,7 @@ export function GlobalAudioPlayer() {
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                  onClick={handleSkipNext}
+                  onClick={playNext}
                   disabled={!hasNext}
                 >
                   <SkipForward className="h-4 w-4" />
@@ -820,15 +736,15 @@ export function GlobalAudioPlayer() {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={handleSkipPrevious}
+                onClick={playPrevious}
                 disabled={!hasPrevious}
               >
                 <SkipBack className="h-4 w-4" />
               </Button>
               <Button
                 size="icon"
-                className="rounded-full w-10 h-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 flex-shrink-0"
-                onClick={handlePlayPause}
+                className="rounded-full w-10 h-10 gradient-accent neon-glow-subtle flex-shrink-0"
+                onClick={togglePlayPause}
                 disabled={isBuffering}
               >
                 {isBuffering ? (
@@ -843,7 +759,7 @@ export function GlobalAudioPlayer() {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={handleSkipNext}
+                onClick={playNext}
                 disabled={!hasNext}
               >
                 <SkipForward className="h-4 w-4" />

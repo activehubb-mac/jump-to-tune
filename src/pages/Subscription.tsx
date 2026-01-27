@@ -299,7 +299,7 @@ export default function Subscription() {
   // Not logged in
   if (!authLoading && !user) {
     return (
-      <Layout useBackground="subtle">
+      <Layout>
         <div className="container mx-auto px-4 py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-6">
@@ -322,7 +322,7 @@ export default function Subscription() {
   const recommendedTier = role || "fan";
 
   return (
-    <Layout useBackground="subtle">
+    <Layout>
       <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">

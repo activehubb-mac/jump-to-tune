@@ -39,7 +39,7 @@ export default function AccountSettings() {
 
   if (isLoading) {
     return (
-      <Layout useBackground="subtle">
+      <Layout>
         <div className="container mx-auto px-4 py-24 flex justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -74,7 +74,7 @@ export default function AccountSettings() {
   ];
 
   return (
-    <Layout useBackground="subtle">
+    <Layout>
       <DeleteAccountModal 
         open={showDeleteModal} 
         onOpenChange={setShowDeleteModal} 

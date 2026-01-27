@@ -56,7 +56,7 @@ export default function LabelProfile() {
 
   if (profileLoading) {
     return (
-      <Layout useBackground="subtle">
+      <Layout>
         <div className="container mx-auto px-4 py-24 flex justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-accent" />
         </div>
@@ -66,7 +66,7 @@ export default function LabelProfile() {
 
   if (!label) {
     return (
-      <Layout useBackground="subtle">
+      <Layout>
         <div className="container mx-auto px-4 py-24 text-center">
           <h1 className="text-2xl font-bold text-foreground">Label not found</h1>
         </div>

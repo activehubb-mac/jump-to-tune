@@ -5,8 +5,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { useConfetti } from "@/hooks/useConfetti";
 import { useLowBalanceWarning } from "@/components/wallet/LowBalanceWarningModal";
-import { Capacitor } from "@capacitor/core";
-import { Browser } from "@capacitor/browser";
 
 interface CreditTransaction {
   id: string;
@@ -176,18 +174,11 @@ export function useWallet() {
         return null;
       }
 
-      // Add mobile header for native platforms
-      const headers: Record<string, string> = {
-        Authorization: `Bearer ${sessionData.session.access_token}`,
-      };
-      
-      if (Capacitor.isNativePlatform()) {
-        headers["x-jumtunes-mobile"] = "true";
-      }
-
       const { data, error } = await supabase.functions.invoke("purchase-credits", {
         body: { amount_cents: amountCents },
-        headers,
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+        },
       });
 
       if (error) {
@@ -201,14 +192,7 @@ export function useWallet() {
       }
 
       if (data?.url) {
-        // Open checkout URL appropriately based on platform
-        if (Capacitor.isNativePlatform()) {
-          // Use Capacitor Browser plugin for native platforms
-          await Browser.open({ url: data.url });
-        } else {
-          // Web: Open in new tab
-          window.open(data.url, "_blank");
-        }
+        window.open(data.url, "_blank");
         return data.url;
       }
 
