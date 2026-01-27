@@ -1,62 +1,55 @@
 
 
-# Plan: Add Banner Image Upload to User Profile
+# Plan: Fix Role Display Bug on User Profile Page
 
-## Overview
-Enable users to customize their profile page by uploading a custom banner/background image. The current gradient will remain as the default fallback when no image is set.
+## The Problem
+Your user profile page shows "Fan" instead of "Label" because you have **two roles** in the database: `label` AND `admin`. 
 
-## What You'll Get
-- A camera/upload button overlay on the profile banner area (visible only when viewing your own profile)
-- Click to select and upload an image (JPEG, PNG, WebP, or GIF up to 5MB)
-- Instant preview while uploading with progress indicator
-- The uploaded banner will be visible to all users who view your profile
-- Current dark charcoal gradient overlay will remain to ensure text readability
+The `useUserProfile` hook uses `.single()` which fails when multiple rows exist, causing `roleData` to be `null` and defaulting to `"fan"`.
 
-## Technical Implementation
+Meanwhile, the Navbar's `AuthContext` correctly shows "Label" because it explicitly excludes the admin role with `.neq("role", "admin")`.
 
-### 1. Create Banner Upload Hook
-Create `src/hooks/useBannerUpload.ts` - similar to the existing avatar upload hook:
-- Upload to the existing `banners` storage bucket
-- Delete previous banner before uploading new one
-- Update `profiles.banner_image_url` with the new URL
-- Progress tracking and error handling
+## The Fix
+Update the `useUserProfile` hook to match the pattern used in `AuthContext`:
+- Use `.neq("role", "admin")` to exclude the admin role (admin is a privilege, not a primary role)
+- Use `.maybeSingle()` instead of `.single()` for safer querying
 
-### 2. Create Banner Upload Component
-Create `src/components/profile/BannerUpload.tsx`:
-- Reusable component for banner image upload
-- Shows camera icon overlay on hover (only for own profile)
-- Displays upload progress during upload
-- File validation (image types, max 5MB)
+## Technical Changes
 
-### 3. Update UserProfile Page
-Modify `src/pages/UserProfile.tsx`:
-- Wrap the banner area with the BannerUpload component when viewing own profile
-- Show upload controls only for authenticated user's own profile
-- Apply dark charcoal gradient overlay for text readability (like featured sections)
-- Update text colors to white with text shadows for consistency
+### File: `src/hooks/useUserProfile.ts`
 
-### 4. Optional: Add Banner Upload to Profile Edit Modal
-Update `src/components/profile/ProfileEditModal.tsx`:
-- Add banner preview and upload option in the edit modal
-- Allow users to upload/change banner from the edit modal as well
+**Before (Lines 44-51):**
+```typescript
+// Get user role
+const { data: roleData } = await supabase
+  .from("user_roles")
+  .select("role")
+  .eq("user_id", userId)
+  .single();
 
-## Files to Create/Modify
-| File | Action |
-|------|--------|
-| `src/hooks/useBannerUpload.ts` | Create - new upload hook |
-| `src/components/profile/BannerUpload.tsx` | Create - new upload component |
-| `src/pages/UserProfile.tsx` | Modify - integrate banner upload |
-| `src/components/profile/ProfileEditModal.tsx` | Modify - add banner option |
-| `src/contexts/AuthContext.tsx` | Modify - add banner_image_url to Profile interface |
+const role: UserRole = roleData?.role || "fan";
+```
 
-## Visual Behavior
-- **Default (no banner)**: Shows gradient background based on user role (primary/accent/secondary)
-- **With banner**: Shows uploaded image with dark charcoal gradient overlay for text legibility
-- **Upload interaction**: Camera icon appears on hover (own profile only), click to upload
-- **During upload**: Shows loading spinner with progress percentage
+**After:**
+```typescript
+// Get user role (excluding admin - it's a separate privilege)
+const { data: roleData } = await supabase
+  .from("user_roles")
+  .select("role")
+  .eq("user_id", userId)
+  .neq("role", "admin")
+  .maybeSingle();
 
-## Design Considerations
-- Banner images are resized/optimized on the client before upload for faster loading
-- Consistent with the dark charcoal overlay styling used in hero carousels
-- Text uses white color with shadows for readability against any background
+const role: UserRole = roleData?.role || "fan";
+```
+
+## Why This Happens
+- Users can have multiple roles (e.g., `label` + `admin`)
+- The `admin` role is meant as an additional privilege, not a primary identity
+- `.single()` throws an error when it finds more than one row
+- `.maybeSingle()` safely returns `null` if no rows or handles single rows properly
+- Excluding `admin` ensures we get the user's primary identity role
+
+## Result
+After this fix, your profile page will correctly show "Label" instead of "Fan", matching what the navbar displays.
 
