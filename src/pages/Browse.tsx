@@ -398,7 +398,7 @@ export default function Browse() {
                       key={album.id} 
                       album={{
                         ...album,
-                        artist: album.artist?.[0] || null,
+                        artist: album.artist || null,
                       }} 
                     />
                   ))}
