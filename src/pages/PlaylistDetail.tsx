@@ -340,7 +340,14 @@ export default function PlaylistDetail() {
         <Button
           variant="ghost"
           className="mb-6"
-          onClick={() => navigate("/library")}
+          onClick={() => {
+            // Check if there's history to go back to, otherwise go to library
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate("/library");
+            }
+          }}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Library
