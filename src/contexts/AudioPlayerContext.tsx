@@ -535,11 +535,20 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     saveToRecentlyPlayed(track);
 
     let audioUrl = track.audio_url;
-    const needsAudioUrl = !audioUrl || audioUrl.trim() === "";
+    
+    // Validate audio URL - check for corrupted/invalid extensions (e.g., .mo3 instead of .mp3)
+    // This can happen when stale localStorage data has corrupted URLs
+    const isValidAudioUrl = (url: string): boolean => {
+      if (!url || url.trim() === "") return false;
+      const cleanUrl = url.split("?")[0].split("#")[0].toLowerCase();
+      return cleanUrl.endsWith(".mp3") || cleanUrl.endsWith(".wav") || cleanUrl.endsWith(".flac") || cleanUrl.endsWith(".m4a") || cleanUrl.endsWith(".aac");
+    };
+    
+    const needsAudioUrl = !audioUrl || !isValidAudioUrl(audioUrl);
 
     if (needsAudioUrl) {
       // Need to fetch audio URL first - breaks gesture chain but necessary
-      // This path is for tracks without pre-hydrated audio_url
+      // This path is for tracks without pre-hydrated audio_url or corrupted URLs
       supabase
         .from("tracks")
         .select("audio_url, has_karaoke, preview_duration")
