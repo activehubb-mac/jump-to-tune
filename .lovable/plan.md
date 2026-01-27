@@ -1,137 +1,110 @@
 
 
-# Fix Mobile Sidebar Not Rendering on iOS
+# Liked Songs Detail Page Implementation Plan
 
-## Problem Analysis
+## Overview
+Create a dedicated "Liked Songs" detail page with a Spotify-style interface featuring Play All, Shuffle buttons, sorting options, and track management - modeled after the existing `PlaylistDetail.tsx` component.
 
-Looking at your screenshot and the current code, the mobile navigation sidebar appears "enveloped" (hidden/transparent) on iOS when toggled. This is a known iOS Safari rendering issue.
+## Current State
+- "Liked Songs" currently navigates to `/library?filter=liked` which shows an inline filtered view
+- The `useLikedTracks` hook already fetches all liked tracks with full metadata
+- `PlaylistDetail.tsx` provides a proven template for the detail page pattern
 
-## Root Causes Identified
+## Implementation Plan
 
-### 1. Background Color Using CSS Variable with Opacity
-**Line 377**: `backgroundColor: 'hsl(var(--background) / 0.98)'`
+### Step 1: Create the LikedSongsDetail Page
+**New file: `src/pages/LikedSongsDetail.tsx`**
 
-iOS Safari has trouble with HSL color functions combined with CSS custom properties and opacity syntax. This can cause the background to render as transparent or not at all.
+Create a dedicated page component that includes:
+- **Header section** with gradient cover (purple like Spotify's Liked Songs)
+- **Metadata display**: Track count and total duration
+- **Action buttons**: Play All, Shuffle
+- **Sorting options**: Recently Added, Alphabetical, Artist name
+- **Track list**: Scrollable list with play, unlike, and add-to-queue actions
 
-### 2. Backdrop Filter Rendering Order on iOS
-**Lines 378-379**: The `WebkitBackdropFilter` and `backdropFilter` properties can cause iOS Safari to fail rendering the container entirely when combined with fixed positioning and dynamic content.
+Key features modeled from PlaylistDetail:
+- Back navigation to Library
+- Track row with cover art, title, artist link, duration
+- Current track highlighting
+- Individual track play/pause toggle
+- Unlike button (heart toggle) on each track
 
-### 3. Missing Initial Paint Trigger
-iOS Safari sometimes fails to paint elements that use `position: fixed` with backdrop filters until a repaint is triggered.
-
-## Proposed Solution
-
-### Step 1: Use Solid Background Color
-Replace the CSS variable-based background with a solid color that iOS Safari can reliably render:
-
-```tsx
-// Before (problematic on iOS)
-backgroundColor: 'hsl(var(--background) / 0.98)'
-
-// After (iOS-safe)
-backgroundColor: '#0d0a14' // Solid background color matching theme
+### Step 2: Add Route in App.tsx
+Add a new route for the liked songs detail page:
+```typescript
+<Route path="/library/liked" element={<LikedSongsDetail />} />
 ```
 
-### Step 2: Add Fallback Background Class
-Add a Tailwind class as the primary background with inline style as fallback:
+### Step 3: Update Navigation in Collection.tsx
+Change the "Liked Songs" item in the library to navigate to the new dedicated page:
+- Update `linkTo` from `/library?filter=liked` to `/library/liked`
 
-```tsx
-className="md:hidden fixed inset-x-0 ... bg-background"
-```
-
-### Step 3: Ensure Proper Stacking Context
-Add `transform: translateZ(0)` or `will-change: transform` to force GPU layer creation and proper rendering:
-
-```tsx
-style={{ 
-  backgroundColor: '#0d0a14',
-  WebkitBackdropFilter: 'blur(24px)',
-  backdropFilter: 'blur(24px)',
-  WebkitTransform: 'translateZ(0)',
-  transform: 'translateZ(0)',
-}}
-```
-
-### Step 4: Use Opacity as Separate Property
-Instead of embedding opacity in the color, use a separate opacity layer:
-
-```tsx
-<div className="... bg-background/[0.98]" style={{...}}>
-```
+### Step 4: Update LibraryListItem.tsx (if needed)
+Ensure the "liked-songs" type item navigates correctly to the new route.
 
 ---
 
 ## Technical Details
 
-### Files to Modify
+### LikedSongsDetail Component Structure
 
-| File | Change |
-|------|--------|
-| `src/components/layout/Navbar.tsx` | Fix mobile menu container styling for iOS |
-
-### Specific Changes (Lines 374-380)
-
-**Current Code:**
-```tsx
-<div 
-  className="md:hidden fixed inset-x-0 top-[calc(4rem+env(safe-area-inset-top,0px))] bottom-0 z-40"
-  style={{ 
-    backgroundColor: 'hsl(var(--background) / 0.98)',
-    WebkitBackdropFilter: 'blur(24px)',
-    backdropFilter: 'blur(24px)',
-  }}
->
+```text
++------------------------------------------+
+|  <- Back to Library                      |
++------------------------------------------+
+|  +--------+                              |
+|  | Purple |  Liked Songs                 |
+|  | Heart  |  42 songs · 2 hr 15 min      |
+|  | Cover  |                              |
+|  +--------+                              |
+|                                          |
+|  [Play All]  [Shuffle]                   |
++------------------------------------------+
+|  Sort: Recently Added  v                 |
++------------------------------------------+
+|  [Track Row 1]                           |
+|  [Track Row 2]                           |
+|  [Track Row 3]                           |
+|  ...                                     |
++------------------------------------------+
 ```
 
-**Fixed Code:**
-```tsx
-<div 
-  className="md:hidden fixed inset-x-0 top-[calc(4rem+env(safe-area-inset-top,0px))] bottom-0 z-40 bg-background"
-  style={{ 
-    backgroundColor: '#0d0a14',
-    opacity: 0.98,
-    WebkitBackdropFilter: 'blur(24px)',
-    backdropFilter: 'blur(24px)',
-    WebkitTransform: 'translateZ(0)',
-    transform: 'translateZ(0)',
-  }}
->
-```
+### Track Row Features
+- Cover art thumbnail with play overlay on hover
+- Track title (highlighted if currently playing)
+- Artist name (clickable link to artist profile)
+- Duration
+- Heart icon to unlike (with optimistic UI update)
+- Add to queue option
 
-**Alternative Approach (More Robust):**
-Use a two-layer approach where the background and blur are on separate elements:
+### Sorting Options
+- **Recently Liked**: Default, sorted by `liked_at` descending
+- **Alphabetical**: Sorted by track title A-Z
+- **Artist**: Grouped/sorted by artist name
 
-```tsx
-{isOpen && (
-  <>
-    {/* Background overlay layer */}
-    <div 
-      className="md:hidden fixed inset-x-0 top-[calc(4rem+env(safe-area-inset-top,0px))] bottom-0 z-40 bg-[#0d0a14]"
-      style={{ opacity: 0.98 }}
-    />
-    {/* Content layer with blur */}
-    <div 
-      className="md:hidden fixed inset-x-0 top-[calc(4rem+env(safe-area-inset-top,0px))] bottom-0 z-40"
-      style={{ 
-        WebkitBackdropFilter: 'blur(24px)',
-        backdropFilter: 'blur(24px)',
-      }}
-    >
-      {/* scrollable content */}
-    </div>
-  </>
-)}
-```
+### Play All / Shuffle Logic
+Reuse the same pattern from PlaylistDetail:
+1. Clear queue
+2. Play first track (or shuffled first)
+3. Add remaining tracks to queue
+4. Show feedback toast
 
 ---
 
-## Testing Checklist
+## Files to Create/Modify
 
-After implementation:
-1. Open on iOS Safari (physical device or simulator)
-2. Toggle the mobile menu - should show solid background
-3. Verify blur effect is visible
-4. Confirm scrolling works within the menu
-5. Test on Android Chrome for regression
-6. Test on desktop for regression
+| File | Action | Description |
+|------|--------|-------------|
+| `src/pages/LikedSongsDetail.tsx` | Create | New dedicated page component |
+| `src/App.tsx` | Modify | Add route `/library/liked` |
+| `src/pages/Collection.tsx` | Modify | Update "Liked Songs" linkTo to `/library/liked` |
+
+---
+
+## Dependencies
+- Uses existing `useLikedTracks` hook for data fetching
+- Uses existing `useLikes` hook for unlike functionality  
+- Uses `AudioPlayerContext` for playback (playTrack, addToQueue, clearQueue)
+- Uses `formatDuration` utility for time display
+- Follows existing UI patterns from PlaylistDetail
 

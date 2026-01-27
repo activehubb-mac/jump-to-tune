@@ -128,19 +128,16 @@ export default function Collection() {
     enabled: albumIds.length > 0,
   });
 
-  // Update URL when filter changes - use functional update to avoid stale reference
+  // Update URL when filter changes
   const handleFilterChange = useCallback((filter: LibraryFilter) => {
     setActiveFilter(filter);
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      if (filter === "all") {
-        newParams.delete("filter");
-      } else {
-        newParams.set("filter", filter);
-      }
-      return newParams;
-    }, { replace: true });
-  }, [setSearchParams]);
+    if (filter === "all") {
+      searchParams.delete("filter");
+    } else {
+      searchParams.set("filter", filter);
+    }
+    setSearchParams(searchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const handleRefresh = useCallback(async () => {
     await Promise.all([

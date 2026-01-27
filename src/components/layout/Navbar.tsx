@@ -372,23 +372,13 @@ export function Navbar() {
           {/* Mobile Navigation */}
           {isOpen && (
             <div 
-              className="md:hidden fixed inset-x-0 top-[calc(4rem+env(safe-area-inset-top,0px))] bottom-0 z-40 bg-background/[0.98]"
+              className="md:hidden py-4 overflow-y-auto overscroll-contain touch-pan-y"
               style={{ 
-                backgroundColor: '#0d0a14',
-                WebkitBackdropFilter: 'blur(24px)',
-                backdropFilter: 'blur(24px)',
-                WebkitTransform: 'translateZ(0)',
-                transform: 'translateZ(0)',
+                maxHeight: 'calc(100vh - 4rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+                WebkitOverflowScrolling: 'touch'
               }}
             >
-              <div 
-                className="h-full overflow-y-auto overscroll-contain"
-                style={{ 
-                  WebkitOverflowScrolling: 'touch',
-                  paddingBottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))'
-                }}
-              >
-                <div className="flex flex-col gap-2 py-4 px-4">
+              <div className="flex flex-col gap-2">
                 {navLinks.map((link) => {
                   // Skip auth-required links for non-authenticated users
                   if (link.authRequired && !user) return null;
@@ -610,7 +600,6 @@ export function Navbar() {
                     </Button>
                   </div>
                 )}
-                </div>
               </div>
             </div>
           )}

@@ -444,12 +444,7 @@ export function GlobalAudioPlayer() {
             </div>
           </div>
           
-          <div 
-            className="h-80" 
-            onTouchMove={(e) => e.stopPropagation()}
-            onWheel={(e) => e.stopPropagation()}
-          >
-            <ScrollArea className="h-full">
+          <ScrollArea className="max-h-80 ios-scroll">
             {queue.length === 0 ? (
               <div className="p-6 text-center">
                 <ListMusic className="w-10 h-10 mx-auto text-muted-foreground/30 mb-2" />
@@ -554,8 +549,7 @@ export function GlobalAudioPlayer() {
                 )}
               </div>
             )}
-            </ScrollArea>
-          </div>
+          </ScrollArea>
         </div>
       )}
 
