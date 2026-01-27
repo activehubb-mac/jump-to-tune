@@ -25,23 +25,36 @@ interface AlbumCardProps {
 export function AlbumCard({ album }: AlbumCardProps) {
   const { playTrack, addToQueue, clearQueue } = useAudioPlayer();
 
-  // Fetch album tracks for play functionality
+  // Fetch album tracks for play functionality (two-step pattern for profiles_public view)
   const { data: tracks = [] } = useQuery({
     queryKey: ["album-tracks-preview", album.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Step 1: Fetch tracks without profile join
+      const { data: tracksData, error } = await supabase
         .from("tracks")
-        .select(`
-          id, title, audio_url, cover_art_url, duration,
-          artist:profiles_public!tracks_artist_id_fkey(id, display_name, avatar_url)
-        `)
+        .select("id, title, audio_url, cover_art_url, duration, artist_id")
         .eq("album_id", album.id)
         .eq("is_draft", false)
         .order("track_number", { ascending: true })
         .limit(10);
 
       if (error) throw error;
-      return data;
+      if (!tracksData || tracksData.length === 0) return [];
+
+      // Step 2: Get unique artist IDs and fetch profiles separately
+      const artistIds = [...new Set(tracksData.map(t => t.artist_id).filter(Boolean))];
+      
+      const { data: artists } = await supabase
+        .from("profiles_public")
+        .select("id, display_name, avatar_url")
+        .in("id", artistIds);
+
+      // Step 3: Map artists to tracks
+      const artistMap = new Map(artists?.map(a => [a.id, a]) || []);
+      return tracksData.map(track => ({
+        ...track,
+        artist: artistMap.get(track.artist_id) || null
+      }));
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
