@@ -1,5 +1,5 @@
 import { useRef, useState, ReactNode } from "react";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBannerUpload } from "@/hooks/useBannerUpload";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
@@ -7,7 +7,7 @@ import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 interface BannerUploadProps {
   userId: string;
   currentBannerUrl?: string | null;
-  onBannerChange?: (url: string) => void;
+  onBannerChange?: (url: string | null) => void;
   onUploadSuccess?: () => Promise<void>;
   children: ReactNode;
   className?: string;
@@ -25,7 +25,7 @@ export function BannerUpload({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const { showFeedback } = useFeedbackSafe();
 
-  const { uploadBanner, isUploading, progress } = useBannerUpload({
+  const { uploadBanner, removeBanner, isUploading, isRemoving, progress } = useBannerUpload({
     userId,
     onSuccess: async (url) => {
       setPreviewUrl(null);
@@ -33,8 +33,10 @@ export function BannerUpload({
       await onUploadSuccess?.();
       showFeedback({
         type: "success",
-        title: "Banner Updated",
-        message: "Your profile banner has been updated successfully.",
+        title: url ? "Banner Updated" : "Banner Removed",
+        message: url 
+          ? "Your profile banner has been updated successfully."
+          : "Your profile banner has been removed.",
         autoClose: true,
         autoCloseDelay: 3000,
       });
@@ -43,8 +45,8 @@ export function BannerUpload({
       setPreviewUrl(null);
       showFeedback({
         type: "error",
-        title: "Upload Failed",
-        message: error.message || "Failed to upload banner. Please try again.",
+        title: "Action Failed",
+        message: error.message || "Failed to update banner. Please try again.",
       });
     },
   });
@@ -69,7 +71,13 @@ export function BannerUpload({
     }
   };
 
+  const handleRemove = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await removeBanner();
+  };
+
   const displayUrl = previewUrl || currentBannerUrl;
+  const isProcessing = isUploading || isRemoving;
 
   return (
     <div className={cn("relative group", className)}>
@@ -79,7 +87,7 @@ export function BannerUpload({
         accept="image/jpeg,image/png,image/webp,image/gif"
         className="hidden"
         onChange={handleFileSelect}
-        disabled={isUploading}
+        disabled={isProcessing}
       />
 
       {/* Background with optional banner image */}
@@ -94,30 +102,46 @@ export function BannerUpload({
       </div>
 
       {/* Upload button overlay - visible on hover */}
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        disabled={isUploading}
+      <div
         className={cn(
-          "absolute inset-0 flex items-center justify-center",
+          "absolute inset-0 flex items-center justify-center gap-3",
           "bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200",
-          "cursor-pointer focus:outline-none focus:opacity-100",
-          isUploading && "opacity-100"
+          isProcessing && "opacity-100"
         )}
       >
-        {isUploading ? (
+        {isProcessing ? (
           <div className="flex flex-col items-center gap-2 text-white">
             <Loader2 className="w-8 h-8 animate-spin" />
-            <span className="text-sm font-medium">{progress}%</span>
+            <span className="text-sm font-medium">
+              {isRemoving ? "Removing..." : `${progress}%`}
+            </span>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-1 text-white">
-            <Camera className="w-8 h-8" />
-            <span className="text-sm font-medium">Change Banner</span>
-            <span className="text-xs text-white/70">Recommended: 1920×480px</span>
-          </div>
+          <>
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={isProcessing}
+              className="flex flex-col items-center gap-1 text-white p-4 rounded-lg hover:bg-white/10 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50"
+            >
+              <Camera className="w-8 h-8" />
+              <span className="text-sm font-medium">Change Banner</span>
+              <span className="text-xs text-white/70">Recommended: 1920×480px</span>
+            </button>
+            {displayUrl && (
+              <button
+                type="button"
+                onClick={handleRemove}
+                disabled={isProcessing}
+                className="flex flex-col items-center gap-1 text-white p-4 rounded-lg hover:bg-red-500/20 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/50"
+              >
+                <Trash2 className="w-8 h-8" />
+                <span className="text-sm font-medium">Remove</span>
+              </button>
+            )}
+          </>
         )}
-      </button>
+      </div>
     </div>
   );
 }
