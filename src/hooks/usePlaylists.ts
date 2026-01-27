@@ -152,6 +152,23 @@ export function usePlaylists() {
     },
   });
 
+  const moveToFolder = useMutation({
+    mutationFn: async ({ playlistId, folderId }: { playlistId: string; folderId: string | null }) => {
+      const { data, error } = await supabase
+        .from("playlists")
+        .update({ folder_id: folderId, updated_at: new Date().toISOString() })
+        .eq("id", playlistId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["playlists", user?.id] });
+    },
+  });
+
   return {
     playlists: playlists || [],
     isLoading,
@@ -159,6 +176,7 @@ export function usePlaylists() {
     createPlaylist,
     updatePlaylist,
     deletePlaylist,
+    moveToFolder,
   };
 }
 

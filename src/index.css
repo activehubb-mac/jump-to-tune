@@ -217,4 +217,19 @@
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }
+
+  /* Owned Track Visual Highlighting */
+  .owned-track-ring {
+    @apply ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.25);
+  }
+
+  .owned-badge {
+    @apply animate-pulse bg-primary/90 text-primary-foreground;
+  }
+
+  .owned-badge-playing {
+    @apply bg-accent text-accent-foreground;
+    animation: none;
+  }
 }
