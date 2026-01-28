@@ -15,7 +15,7 @@ export function Footer({ className = "" }: FooterProps) {
           <div className="space-y-4">
             <Link to="/" className="flex items-center">
               <img 
-                src="/images/jumtunes-footer-logo.jpeg" 
+                src="/images/jumtunes-footer-logo.png" 
                 alt="JumTunes" 
                 className="h-60 w-auto object-contain"
               />
