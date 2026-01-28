@@ -35,13 +35,13 @@ export default defineConfig(({ mode }) => ({
         categories: ["music", "entertainment"],
         icons: [
           {
-            src: "/images/jumtunes-logo.png",
+            src: "/images/jumtunes-footer-logo.png",
             sizes: "192x192",
             type: "image/png",
             purpose: "any maskable"
           },
           {
-            src: "/images/jumtunes-logo.png",
+            src: "/images/jumtunes-footer-logo.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "any maskable"
