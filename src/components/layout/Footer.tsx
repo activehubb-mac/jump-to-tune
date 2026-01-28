@@ -17,7 +17,7 @@ export function Footer({ className = "" }: FooterProps) {
               <img 
                 src="/images/jumtunes-logo.png" 
                 alt="JumTunes" 
-                className="h-48 w-auto object-contain"
+                className="h-56 w-auto object-contain"
               />
             </Link>
             <p className="text-muted-foreground text-sm">
