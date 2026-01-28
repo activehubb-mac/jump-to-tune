@@ -13,11 +13,11 @@ export function Footer({ className = "" }: FooterProps) {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <Link to="/" className="flex items-center">
+            <Link to="/" className="flex items-center group">
               <img 
                 src="/images/jumtunes-footer-logo.png" 
                 alt="JumTunes" 
-                className="h-60 w-auto object-contain"
+                className="h-60 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
               />
             </Link>
             <p className="text-muted-foreground text-sm">
