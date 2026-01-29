@@ -281,7 +281,7 @@ export default function LabelProfile() {
                         <Disc3 className="w-12 h-12 text-muted-foreground/50" />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-[#1a1a1a]/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute inset-0 bg-[#0B0E1A]/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         size="icon"
                         className="rounded-full gradient-accent w-10 h-10"
