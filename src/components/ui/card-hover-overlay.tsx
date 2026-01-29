@@ -13,7 +13,7 @@ export function CardHoverOverlay({
   return (
     <div
       className={cn(
-        "absolute inset-0 bg-[#0B0E1A]/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+        "absolute inset-0 bg-[#1a1a1a]/80 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
         className
       )}
       {...props}

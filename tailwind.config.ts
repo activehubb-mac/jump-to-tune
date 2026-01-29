@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 export default {
-  // darkMode: ["class"], // Removed - single cosmic dark theme
+  // darkMode: ["class"], // Removed - single light theme
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
@@ -57,16 +57,12 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // JumTunes cosmic colors
+        // JumTunes custom colors
         neon: "hsl(var(--neon-glow))",
         electric: "hsl(var(--electric-blue))",
         "deep-purple": "hsl(var(--deep-purple))",
         glass: "hsl(var(--glass))",
         "glass-border": "hsl(var(--glass-border))",
-        // New cosmic-specific tokens
-        "cosmic-purple": "hsl(280 50% 25%)",
-        "cosmic-blue": "hsl(210 100% 65%)",
-        "cosmic-pink": "hsl(292 91% 73%)",
       },
       borderRadius: {
         lg: "var(--radius)",

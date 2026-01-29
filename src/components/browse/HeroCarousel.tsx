@@ -100,8 +100,8 @@ export function HeroCarousel() {
                       </div>
                     )}
 
-                    {/* Gradient Overlay - cosmic dark for premium look */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0B0E1A]/90 via-[#0B0E1A]/40 to-transparent" />
+                    {/* Gradient Overlay - dark charcoal for premium look */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a]/90 via-[#1a1a1a]/40 to-transparent" />
 
                     {/* Content */}
                     <div className="absolute bottom-0 left-0 right-0 p-5">
@@ -184,7 +184,7 @@ export function HeroCarousel() {
                     </div>
 
                     {/* Content */}
-                    <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[#0B0E1A]/90 to-transparent">
+                    <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[#1a1a1a]/90 to-transparent">
                       <div className="flex items-center gap-2 mb-1">
                         <Users className="w-4 h-4 text-primary" />
                         <span className="text-xs text-primary font-medium">Artist</span>

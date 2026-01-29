@@ -31,8 +31,8 @@ export function useConfetti() {
         });
       }
 
-      // Cosmic dark theme matching JumTunes
-      const colors = ["#4DA6FF", "#8B5CF6", "#E879F9", "#3B1C5A"];
+      // Charcoal & Olive theme matching JumTunes
+      const colors = ["#404040", "#5F7353", "#BF9358", "#6B7C5F"];
 
       fire(0.25, {
         spread: 26,
