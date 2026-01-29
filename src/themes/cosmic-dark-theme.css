@@ -1,0 +1,94 @@
+/* JumTunes Cosmic Dark Theme - Space-Inspired Palette
+   Updated: 2026-01-29
+   Purpose: Vibrant dark theme with cosmic background and glow effects
+   
+   Color Palette (from founder):
+   - Primary Background: #0B0E1A (Deep space blue)
+   - Secondary Gradient Start: #1A1F3B (Cards, sidebars)
+   - Secondary Gradient End: #3B1C5A (Gradient accents)
+   - Accent Blue Glow: #4DA6FF (Primary actions, links)
+   - Accent Purple Glow: #8B5CF6 (Secondary accents)
+   - Soft Highlight Pink: #E879F9 (Tertiary accent, badges)
+   - Text Primary: #F5F7FA (Light text)
+   - Text Secondary: #B8C0D4 (Muted text)
+   - Divider/Subtle UI: #2A2F4A (Borders, inputs)
+   
+   Design Philosophy:
+   - Fixed cosmic background image with semi-transparent cards
+   - Glass/blur effects for depth
+   - Blue/purple gradient accents
+   - Neon glow effects on interactive elements
+   
+   To restore: Copy the :root section to src/index.css
+*/
+
+:root {
+  /* Cosmic Dark Theme */
+  --background: 225 40% 7%;            /* #0B0E1A */
+  --foreground: 220 20% 97%;           /* #F5F7FA */
+
+  --card: 225 35% 17%;                 /* #1A1F3B */
+  --card-foreground: 220 20% 97%;      /* #F5F7FA */
+
+  --popover: 225 35% 17%;              /* #1A1F3B */
+  --popover-foreground: 220 20% 97%;   /* #F5F7FA */
+
+  /* Brand Colors - Blue & Purple Glow */
+  --primary: 210 100% 65%;             /* #4DA6FF - Blue Glow */
+  --primary-foreground: 220 20% 97%;
+
+  --secondary: 263 91% 66%;            /* #8B5CF6 - Purple Glow */
+  --secondary-foreground: 220 20% 97%;
+
+  --muted: 225 30% 20%;
+  --muted-foreground: 220 15% 75%;     /* #B8C0D4 */
+
+  --accent: 292 91% 73%;               /* #E879F9 - Pink */
+  --accent-foreground: 220 20% 97%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 220 20% 97%;
+
+  --border: 225 25% 23%;               /* #2A2F4A */
+  --input: 225 25% 23%;
+  --ring: 210 100% 65%;
+
+  --radius: 0.75rem;
+
+  /* JumTunes cosmic tokens */
+  --neon-glow: 292 91% 73%;
+  --electric-blue: 210 100% 65%;
+  --deep-purple: 263 91% 66%;
+  --glass: 225 35% 17%;
+  --glass-border: 225 25% 30%;
+
+  /* Sidebar */
+  --sidebar-background: 225 35% 12%;
+  --sidebar-foreground: 220 20% 97%;
+  --sidebar-primary: 210 100% 65%;
+  --sidebar-primary-foreground: 220 20% 97%;
+  --sidebar-accent: 225 30% 20%;
+  --sidebar-accent-foreground: 220 20% 97%;
+  --sidebar-border: 225 25% 23%;
+  --sidebar-ring: 210 100% 65%;
+}
+
+/* 
+  UTILITY CLASSES (Reference - defined in index.css)
+  
+  Glass effects:
+  .glass → Semi-transparent with blur
+  .glass-card → Card with blur and border
+  
+  Gradient buttons:
+  .gradient-accent → Blue to purple gradient
+  .gradient-primary → Dark gradient for surfaces
+  
+  Gradient text:
+  .text-gradient → Blue to pink gradient text
+  .text-gradient-blue → Blue to purple gradient text
+  
+  Glow effects:
+  .neon-glow → Blue/purple glow shadow
+  .neon-glow-subtle → Subtle blue glow
+*/

@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* JumTunes Design System - Smoke Gray Light Theme
-   Clean, modern, premium neutral palette
+/* JumTunes Design System - Cosmic Dark Theme
+   Space-inspired dark palette with blue/purple glow accents
 */
 
 @layer base {
@@ -14,54 +14,54 @@
     --safe-area-left: env(safe-area-inset-left, 0px);
     --safe-area-right: env(safe-area-inset-right, 0px);
 
-    /* Light Theme: Smoke Gray Base */
-    --background: 0 0% 95%;           /* #F2F2F2 */
-    --foreground: 0 0% 10%;           /* #1A1A1A */
+    /* Cosmic Dark Theme */
+    --background: 225 40% 7%;            /* #0B0E1A - Deep space blue */
+    --foreground: 220 20% 97%;           /* #F5F7FA - Light text */
 
-    --card: 0 0% 90%;                 /* #E6E6E6 */
-    --card-foreground: 0 0% 10%;      /* #1A1A1A */
+    --card: 225 35% 17%;                 /* #1A1F3B - Card surfaces */
+    --card-foreground: 220 20% 97%;      /* #F5F7FA */
 
-    --popover: 0 0% 100%;             /* #FFFFFF */
-    --popover-foreground: 0 0% 10%;   /* #1A1A1A */
+    --popover: 225 35% 17%;              /* #1A1F3B */
+    --popover-foreground: 220 20% 97%;   /* #F5F7FA */
 
-    /* Brand Colors - Charcoal & Olive palette */
-    --primary: 0 0% 25%;              /* Charcoal - strong, neutral */
-    --primary-foreground: 0 0% 100%;
+    /* Brand Colors - Blue & Purple Glow */
+    --primary: 210 100% 65%;             /* #4DA6FF - Blue Glow */
+    --primary-foreground: 220 20% 97%;   /* Light text on primary */
 
-    --secondary: 85 25% 42%;          /* Olive - organic, calming */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 263 91% 66%;            /* #8B5CF6 - Purple Glow */
+    --secondary-foreground: 220 20% 97%;
 
-    --muted: 0 0% 85%;                /* #DADADA */
-    --muted-foreground: 0 0% 45%;     /* Medium gray */
+    --muted: 225 30% 20%;                /* Darker card shade */
+    --muted-foreground: 220 15% 75%;     /* #B8C0D4 - Secondary text */
 
-    --accent: 35 45% 52%;             /* Gold/bronze - warmth */
-    --accent-foreground: 0 0% 100%;
+    --accent: 292 91% 73%;               /* #E879F9 - Pink highlight */
+    --accent-foreground: 220 20% 97%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 220 20% 97%;
 
-    --border: 0 0% 85%;               /* #DADADA */
-    --input: 0 0% 90%;                /* Slightly darker for inputs */
-    --ring: 0 0% 25%;                 /* Charcoal focus ring */
+    --border: 225 25% 23%;               /* #2A2F4A - Dividers */
+    --input: 225 25% 23%;                /* Input backgrounds */
+    --ring: 210 100% 65%;                /* Focus ring - blue glow */
 
     --radius: 0.75rem;
 
-    /* Updated JumTunes tokens for light theme */
-    --neon-glow: 0 0% 25%;            /* Match primary */
-    --electric-blue: 85 25% 42%;      /* Match secondary (olive) */
-    --deep-purple: 0 0% 20%;          /* Darker charcoal */
-    --glass: 0 0% 92%;                /* Light glass effect */
-    --glass-border: 0 0% 80%;         /* Visible border on light */
+    /* JumTunes cosmic tokens */
+    --neon-glow: 292 91% 73%;            /* Pink glow */
+    --electric-blue: 210 100% 65%;       /* Blue glow */
+    --deep-purple: 263 91% 66%;          /* Purple glow */
+    --glass: 225 35% 17%;                /* Glass effect base */
+    --glass-border: 225 25% 30%;         /* Glass border */
 
-    /* Sidebar - Light theme */
-    --sidebar-background: 0 0% 92%;
-    --sidebar-foreground: 0 0% 10%;
-    --sidebar-primary: 0 0% 25%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 88%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 0 0% 85%;
-    --sidebar-ring: 0 0% 25%;
+    /* Sidebar - Cosmic dark */
+    --sidebar-background: 225 35% 12%;
+    --sidebar-foreground: 220 20% 97%;
+    --sidebar-primary: 210 100% 65%;
+    --sidebar-primary-foreground: 220 20% 97%;
+    --sidebar-accent: 225 30% 20%;
+    --sidebar-accent-foreground: 220 20% 97%;
+    --sidebar-border: 225 25% 23%;
+    --sidebar-ring: 210 100% 65%;
   }
 }
 
@@ -73,48 +73,83 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', system-ui, sans-serif;
+    /* Cosmic background image */
+    background-image: url('/images/cosmic-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  /* Fallback solid color layer behind background image */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: hsl(var(--background));
+    z-index: -2;
   }
 }
 
 @layer utilities {
+  /* Semi-transparent glass effect for cosmic theme */
   .glass {
-    @apply bg-card;
+    background: hsl(225 35% 17% / 0.6);
+    backdrop-filter: blur(8px);
   }
 
   .glass-card {
-    @apply bg-card rounded-xl shadow-sm;
+    background: hsl(225 35% 17% / 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.5);
+    border-radius: 0.75rem;
   }
 
   .glass-card-bordered {
-    @apply bg-card border border-border rounded-xl shadow-sm;
+    background: hsl(225 35% 17% / 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.75rem;
   }
 
-  /* Softer glow for light theme */
+  /* Neon glow effects - blue/purple theme */
   .neon-glow {
-    box-shadow: 0 4px 14px hsl(var(--primary) / 0.25),
-                0 2px 6px hsl(var(--primary) / 0.15);
+    box-shadow: 
+      0 0 20px hsl(210 100% 65% / 0.3),
+      0 0 40px hsl(263 91% 66% / 0.2);
   }
 
   .neon-glow-subtle {
-    box-shadow: 0 2px 8px hsl(var(--primary) / 0.15);
+    box-shadow: 0 0 15px hsl(210 100% 65% / 0.2);
   }
 
-  /* Solid color utilities - no gradients */
+  /* Gradient utilities for cosmic theme */
   .gradient-primary {
-    @apply bg-primary text-primary-foreground;
+    background: linear-gradient(135deg, hsl(225 35% 17%) 0%, hsl(280 50% 25%) 100%);
   }
 
   .gradient-accent {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+    background: linear-gradient(135deg, hsl(210 100% 65%) 0%, hsl(263 91% 66%) 100%);
+    color: hsl(var(--foreground));
   }
 
-  /* Solid text colors - no gradients */
+  .gradient-accent:hover {
+    background: linear-gradient(135deg, hsl(210 100% 60%) 0%, hsl(263 91% 60%) 100%);
+  }
+
+  /* Gradient text for cosmic theme */
   .text-gradient {
-    @apply text-primary font-semibold;
+    background: linear-gradient(135deg, hsl(210 100% 65%) 0%, hsl(292 91% 73%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .text-gradient-blue {
-    @apply text-secondary font-semibold;
+    background: linear-gradient(135deg, hsl(210 100% 65%) 0%, hsl(263 91% 66%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .scrollbar-hide {

@@ -21,7 +21,7 @@ export function useStatusBar() {
         
         // On Android, set the background color to match app theme
         if (Capacitor.getPlatform() === 'android') {
-          await StatusBar.setBackgroundColor({ color: '#0d0a14' }); // matches --background
+          await StatusBar.setBackgroundColor({ color: '#0B0E1A' }); // matches --background (cosmic dark)
         }
       } catch (error) {
         console.warn('StatusBar configuration failed:', error);

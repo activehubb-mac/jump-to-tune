@@ -42,7 +42,7 @@ export function usePlaylistFolders() {
         .insert({
           user_id: user.id,
           name,
-          color: color || "#404040",
+          color: color || "#8B5CF6",
           icon: icon || "folder",
         })
         .select()
