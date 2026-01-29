@@ -74,6 +74,11 @@
     @apply text-foreground;
     font-family: 'Inter', system-ui, sans-serif;
     background-color: hsl(var(--background));
+    background-image: url('/images/cosmic-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     min-height: 100vh;
   }
 }
