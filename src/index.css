@@ -71,22 +71,37 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
     font-family: 'Inter', system-ui, sans-serif;
+    background-color: hsl(var(--background));
+    background-image: url('/images/cosmic-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    min-height: 100vh;
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-card;
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   .glass-card {
-    @apply bg-card rounded-xl shadow-sm;
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    @apply rounded-xl shadow-sm;
   }
 
   .glass-card-bordered {
-    @apply bg-card border border-border rounded-xl shadow-sm;
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    @apply border border-border rounded-xl shadow-sm;
   }
 
   /* Softer glow for light theme */
