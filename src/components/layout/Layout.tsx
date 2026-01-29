@@ -17,7 +17,7 @@ export function Layout({
   const { isPlayerVisible } = useAudioPlayer();
   
   return (
-    <div className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full bg-background">
+    <div className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full">
       {/* Fixed Navbar - z-50 ensures it stays above everything */}
       <Navbar />
       
