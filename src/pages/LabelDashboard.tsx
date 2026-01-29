@@ -32,6 +32,8 @@ import { EarningsWidget } from "@/components/dashboard/EarningsWidget";
 import { AddArtistModal } from "@/components/label/AddArtistModal";
 import { UpgradePlanModal } from "@/components/label/UpgradePlanModal";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { useStripeConnect } from "@/hooks/useStripeConnect";
+import { formatEarnings as formatEarningsDollars } from "@/lib/formatters";
 
 export default function LabelDashboard() {
   const { user, role, profile, isLoading } = useAuth();
@@ -41,6 +43,15 @@ export default function LabelDashboard() {
   const { activeArtistCount, canAddMoreArtists, artistLimit, removeArtist } = useLabelRosterActions();
   const { showFeedback } = useFeedbackSafe();
   const navigate = useNavigate();
+  const {
+    isConnected,
+    accountStatus,
+    pendingEarningsDollars,
+    totalEarningsDollars,
+    isLoading: stripeLoading,
+    startOnboarding,
+    isConnecting,
+  } = useStripeConnect();
   
   const [showAddArtistModal, setShowAddArtistModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -139,6 +150,98 @@ export default function LabelDashboard() {
       <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-7xl">
         {/* Subscription Status Banner */}
         <SubscriptionStatusBanner className="mb-4 sm:mb-6" />
+
+        {/* Mobile Earnings/Withdrawal Banner - only visible below lg */}
+        <div className="lg:hidden mb-4 sm:mb-6">
+          {stripeLoading ? (
+            <div className="glass-card p-4 flex items-center justify-center">
+              <Loader2 className="w-5 h-5 animate-spin text-accent" />
+            </div>
+          ) : !isConnected ? (
+            <div className="glass-card p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center shrink-0">
+                    <DollarSign className="w-5 h-5 text-accent" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-foreground text-sm">Set Up Withdrawals</h3>
+                    <p className="text-xs text-muted-foreground truncate">Connect to receive earnings</p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  className="bg-accent hover:bg-accent/90 shrink-0"
+                  onClick={startOnboarding}
+                  disabled={isConnecting}
+                >
+                  {isConnecting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      Set Up
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : accountStatus === "pending" ? (
+            <div className="glass-card p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center shrink-0">
+                    <AlertCircle className="w-5 h-5 text-yellow-500" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-foreground text-sm">Complete Setup</h3>
+                    <p className="text-xs text-muted-foreground truncate">Finish Stripe onboarding</p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10 shrink-0"
+                  onClick={startOnboarding}
+                  disabled={isConnecting}
+                >
+                  {isConnecting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      Continue
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Link to="/label/payouts" className="glass-card p-4 block hover:border-accent/50 transition-colors">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center shrink-0">
+                    <DollarSign className="w-5 h-5 text-green-500" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">Pending:</span>
+                      <span className="font-semibold text-foreground">{formatEarningsDollars(pendingEarningsDollars)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">All Time:</span>
+                      <span className="text-sm text-foreground">{formatEarningsDollars(totalEarningsDollars)}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center text-accent shrink-0">
+                  <span className="text-sm font-medium">Payouts</span>
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </div>
+              </div>
+            </Link>
+          )}
+        </div>
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 sm:mb-8 gap-3 sm:gap-4">
