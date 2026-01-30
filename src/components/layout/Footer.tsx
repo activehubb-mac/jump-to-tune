@@ -1,12 +1,18 @@
 import { Link } from "react-router-dom";
 import { Twitter, Instagram, Youtube, Mic2, Heart, Music, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { openExternalUrl } from "@/lib/platformBrowser";
 
 interface FooterProps {
   className?: string;
 }
 
 export function Footer({ className = "" }: FooterProps) {
+  const handleSocialClick = (url: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    openExternalUrl(url);
+  };
+
   return (
     <footer className={cn("bg-card/30 backdrop-blur-sm", className)}>
       <div className="container mx-auto px-4 py-12">
@@ -17,15 +23,15 @@ export function Footer({ className = "" }: FooterProps) {
               The future of music ownership. Collect, trade, and support your favorite artists.
             </p>
             <div className="flex gap-4">
-              <a href="#" className="text-muted-foreground hover:text-accent transition-colors">
+              <button onClick={handleSocialClick("https://twitter.com/jumtunes")} className="text-muted-foreground hover:text-accent transition-colors">
                 <Twitter className="w-5 h-5" />
-              </a>
-              <a href="https://www.instagram.com/jumtunes?igsh=bWFlNG1pbmwwbGZ2" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors">
+              </button>
+              <button onClick={handleSocialClick("https://www.instagram.com/jumtunes?igsh=bWFlNG1pbmwwbGZ2")} className="text-muted-foreground hover:text-accent transition-colors">
                 <Instagram className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-accent transition-colors">
+              </button>
+              <button onClick={handleSocialClick("https://youtube.com/@jumtunes")} className="text-muted-foreground hover:text-accent transition-colors">
                 <Youtube className="w-5 h-5" />
-              </a>
+              </button>
             </div>
           </div>
 
