@@ -85,20 +85,20 @@
 
 @layer utilities {
   .glass {
-    background: hsl(var(--card) / 0.7);
+    background: hsl(var(--card) / 0.5);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
 
   .glass-card {
-    background: hsl(var(--card) / 0.7);
+    background: hsl(var(--card) / 0.5);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     @apply rounded-xl shadow-sm;
   }
 
   .glass-card-bordered {
-    background: hsl(var(--card) / 0.7);
+    background: hsl(var(--card) / 0.5);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     @apply border border-border rounded-xl shadow-sm;
