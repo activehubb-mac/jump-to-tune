@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* JumTunes Design System - Smoke Gray Light Theme
-   Clean, modern, premium neutral palette
+/* JumTunes Design System - Silent Studio Theme
+   Professional, musical, understated - like a recording studio at night
 */
 
 @layer base {
@@ -14,54 +14,54 @@
     --safe-area-left: env(safe-area-inset-left, 0px);
     --safe-area-right: env(safe-area-inset-right, 0px);
 
-    /* Cosmic Dark Theme - Deep Space Palette */
-    --background: 225 40% 7%;         /* #0B0E1A - Primary Background */
-    --foreground: 220 20% 97%;        /* #F5F7FA - Text Primary */
+    /* Silent Studio Theme - Warm, Musical, Professional */
+    --background: 0 0% 8%;              /* #141414 - Deep charcoal */
+    --foreground: 40 10% 90%;           /* #E8E4DF - Warm white */
 
-    --card: 225 35% 17%;              /* #1A1F3B - Card/Surface */
-    --card-foreground: 220 20% 97%;   /* #F5F7FA */
+    --card: 0 0% 12%;                   /* #1F1F1F - Card surface */
+    --card-foreground: 40 10% 90%;      /* #E8E4DF */
 
-    --popover: 225 35% 17%;           /* #1A1F3B */
-    --popover-foreground: 220 20% 97%;/* #F5F7FA */
+    --popover: 0 0% 12%;                /* #1F1F1F */
+    --popover-foreground: 40 10% 90%;   /* #E8E4DF */
 
-    /* Brand Colors - Blue/Purple Cosmic Glow */
-    --primary: 210 100% 65%;          /* #4DA6FF - Accent Blue Glow */
-    --primary-foreground: 220 20% 97%;
+    /* Brand Colors - Silent Studio Palette */
+    --primary: 45 30% 55%;              /* #B8A675 - Soft Gold */
+    --primary-foreground: 0 0% 8%;      /* Dark text on gold */
 
-    --secondary: 263 91% 66%;         /* #8B5CF6 - Accent Purple Glow */
-    --secondary-foreground: 220 20% 97%;
+    --secondary: 30 8% 40%;             /* #6B6560 - Warm Charcoal */
+    --secondary-foreground: 40 10% 90%; /* Light text */
 
-    --muted: 225 30% 20%;             /* Darker shade of card */
-    --muted-foreground: 220 15% 75%;  /* #B8C0D4 - Text Secondary */
+    --muted: 0 0% 18%;                  /* Darker shade */
+    --muted-foreground: 40 8% 60%;      /* #A49E96 - Muted warm gray */
 
-    --accent: 292 91% 73%;            /* #E879F9 - Soft Highlight Pink */
-    --accent-foreground: 220 20% 97%;
+    --accent: 25 35% 50%;               /* #AD7A5C - Muted Copper */
+    --accent-foreground: 40 10% 90%;    /* Light text */
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 220 20% 97%;
+    --destructive: 0 65% 50%;           /* Softened red */
+    --destructive-foreground: 40 10% 90%;
 
-    --border: 225 25% 23%;            /* #2A2F4A - Divider/Subtle UI */
-    --input: 225 25% 23%;             /* #2A2F4A */
-    --ring: 210 100% 65%;             /* #4DA6FF - Blue focus ring */
+    --border: 0 0% 20%;                 /* #333333 - Subtle border */
+    --input: 0 0% 20%;                  /* #333333 */
+    --ring: 45 30% 55%;                 /* Soft Gold focus ring */
 
     --radius: 0.75rem;
 
-    /* JumTunes cosmic tokens */
-    --neon-glow: 292 91% 73%;         /* Pink glow */
-    --electric-blue: 210 100% 65%;    /* Blue glow */
-    --deep-purple: 263 91% 66%;       /* Purple glow */
-    --glass: 225 35% 17%;             /* Card color for glass */
-    --glass-border: 225 25% 30%;      /* Subtle border */
+    /* JumTunes Silent Studio tokens */
+    --neon-glow: 45 30% 55%;            /* Soft gold glow */
+    --electric-blue: 45 30% 55%;        /* Now soft gold */
+    --deep-purple: 30 8% 40%;           /* Now warm charcoal */
+    --glass: 0 0% 12%;                  /* Card color for glass */
+    --glass-border: 0 0% 25%;           /* Subtle warm border */
 
-    /* Sidebar - Cosmic theme (glass effect) */
-    --sidebar-background: 225 35% 17%;
-    --sidebar-foreground: 220 20% 97%;
-    --sidebar-primary: 210 100% 65%;
-    --sidebar-primary-foreground: 220 20% 97%;
-    --sidebar-accent: 225 30% 25%;
-    --sidebar-accent-foreground: 220 20% 97%;
-    --sidebar-border: 225 25% 23%;
-    --sidebar-ring: 210 100% 65%;
+    /* Sidebar - Silent Studio theme */
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 40 10% 90%;
+    --sidebar-primary: 45 30% 55%;
+    --sidebar-primary-foreground: 0 0% 8%;
+    --sidebar-accent: 0 0% 18%;
+    --sidebar-accent-foreground: 40 10% 90%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 45 30% 55%;
   }
 }
 
@@ -104,28 +104,28 @@
     @apply border border-border rounded-xl shadow-sm;
   }
 
-  /* Cosmic neon glow effects */
+  /* Silent Studio warm glow effects */
   .neon-glow {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.4),
-                0 0 40px hsl(var(--secondary) / 0.2);
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3),
+                0 0 40px hsl(var(--secondary) / 0.15);
   }
 
   .neon-glow-subtle {
-    box-shadow: 0 0 15px hsl(var(--primary) / 0.25);
+    box-shadow: 0 0 15px hsl(var(--primary) / 0.2);
   }
 
-  /* Cosmic gradient utilities */
+  /* Warm gradient utilities */
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(225 35% 17%) 0%, hsl(280 40% 25%) 100%);
+    background: linear-gradient(135deg, hsl(0 0% 12%) 0%, hsl(30 10% 18%) 100%);
     @apply text-foreground;
   }
 
   .gradient-accent {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
     @apply text-primary-foreground hover:opacity-90;
   }
 
-  /* Cosmic text gradients */
+  /* Warm text gradients */
   .text-gradient {
     background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
     -webkit-background-clip: text;
