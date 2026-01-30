@@ -958,8 +958,6 @@ export default function Index() {
       {/* Featured Tracks Section */}
       <FeaturedTracksSection />
 
-      {/* Karaoke Promo Banner */}
-      <KaraokePromoBanner />
 
       {/* Featured Labels Section */}
       <FeaturedLabelsSection />
@@ -1252,6 +1250,9 @@ export default function Index() {
 
       {/* Trending Section - Now a Carousel */}
       <TrendingCarousel onAddToQueue={handleAddToQueue} />
+
+      {/* Karaoke Promo Banner */}
+      <KaraokePromoBanner />
       </div>
       <PremiumFeatureModal open={showPremiumModal} onOpenChange={setShowPremiumModal} feature="Add to Queue" />
 
