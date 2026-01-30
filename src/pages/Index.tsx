@@ -970,7 +970,7 @@ export default function Index() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
-                  <Sparkles className="w-8 h-8 text-accent" />
+                  <Sparkles className="w-5 h-5 text-accent" />
                   Discover Artists
                 </h2>
                 <p className="text-muted-foreground mt-2">Artists you might like based on who you follow</p>
@@ -1031,7 +1031,7 @@ export default function Index() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
-                  <History className="w-8 h-8 text-secondary" />
+                  <History className="w-5 h-5 text-secondary" />
                   Recently Played
                 </h2>
                 <p className="text-muted-foreground mt-2">Pick up where you left off</p>
@@ -1184,7 +1184,7 @@ export default function Index() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
-                  <Clock className="w-8 h-8 text-primary" />
+                  <Clock className="w-5 h-5 text-primary" />
                   New Releases
                 </h2>
                 <p className="text-muted-foreground mt-2">Fresh tracks from the last 7 days</p>
