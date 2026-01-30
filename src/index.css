@@ -74,7 +74,7 @@
     @apply text-foreground;
     font-family: 'Inter', system-ui, sans-serif;
     background-color: hsl(var(--background));
-    background-image: url('/images/cosmic-bg.jpg');
+    background-image: url('/images/music-pattern-bg.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
