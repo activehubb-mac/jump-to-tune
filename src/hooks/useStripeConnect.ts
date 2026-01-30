@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { openExternalUrl } from "@/lib/platformBrowser";
 
 interface Earning {
   id: string;
@@ -81,7 +82,7 @@ export function useStripeConnect() {
       }
 
       if (data?.url) {
-        window.open(data.url, "_blank");
+        await openExternalUrl(data.url);
         return data.url;
       }
 
