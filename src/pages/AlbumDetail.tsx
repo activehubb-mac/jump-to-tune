@@ -12,7 +12,8 @@ import {
   Heart,
   Share2,
   ListPlus,
-  Loader2
+  Loader2,
+  Lock
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,9 +22,12 @@ import { useLikes } from "@/hooks/useLikes";
 import { useLikeCounts } from "@/hooks/useLikeCounts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { formatPrice, formatDuration } from "@/lib/formatters";
 import { format } from "date-fns";
 import { TrackDetailModal } from "@/components/dashboard/TrackDetailModal";
+import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
+import { SubscriptionExpiredModal } from "@/components/subscription/SubscriptionExpiredModal";
 
 export default function AlbumDetail() {
   const { id } = useParams<{ id: string }>();
@@ -31,7 +35,10 @@ export default function AlbumDetail() {
   const { isLiked, toggleLike } = useLikes();
   const { user } = useAuth();
   const { showFeedback } = useFeedbackSafe();
+  const { canUseFeature, isSubscriptionExpired } = useFeatureGate();
   const [selectedTrack, setSelectedTrack] = useState<any>(null);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
 
   // Fetch album
   const { data: album, isLoading } = useQuery({
@@ -100,6 +107,16 @@ export default function AlbumDetail() {
 
   const handlePlayAlbum = () => {
     if (tracks.length === 0) return;
+
+    // Check if user can use queue features
+    if (!canUseFeature("addToQueue")) {
+      if (isSubscriptionExpired()) {
+        setShowExpiredModal(true);
+      } else {
+        setShowPremiumModal(true);
+      }
+      return;
+    }
     
     // Clear and play album from start
     clearQueue();
@@ -131,6 +148,16 @@ export default function AlbumDetail() {
   };
 
   const handleAddAlbumToQueue = () => {
+    // Check if user can add to queue
+    if (!canUseFeature("addToQueue")) {
+      if (isSubscriptionExpired()) {
+        setShowExpiredModal(true);
+      } else {
+        setShowPremiumModal(true);
+      }
+      return;
+    }
+
     tracks.forEach((track) => {
       addToQueue({
         id: track.id,
@@ -178,6 +205,17 @@ export default function AlbumDetail() {
 
   return (
     <Layout>
+      {/* Premium Modals */}
+      <PremiumFeatureModal
+        open={showPremiumModal}
+        onOpenChange={setShowPremiumModal}
+        feature="Add to Queue"
+      />
+      <SubscriptionExpiredModal
+        open={showExpiredModal}
+        onOpenChange={setShowExpiredModal}
+      />
+      
       {/* Track Detail Modal */}
       {selectedTrack && (
         <TrackDetailModal
@@ -268,6 +306,7 @@ export default function AlbumDetail() {
               >
                 <Play className="w-5 h-5 mr-2" />
                 Play Album
+                {!canUseFeature("addToQueue") && <Lock className="w-4 h-4 ml-2" />}
               </Button>
               <Button 
                 size="lg" 
@@ -277,6 +316,7 @@ export default function AlbumDetail() {
               >
                 <ListPlus className="w-5 h-5 mr-2" />
                 Add to Queue
+                {!canUseFeature("addToQueue") && <Lock className="w-4 h-4 ml-2" />}
               </Button>
               <Button size="lg" variant="ghost">
                 <Share2 className="w-5 h-5" />
