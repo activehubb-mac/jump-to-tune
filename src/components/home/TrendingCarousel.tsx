@@ -70,7 +70,7 @@ export function TrendingCarousel({ onAddToQueue }: TrendingCarouselProps) {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-card border border-border shadow-sm rounded-xl p-4">
+              <div key={i} className="glass-card-bordered p-4">
                 <div className="aspect-square rounded-lg bg-muted/50 mb-3 flex items-center justify-center">
                   <Disc3 className="w-12 h-12 text-muted-foreground" />
                 </div>
@@ -105,14 +105,14 @@ export function TrendingCarousel({ onAddToQueue }: TrendingCarouselProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={scrollLeft}
-              className="hidden md:flex w-9 h-9 items-center justify-center rounded-full border border-border bg-card hover:bg-primary/10 transition-colors"
+              className="hidden md:flex w-9 h-9 items-center justify-center rounded-full glass-card-bordered hover:bg-primary/10 transition-colors"
               aria-label="Scroll left"
             >
               <ChevronLeft className="w-5 h-5 text-foreground" />
             </button>
             <button
               onClick={scrollRight}
-              className="hidden md:flex w-9 h-9 items-center justify-center rounded-full border border-border bg-card hover:bg-primary/10 transition-colors"
+              className="hidden md:flex w-9 h-9 items-center justify-center rounded-full glass-card-bordered hover:bg-primary/10 transition-colors"
               aria-label="Scroll right"
             >
               <ChevronRight className="w-5 h-5 text-foreground" />
@@ -131,7 +131,7 @@ export function TrendingCarousel({ onAddToQueue }: TrendingCarouselProps) {
           {trendingTracks.map((track) => (
             <div
               key={track.id}
-              className="flex-shrink-0 w-44 md:w-48 bg-card border border-border shadow-sm rounded-xl p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
+              className="flex-shrink-0 w-44 md:w-48 glass-card-bordered p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
               onClick={() =>
                 playTrack({
                   id: track.id,

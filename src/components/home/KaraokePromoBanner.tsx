@@ -6,7 +6,7 @@ export function KaraokePromoBanner() {
   return (
     <section className="py-10 md:py-14">
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-md p-8 md:p-12">
+        <div className="relative overflow-hidden glass-card-bordered p-8 md:p-12">
           {/* Background decorative elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-muted/40 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-muted/30 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
