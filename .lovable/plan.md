@@ -1,79 +1,85 @@
 
-# Fix "Unknown Artist" Issue - Root Cause and Solution
+# Fix "Complete Withdrawal Setup" Button Not Working
 
 ## Problem Summary
-Regular users see "Unknown Artist" on track cards while admins can see all artist names correctly. This is a data access issue, not a display bug.
+Artists report clicking the "Complete Withdrawal Setup" button with no visible result. Edge function logs show the function is being invoked successfully multiple times but the user sees no browser opening or feedback.
 
 ## Root Cause Analysis
-The application uses a `profiles_public` view to safely expose profile data without sensitive Stripe fields. However, this view was created with `security_invoker=on`, which means:
 
-- The view runs with the **caller's permissions** (not the view owner's)
-- The underlying `profiles` table has RLS policies that only allow users to see **their own profile**
-- Result: Regular users can't access other artists' profile data through the view
+### Evidence from Logs
+- The `create-connect-account` edge function is successfully called (7+ times in quick succession)
+- User's Stripe account exists (`acct_1Srs52CZRCFso88t`) with `details_submitted: false`
+- The function reaches "User already has Connect account, creating login link" but no subsequent log shows the URL was returned
 
-**Current RLS on `profiles` table:**
-- Users can view their own profile only (`auth.uid() = id`)
-- Admins can view all profiles
-- Service role can view all profiles
+### Two Issues Identified
 
-**Why admins see everything:** Admin users have a policy that grants full SELECT access to the profiles table.
+**Issue 1: Missing Logs and Silent Failure**
+The edge function has a gap in logging - after checking account status and before returning, there's no log confirming the URL was successfully created. If `stripe.accountLinks.create()` fails, the error gets swallowed or the function returns without a URL.
+
+**Issue 2: Mobile Browser Opening Silently Failing**
+The frontend uses `openExternalUrl()` which calls `Browser.open()` on native apps. This may fail silently on some devices without any user feedback.
 
 ## Solution
-Recreate the `profiles_public` view **without** `security_invoker=on`. This will make it run with DEFINER privileges (view owner's permissions), allowing all users to read public profile data while keeping sensitive Stripe fields hidden.
 
-## Implementation Steps
+### Step 1: Add Better Logging to Edge Function
+Add logging after successful URL creation to confirm the function completed:
 
-### Step 1: Drop and recreate the profiles_public view
-Create a SQL migration that:
-1. Drops the existing `profiles_public` view
-2. Recreates it **without** `security_invoker=on`
+```text
+File: supabase/functions/create-connect-account/index.ts
 
-```sql
--- Drop the existing view
-DROP VIEW IF EXISTS public.profiles_public;
-
--- Recreate without security_invoker (uses DEFINER by default)
-CREATE VIEW public.profiles_public AS
-SELECT 
-    id,
-    display_name,
-    display_name_font,
-    avatar_url,
-    banner_image_url,
-    bio,
-    website_url,
-    is_verified,
-    onboarding_completed,
-    created_at,
-    updated_at
-FROM profiles;
-
--- Grant SELECT to all authenticated users and anon
-GRANT SELECT ON public.profiles_public TO authenticated;
-GRANT SELECT ON public.profiles_public TO anon;
+Changes:
+- Add log before returning onboarding link URL
+- Add log before returning login link URL  
+- Log the actual error message if accountLinks.create fails (currently only logs on retrieve error)
 ```
 
-### Step 2: No code changes required
-The hooks (`useNewReleases`, `useTrendingTracks`, `useArtists`, etc.) already query `profiles_public` correctly. Once the view permissions are fixed, artist names will display properly for all users.
+### Step 2: Add User Feedback When Opening URL
+If the browser opens successfully OR fails, provide visual feedback to the user:
 
-## Why This Is Secure
-- The view only exposes non-sensitive columns (no Stripe data)
-- Without `security_invoker`, the view runs as the owner (typically `postgres` or `supabase_admin`)
-- The owner has permission to read from `profiles`, so the view can access the data
-- Regular users still cannot access the `profiles` table directly - only through the sanitized view
+```text
+File: src/hooks/useStripeConnect.ts
 
-## Technical Details
+Changes:
+- Show a toast message when the Stripe page is opening ("Opening Stripe setup...")
+- Handle errors from openExternalUrl and show feedback if it fails
+- Add try-catch around openExternalUrl call
+```
 
-**Affected hooks that fetch from profiles_public:**
-- `useNewReleases` - New releases section
-- `useTrendingTracks` - Trending tracks carousel  
-- `useArtists` - Artists listing page
-- `useBrowseSearch` - Search results
-- `useFeaturedContent` - Featured artists/tracks
-- `useArtistProfile` - Artist profile pages
-- `useLabelRoster` - Label roster display
-- `useUserProfile` - User profile pages
-- `useFollowerCounts` - Follower statistics
-- `useFeaturedOnTracks` - Featured collaborations
+### Step 3: Improve Mobile Browser Handling
+Update the platformBrowser utility to handle edge cases:
 
-All these will automatically work correctly once the view is fixed - no code changes needed.
+```text
+File: src/lib/platformBrowser.ts
+
+Changes:
+- Add try-catch around Browser.open with error feedback
+- Consider using presentationStyle: "fullscreen" instead of "popover" for better visibility
+- Add a fallback to window.open if Capacitor Browser fails
+```
+
+### Step 4: Ensure Edge Function Returns URL
+Add explicit handling if the Stripe API returns no URL:
+
+```text
+File: supabase/functions/create-connect-account/index.ts
+
+Changes:
+- Check if accountLink.url exists before returning
+- Return an error if URL is missing
+- Add log confirming successful account link creation
+```
+
+## Technical Changes Summary
+
+| File | Change |
+|------|--------|
+| `supabase/functions/create-connect-account/index.ts` | Add success logging and URL validation |
+| `src/hooks/useStripeConnect.ts` | Add toast feedback and error handling for browser opening |
+| `src/lib/platformBrowser.ts` | Improve mobile browser handling with fallback |
+
+## Testing Plan
+After implementation:
+1. Test on mobile device by clicking "Complete Withdrawal Setup"
+2. Verify a toast message appears ("Opening Stripe setup...")
+3. Verify Stripe onboarding page opens in external browser
+4. Check edge function logs show the URL was created successfully
