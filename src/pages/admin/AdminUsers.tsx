@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Loader2, Search, CheckCircle, XCircle, User, 
-  ShieldCheck, Music, Building2, Shield, ShieldOff 
+  ShieldCheck, Music, Building2, Shield, ShieldOff, CreditCard
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -32,6 +32,9 @@ type UserWithRole = {
   created_at: string;
   role: string | null;
   isAdmin: boolean;
+  stripe_account_id: string | null;
+  stripe_account_status: string | null;
+  stripe_payouts_enabled: boolean | null;
 };
 
 export default function AdminUsers() {
@@ -45,7 +48,7 @@ export default function AdminUsers() {
     queryFn: async () => {
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, display_name, avatar_url, is_verified, created_at')
+        .select('id, display_name, avatar_url, is_verified, created_at, stripe_account_id, stripe_account_status, stripe_payouts_enabled')
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
@@ -72,6 +75,9 @@ export default function AdminUsers() {
         ...profile,
         role: roleMap.get(profile.id) || 'fan',
         isAdmin: adminSet.has(profile.id),
+        stripe_account_id: profile.stripe_account_id,
+        stripe_account_status: profile.stripe_account_status,
+        stripe_payouts_enabled: profile.stripe_payouts_enabled,
       })) as UserWithRole[];
     },
   });
@@ -229,7 +235,7 @@ export default function AdminUsers() {
                       </p>
                     </div>
                     
-                    {/* Role Badges */}
+                    {/* Role & Stripe Badges */}
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <Badge 
                         variant={getRoleBadgeVariant(user.role) as any} 
@@ -245,6 +251,28 @@ export default function AdminUsers() {
                           <span className="flex items-center gap-1">
                             <ShieldCheck className="w-2.5 h-2.5" />
                             admin
+                          </span>
+                        </Badge>
+                      )}
+                      {/* Stripe Status Badge - only show for artists/labels */}
+                      {(user.role === 'artist' || user.role === 'label') && (
+                        <Badge 
+                          variant="outline" 
+                          className={`text-[10px] px-1.5 py-0.5 h-5 ${
+                            user.stripe_payouts_enabled 
+                              ? 'border-green-500/50 text-green-500' 
+                              : user.stripe_account_id 
+                                ? 'border-yellow-500/50 text-yellow-500'
+                                : 'border-muted-foreground/30 text-muted-foreground'
+                          }`}
+                        >
+                          <span className="flex items-center gap-1">
+                            <CreditCard className="w-2.5 h-2.5" />
+                            {user.stripe_payouts_enabled 
+                              ? 'Active' 
+                              : user.stripe_account_id 
+                                ? 'Pending'
+                                : 'Not Set'}
                           </span>
                         </Badge>
                       )}
