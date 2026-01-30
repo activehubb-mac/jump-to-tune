@@ -4,6 +4,7 @@ import { Footer } from "./Footer";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
 import { ParticleBackground } from "@/components/effects/ParticleBackground";
+import { GlobalSubscriptionCheck } from "@/components/subscription/GlobalSubscriptionCheck";
 import { cn } from "@/lib/utils";
 
 interface LayoutProps {
@@ -19,6 +20,8 @@ export function Layout({
   
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full">
+      {/* Global subscription check - shows expiry modal when needed */}
+      <GlobalSubscriptionCheck />
       {/* Light particles behind content */}
       <ParticleBackground />
       

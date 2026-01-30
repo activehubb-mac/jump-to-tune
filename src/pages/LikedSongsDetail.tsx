@@ -18,13 +18,17 @@ import {
   Loader2,
   Disc3,
   Heart,
+  Lock,
 } from "lucide-react";
 import { useLikedTracks, useLikes } from "@/hooks/useLikes";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { formatDuration } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
+import { SubscriptionExpiredModal } from "@/components/subscription/SubscriptionExpiredModal";
 
 type SortOption = "recently-liked" | "alphabetical" | "artist";
 
@@ -132,9 +136,12 @@ export default function LikedSongsDetail() {
   const { showFeedback } = useFeedbackSafe();
   const { playTrack, currentTrack, isPlaying, clearQueue, addToQueue, togglePlayPause } = useAudioPlayer();
   const { toggleLike } = useLikes();
+  const { canUseFeature, isSubscriptionExpired } = useFeatureGate();
 
   const { data: likedTracks, isLoading } = useLikedTracks();
   const [sortBy, setSortBy] = useState<SortOption>("recently-liked");
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
 
   // Sort tracks based on selected option
   const sortedTracks = useMemo(() => {
@@ -183,6 +190,17 @@ export default function LikedSongsDetail() {
 
   const handlePlayAll = () => {
     if (sortedTracks.length === 0) return;
+
+    // Check if user can use queue features
+    if (!canUseFeature("addToQueue")) {
+      if (isSubscriptionExpired()) {
+        setShowExpiredModal(true);
+      } else {
+        setShowPremiumModal(true);
+      }
+      return;
+    }
+
     clearQueue();
     const firstTrack = sortedTracks[0];
     playTrack({
@@ -214,6 +232,17 @@ export default function LikedSongsDetail() {
 
   const handleShufflePlay = () => {
     if (sortedTracks.length === 0) return;
+
+    // Check if user can use shuffle/queue features
+    if (!canUseFeature("shuffle")) {
+      if (isSubscriptionExpired()) {
+        setShowExpiredModal(true);
+      } else {
+        setShowPremiumModal(true);
+      }
+      return;
+    }
+
     clearQueue();
     const shuffled = [...sortedTracks].sort(() => Math.random() - 0.5);
     const firstTrack = shuffled[0];
@@ -260,6 +289,17 @@ export default function LikedSongsDetail() {
 
   return (
     <Layout>
+      {/* Premium Modals */}
+      <PremiumFeatureModal
+        open={showPremiumModal}
+        onOpenChange={setShowPremiumModal}
+        feature="Play All & Shuffle"
+      />
+      <SubscriptionExpiredModal
+        open={showExpiredModal}
+        onOpenChange={setShowExpiredModal}
+      />
+
       <div className="container mx-auto px-4 py-8">
         {/* Back button */}
         <Button
@@ -301,6 +341,7 @@ export default function LikedSongsDetail() {
                   >
                     <Play className="w-4 h-4 mr-2" />
                     Play All
+                    {!canUseFeature("addToQueue") && <Lock className="w-3 h-3 ml-1" />}
                   </Button>
                   <Button
                     variant="outline"
@@ -309,6 +350,7 @@ export default function LikedSongsDetail() {
                   >
                     <Shuffle className="w-4 h-4 mr-2" />
                     Shuffle
+                    {!canUseFeature("shuffle") && <Lock className="w-3 h-3 ml-1" />}
                   </Button>
                 </div>
               </div>
