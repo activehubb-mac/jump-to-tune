@@ -102,25 +102,25 @@ export default function Artists() {
                   <Star className="w-5 h-5 text-yellow-500" />
                   <h2 className="text-2xl font-bold text-foreground">Featured Artists</h2>
                 </div>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid gap-4 sm:gap-6">
                   {featuredArtists.map((artist) => {
                     const following = isFollowing(artist.id);
                     const isOwnProfile = user?.id === artist.id;
                     const followers = followerCounts[artist.id] || artist.followerCount || 0;
                     
                     return (
-                      <Link key={artist.id} to={`/artist/${artist.id}`} className="glass-card p-6 group hover:bg-primary/10 transition-all duration-300">
-                        <div className="flex items-start gap-4">
-                          <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center flex-shrink-0 overflow-hidden">
-                            {artist.avatar_url ? <img src={artist.avatar_url} alt={artist.display_name || ""} className="w-full h-full object-cover" /> : <Music className="w-8 h-8 text-primary-foreground" />}
+                      <Link key={artist.id} to={`/artist/${artist.id}`} className="glass-card p-4 sm:p-6 group hover:bg-primary/10 transition-all duration-300">
+                        <div className="flex items-start gap-3 sm:gap-4">
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            {artist.avatar_url ? <img src={artist.avatar_url} alt={artist.display_name || ""} className="w-full h-full object-cover" /> : <Music className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground" />}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex items-center gap-1.5">
-                                <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{artist.display_name || "Unknown Artist"}</h3>
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <h3 className="text-lg sm:text-xl font-bold text-foreground group-hover:text-primary transition-colors truncate">{artist.display_name || "Unknown Artist"}</h3>
                                 {artist.is_verified && (
                                   <span title="Verified Artist">
-                                    <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
+                                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
                                   </span>
                                 )}
                               </div>
@@ -128,7 +128,7 @@ export default function Artists() {
                                 <Button
                                   size="sm"
                                   variant={following ? "outline" : "default"}
-                                  className={following ? "border-glass-border" : "gradient-accent"}
+                                  className={`shrink-0 ${following ? "border-glass-border" : "gradient-accent"}`}
                                   onClick={(e) => handleFollow(e, artist.id, artist.display_name || "Artist")}
                                 >
                                   {following ? (
