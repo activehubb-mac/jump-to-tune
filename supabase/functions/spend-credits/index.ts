@@ -378,25 +378,103 @@ serve(async (req) => {
       }
     }
 
-    // If earnings recipient has Stripe Connect, log for payout
-    if (earningsRecipient?.stripe_account_id && earningsRecipient?.stripe_payouts_enabled) {
+    // If earnings recipient has Stripe Connect with payouts enabled, transfer funds immediately
+    if (earningsRecipient?.stripe_account_id && earningsRecipient?.stripe_payouts_enabled && artistPayoutCents > 0) {
       try {
         const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
           apiVersion: "2025-11-17.clover",
         });
 
-        // Note: This would require having funds in your Stripe account
-        // For now, we just record the earnings for later payout
-        logStep(`${recipientType} has Stripe Connect - earnings recorded for payout`, {
+        logStep(`Initiating Stripe transfer to ${recipientType}`, {
           stripe_account_id: earningsRecipient.stripe_account_id,
           payout_cents: artistPayoutCents,
-          recipient_type: recipientType,
         });
+
+        // Create a transfer to the connected account
+        const transfer = await stripe.transfers.create({
+          amount: artistPayoutCents,
+          currency: "usd",
+          destination: earningsRecipient.stripe_account_id,
+          transfer_group: `purchase_${purchase.id}`,
+          metadata: {
+            purchase_id: purchase.id,
+            track_id: track_id,
+            track_title: track.title,
+            recipient_type: recipientType,
+            recipient_id: earningsRecipientId,
+          },
+        });
+
+        logStep("Stripe transfer created successfully", { 
+          transfer_id: transfer.id,
+          amount: transfer.amount,
+        });
+
+        // Update the earnings record with transfer ID and mark as paid
+        await supabaseClient
+          .from("artist_earnings")
+          .update({
+            stripe_transfer_id: transfer.id,
+            status: "paid",
+            paid_at: new Date().toISOString(),
+          })
+          .eq("id", earnings?.id);
+
+        logStep("Earnings marked as paid", { earnings_id: earnings?.id });
+
+        // Send payout notification (non-blocking)
+        try {
+          fetch(
+            `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-payout-email`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              },
+              body: JSON.stringify({
+                artistId: earningsRecipientId,
+                payoutAmountCents: artistPayoutCents,
+                status: "paid",
+              }),
+            }
+          ).then(res => {
+            if (!res.ok) logStep("Payout email failed", { status: res.status });
+            else logStep("Payout email sent");
+          }).catch(err => logStep("Payout email error", { error: err.message }));
+        } catch (emailError) {
+          logStep("Payout email error (non-blocking)", { 
+            error: emailError instanceof Error ? emailError.message : "Unknown" 
+          });
+        }
+
       } catch (stripeError) {
-        logStep("Stripe transfer skipped", { 
-          error: stripeError instanceof Error ? stripeError.message : "Unknown" 
+        // Transfer failed - log error but don't fail the purchase
+        const errorMessage = stripeError instanceof Error ? stripeError.message : "Unknown";
+        logStep("Stripe transfer FAILED - earnings remain pending", { 
+          error: errorMessage,
+          stripe_account_id: earningsRecipient.stripe_account_id,
+          payout_cents: artistPayoutCents,
         });
+
+        // Update earnings status to indicate transfer failure
+        if (earnings?.id) {
+          await supabaseClient
+            .from("artist_earnings")
+            .update({ status: "failed" })
+            .eq("id", earnings.id);
+
+          logStep("Earnings marked as failed", { earnings_id: earnings.id });
+        }
       }
+    } else if (earningsRecipient?.stripe_account_id && !earningsRecipient?.stripe_payouts_enabled) {
+      logStep(`${recipientType} has Stripe Connect but payouts not enabled yet - earnings pending`, {
+        stripe_account_id: earningsRecipient.stripe_account_id,
+      });
+    } else {
+      logStep(`${recipientType} has no Stripe Connect - earnings pending until connected`, {
+        recipient_id: earningsRecipientId,
+      });
     }
 
     // Send purchase confirmation email (non-blocking)
