@@ -116,11 +116,11 @@ export function Navbar() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center group pt-4">
+            <Link to="/" className="flex items-center group">
               <img 
-                src="/images/jumtunes-logo.png" 
+                src="/images/jumtunes-new-logo.png" 
                 alt="JumTunes" 
-                className="h-32 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
+                className="h-14 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
               />
             </Link>
 
