@@ -47,7 +47,7 @@ export function BrowseFilterBar({
   onClearFilters,
 }: BrowseFilterBarProps) {
   return (
-    <div className="bg-card border border-border shadow-sm rounded-xl p-4 md:p-6 mb-8">
+    <div className="glass-card-bordered p-4 md:p-6 mb-8">
       {/* Search & Sort Row */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative flex-1">
