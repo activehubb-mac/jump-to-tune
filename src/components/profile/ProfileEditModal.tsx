@@ -125,8 +125,8 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-        <SheetHeader className="text-left">
+      <SheetContent className="w-full sm:max-w-md overflow-y-auto px-4 sm:px-6">
+        <SheetHeader className="text-left pr-6">
           <SheetTitle>Edit Profile</SheetTitle>
           <SheetDescription>
             Update your profile information visible to others.
