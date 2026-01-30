@@ -169,4 +169,29 @@
     @apply bg-accent text-accent-foreground;
     animation: none;
   }
+
+  /* Light Particles Animation */
+  .particle-animate {
+    will-change: transform, opacity;
+    animation: particle-float ease-in-out infinite;
+  }
+
+  @keyframes particle-float {
+    0%, 100% {
+      transform: translateY(0) translateX(0);
+      opacity: 0.4;
+    }
+    50% {
+      transform: translateY(-30px) translateX(10px);
+      opacity: 0.7;
+    }
+  }
+
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .particle-animate {
+      animation: none;
+      opacity: 0.3;
+    }
+  }
 }
