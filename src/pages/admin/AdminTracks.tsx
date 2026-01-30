@@ -127,7 +127,7 @@ export default function AdminTracks() {
             {filteredTracks?.map((track) => (
               <div
                 key={track.id}
-                className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg glass-card hover:bg-primary/5 transition-colors"
               >
                 {/* Track Info */}
                 <div className="flex items-center gap-3 flex-1 min-w-0">

@@ -137,7 +137,7 @@ export default function AdminFinance() {
                 {purchases?.map((purchase) => (
                   <div
                     key={purchase.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                    className="flex items-center justify-between p-3 rounded-lg glass-card"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="text-xs md:text-sm font-mono truncate">{purchase.id.slice(0, 8)}...</p>
@@ -173,7 +173,7 @@ export default function AdminFinance() {
                 {earnings?.map((earning) => (
                   <div
                     key={earning.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                    className="flex items-center justify-between p-3 rounded-lg glass-card"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="text-xs md:text-sm font-mono truncate">{earning.artist_id.slice(0, 8)}...</p>
@@ -215,7 +215,7 @@ export default function AdminFinance() {
                 {transactions?.map((tx) => (
                   <div
                     key={tx.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                    className="flex items-center justify-between p-3 rounded-lg glass-card"
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       {tx.type === 'purchase' ? (

@@ -124,7 +124,7 @@ export default function AdminOverview() {
               {recentPurchases.map((purchase) => (
                 <div
                   key={purchase.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                  className="flex items-center justify-between p-3 rounded-lg glass-card"
                 >
                   <div className="min-w-0 flex-1">
                     <span className="text-xs md:text-sm text-muted-foreground">Track: </span>

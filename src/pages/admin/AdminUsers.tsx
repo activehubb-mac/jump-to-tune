@@ -202,7 +202,7 @@ export default function AdminUsers() {
             {filteredUsers?.map((user) => (
               <div
                 key={user.id}
-                className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                className="p-3 rounded-lg glass-card hover:bg-primary/5 transition-colors"
               >
                 {/* Mobile: Stacked Layout */}
                 <div className="flex items-start gap-3">

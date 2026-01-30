@@ -86,8 +86,8 @@ export default function AdminDashboard() {
                   className={cn(
                     "flex flex-col items-center gap-1 p-3 rounded-lg text-xs font-medium transition-colors",
                     isActive
-                      ? "bg-primary/10 text-primary border border-primary/20"
-                      : "bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      ? "glass-card-bordered border-primary/30 text-primary"
+                      : "glass-card text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <item.icon className="w-5 h-5" />
@@ -98,7 +98,7 @@ export default function AdminDashboard() {
           </div>
           
           {/* Desktop: Horizontal tabs */}
-          <div className="hidden md:flex gap-1 p-1 bg-muted/30 rounded-lg w-fit">
+          <div className="hidden md:flex gap-1 p-1 glass-card-bordered w-fit">
             {adminNavItems.map((item) => {
               const isActive = item.exact 
                 ? location.pathname === item.path
@@ -111,7 +111,7 @@ export default function AdminDashboard() {
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-background text-foreground shadow-sm"
+                      ? "bg-primary/20 text-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                 >
