@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useForYouPlaylist } from "@/hooks/useForYouPlaylist";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useLikes } from "@/hooks/useLikes";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,10 +19,13 @@ import {
   Sparkles,
   RefreshCw,
   Clock,
+  Lock,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { formatDuration } from "@/lib/formatters";
+import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
+import { SubscriptionExpiredModal } from "@/components/subscription/SubscriptionExpiredModal";
 
 
 export default function ForYou() {
@@ -29,6 +34,9 @@ export default function ForYou() {
   const { playTrack, addToQueue, clearQueue, currentTrack, isPlaying, togglePlayPause } = useAudioPlayer();
   const { isLiked, toggleLike } = useLikes();
   const queryClient = useQueryClient();
+  const { canUseFeature, isSubscriptionExpired } = useFeatureGate();
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
 
   const handlePlayTrack = (track: any, index: number) => {
     if (currentTrack?.id === track.id) {
@@ -49,25 +57,37 @@ export default function ForYou() {
         : undefined,
     });
 
-    // Queue the remaining tracks
-    const remainingTracks = tracks?.slice(index + 1) || [];
-    remainingTracks.forEach((t) => {
-      addToQueue({
-        id: t.id,
-        title: t.title,
-        audio_url: t.audio_url,
-        cover_art_url: t.cover_art_url,
-        duration: t.duration,
-        price: t.price,
-        artist: t.artist
-          ? { id: t.artist.id, display_name: t.artist.display_name }
-          : undefined,
+    // Queue the remaining tracks if user has access
+    if (canUseFeature("addToQueue")) {
+      const remainingTracks = tracks?.slice(index + 1) || [];
+      remainingTracks.forEach((t) => {
+        addToQueue({
+          id: t.id,
+          title: t.title,
+          audio_url: t.audio_url,
+          cover_art_url: t.cover_art_url,
+          duration: t.duration,
+          price: t.price,
+          artist: t.artist
+            ? { id: t.artist.id, display_name: t.artist.display_name }
+            : undefined,
+        });
       });
-    });
+    }
   };
 
   const handlePlayAll = () => {
     if (!tracks || tracks.length === 0) return;
+
+    // Check if user can queue tracks
+    if (!canUseFeature("addToQueue")) {
+      if (isSubscriptionExpired()) {
+        setShowExpiredModal(true);
+      } else {
+        setShowPremiumModal(true);
+      }
+      return;
+    }
 
     clearQueue();
     
@@ -105,6 +125,16 @@ export default function ForYou() {
 
   const handleShuffle = () => {
     if (!tracks || tracks.length === 0) return;
+
+    // Check if user can use shuffle/queue
+    if (!canUseFeature("shuffle")) {
+      if (isSubscriptionExpired()) {
+        setShowExpiredModal(true);
+      } else {
+        setShowPremiumModal(true);
+      }
+      return;
+    }
 
     clearQueue();
     const shuffled = [...tracks].sort(() => Math.random() - 0.5);
@@ -160,6 +190,15 @@ export default function ForYou() {
 
   return (
     <Layout>
+      <PremiumFeatureModal
+        open={showPremiumModal}
+        onOpenChange={setShowPremiumModal}
+        feature="Queue & Shuffle"
+      />
+      <SubscriptionExpiredModal
+        open={showExpiredModal}
+        onOpenChange={setShowExpiredModal}
+      />
       <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Hero Section */}
         <div className="relative mb-6 sm:mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-accent/10 to-background p-4 sm:p-8">
@@ -198,15 +237,17 @@ export default function ForYou() {
               >
                 <Play className="w-4 h-4 mr-2" />
                 Play All
+                {!canUseFeature("addToQueue") && <Lock className="w-3 h-3 ml-1" />}
               </Button>
               <Button
                 onClick={handleShuffle}
                 variant="outline"
-                className="border-glass-border"
+                className="border-glass-border relative"
                 disabled={!tracks || tracks.length === 0}
               >
                 <Shuffle className="w-4 h-4 mr-2" />
                 Shuffle
+                {!canUseFeature("shuffle") && <Lock className="w-3 h-3 ml-1" />}
               </Button>
               <Button
                 onClick={handleRefresh}
