@@ -1,11 +1,15 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Disc3, Play } from "lucide-react";
+import { Disc3, Play, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardHoverOverlay } from "@/components/ui/card-hover-overlay";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
+import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/formatters";
+import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
+import { SubscriptionExpiredModal } from "@/components/subscription/SubscriptionExpiredModal";
 
 interface AlbumCardProps {
   album: {
@@ -25,6 +29,9 @@ interface AlbumCardProps {
 
 export function AlbumCard({ album }: AlbumCardProps) {
   const { playTrack, addToQueue, clearQueue } = useAudioPlayer();
+  const { canUseFeature, isSubscriptionExpired } = useFeatureGate();
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
 
   // Fetch album tracks for play functionality (two-step pattern for profiles_public view)
   const { data: tracks = [] } = useQuery({
@@ -66,6 +73,16 @@ export function AlbumCard({ album }: AlbumCardProps) {
     
     if (tracks.length === 0) return;
 
+    // Check if user can use queue features
+    if (!canUseFeature("addToQueue")) {
+      if (isSubscriptionExpired()) {
+        setShowExpiredModal(true);
+      } else {
+        setShowPremiumModal(true);
+      }
+      return;
+    }
+
     clearQueue();
 
     const firstTrack = {
@@ -95,64 +112,80 @@ export function AlbumCard({ album }: AlbumCardProps) {
   };
 
   return (
-    <Link 
-      to={`/album/${album.id}`}
-      className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300 block"
-    >
-      {/* Album Art */}
-      <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">
-        {album.cover_art_url ? (
-          <img
-            src={album.cover_art_url}
-            alt={album.title}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Disc3 className="w-16 h-16 text-muted-foreground/50" />
+    <>
+      {/* Premium Modals */}
+      <PremiumFeatureModal
+        open={showPremiumModal}
+        onOpenChange={setShowPremiumModal}
+        feature="Play Album"
+      />
+      <SubscriptionExpiredModal
+        open={showExpiredModal}
+        onOpenChange={setShowExpiredModal}
+      />
+
+      <Link 
+        to={`/album/${album.id}`}
+        className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300 block"
+      >
+        {/* Album Art */}
+        <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">
+          {album.cover_art_url ? (
+            <img
+              src={album.cover_art_url}
+              alt={album.title}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Disc3 className="w-16 h-16 text-muted-foreground/50" />
+            </div>
+          )}
+          
+          {/* Release Type Badge */}
+          <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-background/80 backdrop-blur-sm">
+            <span className="text-xs font-medium text-primary uppercase">
+              {album.release_type}
+            </span>
           </div>
-        )}
-        
-        {/* Release Type Badge */}
-        <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-background/80 backdrop-blur-sm">
-          <span className="text-xs font-medium text-primary uppercase">
-            {album.release_type}
-          </span>
+
+          {/* Play Button Overlay */}
+          <CardHoverOverlay>
+            <Button 
+              size="icon" 
+              className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 w-12 h-12 relative"
+              onClick={handlePlayAlbum}
+            >
+              <Play className="w-5 h-5 ml-0.5" />
+              {!canUseFeature("addToQueue") && (
+                <Lock className="h-3 w-3 absolute -top-1 -right-1 text-primary-foreground bg-background rounded-full p-0.5" />
+              )}
+            </Button>
+          </CardHoverOverlay>
         </div>
 
-        {/* Play Button Overlay */}
-        <CardHoverOverlay>
-          <Button 
-            size="icon" 
-            className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 w-12 h-12"
-            onClick={handlePlayAlbum}
-          >
-            <Play className="w-5 h-5 ml-0.5" />
-          </Button>
-        </CardHoverOverlay>
-      </div>
-
-      {/* Album Info */}
-      <div>
-        <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-          {album.title}
-        </h3>
-        <p className="text-sm text-muted-foreground truncate">
-          {album.artist?.display_name || "Unknown Artist"}
-        </p>
-        <div className="flex items-center justify-between mt-2">
-          {album.genre && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-muted/50 text-muted-foreground">
-              {album.genre}
-            </span>
-          )}
-          {album.total_price !== null && album.total_price > 0 && (
-            <span className="text-sm font-medium text-primary">
-              {formatPrice(album.total_price)}
-            </span>
-          )}
+        {/* Album Info */}
+        <div>
+          <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+            {album.title}
+          </h3>
+          <p className="text-sm text-muted-foreground truncate">
+            {album.artist?.display_name || "Unknown Artist"}
+          </p>
+          <div className="flex items-center justify-between mt-2">
+            {album.genre && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-muted/50 text-muted-foreground">
+                {album.genre}
+              </span>
+            )}
+            {album.total_price !== null && album.total_price > 0 && (
+              <span className="text-sm font-medium text-primary">
+                {formatPrice(album.total_price)}
+              </span>
+            )}
+          </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </>
   );
 }
