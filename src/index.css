@@ -75,10 +75,10 @@
     font-family: 'Inter', system-ui, sans-serif;
     background-color: hsl(var(--background));
     background-image: url('/images/music-pattern-bg.jpg');
-    background-size: cover;
-    background-position: center;
+    background-size: 400px auto;
+    background-position: top center;
     background-attachment: fixed;
-    background-repeat: no-repeat;
+    background-repeat: repeat;
     min-height: 100vh;
   }
 }
