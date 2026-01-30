@@ -82,10 +82,18 @@ export function useStripeConnect() {
       }
 
       if (data?.url) {
-        await openExternalUrl(data.url);
+        showFeedback({ type: "info", title: "Opening Stripe", message: "Opening Stripe setup in your browser..." });
+        try {
+          await openExternalUrl(data.url);
+        } catch (browserErr) {
+          console.error("Failed to open browser:", browserErr);
+          // Fallback: try window.open directly
+          window.open(data.url, "_blank");
+        }
         return data.url;
       }
 
+      showFeedback({ type: "error", title: "Setup Failed", message: "No setup URL received. Please try again." });
       return null;
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred";

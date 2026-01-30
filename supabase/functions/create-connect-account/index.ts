@@ -80,7 +80,14 @@ serve(async (req) => {
         
         if (account.details_submitted) {
           // Account is complete, create login link to dashboard
+          logStep("Creating login link for active account");
           const loginLink = await stripe.accounts.createLoginLink(profile.stripe_account_id);
+          
+          if (!loginLink?.url) {
+            throw new Error("Failed to create Stripe login link - no URL returned");
+          }
+          
+          logStep("Login link created successfully", { url: loginLink.url.substring(0, 50) + "..." });
           return new Response(
             JSON.stringify({ 
               url: loginLink.url,
@@ -93,6 +100,7 @@ serve(async (req) => {
           );
         } else {
           // Account exists but onboarding not complete, create new onboarding link
+          logStep("Creating onboarding link for pending account");
           const accountLink = await stripe.accountLinks.create({
             account: profile.stripe_account_id,
             refresh_url: `${origin}${payoutsPath}?refresh=true`,
@@ -100,6 +108,11 @@ serve(async (req) => {
             type: "account_onboarding",
           });
 
+          if (!accountLink?.url) {
+            throw new Error("Failed to create Stripe onboarding link - no URL returned");
+          }
+
+          logStep("Onboarding link created successfully", { url: accountLink.url.substring(0, 50) + "..." });
           return new Response(
             JSON.stringify({ 
               url: accountLink.url,
@@ -153,6 +166,7 @@ serve(async (req) => {
     }
 
     // Create account link for onboarding
+    logStep("Creating initial onboarding link for new account");
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
       refresh_url: `${origin}${payoutsPath}?refresh=true`,
@@ -160,7 +174,11 @@ serve(async (req) => {
       type: "account_onboarding",
     });
 
-    logStep("Account link created", { url: accountLink.url });
+    if (!accountLink?.url) {
+      throw new Error("Failed to create Stripe onboarding link - no URL returned");
+    }
+
+    logStep("Initial onboarding link created successfully", { url: accountLink.url.substring(0, 50) + "..." });
 
     return new Response(
       JSON.stringify({ 

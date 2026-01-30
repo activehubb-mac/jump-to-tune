@@ -17,7 +17,14 @@ export const isNativeApp = (): boolean => {
  */
 export const openExternalUrl = async (url: string): Promise<void> => {
   if (isNativeApp()) {
-    await Browser.open({ url, presentationStyle: "popover" });
+    try {
+      // Use fullscreen for better visibility on mobile
+      await Browser.open({ url, presentationStyle: "fullscreen" });
+    } catch (err) {
+      console.error("Capacitor Browser.open failed:", err);
+      // Fallback to window.open if Capacitor fails
+      window.open(url, "_blank");
+    }
   } else {
     window.open(url, "_blank");
   }
