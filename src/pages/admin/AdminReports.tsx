@@ -154,7 +154,7 @@ export default function AdminReports() {
               {filteredReports.map((report) => (
                 <div
                   key={report.id}
-                  className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg bg-muted/30"
+                  className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg glass-card"
                 >
                   {/* Report Info */}
                   <div className="flex items-center gap-3 flex-1 min-w-0">
