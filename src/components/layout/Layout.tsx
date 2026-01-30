@@ -17,7 +17,33 @@ export function Layout({
   const { isPlayerVisible } = useAudioPlayer();
   
   return (
-    <div className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full">
+    <div className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full relative">
+      {/* Glow Orbs - Premium Background Effect */}
+      <div 
+        className="fixed pointer-events-none rounded-full opacity-60"
+        style={{
+          width: '800px',
+          height: '800px',
+          background: 'rgba(138, 180, 255, 0.18)',
+          filter: 'blur(120px)',
+          top: '-200px',
+          left: '-200px',
+          zIndex: -3,
+        }}
+      />
+      <div 
+        className="fixed pointer-events-none rounded-full opacity-60"
+        style={{
+          width: '800px',
+          height: '800px',
+          background: 'rgba(255, 200, 120, 0.16)',
+          filter: 'blur(120px)',
+          bottom: '-300px',
+          right: '-300px',
+          zIndex: -3,
+        }}
+      />
+      
       {/* Fixed Navbar - z-50 ensures it stays above everything */}
       <Navbar />
       

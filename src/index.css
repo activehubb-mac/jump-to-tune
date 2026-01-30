@@ -73,13 +73,55 @@
   body {
     @apply text-foreground;
     font-family: 'Inter', system-ui, sans-serif;
-    background-color: hsl(var(--background));
-    background-image: url('/images/cosmic-bg.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
     min-height: 100vh;
+    
+    /* CSS-Only Cosmic Background */
+    background:
+      radial-gradient(
+        circle at top left,
+        #1b1f3b 0%,
+        #0b0f1a 45%,
+        #05070f 100%
+      );
+    background-attachment: fixed;
+  }
+
+  /* Diagonal Energy Streaks - Premium Feel */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      linear-gradient(
+        135deg,
+        rgba(138, 180, 255, 0.15),
+        rgba(138, 180, 255, 0.05) 40%,
+        transparent 60%
+      ),
+      linear-gradient(
+        160deg,
+        rgba(255, 200, 120, 0.12),
+        transparent 65%
+      );
+    pointer-events: none;
+    z-index: -2;
+  }
+
+  /* CSS-Only Noise Overlay */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      repeating-radial-gradient(
+        rgba(255,255,255,0.02) 0,
+        rgba(255,255,255,0.02) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: -1;
   }
 }
 
