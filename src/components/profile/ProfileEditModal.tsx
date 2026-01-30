@@ -238,7 +238,7 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
             <p className="text-xs text-muted-foreground">
               Choose how your name appears on your profile
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-2">
               {PROFILE_FONTS.map((font) => (
                 <button
                   key={font.id}
@@ -253,7 +253,7 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
                   )}
                 >
                   <span
-                    className="text-lg text-foreground truncate block"
+                    className="text-base sm:text-lg text-foreground truncate block"
                     style={{ fontFamily: `'${font.id}', sans-serif` }}
                   >
                     {displayName || "Your Name"}
