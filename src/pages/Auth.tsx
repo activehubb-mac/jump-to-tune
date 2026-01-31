@@ -521,9 +521,9 @@ export default function Auth() {
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <img 
-                src="/images/jumtunes-new-logo.png" 
+                src="/images/jumtunes-logo.png" 
                 alt="JumTunes" 
-                className="h-32 w-auto object-contain"
+                className="h-64 w-auto object-contain"
               />
             </div>
             <h1 className="text-3xl font-bold text-foreground">
