@@ -232,9 +232,9 @@ export default function Onboarding() {
             <div className="text-center space-y-4 sm:space-y-6">
               <div className="flex justify-center">
                 <img 
-                  src="/images/jumtunes-logo.png" 
+                  src="/images/jumtunes-logo-test.png" 
                   alt="JumTunes" 
-                  className="h-48 sm:h-72 w-auto object-contain"
+                  className="h-50 w-auto object-contain"
                 />
               </div>
               <div>
@@ -544,14 +544,6 @@ export default function Onboarding() {
         </div>
       </div>
 
-      {/* Logo */}
-      <div className="relative z-10 pb-8 flex justify-center">
-        <img 
-          src="/images/jumtunes-logo.png" 
-          alt="JumTunes" 
-          className="h-40 w-auto object-contain opacity-60"
-        />
-      </div>
     </div>
   );
 }
