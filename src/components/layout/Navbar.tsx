@@ -118,7 +118,7 @@ export function Navbar() {
             {/* Logo */}
             <Link to="/" className="flex items-center group">
               <img 
-                src="/images/jumtunes-logo.png" 
+                src="/images/jumtunes-logo-test.png" 
                 alt="JumTunes" 
                 className="h-14 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
               />
