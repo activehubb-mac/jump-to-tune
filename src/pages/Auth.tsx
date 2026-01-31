@@ -8,6 +8,7 @@ import { Music, Mail, Lock, User, Building2, Headphones, ArrowRight, Loader2, Re
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { SignupConfirmationModal } from "@/components/auth/SignupConfirmationModal";
 
 type AuthMode = "signin" | "signup";
 type UserRole = "fan" | "artist" | "label";
@@ -40,8 +41,6 @@ const getEmailProvider = (email: string) => {
   }
   return null;
 };
-
-import { SignupConfirmationModal } from "@/components/auth/SignupConfirmationModal";
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
