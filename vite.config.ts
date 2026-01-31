@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "images/jumtunes-logo.png"],
+      includeAssets: ["favicon.ico", "images/jumtunes-app-icon.png"],
       manifest: {
         name: "JumTunes",
         short_name: "JumTunes",
@@ -35,16 +35,16 @@ export default defineConfig(({ mode }) => ({
         categories: ["music", "entertainment"],
         icons: [
           {
-            src: "/images/jumtunes-new-logo.png",
+            src: "/images/jumtunes-app-icon.png",
             sizes: "192x192",
             type: "image/png",
-            purpose: "any maskable"
+            purpose: "any"
           },
           {
-            src: "/images/jumtunes-new-logo.png",
+            src: "/images/jumtunes-app-icon.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "any maskable"
+            purpose: "any"
           }
         ]
       },
