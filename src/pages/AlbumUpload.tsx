@@ -419,7 +419,7 @@ export default function AlbumUpload() {
                     </SelectContent>
                   </Select>
                 </div>
-              )
+              )}
 
               <FormField
                 control={form.control}

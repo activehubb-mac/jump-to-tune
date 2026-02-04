@@ -482,7 +482,7 @@ export default function TrackEdit() {
                   </SelectContent>
                 </Select>
               </div>
-            )
+            )}
 
             {/* Feature Artists */}
             <FeatureArtistsSelector
