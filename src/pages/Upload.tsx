@@ -89,6 +89,12 @@ export default function Upload() {
   });
   const [rightsConfirmed, setRightsConfirmed] = useState(false);
   const [rightsError, setRightsError] = useState<string | undefined>();
+  
+  // Sub-genre state
+  const [subGenre, setSubGenre] = useState("");
+  const selectedMainGenre = form.watch("genre") || "";
+  const availableSubGenres = getSubGenres(selectedMainGenre);
+  const showSubGenreDropdown = hasSubGenres(selectedMainGenre);
 
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadFormSchema),
