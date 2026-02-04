@@ -23,7 +23,7 @@ import CreditsSection, { TrackCredits } from "@/components/upload/CreditsSection
 import FeatureArtistsSelector from "@/components/upload/FeatureArtistsSelector";
 import ExplicitToggle from "@/components/upload/ExplicitToggle";
 
-import { MAIN_GENRES } from "@/lib/genres";
+import { MAIN_GENRES, getSubGenres, hasSubGenres, parseGenreValue, combineGenreValue } from "@/lib/genres";
 
 interface FeatureArtist {
   id: string;
