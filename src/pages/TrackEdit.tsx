@@ -444,11 +444,17 @@ export default function TrackEdit() {
               </div>
               <div>
                 <Label htmlFor="genre">Genre</Label>
-                <Select value={genre} onValueChange={setGenre}>
+                <Select 
+                  value={genre} 
+                  onValueChange={(value) => {
+                    setGenre(value);
+                    setSubGenre(""); // Reset sub-genre when main genre changes
+                  }}
+                >
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select genre" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border-glass-border">
                     {MAIN_GENRES.map((g) => (
                       <SelectItem key={g} value={g}>
                         {g}
@@ -457,6 +463,26 @@ export default function TrackEdit() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Sub-Genre Dropdown - Only shown when main genre has sub-genres */}
+            {showSubGenreDropdown && (
+              <div>
+                <Label htmlFor="subGenre">Sub-Genre (optional)</Label>
+                <Select value={subGenre} onValueChange={setSubGenre}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select a sub-genre" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border-glass-border">
+                    {availableSubGenres.map((sg) => (
+                      <SelectItem key={sg} value={sg}>
+                        {sg}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )
             </div>
 
             {/* Feature Artists */}
