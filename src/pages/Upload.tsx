@@ -355,7 +355,10 @@ export default function Upload() {
                         <InfoTooltip content="Select a genre that best represents your sound. This helps fans discover your music through browse filters." />
                       </FormLabel>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setSubGenre(""); // Reset sub-genre when main genre changes
+                        }}
                         value={field.value}
                         disabled={isUploading}
                       >
@@ -376,6 +379,33 @@ export default function Upload() {
                     </FormItem>
                   )}
                 />
+              </div>
+
+              {/* Sub-Genre Dropdown - Only shown when main genre has sub-genres */}
+              {showSubGenreDropdown && (
+                <div className="mt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="text-sm font-medium text-foreground">Sub-Genre (optional)</label>
+                    <InfoTooltip content="Choose a more specific sub-genre to help fans find your music more easily." />
+                  </div>
+                  <Select
+                    onValueChange={setSubGenre}
+                    value={subGenre}
+                    disabled={isUploading}
+                  >
+                    <SelectTrigger className="bg-muted/50 border-glass-border focus:border-primary">
+                      <SelectValue placeholder="Select a sub-genre" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border-glass-border">
+                      {availableSubGenres.map((sg) => (
+                        <SelectItem key={sg} value={sg}>
+                          {sg}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               </div>
 
               {/* Feature Artists */}
