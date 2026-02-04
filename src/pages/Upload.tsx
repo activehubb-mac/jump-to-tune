@@ -217,7 +217,7 @@ export default function Upload() {
       {
         title: values.title,
         description: values.description || "",
-        genre: values.genre || "",
+        genre: combineGenreValue(values.genre || "", subGenre),
         price: values.price,
         totalEditions: values.totalEditions,
         artistId: values.artistId,
