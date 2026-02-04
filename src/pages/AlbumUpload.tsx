@@ -70,6 +70,12 @@ export default function AlbumUpload() {
   const [rightsConfirmed, setRightsConfirmed] = useState(false);
   const [rightsError, setRightsError] = useState<string | undefined>();
 
+  // Sub-genre state
+  const [subGenre, setSubGenre] = useState("");
+  const selectedMainGenre = form.watch("genre") || "";
+  const availableSubGenres = getSubGenres(selectedMainGenre);
+  const showSubGenreDropdown = hasSubGenres(selectedMainGenre);
+
   const form = useForm<AlbumFormValues>({
     resolver: zodResolver(albumFormSchema),
     defaultValues: {
