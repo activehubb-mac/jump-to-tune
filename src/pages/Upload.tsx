@@ -92,9 +92,6 @@ export default function Upload() {
   
   // Sub-genre state
   const [subGenre, setSubGenre] = useState("");
-  const selectedMainGenre = form.watch("genre") || "";
-  const availableSubGenres = getSubGenres(selectedMainGenre);
-  const showSubGenreDropdown = hasSubGenres(selectedMainGenre);
 
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadFormSchema),
@@ -107,6 +104,11 @@ export default function Upload() {
       artistId: undefined,
     },
   });
+
+  // Sub-genre derived state (must be after form)
+  const selectedMainGenre = form.watch("genre") || "";
+  const availableSubGenres = getSubGenres(selectedMainGenre);
+  const showSubGenreDropdown = hasSubGenres(selectedMainGenre);
 
   // Show loading state while checking auth
   if (isLoading) {

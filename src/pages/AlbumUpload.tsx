@@ -72,9 +72,6 @@ export default function AlbumUpload() {
 
   // Sub-genre state
   const [subGenre, setSubGenre] = useState("");
-  const selectedMainGenre = form.watch("genre") || "";
-  const availableSubGenres = getSubGenres(selectedMainGenre);
-  const showSubGenreDropdown = hasSubGenres(selectedMainGenre);
 
   const form = useForm<AlbumFormValues>({
     resolver: zodResolver(albumFormSchema),
@@ -85,6 +82,11 @@ export default function AlbumUpload() {
       artistId: undefined,
     },
   });
+
+  // Sub-genre derived state (must be after form)
+  const selectedMainGenre = form.watch("genre") || "";
+  const availableSubGenres = getSubGenres(selectedMainGenre);
+  const showSubGenreDropdown = hasSubGenres(selectedMainGenre);
 
   // Convert bulk audio files to album track data
   const handleBulkAudioChange = (audioTracks: AudioTrackFile[]) => {
