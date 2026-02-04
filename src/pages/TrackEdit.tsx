@@ -60,6 +60,11 @@ export default function TrackEdit() {
     displayLabelName: "",
   });
 
+  // Sub-genre state
+  const [subGenre, setSubGenre] = useState("");
+  const availableSubGenres = getSubGenres(genre);
+  const showSubGenreDropdown = hasSubGenres(genre);
+
   // Fetch track data
   const { data: track, isLoading: trackLoading } = useQuery({
     queryKey: ["track", id],
