@@ -219,7 +219,7 @@ export default function TrackEdit() {
         .update({
           title,
           description: description || null,
-          genre: genre || null,
+          genre: combineGenreValue(genre, subGenre) || null,
           price: parseFloat(price) || 0,
           total_editions: parseInt(totalEditions) || 100,
           is_draft: isDraft,
