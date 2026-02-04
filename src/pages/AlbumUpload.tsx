@@ -227,7 +227,7 @@ export default function AlbumUpload() {
       {
         title: values.title,
         description: values.description || "",
-        genre: values.genre || "",
+        genre: combineGenreValue(values.genre || "", subGenre),
         releaseType,
         artistId: values.artistId,
       },
