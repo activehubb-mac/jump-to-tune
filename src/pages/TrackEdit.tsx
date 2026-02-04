@@ -135,7 +135,12 @@ export default function TrackEdit() {
     if (track) {
       setTitle(track.title);
       setDescription(track.description || "");
-      setGenre(track.genre || "");
+      
+      // Parse stored genre into main genre and sub-genre
+      const { mainGenre, subGenre: parsedSubGenre } = parseGenreValue(track.genre || "");
+      setGenre(mainGenre);
+      setSubGenre(parsedSubGenre);
+      
       setPrice(track.price.toString());
       setTotalEditions(track.total_editions.toString());
       setIsDraft(track.is_draft ?? true);
