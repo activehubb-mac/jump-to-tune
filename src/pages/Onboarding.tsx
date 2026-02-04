@@ -13,10 +13,7 @@ import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { useDownload } from "@/hooks/useDownload";
 import { cn } from "@/lib/utils";
 
-const GENRE_OPTIONS = [
-  "Hip Hop", "R&B", "Pop", "Rock", "Electronic", "Jazz",
-  "Classical", "Country", "Reggae", "Afrobeats", "Latin", "Indie"
-];
+import { ONBOARDING_GENRES } from "@/lib/genres";
 
 const SUBSCRIPTION_TIERS = [
   {
@@ -371,7 +368,7 @@ export default function Onboarding() {
               </div>
 
               <div className="flex flex-wrap gap-2 justify-center py-4">
-                {GENRE_OPTIONS.map((genre) => (
+                {ONBOARDING_GENRES.map((genre) => (
                   <button
                     key={genre}
                     type="button"

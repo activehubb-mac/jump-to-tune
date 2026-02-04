@@ -39,28 +39,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-const GENRES = [
-  "Electronic",
-  "Hip Hop",
-  "Pop",
-  "R&B",
-  "Rock",
-  "Jazz",
-  "Classical",
-  "Country",
-  "Reggae",
-  "Latin",
-  "Afrobeat",
-  "Indie",
-  "Alternative",
-  "Dance",
-  "House",
-  "Techno",
-  "Ambient",
-  "Soul",
-  "Folk",
-  "Metal",
-] as const;
+import { MAIN_GENRES } from "@/lib/genres";
 
 const uploadFormSchema = z.object({
   title: z.string().min(1, "Track title is required").max(100, "Title must be less than 100 characters"),
@@ -380,7 +359,7 @@ export default function Upload() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-background border-glass-border">
-                          {GENRES.map((genre) => (
+                          {MAIN_GENRES.map((genre) => (
                             <SelectItem key={genre} value={genre}>
                               {genre}
                             </SelectItem>
