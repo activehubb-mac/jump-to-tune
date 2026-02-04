@@ -36,7 +36,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { MAIN_GENRES } from "@/lib/genres";
+import { MAIN_GENRES, getSubGenres, hasSubGenres, combineGenreValue } from "@/lib/genres";
 
 const albumFormSchema = z.object({
   title: z.string().min(1, "Album title is required").max(100, "Title must be less than 100 characters"),
