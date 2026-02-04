@@ -23,7 +23,7 @@ import CreditsSection, { TrackCredits } from "@/components/upload/CreditsSection
 import FeatureArtistsSelector from "@/components/upload/FeatureArtistsSelector";
 import ExplicitToggle from "@/components/upload/ExplicitToggle";
 
-import { MAIN_GENRES } from "@/lib/genres";
+import { MAIN_GENRES, getSubGenres, hasSubGenres, parseGenreValue, combineGenreValue } from "@/lib/genres";
 
 interface FeatureArtist {
   id: string;
@@ -59,6 +59,11 @@ export default function TrackEdit() {
     engineers: [],
     displayLabelName: "",
   });
+
+  // Sub-genre state
+  const [subGenre, setSubGenre] = useState("");
+  const availableSubGenres = getSubGenres(genre);
+  const showSubGenreDropdown = hasSubGenres(genre);
 
   // Fetch track data
   const { data: track, isLoading: trackLoading } = useQuery({
@@ -130,7 +135,12 @@ export default function TrackEdit() {
     if (track) {
       setTitle(track.title);
       setDescription(track.description || "");
-      setGenre(track.genre || "");
+      
+      // Parse stored genre into main genre and sub-genre
+      const { mainGenre, subGenre: parsedSubGenre } = parseGenreValue(track.genre || "");
+      setGenre(mainGenre);
+      setSubGenre(parsedSubGenre);
+      
       setPrice(track.price.toString());
       setTotalEditions(track.total_editions.toString());
       setIsDraft(track.is_draft ?? true);
@@ -209,7 +219,7 @@ export default function TrackEdit() {
         .update({
           title,
           description: description || null,
-          genre: genre || null,
+          genre: combineGenreValue(genre, subGenre) || null,
           price: parseFloat(price) || 0,
           total_editions: parseInt(totalEditions) || 100,
           is_draft: isDraft,
@@ -434,11 +444,17 @@ export default function TrackEdit() {
               </div>
               <div>
                 <Label htmlFor="genre">Genre</Label>
-                <Select value={genre} onValueChange={setGenre}>
+                <Select 
+                  value={genre} 
+                  onValueChange={(value) => {
+                    setGenre(value);
+                    setSubGenre(""); // Reset sub-genre when main genre changes
+                  }}
+                >
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select genre" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border-glass-border">
                     {MAIN_GENRES.map((g) => (
                       <SelectItem key={g} value={g}>
                         {g}
@@ -448,6 +464,25 @@ export default function TrackEdit() {
                 </Select>
               </div>
             </div>
+
+            {/* Sub-Genre Dropdown - Only shown when main genre has sub-genres */}
+            {showSubGenreDropdown && (
+              <div>
+                <Label htmlFor="subGenre">Sub-Genre (optional)</Label>
+                <Select value={subGenre} onValueChange={setSubGenre}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select a sub-genre" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border-glass-border">
+                    {availableSubGenres.map((sg) => (
+                      <SelectItem key={sg} value={sg}>
+                        {sg}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Feature Artists */}
             <FeatureArtistsSelector

@@ -113,6 +113,34 @@ export function getSubGenres(mainGenre: string): readonly string[] {
   return SUB_GENRES[mainGenre] || [];
 }
 
+// Check if a genre has sub-genres
+export function hasSubGenres(mainGenre: string): boolean {
+  return mainGenre in SUB_GENRES && SUB_GENRES[mainGenre].length > 0;
+}
+
+// Parse a stored genre value into main genre and sub-genre
+export function parseGenreValue(storedGenre: string): { mainGenre: string; subGenre: string } {
+  if (!storedGenre) return { mainGenre: "", subGenre: "" };
+  
+  // Check if it contains a sub-genre separator
+  const separatorIndex = storedGenre.indexOf(" - ");
+  if (separatorIndex > -1) {
+    return {
+      mainGenre: storedGenre.substring(0, separatorIndex),
+      subGenre: storedGenre.substring(separatorIndex + 3),
+    };
+  }
+  
+  return { mainGenre: storedGenre, subGenre: "" };
+}
+
+// Combine main genre and sub-genre into a single stored value
+export function combineGenreValue(mainGenre: string, subGenre: string): string {
+  if (!mainGenre) return "";
+  if (!subGenre) return mainGenre;
+  return `${mainGenre} - ${subGenre}`;
+}
+
 // All genres flattened (main + sub-genres)
 export const ALL_GENRES: string[] = [
   ...MAIN_GENRES,

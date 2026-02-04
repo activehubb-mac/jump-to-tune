@@ -36,7 +36,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { MAIN_GENRES } from "@/lib/genres";
+import { MAIN_GENRES, getSubGenres, hasSubGenres, combineGenreValue } from "@/lib/genres";
 
 const albumFormSchema = z.object({
   title: z.string().min(1, "Album title is required").max(100, "Title must be less than 100 characters"),
@@ -70,6 +70,9 @@ export default function AlbumUpload() {
   const [rightsConfirmed, setRightsConfirmed] = useState(false);
   const [rightsError, setRightsError] = useState<string | undefined>();
 
+  // Sub-genre state
+  const [subGenre, setSubGenre] = useState("");
+
   const form = useForm<AlbumFormValues>({
     resolver: zodResolver(albumFormSchema),
     defaultValues: {
@@ -79,6 +82,11 @@ export default function AlbumUpload() {
       artistId: undefined,
     },
   });
+
+  // Sub-genre derived state (must be after form)
+  const selectedMainGenre = form.watch("genre") || "";
+  const availableSubGenres = getSubGenres(selectedMainGenre);
+  const showSubGenreDropdown = hasSubGenres(selectedMainGenre);
 
   // Convert bulk audio files to album track data
   const handleBulkAudioChange = (audioTracks: AudioTrackFile[]) => {
@@ -221,7 +229,7 @@ export default function AlbumUpload() {
       {
         title: values.title,
         description: values.description || "",
-        genre: values.genre || "",
+        genre: combineGenreValue(values.genre || "", subGenre),
         releaseType,
         artistId: values.artistId,
       },
@@ -363,7 +371,10 @@ export default function AlbumUpload() {
                         <InfoTooltip content="Primary genre for this release. Individual tracks inherit this genre." />
                       </FormLabel>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setSubGenre(""); // Reset sub-genre when main genre changes
+                        }}
                         value={field.value}
                         disabled={isUploading}
                       >
@@ -385,6 +396,32 @@ export default function AlbumUpload() {
                   )}
                 />
               </div>
+
+              {/* Sub-Genre Dropdown - Only shown when main genre has sub-genres */}
+              {showSubGenreDropdown && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="text-sm font-medium text-foreground">Sub-Genre (optional)</label>
+                    <InfoTooltip content="Choose a more specific sub-genre for your release." />
+                  </div>
+                  <Select
+                    onValueChange={setSubGenre}
+                    value={subGenre}
+                    disabled={isUploading}
+                  >
+                    <SelectTrigger className="bg-muted/50 border-glass-border focus:border-primary">
+                      <SelectValue placeholder="Select a sub-genre" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border-glass-border">
+                      {availableSubGenres.map((sg) => (
+                        <SelectItem key={sg} value={sg}>
+                          {sg}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <FormField
                 control={form.control}
