@@ -23,28 +23,7 @@ import CreditsSection, { TrackCredits } from "@/components/upload/CreditsSection
 import FeatureArtistsSelector from "@/components/upload/FeatureArtistsSelector";
 import ExplicitToggle from "@/components/upload/ExplicitToggle";
 
-const GENRES = [
-  "Electronic",
-  "Hip Hop",
-  "Pop",
-  "R&B",
-  "Rock",
-  "Jazz",
-  "Classical",
-  "Country",
-  "Reggae",
-  "Latin",
-  "Afrobeat",
-  "Indie",
-  "Alternative",
-  "Dance",
-  "House",
-  "Techno",
-  "Ambient",
-  "Soul",
-  "Folk",
-  "Metal",
-];
+import { MAIN_GENRES } from "@/lib/genres";
 
 interface FeatureArtist {
   id: string;
@@ -460,7 +439,7 @@ export default function TrackEdit() {
                     <SelectValue placeholder="Select genre" />
                   </SelectTrigger>
                   <SelectContent>
-                    {GENRES.map((g) => (
+                    {MAIN_GENRES.map((g) => (
                       <SelectItem key={g} value={g}>
                         {g}
                       </SelectItem>

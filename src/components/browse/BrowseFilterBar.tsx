@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
-const genres = ["All", "Electronic", "Hip Hop", "R&B", "Pop", "Rock", "Jazz", "Classical", "Indie"];
+import { BROWSE_QUICK_GENRES } from "@/lib/genres";
 const moods = ["All", "Chill", "Energetic", "Dark", "Uplifting", "Melancholic", "Romantic", "Aggressive", "Dreamy", "Funky"];
 
 type SortOption = "newest" | "oldest" | "popular" | "price_low" | "price_high";
@@ -77,7 +77,7 @@ export function BrowseFilterBar({
       <div className="mb-3">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider mr-3">Genre</span>
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mt-2 -mx-1 px-1">
-          {genres.map((genre) => (
+          {BROWSE_QUICK_GENRES.map((genre) => (
             <button
               key={genre}
               onClick={() => onGenreChange(genre)}
