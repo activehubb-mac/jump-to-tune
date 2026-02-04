@@ -406,7 +406,6 @@ export default function Upload() {
                   </Select>
                 </div>
               )}
-              </div>
 
               {/* Feature Artists */}
               <FeatureArtistsSelector

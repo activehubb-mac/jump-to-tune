@@ -369,7 +369,10 @@ export default function AlbumUpload() {
                         <InfoTooltip content="Primary genre for this release. Individual tracks inherit this genre." />
                       </FormLabel>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setSubGenre(""); // Reset sub-genre when main genre changes
+                        }}
                         value={field.value}
                         disabled={isUploading}
                       >
@@ -391,6 +394,32 @@ export default function AlbumUpload() {
                   )}
                 />
               </div>
+
+              {/* Sub-Genre Dropdown - Only shown when main genre has sub-genres */}
+              {showSubGenreDropdown && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="text-sm font-medium text-foreground">Sub-Genre (optional)</label>
+                    <InfoTooltip content="Choose a more specific sub-genre for your release." />
+                  </div>
+                  <Select
+                    onValueChange={setSubGenre}
+                    value={subGenre}
+                    disabled={isUploading}
+                  >
+                    <SelectTrigger className="bg-muted/50 border-glass-border focus:border-primary">
+                      <SelectValue placeholder="Select a sub-genre" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border-glass-border">
+                      {availableSubGenres.map((sg) => (
+                        <SelectItem key={sg} value={sg}>
+                          {sg}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )
 
               <FormField
                 control={form.control}

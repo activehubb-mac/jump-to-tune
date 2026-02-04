@@ -1,10 +1,10 @@
-import { Search, Mic2, X } from "lucide-react";
+import { Search, Mic2, X, Music } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
-import { BROWSE_QUICK_GENRES } from "@/lib/genres";
+import { MAIN_GENRES } from "@/lib/genres";
 const moods = ["All", "Chill", "Energetic", "Dark", "Uplifting", "Melancholic", "Romantic", "Aggressive", "Dreamy", "Funky"];
 
 type SortOption = "newest" | "oldest" | "popular" | "price_low" | "price_high";
@@ -73,23 +73,24 @@ export function BrowseFilterBar({
         </Select>
       </div>
 
-      {/* Genre Pills */}
-      <div className="mb-3">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider mr-3">Genre</span>
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mt-2 -mx-1 px-1">
-          {BROWSE_QUICK_GENRES.map((genre) => (
-            <button
-              key={genre}
-              onClick={() => onGenreChange(genre)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap shrink-0 ${
-                selectedGenre === genre
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              {genre}
-            </button>
-          ))}
+      {/* Genre Dropdown & Mood Pills Row */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-3">
+        {/* Genre Dropdown */}
+        <div className="flex items-center gap-2">
+          <Music className="w-4 h-4 text-muted-foreground shrink-0" />
+          <Select value={selectedGenre} onValueChange={onGenreChange}>
+            <SelectTrigger className="w-full sm:w-[200px] bg-background border-border h-9">
+              <SelectValue placeholder="All Genres" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border-border max-h-[300px]">
+              <SelectItem value="All">All Genres</SelectItem>
+              {MAIN_GENRES.map((genre) => (
+                <SelectItem key={genre} value={genre}>
+                  {genre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

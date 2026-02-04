@@ -483,7 +483,6 @@ export default function TrackEdit() {
                 </Select>
               </div>
             )
-            </div>
 
             {/* Feature Artists */}
             <FeatureArtistsSelector
