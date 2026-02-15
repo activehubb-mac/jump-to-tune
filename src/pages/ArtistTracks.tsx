@@ -13,6 +13,8 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useArtistTracks } from "@/hooks/useTracks";
+import { useArtistAlbums } from "@/hooks/useAlbums";
+import { AlbumSection } from "@/components/dashboard/AlbumSection";
 import { TrackCard } from "@/components/dashboard/TrackCard";
 import { TrackDetailModal } from "@/components/dashboard/TrackDetailModal";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +34,7 @@ import {
 export default function ArtistTracks() {
   const { user, role, isLoading } = useAuth();
   const { data: tracks, isLoading: tracksLoading } = useArtistTracks(user?.id);
+  const { data: albums, isLoading: albumsLoading } = useArtistAlbums(user?.id);
   const [deleteTrackId, setDeleteTrackId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState<typeof tracks extends (infer T)[] ? T : never | null>(null);
@@ -142,6 +145,13 @@ export default function ArtistTracks() {
           </Button>
         </div>
 
+        {/* Albums Section */}
+        <AlbumSection albums={albums} isLoading={albumsLoading} statsQueryKey="artist-stats" />
+
+        {/* Tracks */}
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4">
+          Singles & Tracks
+        </h2>
         {tracksLoading ? (
           <div className="flex justify-center py-24">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
