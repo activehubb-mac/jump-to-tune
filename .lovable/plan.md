@@ -1,76 +1,75 @@
 
 
-# Fix: Complete Track and Album Delete Functionality
+# Add "View Credits" from the Global Audio Player
 
 ## Summary
 
-There are three gaps in the delete system: the Label Dashboard delete is broken (only logs to console), there's no way to delete albums/EPs, and there's no way to remove individual tracks from an album. This plan addresses all three.
+Users currently have no way to view track credits (writers, producers, performers) from the audio player while listening. This update adds a credits bottom sheet accessible by tapping the track cover art in the player bar, and also from tracks in the queue panel.
 
 ---
 
-## Change 1: Fix Label Dashboard Delete (Bug Fix)
+## What Will Change
 
-**File:** `src/pages/LabelDashboard.tsx`
+### 1. New Component: TrackCreditsSheet
 
-The `onDelete` handler on line 447 currently does `console.log("Delete track:", id)` instead of actually deleting. This needs the same delete logic that already exists in `ArtistDashboard.tsx` and `LabelTracks.tsx`:
+A new bottom sheet/drawer component that displays track credits in the same categorized layout already used in TrackDetailModal (Writing and Arrangement, Production and Engineering, Performance, Other).
 
-- Add `deleteTrackId` state and `handleDelete` function (same pattern as ArtistDashboard)
-- Replace `console.log` with `setDeleteTrackId(id)`
-- Add the `AlertDialog` delete confirmation modal
+**File:** `src/components/audio/TrackCreditsSheet.tsx`
 
----
+- Uses the Vaul drawer (already installed) for a swipeable bottom sheet on mobile, dialog on desktop
+- Fetches `track_credits`, `track_features`, and `track_registration` data using React Query (same queries as TrackDetailModal)
+- Shows: cover art, track title, artist name, featured artists, categorized credits, recording protection info
+- Scrollable content area for tracks with many credits
+- Accepts a `trackId` prop so it can show credits for any track (current or queued)
 
-## Change 2: Add Album/EP Delete Capability
+### 2. Player Bar: Cover Art Becomes Clickable
 
-**Files:** `src/pages/ArtistTracks.tsx`, `src/pages/LabelTracks.tsx`
+**File:** `src/components/audio/GlobalAudioPlayer.tsx`
 
-Add album management alongside tracks. Artists and labels need to see their albums and delete them. When an album is deleted, all tracks within it should also be deleted (cascade).
+The cover art thumbnail (line ~571) in the player bar gets an `onClick` handler that opens the credits sheet for the currently playing track.
 
-### Database consideration
-The `albums` table has RLS policies allowing artists to delete their own albums (`auth.uid() = artist_id`) and labels to delete theirs (`auth.uid() = label_id`). However, tracks within the album reference `album_id` -- we need to ensure deleting an album also removes its tracks, or handle this in application logic by deleting tracks first, then the album.
+- Add a subtle visual hint (e.g., a small `Mic2` icon overlay on hover) so users know it's tappable
+- On click: close the queue panel if open, then open the credits sheet
 
-### Implementation approach
-- Add an "Albums" tab or section to both `ArtistTracks` and `LabelTracks` pages showing albums/EPs
-- Each album card gets a delete button with confirmation dialog
-- Delete flow: first delete all tracks with matching `album_id`, then delete the album itself
-- Both operations are already permitted by existing RLS policies
+### 3. Queue Panel: Add Credits Button to Track Items
 
----
+**File:** `src/components/audio/GlobalAudioPlayer.tsx`
 
-## Change 3: Remove Individual Tracks from Albums
+Each track in the queue (Now Playing, Up Next, Previously Played) gets a small credits icon button:
 
-**File:** New component or update to `AlbumDetail.tsx`
+- Add a `Mic2` icon button on each queue track row (visible on hover/tap like the existing delete button)
+- Clicking it opens the credits sheet for that specific track
+- The queue panel stays open underneath the credits sheet (credits sheet has higher z-index)
 
-For the album owner (artist or label), show edit/delete actions on individual tracks within the album view:
+### 4. Modal Conflict Handling
 
-- Detect if the current user is the album owner (compare `user.id` with `album.artist_id` or `album.label_id`)
-- If owner, show a delete button on each track row
-- Deleting a track from an album removes it from the `tracks` table (existing RLS allows this)
-- After deletion, the album track list refreshes
+- When the credits sheet opens from the **player bar**, the queue panel closes automatically
+- When the credits sheet opens from a **queue item**, the queue remains visible but the sheet overlays it
+- Only one credits sheet can be open at a time (controlled by a single `creditsTrackId` state)
+- The credits sheet uses z-index higher than the queue panel (queue is z-50, credits sheet will be z-[60])
 
 ---
 
 ## Technical Details
 
-### Delete Album Flow (Application Logic)
-```text
-1. User clicks "Delete Album" -> Confirmation dialog
-2. On confirm:
-   a. DELETE FROM tracks WHERE album_id = :albumId
-   b. DELETE FROM albums WHERE id = :albumId
-3. Invalidate queries: ["tracks"], ["albums"], ["artist-stats"] / ["label-stats"]
-4. Show success feedback
-```
+### State Management (in GlobalAudioPlayer)
+- Add `creditsTrackId: string | null` state
+- `setCreditsTrackId(trackId)` opens the sheet for that track
+- `setCreditsTrackId(null)` closes the sheet
 
-### Files Modified
-- `src/pages/LabelDashboard.tsx` -- fix broken delete handler
-- `src/pages/ArtistTracks.tsx` -- add album section with delete
-- `src/pages/LabelTracks.tsx` -- add album section with delete
-- `src/pages/AlbumDetail.tsx` -- add owner track management (edit/delete per track)
+### Data Fetching (in TrackCreditsSheet)
+Reuses the same Supabase queries from TrackDetailModal:
+- `track_credits` table filtered by `track_id`
+- `track_features` table joined with `profiles_public` for featured artist names
+- `fetchTrackRegistration()` for recording protection info
+- Artist info passed as a prop from the queue/player context
+
+### Files to Create
+- `src/components/audio/TrackCreditsSheet.tsx`
+
+### Files to Modify
+- `src/components/audio/GlobalAudioPlayer.tsx` — add credits state, clickable cover art, credits button in queue items, render TrackCreditsSheet
 
 ### No Database Changes Needed
-All required RLS policies already exist:
-- Artists can delete their own tracks and albums
-- Labels can delete their tracks and albums
-- The delete operations use standard Supabase client calls
+All data is already available via existing tables and queries.
 
