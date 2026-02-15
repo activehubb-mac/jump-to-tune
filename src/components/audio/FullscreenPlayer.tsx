@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1,
   Loader2, MoreHorizontal, ListMusic, Mic2, Heart, FolderPlus, Download,
-  Share2, User, Disc3, Lock, Clock, Mic, MicOff, ChevronRight,
+  Share2, User, Disc3, Lock, Clock, Mic, MicOff, ChevronRight, Shield, UserPlus, UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useFollow } from "@/hooks/useFollows";
 
 function formatTime(seconds: number): string {
   if (!seconds || isNaN(seconds)) return "0:00";
@@ -24,33 +25,6 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-// Credit role categorization (same as TrackCreditsSheet)
-const CREDIT_CATEGORIES: Record<string, string[]> = {
-  "Writing & Arrangement": ["Songwriter", "Composer", "Lyricist", "Arranger", "Co-Writer"],
-  "Production & Engineering": ["Producer", "Executive Producer", "Co-Producer", "Mix Engineer", "Mastering Engineer", "Recording Engineer", "Sound Engineer", "Audio Engineer"],
-  "Performance": ["Vocalist", "Guitarist", "Bassist", "Drummer", "Pianist", "Keyboardist", "DJ", "Instrumentalist", "Background Vocals"],
-};
-
-function categorizeCredits(credits: { name: string; role: string }[]) {
-  const categorized: Record<string, { name: string; role: string }[]> = {};
-  const other: { name: string; role: string }[] = [];
-
-  credits.forEach((credit) => {
-    let found = false;
-    for (const [category, roles] of Object.entries(CREDIT_CATEGORIES)) {
-      if (roles.some((r) => credit.role.toLowerCase().includes(r.toLowerCase()))) {
-        if (!categorized[category]) categorized[category] = [];
-        categorized[category].push(credit);
-        found = true;
-        break;
-      }
-    }
-    if (!found) other.push(credit);
-  });
-
-  if (other.length > 0) categorized["Other"] = other;
-  return categorized;
-}
 
 interface FullscreenPlayerProps {
   albumId?: string | null;
@@ -134,8 +108,40 @@ export function FullscreenPlayer({
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
 
+  const [bioExpanded, setBioExpanded] = useState(false);
+  const { isFollowing, toggleFollow, isToggling } = useFollow();
+
   const artistId = currentTrack.artist?.id;
   const trackId = currentTrack.id;
+
+  // Fetch artist profile (banner, bio, etc.)
+  const { data: artistProfile } = useQuery({
+    queryKey: ["fullscreen-artist-profile", artistId],
+    queryFn: async () => {
+      if (!artistId) return null;
+      const { data } = await supabase
+        .from("profiles_public")
+        .select("id, display_name, avatar_url, banner_image_url, bio")
+        .eq("id", artistId)
+        .maybeSingle();
+      return data;
+    },
+    enabled: open && !!artistId,
+  });
+
+  // Fetch follower count
+  const { data: followerCount } = useQuery({
+    queryKey: ["fullscreen-follower-count", artistId],
+    queryFn: async () => {
+      if (!artistId) return 0;
+      const { count } = await supabase
+        .from("follows")
+        .select("id", { count: "exact", head: true })
+        .eq("following_id", artistId);
+      return count || 0;
+    },
+    enabled: open && !!artistId,
+  });
 
   // Fetch more tracks from this artist
   const { data: artistTracks, isLoading: loadingArtistTracks } = useQuery({
@@ -154,18 +160,6 @@ export function FullscreenPlayer({
     enabled: open && !!artistId,
   });
 
-  // Fetch track credits
-  const { data: trackCredits } = useQuery({
-    queryKey: ["fullscreen-track-credits", trackId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("track_credits")
-        .select("*")
-        .eq("track_id", trackId);
-      return data || [];
-    },
-    enabled: open,
-  });
 
   // Fetch track registration
   const { data: trackRegistration } = useQuery({
@@ -181,8 +175,6 @@ export function FullscreenPlayer({
     enabled: open,
   });
 
-  const categorizedCredits = trackCredits ? categorizeCredits(trackCredits) : {};
-  const hasCredits = trackCredits && trackCredits.length > 0;
 
   const handleSeek = (value: number[]) => {
     seek(value[0]);
@@ -547,68 +539,120 @@ export function FullscreenPlayer({
                 </div>
               )}
 
-              {/* Credits Section */}
-              {hasCredits && (
+              {/* View Song Credits Button */}
+              <button
+                className="flex items-center gap-3 w-full p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-left"
+                onClick={onOpenCredits}
+              >
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+                  <Mic2 className="h-5 w-5 text-[#B8A675]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white">View Song Credits</p>
+                  <p className="text-xs text-white/40">Writers, producers & more</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-white/30 flex-shrink-0" />
+              </button>
+
+              {/* Rich About the Artist Section */}
+              {artistId && artistProfile && (
                 <div>
-                  <h3 className="text-sm font-semibold text-white/80 mb-3">Credits</h3>
-                  <div className="space-y-4">
-                    {Object.entries(categorizedCredits).map(([category, credits]) => (
-                      <div key={category}>
-                        <p className="text-xs text-white/40 uppercase tracking-wider mb-2">{category}</p>
-                        <div className="space-y-1.5">
-                          {credits.map((credit, idx) => (
-                            <div key={idx} className="flex items-center justify-between">
-                              <span className="text-sm text-white/70">{credit.name}</span>
-                              <span className="text-xs text-white/40">{credit.role}</span>
-                            </div>
-                          ))}
-                        </div>
+                  <h3 className="text-sm font-semibold text-white/80 mb-3">About the Artist</h3>
+
+                  {/* Banner Image */}
+                  <div className="relative w-full h-[200px] rounded-xl overflow-hidden bg-white/5">
+                    {artistProfile.banner_image_url ? (
+                      <img
+                        src={artistProfile.banner_image_url}
+                        alt={artistProfile.display_name || ""}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : artistProfile.avatar_url ? (
+                      <img
+                        src={artistProfile.avatar_url}
+                        alt={artistProfile.display_name || ""}
+                        className="w-full h-full object-cover scale-150 blur-sm"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/10 to-white/5">
+                        <User className="w-16 h-16 text-white/20" />
                       </div>
-                    ))}
+                    )}
+                    {/* Gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    {/* Artist name overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <h4 className="text-xl font-bold text-white drop-shadow-lg">
+                        {artistProfile.display_name || "Unknown Artist"}
+                      </h4>
+                    </div>
                   </div>
-                  {trackRegistration?.recording_id && (
-                    <div className="mt-4 pt-3 border-t border-white/10">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-white/40">JumTunes Recording ID</span>
-                        <span className="text-xs text-white/50 font-mono">{trackRegistration.recording_id}</span>
-                      </div>
+
+                  {/* Follower count + Follow button */}
+                  <div className="flex items-center justify-between mt-3">
+                    <p className="text-sm text-white/50">
+                      {followerCount !== undefined
+                        ? `${followerCount.toLocaleString()} follower${followerCount !== 1 ? "s" : ""}`
+                        : ""}
+                    </p>
+                    <Button
+                      size="sm"
+                      variant={isFollowing(artistId) ? "outline" : "default"}
+                      className={cn(
+                        "h-8 px-4 text-xs font-semibold rounded-full",
+                        isFollowing(artistId)
+                          ? "border-white/20 text-white/80 hover:bg-white/10 bg-transparent"
+                          : "bg-[#B8A675] text-black hover:bg-[#B8A675]/90"
+                      )}
+                      onClick={() => toggleFollow(artistId, artistProfile.display_name || undefined)}
+                      disabled={isToggling}
+                    >
+                      {isFollowing(artistId) ? (
+                        <>
+                          <UserCheck className="h-3.5 w-3.5 mr-1" />
+                          Following
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="h-3.5 w-3.5 mr-1" />
+                          Follow
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Bio */}
+                  {artistProfile.bio && (
+                    <div className="mt-3">
+                      <p
+                        className={cn(
+                          "text-sm text-white/60 leading-relaxed whitespace-pre-line",
+                          !bioExpanded && "line-clamp-3"
+                        )}
+                      >
+                        {artistProfile.bio}
+                      </p>
+                      {artistProfile.bio.length > 120 && (
+                        <button
+                          className="text-xs text-[#B8A675] mt-1 hover:underline"
+                          onClick={() => setBioExpanded(!bioExpanded)}
+                        >
+                          {bioExpanded ? "Show less" : "Show more"}
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
               )}
 
-              {/* About the Artist */}
-              {currentTrack.artist && (
-                <div>
-                  <h3 className="text-sm font-semibold text-white/80 mb-3">About the Artist</h3>
-                  <button
-                    className="flex items-center gap-3 w-full p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-left"
-                    onClick={() => {
-                      onClose();
-                      navigate(`/artist/${currentTrack.artist!.id}`);
-                    }}
-                  >
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10 flex-shrink-0">
-                      {(currentTrack.artist as any)?.avatar_url ? (
-                        <img
-                          src={(currentTrack.artist as any).avatar_url}
-                          alt={currentTrack.artist.display_name || ""}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <User className="w-5 h-5 text-white/30" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">
-                        {currentTrack.artist.display_name || "Unknown Artist"}
-                      </p>
-                      <p className="text-xs text-white/40">View full profile</p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-white/30 flex-shrink-0" />
-                  </button>
+              {/* JumTunes Recording ID */}
+              {trackRegistration?.recording_id && (
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                  <Shield className="h-4 w-4 text-[#B8A675] flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-white/40">JumTunes Recording ID</p>
+                    <p className="text-xs text-white/60 font-mono">{trackRegistration.recording_id}</p>
+                  </div>
                 </div>
               )}
             </div>
