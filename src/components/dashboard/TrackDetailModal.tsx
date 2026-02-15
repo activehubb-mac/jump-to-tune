@@ -156,14 +156,30 @@ export function TrackDetailModal({
 
   if (!track) return null;
 
-  // Group credits by role
-  const creditsByRole: Record<string, string[]> = {};
+  // Group credits by category for display like music apps
+  const creditCategories: { label: string; roles: string[]; entries: { name: string; role: string }[] }[] = [
+    { label: "Writing & Arrangement", roles: ["writer", "songwriter", "lyricist", "composer", "arranger"], entries: [] },
+    { label: "Production & Engineering", roles: ["producer", "studio producer", "engineer", "mixing engineer", "mastering engineer", "recording engineer", "co-producer"], entries: [] },
+    { label: "Performance", roles: ["vocalist", "musician", "instrumentalist", "guitarist", "drummer", "bassist", "pianist", "keyboardist"], entries: [] },
+    { label: "Other", roles: [], entries: [] },
+  ];
+
   trackCredits?.forEach((credit) => {
-    if (!creditsByRole[credit.role]) {
-      creditsByRole[credit.role] = [];
+    const roleLower = credit.role.toLowerCase();
+    let placed = false;
+    for (const cat of creditCategories) {
+      if (cat.roles.some(r => roleLower.includes(r))) {
+        cat.entries.push({ name: credit.name, role: credit.role });
+        placed = true;
+        break;
+      }
     }
-    creditsByRole[credit.role].push(credit.name);
+    if (!placed) {
+      creditCategories[creditCategories.length - 1].entries.push({ name: credit.name, role: credit.role });
+    }
   });
+
+  const filledCategories = creditCategories.filter(c => c.entries.length > 0);
 
   const hasCredits = trackCredits && trackCredits.length > 0;
   const hasFeatures = featureArtists && featureArtists.length > 0;
@@ -260,21 +276,80 @@ export function TrackDetailModal({
             </p>
           )}
 
-          {/* Credits */}
+          {/* Credits - Grouped by Category */}
           {hasCredits && (
-            <div className="w-full glass-card p-4 rounded-lg space-y-2">
+            <div className="w-full glass-card p-4 rounded-lg space-y-4">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <Mic2 className="h-4 w-4" />
+                <Mic2 className="h-4 w-4 text-primary" />
                 Credits
               </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                {Object.entries(creditsByRole).map(([role, names]) => (
-                  <div key={role}>
-                    <span className="text-muted-foreground capitalize">{role}s:</span>{" "}
-                    <span className="text-foreground">{names.join(", ")}</span>
+              
+              {/* Main Artist */}
+              {track.artist && (
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-1">Artist</h4>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-foreground">{track.artist.display_name || "Unknown Artist"}</p>
+                      <p className="text-xs text-muted-foreground">Main Artist</p>
+                    </div>
                   </div>
-                ))}
+                </div>
+              )}
+
+              {/* Featured Artists in Credits */}
+              {hasFeatures && (
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-1">Featured Artists</h4>
+                  <div className="space-y-1">
+                    {featureArtists.map((fa) => (
+                      <div key={fa.id}>
+                        <p className="text-sm text-foreground">{fa.display_name}</p>
+                        <p className="text-xs text-muted-foreground">Featured Artist</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Categorized Credits */}
+              {filledCategories.map((cat) => (
+                <div key={cat.label}>
+                  <h4 className="text-sm font-semibold text-foreground mb-1">{cat.label}</h4>
+                  <div className="space-y-1">
+                    {cat.entries.map((entry, i) => (
+                      <div key={`${entry.name}-${i}`}>
+                        <p className="text-sm text-foreground">{entry.name}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{entry.role}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Show artist info even without credits */}
+          {!hasCredits && track.artist && (
+            <div className="w-full glass-card p-4 rounded-lg space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Mic2 className="h-4 w-4 text-primary" />
+                Artist
               </div>
+              <div>
+                <p className="text-sm text-foreground">{track.artist.display_name || "Unknown Artist"}</p>
+                <p className="text-xs text-muted-foreground">Main Artist</p>
+              </div>
+              {hasFeatures && (
+                <div className="mt-2 space-y-1">
+                  {featureArtists.map((fa) => (
+                    <div key={fa.id}>
+                      <p className="text-sm text-foreground">{fa.display_name}</p>
+                      <p className="text-xs text-muted-foreground">Featured Artist</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

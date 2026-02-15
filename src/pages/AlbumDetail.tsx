@@ -393,7 +393,7 @@ export default function AlbumDetail() {
                   className={`flex items-center gap-4 p-4 hover:bg-muted/30 transition-colors cursor-pointer group ${
                     isCurrentTrack ? "bg-primary/10" : ""
                   }`}
-                  onClick={() => setSelectedTrack(track)}
+                  onClick={() => setSelectedTrack({ ...track, artist: artist ? { id: artist.id!, display_name: artist.display_name } : undefined })}
                 >
                   {/* Track Number / Play Button */}
                   <div className="w-8 flex items-center justify-center">
