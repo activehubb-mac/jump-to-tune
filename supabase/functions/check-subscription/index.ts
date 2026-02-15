@@ -165,11 +165,87 @@ serve(async (req) => {
             status: 200,
           });
         } catch (e) {
-          logStep("Error fetching Stripe subscription", { error: e });
+          logStep("Stripe subscription retrieval failed, marking as canceled", { error: e });
+          
+          // Stripe can't find this subscription — it's been canceled/removed
+          // Update local DB to prevent repeated failed lookups
+          await supabaseClient
+            .from("subscriptions")
+            .update({ 
+              status: "canceled", 
+              stripe_subscription_id: null, 
+              updated_at: new Date().toISOString() 
+            })
+            .eq("user_id", user.id);
+          
+          logStep("Local subscription marked as canceled after Stripe error");
+          
+          return new Response(JSON.stringify({
+            subscribed: false,
+            status: "canceled",
+            tier: localSub.tier,
+            trial_ends_at: localSub.trial_ends_at,
+            current_period_end: localSub.current_period_end || localSub.trial_ends_at,
+            days_left_in_trial: 0,
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
         }
       }
       
-      // Fallback: return local subscription data if Stripe fetch fails
+      // Fallback: validate dates before trusting local status
+      const now = new Date();
+      const periodEnd = localSub.current_period_end ? new Date(localSub.current_period_end) : null;
+      const trialEnd = localSub.trial_ends_at ? new Date(localSub.trial_ends_at) : null;
+      const periodExpired = periodEnd && periodEnd < now;
+      const trialExpired = trialEnd && trialEnd < now;
+      
+      if (periodExpired && trialExpired) {
+        // Both period and trial have passed — subscription is expired
+        logStep("Subscription expired (period and trial both past)", {
+          periodEnd: localSub.current_period_end,
+          trialEnd: localSub.trial_ends_at,
+        });
+        
+        // Update DB to reflect reality
+        await supabaseClient
+          .from("subscriptions")
+          .update({ status: "canceled", updated_at: new Date().toISOString() })
+          .eq("user_id", user.id);
+        
+        return new Response(JSON.stringify({
+          subscribed: false,
+          status: "canceled",
+          tier: localSub.tier,
+          trial_ends_at: localSub.trial_ends_at,
+          current_period_end: localSub.current_period_end,
+          days_left_in_trial: 0,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+      
+      if (periodExpired && !trialExpired) {
+        // Period ended but trial is still active
+        const daysLeft = Math.ceil((trialEnd!.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+        logStep("Period expired but trial still active", { daysLeft });
+        
+        return new Response(JSON.stringify({
+          subscribed: true,
+          status: "trialing",
+          tier: localSub.tier,
+          trial_ends_at: localSub.trial_ends_at,
+          current_period_end: localSub.current_period_end || localSub.trial_ends_at,
+          days_left_in_trial: daysLeft,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+      
+      // Dates are still valid — return local data as-is
       return new Response(JSON.stringify({
         subscribed: localSub.status === "active" || localSub.status === "trialing",
         status: localSub.status,
