@@ -1,75 +1,102 @@
 
 
-# Add "View Credits" from the Global Audio Player
+# Fullscreen Track Player
 
 ## Summary
 
-Users currently have no way to view track credits (writers, producers, performers) from the audio player while listening. This update adds a credits bottom sheet accessible by tapping the track cover art in the player bar, and also from tracks in the queue panel.
+Add a fullscreen player view that opens when users tap the mini player bar. Inspired by the Spotify reference screenshots, this creates an immersive listening experience with a large cover art display, full playback controls, and quick-access action menus -- all styled with the Silent Studio dark charcoal (#141414) background so the cover art pops.
 
 ---
 
-## What Will Change
+## How It Works
 
-### 1. New Component: TrackCreditsSheet
+**Opening:** Tapping anywhere on the mini player bar (except specific buttons like play/pause, skip, close) expands it into a fullscreen overlay.
 
-A new bottom sheet/drawer component that displays track credits in the same categorized layout already used in TrackDetailModal (Writing and Arrangement, Production and Engineering, Performance, Other).
+**Closing:** Tapping the chevron-down arrow at the top collapses it back to the mini player bar.
 
-**File:** `src/components/audio/TrackCreditsSheet.tsx`
+**Layout (top to bottom):**
 
-- Uses the Vaul drawer (already installed) for a swipeable bottom sheet on mobile, dialog on desktop
-- Fetches `track_credits`, `track_features`, and `track_registration` data using React Query (same queries as TrackDetailModal)
-- Shows: cover art, track title, artist name, featured artists, categorized credits, recording protection info
-- Scrollable content area for tracks with many credits
-- Accepts a `trackId` prop so it can show credits for any track (current or queued)
+1. **Header bar** -- Chevron down (close) on the left, source label in center (e.g., album/playlist name if available), "..." menu on the right
+2. **Cover art** -- Large, centered, with rounded corners and subtle shadow to make it pop against the dark background
+3. **Track info** -- Title (bold, large) and artist name (tappable, links to artist profile)
+4. **Progress bar** -- Slider with current time on left and remaining/total time on right, preview limit marker if applicable
+5. **Playback controls** -- Shuffle, Previous, Play/Pause (large circle), Next, Repeat
+6. **Action row** -- Like/Credits icon, Add to Playlist, Download, Queue toggle
+7. **Scrollable area below** (optional scroll) -- View Credits section (reuses the same categorized layout already built)
 
-### 2. Player Bar: Cover Art Becomes Clickable
+**"..." Menu (bottom sheet):**
+- Add to Playlist
+- Go to Artist
+- Go to Album (if track has album_id)
+- View Credits
+- Download
+- Share (copy link)
 
-**File:** `src/components/audio/GlobalAudioPlayer.tsx`
+---
 
-The cover art thumbnail (line ~571) in the player bar gets an `onClick` handler that opens the credits sheet for the currently playing track.
+## Background Color Decision
 
-- Add a subtle visual hint (e.g., a small `Mic2` icon overlay on hover) so users know it's tappable
-- On click: close the queue panel if open, then open the credits sheet
+Using the app's existing **dark charcoal (#141414)** as a solid background rather than dynamic dominant color extraction. Reasons:
+- Consistent with the Silent Studio theme
+- Cover art naturally pops against the dark background
+- No external color extraction library needed
+- Gold (#B8A675) accent color for the progress bar and active controls provides cohesion
 
-### 3. Queue Panel: Add Credits Button to Track Items
+---
 
-**File:** `src/components/audio/GlobalAudioPlayer.tsx`
+## Modal Conflict Handling
 
-Each track in the queue (Now Playing, Up Next, Previously Played) gets a small credits icon button:
-
-- Add a `Mic2` icon button on each queue track row (visible on hover/tap like the existing delete button)
-- Clicking it opens the credits sheet for that specific track
-- The queue panel stays open underneath the credits sheet (credits sheet has higher z-index)
-
-### 4. Modal Conflict Handling
-
-- When the credits sheet opens from the **player bar**, the queue panel closes automatically
-- When the credits sheet opens from a **queue item**, the queue remains visible but the sheet overlays it
-- Only one credits sheet can be open at a time (controlled by a single `creditsTrackId` state)
-- The credits sheet uses z-index higher than the queue panel (queue is z-50, credits sheet will be z-[60])
+- Opening the fullscreen player **closes** the queue panel and credits sheet if open
+- The fullscreen player lives at **z-[55]** (above the mini player at z-50, below credits sheet at z-[60])
+- The "..." action menu uses a Drawer at z-[60]
+- Queue can be re-opened from within the fullscreen view (overlays on top)
+- Credits sheet can be opened from within fullscreen (overlays on top)
 
 ---
 
 ## Technical Details
 
-### State Management (in GlobalAudioPlayer)
-- Add `creditsTrackId: string | null` state
-- `setCreditsTrackId(trackId)` opens the sheet for that track
-- `setCreditsTrackId(null)` closes the sheet
+### New File: `src/components/audio/FullscreenPlayer.tsx`
 
-### Data Fetching (in TrackCreditsSheet)
-Reuses the same Supabase queries from TrackDetailModal:
-- `track_credits` table filtered by `track_id`
-- `track_features` table joined with `profiles_public` for featured artist names
-- `fetchTrackRegistration()` for recording protection info
-- Artist info passed as a prop from the queue/player context
+A new component that receives all player state and actions as props from GlobalAudioPlayer. It renders:
+- Full viewport overlay with `fixed inset-0` positioning
+- Background: solid `bg-[#141414]` with safe area insets
+- Animated entrance/exit using framer-motion (slide up/down)
+- Cover art with `aspect-square` sizing, max width ~320px on mobile, ~400px on desktop
+- All existing player controls (shuffle, prev, play, next, repeat) in the same layout
+- Progress slider (reuses existing Slider component)
+- Action row buttons
+- "..." menu using the existing Drawer component for bottom sheet actions
+- ScrollArea for credits content at the bottom (lazy-loaded, same queries as TrackCreditsSheet)
 
-### Files to Create
-- `src/components/audio/TrackCreditsSheet.tsx`
+### Modified File: `src/components/audio/GlobalAudioPlayer.tsx`
 
-### Files to Modify
-- `src/components/audio/GlobalAudioPlayer.tsx` — add credits state, clickable cover art, credits button in queue items, render TrackCreditsSheet
+- Add `showFullscreen` boolean state
+- Clicking the player bar (track info area / cover art on mobile) sets `showFullscreen = true` and closes queue
+- The existing cover art `onClick` currently opens credits -- this changes to open fullscreen instead; credits access moves into the fullscreen view
+- Render `<FullscreenPlayer>` conditionally when `showFullscreen` is true
+- Pass all necessary state and handlers as props
 
-### No Database Changes Needed
-All data is already available via existing tables and queries.
+### Props Interface for FullscreenPlayer
+
+```text
+- currentTrack, isPlaying, isBuffering, currentTime, duration, volume, isMuted
+- isPreviewMode, previewTimeRemaining, currentPreviewLimit
+- isShuffled, repeatMode, hasKaraoke, isKaraokeMode, showLyrics
+- hasNext, hasPrevious, needsUserGesture
+- All handler functions: togglePlayPause, seek, playNext, playPrevious, etc.
+- onClose: () => void (collapses back to mini player)
+- onOpenQueue: () => void
+- onOpenCredits: (track) => void
+```
+
+### Safe Area Handling
+
+- Top: `padding-top: env(safe-area-inset-top)` for the header
+- Bottom: `padding-bottom: env(safe-area-inset-bottom)` for the action row
+- Follows existing iOS hardening patterns
+
+### No Database Changes
+
+All data is already available. Credits reuse existing queries.
 
