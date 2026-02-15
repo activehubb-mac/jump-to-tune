@@ -59,3 +59,26 @@ export const formatFileSize = (bytes: number): string => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
+
+/**
+ * Generate a SHA-256 hash of an audio file for fingerprinting.
+ * Uses the browser's built-in Web Crypto API — no external libraries needed.
+ */
+export const generateAudioHash = async (file: File): Promise<string> => {
+  const buffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+};
+
+/**
+ * Get the user's country/region from browser timezone (best effort)
+ */
+export const getBrowserCountry = (): string => {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return tz || 'Unknown';
+  } catch {
+    return 'Unknown';
+  }
+};

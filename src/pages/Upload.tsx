@@ -242,16 +242,20 @@ export default function Upload() {
         engineers: credits.engineers,
       },
       featureArtists.map((a) => a.id),
-      isDraft
+      isDraft,
+      rightsConfirmed
     );
 
     if (result.success) {
+      const recordingMsg = result.recordingId
+        ? ` Recording ID: ${result.recordingId}`
+        : "";
       showFeedback({
         type: "success",
         title: isDraft ? "Draft Saved" : "Track Published!",
         message: isDraft
-          ? "Your track has been saved as a draft. You can publish it later from your dashboard."
-          : "Your track is now live and visible to fans!",
+          ? `Your track has been saved as a draft.${recordingMsg}`
+          : `Your track is now live and visible to fans!${recordingMsg}`,
       });
       navigate(role === "artist" ? "/artist/dashboard" : "/label/dashboard");
     } else {
