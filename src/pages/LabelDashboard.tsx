@@ -17,17 +17,30 @@ import {
   BarChart3,
   CreditCard,
   ChevronRight,
-  X
+  X,
+  Trash2
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLabelStats } from "@/hooks/useLabelStats";
+import { supabase } from "@/integrations/supabase/client";
 import { useLabelTracks } from "@/hooks/useTracks";
 import { useLabelRoster } from "@/hooks/useLabelRoster";
 import { useLabelRosterActions } from "@/hooks/useLabelRosterActions";
 import { formatEarnings } from "@/lib/formatters";
 import { TrackCard } from "@/components/dashboard/TrackCard";
 import { TrackDetailModal } from "@/components/dashboard/TrackDetailModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useQueryClient } from "@tanstack/react-query";
 import { SubscriptionStatusBanner } from "@/components/subscription/SubscriptionStatusBanner";
 import { EarningsWidget } from "@/components/dashboard/EarningsWidget";
 import { AddArtistModal } from "@/components/label/AddArtistModal";
@@ -57,6 +70,27 @@ export default function LabelDashboard() {
   const [showAddArtistModal, setShowAddArtistModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState<any>(null);
+  const [deleteTrackId, setDeleteTrackId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleDeleteTrack = async () => {
+    if (!deleteTrackId) return;
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase.from("tracks").delete().eq("id", deleteTrackId);
+      if (error) throw error;
+      showFeedback({ type: "success", title: "Track Deleted", message: "Track deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: ["tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["label-stats"] });
+    } catch (error) {
+      console.error("Error deleting track:", error);
+      showFeedback({ type: "error", title: "Delete Failed", message: "Failed to delete track" });
+    } finally {
+      setIsDeleting(false);
+      setDeleteTrackId(null);
+    }
+  };
 
   const handleAddArtistClick = () => {
     if (!canAddMoreArtists) {
@@ -444,7 +478,7 @@ export default function LabelDashboard() {
                       showArtist
                       showActions
                       onEdit={(id) => navigate(`/track/${id}/edit`)}
-                      onDelete={(id) => console.log("Delete track:", id)}
+                      onDelete={(id) => setDeleteTrackId(id)}
                       onClick={() => setSelectedTrack(track)}
                     />
                   ))}
@@ -559,6 +593,37 @@ export default function LabelDashboard() {
         open={!!selectedTrack}
         onOpenChange={(open) => !open && setSelectedTrack(null)}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteTrackId} onOpenChange={() => setDeleteTrackId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-destructive" />
+              Delete Track
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this track? This action cannot be undone.
+              All associated data including purchases will be removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteTrack}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Trash2 className="w-4 h-4 mr-2" />
+              )}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 }

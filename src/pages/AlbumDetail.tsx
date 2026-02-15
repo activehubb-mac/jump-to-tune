@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { 
@@ -13,9 +13,11 @@ import {
   Share2,
   ListPlus,
   Loader2,
-  Lock
+  Lock,
+  Trash2,
+  Pencil
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useLikes } from "@/hooks/useLikes";
@@ -28,6 +30,17 @@ import { format } from "date-fns";
 import { TrackDetailModal } from "@/components/dashboard/TrackDetailModal";
 import { PremiumFeatureModal } from "@/components/premium/PremiumFeatureModal";
 import { SubscriptionExpiredModal } from "@/components/subscription/SubscriptionExpiredModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 
 export default function AlbumDetail() {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +52,10 @@ export default function AlbumDetail() {
   const [selectedTrack, setSelectedTrack] = useState<any>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showExpiredModal, setShowExpiredModal] = useState(false);
+  const [deleteTrackId, setDeleteTrackId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Fetch album
   const { data: album, isLoading } = useQuery({
@@ -89,6 +106,27 @@ export default function AlbumDetail() {
     },
     enabled: !!id,
   });
+
+  // Check if current user is the album owner
+  const isOwner = user && album && (user.id === album.artist_id || user.id === album.label_id);
+
+  const handleDeleteTrackFromAlbum = async () => {
+    if (!deleteTrackId) return;
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase.from("tracks").delete().eq("id", deleteTrackId);
+      if (error) throw error;
+      showFeedback({ type: "success", title: "Track Removed", message: "Track has been deleted from this album" });
+      queryClient.invalidateQueries({ queryKey: ["album-tracks", id] });
+      queryClient.invalidateQueries({ queryKey: ["tracks"] });
+    } catch (error) {
+      console.error("Error deleting track:", error);
+      showFeedback({ type: "error", title: "Delete Failed", message: "Failed to delete track" });
+    } finally {
+      setIsDeleting(false);
+      setDeleteTrackId(null);
+    }
+  };
 
   const trackIds = tracks.map((t) => t.id);
   const { data: likeCounts = {} } = useLikeCounts(trackIds);
@@ -419,12 +457,69 @@ export default function AlbumDetail() {
                   <span className="text-sm font-medium w-16 text-right">
                     {track.price > 0 ? formatPrice(track.price) : "Free"}
                   </span>
+
+                  {/* Owner Actions */}
+                  {isOwner && (
+                    <div className="flex items-center gap-1 ml-2">
+                      <button
+                        className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/track/${track.id}/edit`);
+                        }}
+                        title="Edit track"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteTrackId(track.id);
+                        }}
+                        title="Delete track"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         </div>
       </div>
+
+      {/* Delete Track from Album Confirmation */}
+      <AlertDialog open={!!deleteTrackId} onOpenChange={() => setDeleteTrackId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-destructive" />
+              Delete Track from Album
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this track? This will permanently remove it
+              from this album and from your catalog. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteTrackFromAlbum}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Trash2 className="w-4 h-4 mr-2" />
+              )}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 }
