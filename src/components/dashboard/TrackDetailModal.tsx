@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Disc3, Play, Pause, Volume2, VolumeX, Users, Mic2 } from "lucide-react";
+import { Disc3, Play, Pause, Volume2, VolumeX, Users, Mic2, Shield, Download } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { Slider } from "@/components/ui/slider";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -16,6 +16,8 @@ import { DownloadButton } from "@/components/download/DownloadButton";
 import { usePurchases } from "@/hooks/usePurchases";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { fetchTrackRegistration } from "@/hooks/useTrackRegistration";
 
 interface Track {
   id: string;
@@ -68,6 +70,14 @@ export function TrackDetailModal({
     toggleMute,
   } = useAudioPlayer();
   const { isOwned } = usePurchases();
+  const { user } = useAuth();
+
+  // Fetch track registration
+  const { data: registration } = useQuery({
+    queryKey: ["track-registration", track?.id],
+    queryFn: () => fetchTrackRegistration(track!.id),
+    enabled: !!track?.id && open,
+  });
 
   // Fetch track credits
   const { data: trackCredits } = useQuery({
@@ -264,6 +274,56 @@ export function TrackDetailModal({
                     <span className="text-foreground">{names.join(", ")}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recording Protection */}
+          {registration?.recording_id && (
+            <div className="w-full glass-card p-4 rounded-lg space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Shield className="h-4 w-4 text-primary" />
+                Recording Protection
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Recording ID</p>
+                  <p className="text-sm font-mono text-primary font-semibold">
+                    {registration.recording_id}
+                  </p>
+                </div>
+                {/* Show download certificate button only for track owner */}
+                {user && (track.artist?.id === user.id) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-primary/30 text-primary hover:bg-primary/10"
+                    onClick={async () => {
+                      const session = await supabase.auth.getSession();
+                      const token = session.data.session?.access_token;
+                      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-certificate`;
+                      const res = await fetch(url, {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({ track_id: track.id }),
+                      });
+                      if (res.ok) {
+                        const blob = await res.blob();
+                        const a = document.createElement("a");
+                        a.href = URL.createObjectURL(blob);
+                        a.download = `JumTunes-Certificate-${registration.recording_id}.html`;
+                        a.click();
+                        URL.revokeObjectURL(a.href);
+                      }
+                    }}
+                  >
+                    <Download className="h-3 w-3 mr-1" />
+                    Certificate
+                  </Button>
+                )}
               </div>
             </div>
           )}

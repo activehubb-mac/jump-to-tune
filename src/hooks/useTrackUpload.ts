@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAudioDuration } from '@/lib/audioUtils';
+import { registerTrack } from '@/hooks/useTrackRegistration';
 
 export interface TrackFormData {
   title: string;
@@ -45,8 +46,9 @@ interface UseTrackUploadReturn {
     karaokeData: KaraokeData,
     creditsData: TrackCreditsData,
     featureArtistIds: string[],
-    isDraft: boolean
-  ) => Promise<{ success: boolean; trackId?: string; error?: string }>;
+    isDraft: boolean,
+    rightsConfirmed?: boolean
+  ) => Promise<{ success: boolean; trackId?: string; recordingId?: string; error?: string }>;
 }
 
 export const useTrackUpload = (): UseTrackUploadReturn => {
@@ -101,8 +103,9 @@ export const useTrackUpload = (): UseTrackUploadReturn => {
     karaokeData: KaraokeData,
     creditsData: TrackCreditsData,
     featureArtistIds: string[],
-    isDraft: boolean
-  ): Promise<{ success: boolean; trackId?: string; error?: string }> => {
+    isDraft: boolean,
+    rightsConfirmed: boolean = false
+  ): Promise<{ success: boolean; trackId?: string; recordingId?: string; error?: string }> => {
     if (!user) {
       return { success: false, error: 'Not authenticated' };
     }
@@ -273,7 +276,19 @@ export const useTrackUpload = (): UseTrackUploadReturn => {
         }
       }
 
-      return { success: true, trackId: track?.id };
+      // Register track for recording protection
+      let recordingId: string | undefined;
+      if (track) {
+        const regResult = await registerTrack({
+          trackId: track.id,
+          audioFile,
+          uploadedBy: user.id,
+          rightsConfirmed,
+        });
+        recordingId = regResult.recordingId || undefined;
+      }
+
+      return { success: true, trackId: track?.id, recordingId };
     } catch (error) {
       console.error('Track upload error:', error);
       return {

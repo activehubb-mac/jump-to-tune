@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ReleaseType } from '@/components/upload/ReleaseTypeSelector';
 import { AlbumTrackData } from '@/components/upload/AlbumTrackRow';
+import { registerTrack } from '@/hooks/useTrackRegistration';
 
 export interface AlbumFormData {
   title: string;
@@ -25,7 +26,8 @@ interface UseAlbumUploadReturn {
     formData: AlbumFormData,
     coverFile: File | null,
     tracks: AlbumTrackData[],
-    isDraft: boolean
+    isDraft: boolean,
+    rightsConfirmed?: boolean
   ) => Promise<{ success: boolean; albumId?: string; error?: string }>;
 }
 
@@ -77,7 +79,8 @@ export const useAlbumUpload = (): UseAlbumUploadReturn => {
     formData: AlbumFormData,
     coverFile: File | null,
     tracks: AlbumTrackData[],
-    isDraft: boolean
+    isDraft: boolean,
+    rightsConfirmed: boolean = false
   ): Promise<{ success: boolean; albumId?: string; error?: string }> => {
     if (!user) {
       return { success: false, error: 'Not authenticated' };
@@ -230,6 +233,16 @@ export const useAlbumUpload = (): UseAlbumUploadReturn => {
               console.error('Failed to save track credits:', creditsError);
             }
           }
+        }
+
+        // Register track for recording protection
+        if (insertedTrack) {
+          await registerTrack({
+            trackId: insertedTrack.id,
+            audioFile: track.file,
+            uploadedBy: user.id,
+            rightsConfirmed,
+          });
         }
 
         completedTracks++;

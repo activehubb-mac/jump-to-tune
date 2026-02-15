@@ -937,6 +937,50 @@ export type Database = {
           },
         ]
       }
+      track_registrations: {
+        Row: {
+          audio_hash: string
+          country: string | null
+          created_at: string
+          id: string
+          recording_id: string
+          rights_confirmed: boolean
+          track_id: string
+          upload_timestamp: string
+          uploaded_by: string
+        }
+        Insert: {
+          audio_hash: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          recording_id?: string
+          rights_confirmed?: boolean
+          track_id: string
+          upload_timestamp?: string
+          uploaded_by: string
+        }
+        Update: {
+          audio_hash?: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          recording_id?: string
+          rights_confirmed?: boolean
+          track_id?: string
+          upload_timestamp?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "track_registrations_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tracks: {
         Row: {
           album_id: string | null
@@ -1123,6 +1167,7 @@ export type Database = {
         Args: { p_amount_cents: number; p_user_id: string }
         Returns: Json
       }
+      generate_recording_id: { Args: never; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
