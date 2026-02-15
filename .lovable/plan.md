@@ -1,63 +1,76 @@
 
 
-# Fix: Subscription Expiry Enforcement
+# Fix: Complete Track and Album Delete Functionality
 
-## What's Actually Happening
+## Summary
 
-Your subscription flow worked correctly during testing -- Stripe processed the downgrade. But the local database was never updated to reflect the cancellation, and the `check-subscription` edge function has two gaps:
+There are three gaps in the delete system: the Label Dashboard delete is broken (only logs to console), there's no way to delete albums/EPs, and there's no way to remove individual tracks from an album. This plan addresses all three.
 
-1. **Silent Stripe error**: When retrieving `sub_1Spvh2EKeZaBsSwjimemSDva` from Stripe fails (subscription canceled/removed), the error is caught and silently ignored
-2. **Blind fallback**: The fallback path (line 172) trusts the DB `status: "active"` without checking if `current_period_end` has passed
+---
 
-## The Fix
+## Change 1: Fix Label Dashboard Delete (Bug Fix)
 
-**File: `supabase/functions/check-subscription/index.ts`**
+**File:** `src/pages/LabelDashboard.tsx`
 
-### Change 1: Handle Stripe retrieval failures properly
+The `onDelete` handler on line 447 currently does `console.log("Delete track:", id)` instead of actually deleting. This needs the same delete logic that already exists in `ArtistDashboard.tsx` and `LabelTracks.tsx`:
 
-When Stripe returns an error for a stored subscription ID, instead of silently falling through, treat it as an expired/invalid subscription:
+- Add `deleteTrackId` state and `handleDelete` function (same pattern as ArtistDashboard)
+- Replace `console.log` with `setDeleteTrackId(id)`
+- Add the `AlertDialog` delete confirmation modal
 
-- If Stripe says the subscription doesn't exist or is invalid, mark as expired
-- Update the local DB to clear the stale status so future checks are faster
+---
 
-### Change 2: Add date validation to the fallback path
+## Change 2: Add Album/EP Delete Capability
 
-Before returning the fallback local data at line 172, check:
+**Files:** `src/pages/ArtistTracks.tsx`, `src/pages/LabelTracks.tsx`
 
+Add album management alongside tracks. Artists and labels need to see their albums and delete them. When an album is deleted, all tracks within it should also be deleted (cascade).
+
+### Database consideration
+The `albums` table has RLS policies allowing artists to delete their own albums (`auth.uid() = artist_id`) and labels to delete theirs (`auth.uid() = label_id`). However, tracks within the album reference `album_id` -- we need to ensure deleting an album also removes its tracks, or handle this in application logic by deleting tracks first, then the album.
+
+### Implementation approach
+- Add an "Albums" tab or section to both `ArtistTracks` and `LabelTracks` pages showing albums/EPs
+- Each album card gets a delete button with confirmation dialog
+- Delete flow: first delete all tracks with matching `album_id`, then delete the album itself
+- Both operations are already permitted by existing RLS policies
+
+---
+
+## Change 3: Remove Individual Tracks from Albums
+
+**File:** New component or update to `AlbumDetail.tsx`
+
+For the album owner (artist or label), show edit/delete actions on individual tracks within the album view:
+
+- Detect if the current user is the album owner (compare `user.id` with `album.artist_id` or `album.label_id`)
+- If owner, show a delete button on each track row
+- Deleting a track from an album removes it from the `tracks` table (existing RLS allows this)
+- After deletion, the album track list refreshes
+
+---
+
+## Technical Details
+
+### Delete Album Flow (Application Logic)
 ```text
-IF current_period_end has passed AND trial_ends_at has passed:
-  -> Update DB status to "canceled"
-  -> Return subscribed: false, status: "canceled"
-ELSE IF only current_period_end has passed but trial still active:
-  -> Return trial status with remaining days
-ELSE:
-  -> Return current local data as-is (it's still valid)
+1. User clicks "Delete Album" -> Confirmation dialog
+2. On confirm:
+   a. DELETE FROM tracks WHERE album_id = :albumId
+   b. DELETE FROM albums WHERE id = :albumId
+3. Invalidate queries: ["tracks"], ["albums"], ["artist-stats"] / ["label-stats"]
+4. Show success feedback
 ```
 
-### Change 3: Sync DB on Stripe error
+### Files Modified
+- `src/pages/LabelDashboard.tsx` -- fix broken delete handler
+- `src/pages/ArtistTracks.tsx` -- add album section with delete
+- `src/pages/LabelTracks.tsx` -- add album section with delete
+- `src/pages/AlbumDetail.tsx` -- add owner track management (edit/delete per track)
 
-When the Stripe fetch fails for a known subscription ID, update the local record:
-
-```text
-UPDATE subscriptions 
-SET status = 'canceled', stripe_subscription_id = NULL
-WHERE user_id = user.id
-```
-
-This prevents repeated failed Stripe lookups on every check.
-
-## What This Fixes
-
-- Your account will immediately show as expired on next check
-- The `SubscriptionExpiredModal` will appear as designed
-- Premium features (queue, shuffle, repeat, sorting) will show lock icons
-- Users who tested proration/downgrade flows won't get stuck in a "forever active" state
-- Future Stripe errors won't silently grant access
-
-## Scope
-
-- **One file modified**: `supabase/functions/check-subscription/index.ts`
-- **No database migration needed**
-- **No frontend changes needed** -- the existing expired modal, lock icons, and feature gating are already wired up and waiting for the correct `subscribed: false` response
-- Edge function will be redeployed automatically
+### No Database Changes Needed
+All required RLS policies already exist:
+- Artists can delete their own tracks and albums
+- Labels can delete their tracks and albums
+- The delete operations use standard Supabase client calls
 
