@@ -96,7 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 15px 10px; background-color: #f4f4f5;">
           <div style="max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); padding: 24px 20px; border-radius: 12px 12px 0 0; text-align: center;">
+            <div style="background: linear-gradient(135deg, #141414 0%, #1e1e1e 50%, #B8A675 100%); padding: 24px 20px; border-radius: 12px 12px 0 0; text-align: center;">
               <img src="${LOGO_URL}" alt="JumTunes" style="width: 180px; height: auto; display: block; margin: 0 auto;">
             </div>
             
@@ -122,7 +122,7 @@ const handler = async (req: Request): Promise<Response> => {
                     <td style="vertical-align: top; padding-left: 12px;">
                       <p style="margin: 0; font-weight: 600; color: #1f2937; font-size: 16px;">${trackTitle}</p>
                       <p style="margin: 4px 0 0 0; color: #6b7280; font-size: 14px;">by ${artistName}</p>
-                      <p style="margin: 8px 0 0 0; color: #7c3aed; font-size: 12px; font-weight: 600;">
+                      <p style="margin: 8px 0 0 0; color: #B8A675; font-size: 12px; font-weight: 600;">
                         Edition #${editionNumber} of ${totalEditions}
                       </p>
                     </td>
@@ -138,8 +138,8 @@ const handler = async (req: Request): Promise<Response> => {
                   </tr>
                   ${tip ? `
                   <tr>
-                    <td style="color: #6b7280; padding: 4px 0;">Artist Tip 💜</td>
-                    <td style="color: #7c3aed; text-align: right; font-weight: 500;">+$${tip}</td>
+                    <td style="color: #6b7280; padding: 4px 0;">Artist Tip 🎵</td>
+                    <td style="color: #B8A675; text-align: right; font-weight: 500;">+$${tip}</td>
                   </tr>
                   ` : ""}
                   <tr style="border-top: 1px solid #e5e7eb;">
@@ -151,7 +151,7 @@ const handler = async (req: Request): Promise<Response> => {
               
               <div style="text-align: center; margin: 24px 0;">
                 <a href="https://jump-to-tune.lovable.app/library" 
-                   style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                   style="display: inline-block; background: linear-gradient(135deg, #141414 0%, #B8A675 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                   View Your Library
                 </a>
               </div>
