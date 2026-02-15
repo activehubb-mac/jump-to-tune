@@ -27,6 +27,7 @@ import { useLabelRoster } from "@/hooks/useLabelRoster";
 import { useLabelRosterActions } from "@/hooks/useLabelRosterActions";
 import { formatEarnings } from "@/lib/formatters";
 import { TrackCard } from "@/components/dashboard/TrackCard";
+import { TrackDetailModal } from "@/components/dashboard/TrackDetailModal";
 import { SubscriptionStatusBanner } from "@/components/subscription/SubscriptionStatusBanner";
 import { EarningsWidget } from "@/components/dashboard/EarningsWidget";
 import { AddArtistModal } from "@/components/label/AddArtistModal";
@@ -55,6 +56,7 @@ export default function LabelDashboard() {
   
   const [showAddArtistModal, setShowAddArtistModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState<any>(null);
 
   const handleAddArtistClick = () => {
     if (!canAddMoreArtists) {
@@ -443,6 +445,7 @@ export default function LabelDashboard() {
                       showActions
                       onEdit={(id) => navigate(`/track/${id}/edit`)}
                       onDelete={(id) => console.log("Delete track:", id)}
+                      onClick={() => setSelectedTrack(track)}
                     />
                   ))}
                 </div>
@@ -548,6 +551,13 @@ export default function LabelDashboard() {
         onOpenChange={setShowUpgradeModal}
         currentCount={activeArtistCount}
         limit={artistLimit}
+      />
+
+      {/* Track Detail Modal */}
+      <TrackDetailModal
+        track={selectedTrack}
+        open={!!selectedTrack}
+        onOpenChange={(open) => !open && setSelectedTrack(null)}
       />
     </Layout>
   );
