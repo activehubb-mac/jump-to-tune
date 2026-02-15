@@ -21,6 +21,7 @@ import { usePlaylists } from "@/hooks/usePlaylists";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { AddToPlaylistModal } from "@/components/playlist/AddToPlaylistModal";
 import { CreatePlaylistModal } from "@/components/playlist/CreatePlaylistModal";
+import { TrackCreditsSheet } from "@/components/audio/TrackCreditsSheet";
 import {
   DndContext,
   closestCenter,
@@ -52,9 +53,10 @@ interface SortableTrackItemProps {
   actualIndex: number;
   onPlay: () => void;
   onRemove: () => void;
+  onViewCredits?: () => void;
 }
 
-function SortableTrackItem({ track, actualIndex, onPlay, onRemove }: SortableTrackItemProps) {
+function SortableTrackItem({ track, actualIndex, onPlay, onRemove, onViewCredits }: SortableTrackItemProps) {
   const {
     attributes,
     listeners,
@@ -106,6 +108,20 @@ function SortableTrackItem({ track, actualIndex, onPlay, onRemove }: SortableTra
           </p>
         </div>
       </div>
+      {onViewCredits && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary flex-shrink-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewCredits();
+          }}
+          title="View credits"
+        >
+          <Mic2 className="w-3 h-3" />
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="icon"
@@ -174,6 +190,8 @@ export function GlobalAudioPlayer() {
   const [showAddToPlaylist, setShowAddToPlaylist] = useState(false);
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
   const [showKaraokeHint, setShowKaraokeHint] = useState(false);
+  const [creditsTrackId, setCreditsTrackId] = useState<string | null>(null);
+  const [creditsTrackMeta, setCreditsTrackMeta] = useState<{ title: string; cover_art_url: string | null; artist: { id: string; display_name: string | null } | null } | null>(null);
   
   // Load waveform preference from localStorage
   const WAVEFORM_PREF_KEY = "jumtunes_waveform_preference";
@@ -320,6 +338,17 @@ export function GlobalAudioPlayer() {
 
   const hasKaraoke = !!currentTrack?.has_karaoke;
   const karaokeReady = !!karaokeData?.instrumental_url;
+
+  // Open credits sheet for a track
+  const openCredits = (track: AudioTrack, fromQueue = false) => {
+    if (!fromQueue) setShowQueue(false);
+    setCreditsTrackId(track.id);
+    setCreditsTrackMeta({
+      title: track.title,
+      cover_art_url: track.cover_art_url,
+      artist: track.artist || null,
+    });
+  };
 
   // Handle purchase success - grant full access
   const handlePurchaseSuccess = () => {
@@ -478,7 +507,16 @@ export function GlobalAudioPlayer() {
                             {currentTrack.artist?.display_name || "Unknown Artist"}
                           </p>
                         </div>
-                        <div className="flex-shrink-0">
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary"
+                            onClick={() => openCredits(currentTrack, true)}
+                            title="View credits"
+                          >
+                            <Mic2 className="w-3 h-3" />
+                          </Button>
                           {isPlaying ? (
                             <div className="flex gap-0.5">
                               <div className="w-0.5 h-3 bg-primary rounded-full animate-pulse" />
@@ -512,6 +550,7 @@ export function GlobalAudioPlayer() {
                                 actualIndex={actualIndex}
                                 onPlay={() => playTrack(track)}
                                 onRemove={() => removeFromQueue(actualIndex)}
+                                onViewCredits={() => openCredits(track, true)}
                               />
                             );
                           })}
@@ -548,6 +587,18 @@ export function GlobalAudioPlayer() {
                               {track.artist?.display_name || "Unknown Artist"}
                             </p>
                           </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary flex-shrink-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openCredits(track, true);
+                            }}
+                            title="View credits"
+                          >
+                            <Mic2 className="w-3 h-3" />
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -568,7 +619,11 @@ export function GlobalAudioPlayer() {
           <div className="flex items-center gap-4 py-3">
             {/* Track Info */}
             <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-64">
-              <div className="w-12 h-12 rounded-lg bg-muted/50 overflow-hidden flex-shrink-0 relative">
+              <div
+                className="w-12 h-12 rounded-lg bg-muted/50 overflow-hidden flex-shrink-0 relative cursor-pointer group/cover"
+                onClick={() => openCredits(currentTrack)}
+                title="View credits"
+              >
                 {currentTrack.cover_art_url ? (
                   <img
                     src={currentTrack.cover_art_url}
@@ -590,6 +645,10 @@ export function GlobalAudioPlayer() {
                     />
                   </div>
                 )}
+                {/* Credits hint overlay */}
+                <div className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-opacity">
+                  <Mic2 className="w-4 h-4 text-primary" />
+                </div>
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
@@ -976,6 +1035,21 @@ export function GlobalAudioPlayer() {
           </div>
         </div>
       </div>
+
+      {/* Track Credits Sheet */}
+      <TrackCreditsSheet
+        trackId={creditsTrackId}
+        trackTitle={creditsTrackMeta?.title}
+        trackCoverArt={creditsTrackMeta?.cover_art_url}
+        artist={creditsTrackMeta?.artist}
+        open={!!creditsTrackId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCreditsTrackId(null);
+            setCreditsTrackMeta(null);
+          }
+        }}
+      />
     </>
   );
 }
