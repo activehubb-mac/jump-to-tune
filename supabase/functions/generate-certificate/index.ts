@@ -122,30 +122,30 @@ Deno.serve(async (req) => {
       padding: 40px;
     }
     .certificate {
-      border: 2px solid #8b5cf6;
+      border: 2px solid #B8A675;
       border-radius: 16px;
       padding: 48px;
       min-height: calc(297mm - 80px);
       display: flex;
       flex-direction: column;
-      background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #0f0f23 100%);
+      background: linear-gradient(135deg, #141414 0%, #1e1e1e 50%, #141414 100%);
     }
     .header {
       text-align: center;
       margin-bottom: 40px;
-      border-bottom: 1px solid #8b5cf6;
+      border-bottom: 1px solid #B8A675;
       padding-bottom: 24px;
     }
     .logo-text {
       font-size: 32px;
       font-weight: bold;
-      color: #8b5cf6;
+      color: #B8A675;
       letter-spacing: 4px;
       text-transform: uppercase;
     }
     .subtitle {
       font-size: 14px;
-      color: #a78bfa;
+      color: #C9B98A;
       margin-top: 8px;
       letter-spacing: 2px;
     }
@@ -170,14 +170,14 @@ Deno.serve(async (req) => {
     .detail-row {
       display: flex;
       padding: 14px 0;
-      border-bottom: 1px solid rgba(139, 92, 246, 0.15);
+      border-bottom: 1px solid rgba(184, 166, 117, 0.15);
     }
     .detail-label {
       width: 200px;
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: #8b5cf6;
+      color: #B8A675;
       font-weight: bold;
     }
     .detail-value {
@@ -189,14 +189,14 @@ Deno.serve(async (req) => {
     .hash-value {
       font-family: 'Courier New', monospace;
       font-size: 11px;
-      color: #a78bfa;
+      color: #C9B98A;
     }
     .statement {
       margin-top: 32px;
       padding: 24px;
-      border: 1px solid rgba(139, 92, 246, 0.3);
+      border: 1px solid rgba(184, 166, 117, 0.3);
       border-radius: 8px;
-      background: rgba(139, 92, 246, 0.05);
+      background: rgba(184, 166, 117, 0.05);
     }
     .statement p {
       font-size: 13px;
@@ -207,7 +207,7 @@ Deno.serve(async (req) => {
       text-align: center;
       margin-top: 32px;
       padding-top: 24px;
-      border-top: 1px solid rgba(139, 92, 246, 0.3);
+      border-top: 1px solid rgba(184, 166, 117, 0.3);
     }
     .footer p {
       font-size: 11px;
@@ -215,13 +215,13 @@ Deno.serve(async (req) => {
     }
     .recording-id-badge {
       display: inline-block;
-      background: rgba(139, 92, 246, 0.2);
-      border: 1px solid #8b5cf6;
+      background: rgba(184, 166, 117, 0.2);
+      border: 1px solid #B8A675;
       border-radius: 8px;
       padding: 8px 24px;
       font-size: 20px;
       font-weight: bold;
-      color: #a78bfa;
+      color: #C9B98A;
       letter-spacing: 2px;
       margin: 16px 0;
       font-family: 'Courier New', monospace;
