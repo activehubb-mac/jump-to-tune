@@ -1,68 +1,41 @@
 
 
-# Fix Fullscreen Player: Click Area, Scroll, and Content Sections
+# Enhance Fullscreen Player: Rich Artist Section and Credits Dialog
 
-## Problems Identified
+## What Changes
 
-1. **Clicking empty space in the player bar does nothing** -- only the cover art and track title are wired to open fullscreen. The entire left section of the bar should be tappable.
-2. **Background scrolls instead of fullscreen player content** -- the fullscreen overlay uses `overflow-hidden` with no scrollable inner container, so swipe gestures leak through to the page behind it.
-3. **Missing content below controls** -- the Spotify reference shows that scrolling down reveals additional sections: "More from this artist" (their other tracks), "Artist info" section, and inline credits. Currently the fullscreen player is static with no scrollable content.
+### 1. Replace the small "About the Artist" card with a rich, immersive section
 
----
+Currently: A tiny row with avatar, name, and "View full profile" link that navigates away.
 
-## What Will Change
+New design: A full-width section inspired by the Spotify reference, containing:
+- **Large artist banner image** (or avatar fallback) displayed as a wide card with overlay text
+- **Artist name** overlaid on the banner (bold, large)
+- **Follower count** displayed beneath the banner
+- **Bio text** shown inline (first 3 lines with "Show more" expansion)
+- **"Follow" button** if the user is not already following
+- All of this stays within the fullscreen player -- no navigation away
 
-### 1. Fix Player Bar Click Area (GlobalAudioPlayer.tsx)
+Data needed: Fetch from `profiles_public` (banner_image_url, bio, avatar_url, display_name) and `follows` table (follower count). These queries already exist in the codebase via `useFollowerCounts` and `useArtistProfile`.
 
-Wrap the entire player bar `div` (the bottom fixed bar) with an `onClick` handler so tapping anywhere on it (except interactive buttons like play/pause, skip, close, volume) opens the fullscreen player. This will use `event.target` checks or wrap the non-button area in a clickable container.
+### 2. Add a visible "View Song Credits" button that opens a credits Drawer
 
-**Approach:** Add an `onClick` on the outer player bar div that opens fullscreen, then add `e.stopPropagation()` on all interactive buttons (play, skip, close, volume, etc.) so they don't also trigger the fullscreen open.
+Currently: Credits are displayed inline as plain text below the controls, and also available in the "..." menu.
 
-### 2. Fix Scroll Behavior (FullscreenPlayer.tsx)
+New design:
+- Remove the inline credits section from the scroll area
+- Add a prominent **"View Song Credits"** row button (with a Mic2 icon) in the scrollable area, styled like a list item
+- Tapping it opens the existing `TrackCreditsSheet` drawer (already built at z-[60]) with the full categorized credits layout
+- The `Mic2` icon button in the action row also still triggers this same drawer
+- The credits option in the "..." menu also triggers this same drawer
 
-Restructure the fullscreen player layout:
-- The outer `motion.div` keeps `overflow-hidden` and `touch-action: none` on the background to prevent page scrolling
-- Add `overscrollBehavior: 'contain'` to trap scroll within the player
-- The inner content becomes a scrollable container that holds the cover art, controls at the top (fixed/sticky), and scrollable content sections below
+### 3. Restructure the scrollable content order
 
-**Layout structure:**
-```text
-[Fixed overlay - covers full screen, traps scroll]
-  [Header bar - flex-shrink-0, always visible]
-  [Scrollable content area - overflow-y: auto]
-    [Cover art - large, centered]
-    [Track info]
-    [Progress bar]
-    [Playback controls]
-    [Action row]
-    [--- Scrollable extra content below ---]
-    [More from this Artist - horizontal card carousel]
-    [Credits section - categorized, inline]
-    [About the Artist - mini bio card with link]
-  [/Scrollable content area]
-[/Fixed overlay]
-```
-
-### 3. Add Scrollable Content Sections (FullscreenPlayer.tsx)
-
-Below the action row, add three new sections that the user can scroll to:
-
-**a) "More from this Artist" section**
-- Fetches other tracks by the same artist (using `artist.id`) from the `tracks` table
-- Excludes the currently playing track
-- Displays as a horizontal scrollable row of small track cards (cover art + title)
-- Tapping a card plays that track (calls `playTrack` from context)
-
-**b) "Credits" section (inline)**
-- Fetches and displays the same categorized credits data (Writing & Arrangement, Production & Engineering, Performance, Other)
-- Reuses the same query logic from `TrackCreditsSheet`
-- Displayed inline as a vertical list within the scroll, not as a separate modal
-- This replaces the need to open a separate credits sheet from the fullscreen view
-
-**c) "About the Artist" section**
-- Shows a small card with the artist's avatar, name, and a "View Profile" button
-- Links to `/artist/:id`
-- Tapping it closes the fullscreen player and navigates
+New order after the action row:
+1. **"More from [Artist Name]"** -- horizontal track carousel (keep as is)
+2. **"View Song Credits"** -- tappable row that opens the credits drawer
+3. **"About the Artist"** -- rich section with banner, bio, followers (no routing away)
+4. **JumTunes Recording ID** -- shown at the bottom if available
 
 ---
 
@@ -70,42 +43,24 @@ Below the action row, add three new sections that the user can scroll to:
 
 ### Files to Modify
 
-**`src/components/audio/FullscreenPlayer.tsx`** (major rewrite)
-- Restructure from static centered layout to scrollable layout
-- Add data fetching: `useQuery` for artist tracks, track credits, track features, track registration
-- Add "More from this Artist" horizontal carousel
-- Add inline credits display
-- Add "About the Artist" card
-- Fix scroll containment with `overscroll-behavior: contain` and proper `overflow-y: auto`
-- Accept new props: `onPlayTrack` callback so tapping a related track plays it
+**`src/components/audio/FullscreenPlayer.tsx`**
 
-**`src/components/audio/GlobalAudioPlayer.tsx`** (minor changes)
-- Make the entire player bar clickable to open fullscreen (not just cover art and title)
-- Add `e.stopPropagation()` on interactive buttons (play/pause, skip, close, volume slider, queue toggle)
-- Pass `playTrack` function to FullscreenPlayer so related tracks can be played
-- The "onOpenCredits" prop can be removed since credits are now inline in the fullscreen view
+- Add new queries:
+  - Fetch artist profile details: `supabase.from('profiles_public').select('id, display_name, avatar_url, banner_image_url, bio').eq('id', artistId).maybeSingle()`
+  - Fetch follower count: `supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', artistId)`
+- Replace the current "About the Artist" button with a rich card:
+  - Full-width banner image (rounded, ~200px tall) with artist name overlay at bottom
+  - Follower count text below
+  - Bio text with truncation (3 lines, expandable)
+- Replace inline credits section with a "View Song Credits" tappable row
+- The `onOpenCredits` callback (already wired) opens the `TrackCreditsSheet` drawer
+- Move the Recording ID display to a standalone small section at the bottom
 
-### Data Fetching (inside FullscreenPlayer)
+### No new files needed
 
-- **Artist tracks:** `supabase.from('tracks').select('id, title, cover_art_url, audio_url, artist:profiles_public!tracks_artist_id_fkey(id, display_name, avatar_url)').eq('artist_id', artistId).neq('id', currentTrackId).eq('status', 'published').limit(10)`
-- **Track credits:** Same query as TrackCreditsSheet -- `supabase.from('track_credits').select('*').eq('track_id', trackId)`
-- **Featured artists:** Same query as TrackCreditsSheet
-- **Track registration:** `fetchTrackRegistration(trackId)`
+The `TrackCreditsSheet` component already exists and handles the full credits display with categorized layout, featured artists, and recording protection info.
 
-All queries are enabled only when `open` is true so they don't fire when the player is collapsed.
+### No database changes needed
 
-### Scroll Behavior Fix
+All data is available from existing tables (`profiles_public`, `follows`, `track_credits`, `track_features`, `track_registrations`).
 
-The key CSS properties on the scrollable container:
-- `overflow-y: auto`
-- `overscroll-behavior: contain` (prevents scroll chaining to parent/background)
-- `-webkit-overflow-scrolling: touch` (smooth momentum scrolling on iOS)
-- The outer overlay gets `overflow: hidden` and `touch-action: none` on any non-scrollable areas
-
-### No New Dependencies
-
-All features use existing libraries (React Query, Supabase client, framer-motion, Lucide icons).
-
-### No Database Changes
-
-All data already exists in the `tracks`, `track_credits`, `track_features`, and `profiles_public` tables.
