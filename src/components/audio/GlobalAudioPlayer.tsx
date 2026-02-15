@@ -614,16 +614,16 @@ export function GlobalAudioPlayer() {
 
       {/* Player Bar */}
       <div 
-        className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-glass-border/30 backdrop-blur-xl animate-in slide-in-from-bottom duration-300"
+        className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-glass-border/30 backdrop-blur-xl animate-in slide-in-from-bottom duration-300 cursor-pointer"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        onClick={() => { setShowQueue(false); setShowFullscreen(true); }}
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-4 py-3">
             {/* Track Info */}
             <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-64">
               <div
-                className="w-12 h-12 rounded-lg bg-muted/50 overflow-hidden flex-shrink-0 relative cursor-pointer group/cover"
-                onClick={() => { setShowQueue(false); setShowFullscreen(true); }}
+                className="w-12 h-12 rounded-lg bg-muted/50 overflow-hidden flex-shrink-0 relative group/cover"
                 title="Open fullscreen player"
               >
                 {currentTrack.cover_art_url ? (
@@ -652,7 +652,7 @@ export function GlobalAudioPlayer() {
                   <Mic2 className="w-4 h-4 text-primary" />
                 </div>
               </div>
-              <div className="min-w-0 cursor-pointer" onClick={() => { setShowQueue(false); setShowFullscreen(true); }}>
+              <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <p className="text-sm font-medium text-foreground truncate">
                     {currentTrack.title}
@@ -679,6 +679,7 @@ export function GlobalAudioPlayer() {
                   <Link
                     to={`/artist/${currentTrack.artist.id}`}
                     className="text-xs text-muted-foreground truncate block hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     {currentTrack.artist.display_name || "Unknown Artist"}
                   </Link>
@@ -687,7 +688,7 @@ export function GlobalAudioPlayer() {
             </div>
 
             {/* Center Controls */}
-            <div className="flex-1 flex flex-col items-center gap-1 max-w-2xl mx-auto hidden md:flex">
+            <div className="flex-1 flex flex-col items-center gap-1 max-w-2xl mx-auto hidden md:flex" onClick={(e) => e.stopPropagation()}>
               {/* Play Button & Progress */}
               <div className="flex items-center gap-2 w-full">
                 <Button
@@ -817,7 +818,7 @@ export function GlobalAudioPlayer() {
             </div>
 
             {/* Mobile Play Button */}
-            <div className="flex items-center gap-1 md:hidden">
+            <div className="flex items-center gap-1 md:hidden" onClick={(e) => e.stopPropagation()}>
               <Button
                 variant="ghost"
                 size="icon"
@@ -853,7 +854,7 @@ export function GlobalAudioPlayer() {
             </div>
 
             {/* Karaoke, Download, Queue, Volume & Close */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
               {/* Karaoke/Lyrics Button - only show if track has karaoke */}
               {hasKaraoke && (
                 <>
@@ -1011,7 +1012,7 @@ export function GlobalAudioPlayer() {
           </div>
 
           {/* Mobile Progress Bar */}
-          <div className="md:hidden pb-2">
+          <div className="md:hidden pb-2" onClick={(e) => e.stopPropagation()}>
             <div className="relative">
               <Slider
                 value={[currentTime]}
@@ -1079,6 +1080,7 @@ export function GlobalAudioPlayer() {
           const downloadBtn = document.querySelector('[data-download-trigger]') as HTMLButtonElement;
           if (downloadBtn) downloadBtn.click();
         }}
+        onPlayTrack={playTrack}
       />
 
       {/* Track Credits Sheet */}

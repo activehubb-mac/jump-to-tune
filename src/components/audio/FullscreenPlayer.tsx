@@ -3,22 +3,53 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1,
   Loader2, MoreHorizontal, ListMusic, Mic2, Heart, FolderPlus, Download,
-  Share2, User, Disc3, Lock, Clock, Mic, MicOff,
+  Share2, User, Disc3, Lock, Clock, Mic, MicOff, ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useNavigate } from "react-router-dom";
 import { AudioTrack } from "@/contexts/AudioPlayerContext";
 import {
   Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription,
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 function formatTime(seconds: number): string {
   if (!seconds || isNaN(seconds)) return "0:00";
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+// Credit role categorization (same as TrackCreditsSheet)
+const CREDIT_CATEGORIES: Record<string, string[]> = {
+  "Writing & Arrangement": ["Songwriter", "Composer", "Lyricist", "Arranger", "Co-Writer"],
+  "Production & Engineering": ["Producer", "Executive Producer", "Co-Producer", "Mix Engineer", "Mastering Engineer", "Recording Engineer", "Sound Engineer", "Audio Engineer"],
+  "Performance": ["Vocalist", "Guitarist", "Bassist", "Drummer", "Pianist", "Keyboardist", "DJ", "Instrumentalist", "Background Vocals"],
+};
+
+function categorizeCredits(credits: { name: string; role: string }[]) {
+  const categorized: Record<string, { name: string; role: string }[]> = {};
+  const other: { name: string; role: string }[] = [];
+
+  credits.forEach((credit) => {
+    let found = false;
+    for (const [category, roles] of Object.entries(CREDIT_CATEGORIES)) {
+      if (roles.some((r) => credit.role.toLowerCase().includes(r.toLowerCase()))) {
+        if (!categorized[category]) categorized[category] = [];
+        categorized[category].push(credit);
+        found = true;
+        break;
+      }
+    }
+    if (!found) other.push(credit);
+  });
+
+  if (other.length > 0) categorized["Other"] = other;
+  return categorized;
 }
 
 interface FullscreenPlayerProps {
@@ -58,6 +89,7 @@ interface FullscreenPlayerProps {
   onOpenCredits: () => void;
   onAddToPlaylist: () => void;
   onDownload: () => void;
+  onPlayTrack?: (track: AudioTrack) => void;
 }
 
 export function FullscreenPlayer({
@@ -97,9 +129,60 @@ export function FullscreenPlayer({
   onOpenCredits,
   onAddToPlaylist,
   onDownload,
+  onPlayTrack,
 }: FullscreenPlayerProps) {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
+
+  const artistId = currentTrack.artist?.id;
+  const trackId = currentTrack.id;
+
+  // Fetch more tracks from this artist
+  const { data: artistTracks, isLoading: loadingArtistTracks } = useQuery({
+    queryKey: ["fullscreen-artist-tracks", artistId, trackId],
+    queryFn: async () => {
+      if (!artistId) return [];
+      const { data } = await supabase
+        .from("tracks")
+        .select("id, title, cover_art_url, audio_url, duration, price, has_karaoke, preview_duration, artist:profiles_public!tracks_artist_id_fkey(id, display_name, avatar_url)")
+        .eq("artist_id", artistId)
+        .neq("id", trackId)
+        .eq("is_draft", false)
+        .limit(10);
+      return data || [];
+    },
+    enabled: open && !!artistId,
+  });
+
+  // Fetch track credits
+  const { data: trackCredits } = useQuery({
+    queryKey: ["fullscreen-track-credits", trackId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("track_credits")
+        .select("*")
+        .eq("track_id", trackId);
+      return data || [];
+    },
+    enabled: open,
+  });
+
+  // Fetch track registration
+  const { data: trackRegistration } = useQuery({
+    queryKey: ["fullscreen-track-registration", trackId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("track_registrations")
+        .select("recording_id")
+        .eq("track_id", trackId)
+        .maybeSingle();
+      return data;
+    },
+    enabled: open,
+  });
+
+  const categorizedCredits = trackCredits ? categorizeCredits(trackCredits) : {};
+  const hasCredits = trackCredits && trackCredits.length > 0;
 
   const handleSeek = (value: number[]) => {
     seek(value[0]);
@@ -128,6 +211,23 @@ export function FullscreenPlayer({
       await navigator.clipboard.writeText(url);
     } catch {
       // silent
+    }
+  };
+
+  const handlePlayRelatedTrack = (track: any) => {
+    if (onPlayTrack) {
+      const audioTrack: AudioTrack = {
+        id: track.id,
+        title: track.title,
+        audio_url: track.audio_url,
+        cover_art_url: track.cover_art_url,
+        duration: track.duration,
+        price: track.price,
+        has_karaoke: track.has_karaoke,
+        preview_duration: track.preview_duration,
+        artist: Array.isArray(track.artist) ? track.artist[0] : track.artist,
+      };
+      onPlayTrack(audioTrack);
     }
   };
 
@@ -172,199 +272,345 @@ export function FullscreenPlayer({
             </Button>
           </div>
 
-          {/* Main content area - flex grow with centering */}
-          <div className="flex-1 flex flex-col items-center justify-center px-8 gap-6 min-h-0">
-            {/* Cover Art */}
-            <div className="w-full max-w-[320px] md:max-w-[400px] aspect-square rounded-xl overflow-hidden shadow-2xl shadow-black/50 flex-shrink-0">
-              {currentTrack.cover_art_url ? (
-                <img
-                  src={currentTrack.cover_art_url}
-                  alt={currentTrack.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-white/5 flex items-center justify-center">
-                  <Disc3 className="w-20 h-20 text-white/20" />
-                </div>
-              )}
-            </div>
-
-            {/* Track Info */}
-            <div className="w-full max-w-[320px] md:max-w-[400px] flex-shrink-0">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-white truncate flex-1">
-                  {currentTrack.title}
-                </h2>
-                {isPreviewMode && (
-                  <span className="flex-shrink-0 inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border border-amber-500/50 text-amber-500 bg-amber-500/10">
-                    <Clock className="w-2.5 h-2.5" />
-                    {Math.ceil(previewTimeRemaining)}s
-                  </span>
-                )}
-              </div>
-              {currentTrack.artist && (
-                <Link
-                  to={`/artist/${currentTrack.artist.id}`}
-                  className="text-base text-[#B8A675] hover:underline transition-colors"
-                  onClick={onClose}
-                >
-                  {currentTrack.artist.display_name || "Unknown Artist"}
-                </Link>
-              )}
-            </div>
-
-            {/* Progress Bar */}
-            <div className="w-full max-w-[320px] md:max-w-[400px] flex-shrink-0">
-              <div className="relative">
-                <Slider
-                  value={[currentTime]}
-                  max={isPreviewMode ? currentPreviewLimit : (duration || 100)}
-                  step={0.1}
-                  onValueChange={handleSeek}
-                  className="w-full [&_[role=slider]]:bg-[#B8A675] [&_[role=slider]]:border-[#B8A675] [&_.bg-primary]:bg-[#B8A675]"
-                />
-                {isPreviewMode && duration > currentPreviewLimit && (
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-amber-500 pointer-events-none rounded-full"
-                    style={{ left: `${(currentPreviewLimit / duration) * 100}%` }}
+          {/* Scrollable content area */}
+          <div
+            className="flex-1 overflow-y-auto min-h-0"
+            style={{
+              overscrollBehavior: "contain",
+              WebkitOverflowScrolling: "touch",
+            }}
+          >
+            {/* Main player content - centered */}
+            <div className="flex flex-col items-center px-8 gap-6 pt-2 pb-4">
+              {/* Cover Art */}
+              <div className="w-full max-w-[320px] md:max-w-[400px] aspect-square rounded-xl overflow-hidden shadow-2xl shadow-black/50 flex-shrink-0">
+                {currentTrack.cover_art_url ? (
+                  <img
+                    src={currentTrack.cover_art_url}
+                    alt={currentTrack.title}
+                    className="w-full h-full object-cover"
                   />
+                ) : (
+                  <div className="w-full h-full bg-white/5 flex items-center justify-center">
+                    <Disc3 className="w-20 h-20 text-white/20" />
+                  </div>
                 )}
               </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-xs text-white/50">{formatTime(currentTime)}</span>
-                <span className="text-xs text-white/50">
-                  {isPreviewMode ? formatTime(currentPreviewLimit) : formatTime(duration)}
-                </span>
+
+              {/* Track Info */}
+              <div className="w-full max-w-[320px] md:max-w-[400px]">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-white truncate flex-1">
+                    {currentTrack.title}
+                  </h2>
+                  {isPreviewMode && (
+                    <span className="flex-shrink-0 inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border border-amber-500/50 text-amber-500 bg-amber-500/10">
+                      <Clock className="w-2.5 h-2.5" />
+                      {Math.ceil(previewTimeRemaining)}s
+                    </span>
+                  )}
+                </div>
+                {currentTrack.artist && (
+                  <Link
+                    to={`/artist/${currentTrack.artist.id}`}
+                    className="text-base text-[#B8A675] hover:underline transition-colors"
+                    onClick={onClose}
+                  >
+                    {currentTrack.artist.display_name || "Unknown Artist"}
+                  </Link>
+                )}
               </div>
-            </div>
 
-            {/* Playback Controls */}
-            <div className="flex items-center justify-center gap-6 w-full max-w-[320px] md:max-w-[400px] flex-shrink-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "h-10 w-10 relative",
-                  isShuffled && canShuffle ? "text-[#B8A675]" : "text-white/60 hover:text-white hover:bg-white/10"
-                )}
-                onClick={handleShuffleClick}
-              >
-                <Shuffle className="h-5 w-5" />
-                {!canShuffle && <Lock className="h-2.5 w-2.5 absolute -top-0.5 -right-0.5 text-[#B8A675]" />}
-              </Button>
+              {/* Progress Bar */}
+              <div className="w-full max-w-[320px] md:max-w-[400px]">
+                <div className="relative">
+                  <Slider
+                    value={[currentTime]}
+                    max={isPreviewMode ? currentPreviewLimit : (duration || 100)}
+                    step={0.1}
+                    onValueChange={handleSeek}
+                    className="w-full [&_[role=slider]]:bg-[#B8A675] [&_[role=slider]]:border-[#B8A675] [&_.bg-primary]:bg-[#B8A675]"
+                  />
+                  {isPreviewMode && duration > currentPreviewLimit && (
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-amber-500 pointer-events-none rounded-full"
+                      style={{ left: `${(currentPreviewLimit / duration) * 100}%` }}
+                    />
+                  )}
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span className="text-xs text-white/50">{formatTime(currentTime)}</span>
+                  <span className="text-xs text-white/50">
+                    {isPreviewMode ? formatTime(currentPreviewLimit) : formatTime(duration)}
+                  </span>
+                </div>
+              </div>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 text-white/80 hover:text-white hover:bg-white/10"
-                onClick={playPrevious}
-                disabled={!hasPrevious}
-              >
-                <SkipBack className="h-6 w-6" />
-              </Button>
-
-              <Button
-                size="icon"
-                className="rounded-full w-16 h-16 bg-white text-[#141414] hover:bg-white/90 shadow-lg flex-shrink-0"
-                onClick={needsUserGesture ? resumePlayback : togglePlayPause}
-                disabled={isBuffering && !needsUserGesture}
-              >
-                {isBuffering && !needsUserGesture ? (
-                  <Loader2 className="h-7 w-7 animate-spin" />
-                ) : isPlaying ? (
-                  <Pause className="h-7 w-7" />
-                ) : (
-                  <Play className="h-7 w-7 ml-1" />
-                )}
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 text-white/80 hover:text-white hover:bg-white/10"
-                onClick={playNext}
-                disabled={!hasNext}
-              >
-                <SkipForward className="h-6 w-6" />
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "h-10 w-10 relative",
-                  repeatMode !== "off" && canRepeat ? "text-[#B8A675]" : "text-white/60 hover:text-white hover:bg-white/10"
-                )}
-                onClick={handleRepeatClick}
-              >
-                {repeatMode === "one" && canRepeat ? (
-                  <Repeat1 className="h-5 w-5" />
-                ) : (
-                  <Repeat className="h-5 w-5" />
-                )}
-                {!canRepeat && <Lock className="h-2.5 w-2.5 absolute -top-0.5 -right-0.5 text-[#B8A675]" />}
-              </Button>
-            </div>
-
-            {/* Action Row */}
-            <div className="flex items-center justify-center gap-4 w-full max-w-[320px] md:max-w-[400px] flex-shrink-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 text-white/60 hover:text-[#B8A675] hover:bg-white/10"
-                onClick={onOpenCredits}
-                title="View credits"
-              >
-                <Mic2 className="h-5 w-5" />
-              </Button>
-
-              {hasKaraoke && (
+              {/* Playback Controls */}
+              <div className="flex items-center justify-center gap-6 w-full max-w-[320px] md:max-w-[400px]">
                 <Button
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "h-10 w-10",
-                    isKaraokeMode ? "text-[#B8A675] bg-[#B8A675]/10" : "text-white/60 hover:text-white hover:bg-white/10"
+                    "h-10 w-10 relative",
+                    isShuffled && canShuffle ? "text-[#B8A675]" : "text-white/60 hover:text-white hover:bg-white/10"
                   )}
-                  onClick={toggleKaraokeMode}
-                  disabled={!karaokeReady}
-                  title={isKaraokeMode ? "Original audio" : "Karaoke mode"}
+                  onClick={handleShuffleClick}
                 >
-                  {isKaraokeMode ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                  <Shuffle className="h-5 w-5" />
+                  {!canShuffle && <Lock className="h-2.5 w-2.5 absolute -top-0.5 -right-0.5 text-[#B8A675]" />}
                 </Button>
-              )}
 
-              {isOwned && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-12 w-12 text-white/80 hover:text-white hover:bg-white/10"
+                  onClick={playPrevious}
+                  disabled={!hasPrevious}
+                >
+                  <SkipBack className="h-6 w-6" />
+                </Button>
+
+                <Button
+                  size="icon"
+                  className="rounded-full w-16 h-16 bg-white text-[#141414] hover:bg-white/90 shadow-lg flex-shrink-0"
+                  onClick={needsUserGesture ? resumePlayback : togglePlayPause}
+                  disabled={isBuffering && !needsUserGesture}
+                >
+                  {isBuffering && !needsUserGesture ? (
+                    <Loader2 className="h-7 w-7 animate-spin" />
+                  ) : isPlaying ? (
+                    <Pause className="h-7 w-7" />
+                  ) : (
+                    <Play className="h-7 w-7 ml-1" />
+                  )}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-12 w-12 text-white/80 hover:text-white hover:bg-white/10"
+                  onClick={playNext}
+                  disabled={!hasNext}
+                >
+                  <SkipForward className="h-6 w-6" />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-10 w-10 relative",
+                    repeatMode !== "off" && canRepeat ? "text-[#B8A675]" : "text-white/60 hover:text-white hover:bg-white/10"
+                  )}
+                  onClick={handleRepeatClick}
+                >
+                  {repeatMode === "one" && canRepeat ? (
+                    <Repeat1 className="h-5 w-5" />
+                  ) : (
+                    <Repeat className="h-5 w-5" />
+                  )}
+                  {!canRepeat && <Lock className="h-2.5 w-2.5 absolute -top-0.5 -right-0.5 text-[#B8A675]" />}
+                </Button>
+              </div>
+
+              {/* Action Row */}
+              <div className="flex items-center justify-center gap-4 w-full max-w-[320px] md:max-w-[400px]">
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-10 w-10 text-white/60 hover:text-[#B8A675] hover:bg-white/10"
-                  onClick={onAddToPlaylist}
-                  title="Add to playlist"
+                  onClick={onOpenCredits}
+                  title="View credits"
                 >
-                  <FolderPlus className="h-5 w-5" />
+                  <Mic2 className="h-5 w-5" />
                 </Button>
+
+                {hasKaraoke && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-10 w-10",
+                      isKaraokeMode ? "text-[#B8A675] bg-[#B8A675]/10" : "text-white/60 hover:text-white hover:bg-white/10"
+                    )}
+                    onClick={toggleKaraokeMode}
+                    disabled={!karaokeReady}
+                    title={isKaraokeMode ? "Original audio" : "Karaoke mode"}
+                  >
+                    {isKaraokeMode ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                  </Button>
+                )}
+
+                {isOwned && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 text-white/60 hover:text-[#B8A675] hover:bg-white/10"
+                    onClick={onAddToPlaylist}
+                    title="Add to playlist"
+                  >
+                    <FolderPlus className="h-5 w-5" />
+                  </Button>
+                )}
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 text-white/60 hover:text-[#B8A675] hover:bg-white/10"
+                  onClick={onDownload}
+                  title="Download"
+                >
+                  <Download className="h-5 w-5" />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 text-white/60 hover:text-[#B8A675] hover:bg-white/10"
+                  onClick={onOpenQueue}
+                  title="Queue"
+                >
+                  <ListMusic className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+
+            {/* === Scrollable Extra Content === */}
+            <div className="px-6 pb-8 space-y-8">
+
+              {/* More from this Artist */}
+              {artistId && (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-white/80">
+                      More from {currentTrack.artist?.display_name || "this artist"}
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-white/40 hover:text-white/70 h-7 px-2"
+                      onClick={() => {
+                        onClose();
+                        navigate(`/artist/${artistId}`);
+                      }}
+                    >
+                      See all <ChevronRight className="h-3 w-3 ml-0.5" />
+                    </Button>
+                  </div>
+
+                  {loadingArtistTracks ? (
+                    <div className="flex gap-3 overflow-hidden">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex-shrink-0 w-32">
+                          <Skeleton className="w-32 h-32 rounded-lg bg-white/5" />
+                          <Skeleton className="w-24 h-3 mt-2 bg-white/5" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : artistTracks && artistTracks.length > 0 ? (
+                    <div
+                      className="flex gap-3 overflow-x-auto pb-2 -mx-6 px-6"
+                      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                    >
+                      {artistTracks.map((track) => (
+                        <button
+                          key={track.id}
+                          className="flex-shrink-0 w-32 text-left group"
+                          onClick={() => handlePlayRelatedTrack(track)}
+                        >
+                          <div className="w-32 h-32 rounded-lg overflow-hidden bg-white/5 relative">
+                            {track.cover_art_url ? (
+                              <img
+                                src={track.cover_art_url}
+                                alt={track.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Disc3 className="w-8 h-8 text-white/20" />
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Play className="w-8 h-8 text-white" />
+                            </div>
+                          </div>
+                          <p className="text-xs text-white/70 mt-2 truncate group-hover:text-white transition-colors">
+                            {track.title}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-white/30">No other tracks available</p>
+                  )}
+                </div>
               )}
 
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 text-white/60 hover:text-[#B8A675] hover:bg-white/10"
-                onClick={onDownload}
-                title="Download"
-              >
-                <Download className="h-5 w-5" />
-              </Button>
+              {/* Credits Section */}
+              {hasCredits && (
+                <div>
+                  <h3 className="text-sm font-semibold text-white/80 mb-3">Credits</h3>
+                  <div className="space-y-4">
+                    {Object.entries(categorizedCredits).map(([category, credits]) => (
+                      <div key={category}>
+                        <p className="text-xs text-white/40 uppercase tracking-wider mb-2">{category}</p>
+                        <div className="space-y-1.5">
+                          {credits.map((credit, idx) => (
+                            <div key={idx} className="flex items-center justify-between">
+                              <span className="text-sm text-white/70">{credit.name}</span>
+                              <span className="text-xs text-white/40">{credit.role}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {trackRegistration?.recording_id && (
+                    <div className="mt-4 pt-3 border-t border-white/10">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-white/40">JumTunes Recording ID</span>
+                        <span className="text-xs text-white/50 font-mono">{trackRegistration.recording_id}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 text-white/60 hover:text-[#B8A675] hover:bg-white/10"
-                onClick={onOpenQueue}
-                title="Queue"
-              >
-                <ListMusic className="h-5 w-5" />
-              </Button>
+              {/* About the Artist */}
+              {currentTrack.artist && (
+                <div>
+                  <h3 className="text-sm font-semibold text-white/80 mb-3">About the Artist</h3>
+                  <button
+                    className="flex items-center gap-3 w-full p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-left"
+                    onClick={() => {
+                      onClose();
+                      navigate(`/artist/${currentTrack.artist!.id}`);
+                    }}
+                  >
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10 flex-shrink-0">
+                      {(currentTrack.artist as any)?.avatar_url ? (
+                        <img
+                          src={(currentTrack.artist as any).avatar_url}
+                          alt={currentTrack.artist.display_name || ""}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <User className="w-5 h-5 text-white/30" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">
+                        {currentTrack.artist.display_name || "Unknown Artist"}
+                      </p>
+                      <p className="text-xs text-white/40">View full profile</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-white/30 flex-shrink-0" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
