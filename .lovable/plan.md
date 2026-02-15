@@ -1,37 +1,63 @@
 
 
-# Fix: Make Label Dashboard Track Cards Clickable
+# Fix: Subscription Expiry Enforcement
 
-## The Problem
+## What's Actually Happening
 
-On the **Label Dashboard**, clicking a track card in "Recent Releases" does nothing. The track cards render but have no `onClick` handler and no `TrackDetailModal` is wired up.
+Your subscription flow worked correctly during testing -- Stripe processed the downgrade. But the local database was never updated to reflect the cancellation, and the `check-subscription` edge function has two gaps:
 
-Meanwhile, the **Artist Dashboard** already works correctly -- clicking a track opens a detail modal showing full track info, play controls, and the new Recording ID.
+1. **Silent Stripe error**: When retrieving `sub_1Spvh2EKeZaBsSwjimemSDva` from Stripe fails (subscription canceled/removed), the error is caught and silently ignored
+2. **Blind fallback**: The fallback path (line 172) trusts the DB `status: "active"` without checking if `current_period_end` has passed
 
 ## The Fix
 
-Mirror what the Artist Dashboard already does:
+**File: `supabase/functions/check-subscription/index.ts`**
 
-1. **Add state** for `selectedTrack` in `LabelDashboard.tsx`
-2. **Add `onClick`** handler to each `TrackCard` in the Recent Releases grid
-3. **Add `TrackDetailModal`** component to the page
-4. Import the required component
+### Change 1: Handle Stripe retrieval failures properly
 
-## What Changes
+When Stripe returns an error for a stored subscription ID, instead of silently falling through, treat it as an expired/invalid subscription:
 
-**File: `src/pages/LabelDashboard.tsx`**
+- If Stripe says the subscription doesn't exist or is invalid, mark as expired
+- Update the local DB to clear the stale status so future checks are faster
 
-- Import `TrackDetailModal` from `@/components/dashboard/TrackDetailModal`
-- Add `selectedTrack` state (useState)
-- Add `onClick={() => setSelectedTrack(track)}` to each TrackCard in the Recent Releases grid
-- Add `<TrackDetailModal>` at the bottom of the component, same pattern as ArtistDashboard
+### Change 2: Add date validation to the fallback path
 
-## Who Benefits
+Before returning the fallback local data at line 172, check:
 
-- **Label owners** can now click any release to see full track details, play the track, view the Recording ID, and download certificates
-- **Consistency** between Artist and Label dashboards
+```text
+IF current_period_end has passed AND trial_ends_at has passed:
+  -> Update DB status to "canceled"
+  -> Return subscribed: false, status: "canceled"
+ELSE IF only current_period_end has passed but trial still active:
+  -> Return trial status with remaining days
+ELSE:
+  -> Return current local data as-is (it's still valid)
+```
+
+### Change 3: Sync DB on Stripe error
+
+When the Stripe fetch fails for a known subscription ID, update the local record:
+
+```text
+UPDATE subscriptions 
+SET status = 'canceled', stripe_subscription_id = NULL
+WHERE user_id = user.id
+```
+
+This prevents repeated failed Stripe lookups on every check.
+
+## What This Fixes
+
+- Your account will immediately show as expired on next check
+- The `SubscriptionExpiredModal` will appear as designed
+- Premium features (queue, shuffle, repeat, sorting) will show lock icons
+- Users who tested proration/downgrade flows won't get stuck in a "forever active" state
+- Future Stripe errors won't silently grant access
 
 ## Scope
 
-This is a small, focused change -- only `LabelDashboard.tsx` is modified. No new files, no database changes.
+- **One file modified**: `supabase/functions/check-subscription/index.ts`
+- **No database migration needed**
+- **No frontend changes needed** -- the existing expired modal, lock icons, and feature gating are already wired up and waiting for the correct `subscribed: false` response
+- Edge function will be redeployed automatically
 
