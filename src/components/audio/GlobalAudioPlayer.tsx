@@ -22,6 +22,7 @@ import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { AddToPlaylistModal } from "@/components/playlist/AddToPlaylistModal";
 import { CreatePlaylistModal } from "@/components/playlist/CreatePlaylistModal";
 import { TrackCreditsSheet } from "@/components/audio/TrackCreditsSheet";
+import { FullscreenPlayer } from "@/components/audio/FullscreenPlayer";
 import {
   DndContext,
   closestCenter,
@@ -192,6 +193,7 @@ export function GlobalAudioPlayer() {
   const [showKaraokeHint, setShowKaraokeHint] = useState(false);
   const [creditsTrackId, setCreditsTrackId] = useState<string | null>(null);
   const [creditsTrackMeta, setCreditsTrackMeta] = useState<{ title: string; cover_art_url: string | null; artist: { id: string; display_name: string | null } | null } | null>(null);
+  const [showFullscreen, setShowFullscreen] = useState(false);
   
   // Load waveform preference from localStorage
   const WAVEFORM_PREF_KEY = "jumtunes_waveform_preference";
@@ -621,8 +623,8 @@ export function GlobalAudioPlayer() {
             <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-64">
               <div
                 className="w-12 h-12 rounded-lg bg-muted/50 overflow-hidden flex-shrink-0 relative cursor-pointer group/cover"
-                onClick={() => openCredits(currentTrack)}
-                title="View credits"
+                onClick={() => { setShowQueue(false); setShowFullscreen(true); }}
+                title="Open fullscreen player"
               >
                 {currentTrack.cover_art_url ? (
                   <img
@@ -650,7 +652,7 @@ export function GlobalAudioPlayer() {
                   <Mic2 className="w-4 h-4 text-primary" />
                 </div>
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 cursor-pointer" onClick={() => { setShowQueue(false); setShowFullscreen(true); }}>
                 <div className="flex items-center gap-1.5">
                   <p className="text-sm font-medium text-foreground truncate">
                     {currentTrack.title}
@@ -1035,6 +1037,49 @@ export function GlobalAudioPlayer() {
           </div>
         </div>
       </div>
+
+      {/* Fullscreen Player */}
+      <FullscreenPlayer
+        open={showFullscreen}
+        currentTrack={currentTrack}
+        isPlaying={isPlaying}
+        isBuffering={isBuffering}
+        needsUserGesture={needsUserGesture}
+        currentTime={currentTime}
+        duration={duration}
+        isPreviewMode={isPreviewMode}
+        previewTimeRemaining={previewTimeRemaining}
+        currentPreviewLimit={currentPreviewLimit}
+        isShuffled={isShuffled}
+        repeatMode={repeatMode}
+        hasKaraoke={hasKaraoke}
+        isKaraokeMode={isKaraokeMode}
+        karaokeReady={karaokeReady}
+        showLyrics={showLyrics}
+        hasNext={hasNext}
+        hasPrevious={hasPrevious}
+        canShuffle={canShuffle}
+        canRepeat={canRepeat}
+        isOwned={isOwned(currentTrack.id)}
+        togglePlayPause={needsUserGesture ? resumePlayback : togglePlayPause}
+        resumePlayback={resumePlayback}
+        seek={seek}
+        playNext={playNext}
+        playPrevious={playPrevious}
+        handleShuffleClick={handleShuffleClick}
+        handleRepeatClick={handleRepeatClick}
+        toggleKaraokeMode={toggleKaraokeMode}
+        toggleShowLyrics={toggleShowLyrics}
+        onClose={() => setShowFullscreen(false)}
+        onOpenQueue={() => { setShowFullscreen(false); handleQueueClick(); }}
+        onOpenCredits={() => openCredits(currentTrack)}
+        onAddToPlaylist={() => setShowAddToPlaylist(true)}
+        onDownload={() => {
+          // Trigger download via the existing DownloadButton mechanism
+          const downloadBtn = document.querySelector('[data-download-trigger]') as HTMLButtonElement;
+          if (downloadBtn) downloadBtn.click();
+        }}
+      />
 
       {/* Track Credits Sheet */}
       <TrackCreditsSheet
