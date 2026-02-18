@@ -1,66 +1,82 @@
 
 
-# Enhance Fullscreen Player: Rich Artist Section and Credits Dialog
+# Homepage Messaging Repositioning
 
-## What Changes
-
-### 1. Replace the small "About the Artist" card with a rich, immersive section
-
-Currently: A tiny row with avatar, name, and "View full profile" link that navigates away.
-
-New design: A full-width section inspired by the Spotify reference, containing:
-- **Large artist banner image** (or avatar fallback) displayed as a wide card with overlay text
-- **Artist name** overlaid on the banner (bold, large)
-- **Follower count** displayed beneath the banner
-- **Bio text** shown inline (first 3 lines with "Show more" expansion)
-- **"Follow" button** if the user is not already following
-- All of this stays within the fullscreen player -- no navigation away
-
-Data needed: Fetch from `profiles_public` (banner_image_url, bio, avatar_url, display_name) and `follows` table (follower count). These queries already exist in the codebase via `useFollowerCounts` and `useArtistProfile`.
-
-### 2. Add a visible "View Song Credits" button that opens a credits Drawer
-
-Currently: Credits are displayed inline as plain text below the controls, and also available in the "..." menu.
-
-New design:
-- Remove the inline credits section from the scroll area
-- Add a prominent **"View Song Credits"** row button (with a Mic2 icon) in the scrollable area, styled like a list item
-- Tapping it opens the existing `TrackCreditsSheet` drawer (already built at z-[60]) with the full categorized credits layout
-- The `Mic2` icon button in the action row also still triggers this same drawer
-- The credits option in the "..." menu also triggers this same drawer
-
-### 3. Restructure the scrollable content order
-
-New order after the action row:
-1. **"More from [Artist Name]"** -- horizontal track carousel (keep as is)
-2. **"View Song Credits"** -- tappable row that opens the credits drawer
-3. **"About the Artist"** -- rich section with banner, bio, followers (no routing away)
-4. **JumTunes Recording ID** -- shown at the bottom if available
+**Goal**: Update all homepage text to reposition JumTunes as a superfan platform that complements streaming, not competes with it. No layout, color, structure, or design changes -- wording only.
 
 ---
 
-## Technical Details
+## Changes Overview
 
-### Files to Modify
+### 1. Hero Section (Guest / Not Logged In)
 
-**`src/components/audio/FullscreenPlayer.tsx`**
+Update the `getHeroContent()` function for the `!user` case:
 
-- Add new queries:
-  - Fetch artist profile details: `supabase.from('profiles_public').select('id, display_name, avatar_url, banner_image_url, bio').eq('id', artistId).maybeSingle()`
-  - Fetch follower count: `supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', artistId)`
-- Replace the current "About the Artist" button with a rich card:
-  - Full-width banner image (rounded, ~200px tall) with artist name overlay at bottom
-  - Follower count text below
-  - Bio text with truncation (3 lines, expandable)
-- Replace inline credits section with a "View Song Credits" tappable row
-- The `onOpenCredits` callback (already wired) opens the `TrackCreditsSheet` drawer
-- Move the Recording ID display to a standalone small section at the bottom
+| Element | Current | New |
+|---------|---------|-----|
+| Badge text | "Join 10K+ Creators" | "Built for the Superfans Behind the Streams" |
+| Heading | "Where Artists Thrive." | "Where Superfans Go Deeper." |
+| Subheading | "Your sound. Your earnings. Your legacy..." | "Streaming helps artists get discovered. JumTunes helps artists build direct relationships, exclusive drops, and real fan support." |
+| Supporting line | *(none)* | Add: "This is your VIP room -- the place where your biggest supporters show up first." |
+| Primary button | "Start Creating" | "Launch Your VIP Drop" |
+| Secondary button | "Explore Music" | "Explore Exclusive Releases" |
 
-### No new files needed
+### 2. Remove Fake Metrics (Hero Quick Stats)
 
-The `TrackCreditsSheet` component already exists and handles the full credits display with categorized layout, featured artists, and recording protection info.
+Remove the inline stats block that shows "50K+", "10K+", "$2M+" in the hero section (lines 929-944).
 
-### No database changes needed
+### 3. Remove Stats Section
 
-All data is available from existing tables (`profiles_public`, `follows`, `track_credits`, `track_features`, `track_registrations`).
+Remove the standalone stats section (lines 1081-1091) that displays the `stats` array (50K+ Tracks, 10K+ Artists, 500K+ Collectors, $2M+ Artist Earnings). Also remove the `stats` constant at the top of the file.
+
+### 4. Replace Features Section with Value Blocks
+
+Update the `features` array (lines 24-40) with new superfan-focused messaging:
+
+| Block | Title | Description |
+|-------|-------|-------------|
+| 1 | Direct Fan Support | Every download represents a real supporter -- not just a stream count. |
+| 2 | Exclusive Releases | Drop early versions, remixes, bonus tracks, or limited editions before streaming. |
+| 3 | Own Your Relationship | Know who supports you. Build community beyond algorithms. |
+| 4 | Streaming-Friendly Model | JumTunes complements streaming platforms -- it doesn't replace them. |
+
+Update section title from "Why JumTunes?" to "Why Artists Use JumTunes" and update subtitle accordingly.
+
+### 5. Update PWA Install Banner
+
+In `src/components/home/PWAInstallBanner.tsx`, change the default install message from "Install for quick access and offline support" to "Support artists directly. Unlock exclusive music before it hits streaming."
+
+### 6. Add Mid-Page Brand Statement Section
+
+Add a new section between the Features section and the Role CTA section (for guests only) with:
+
+- **Headline**: "The VIP Room Inside the Streaming Club."
+- **Body**: Streaming is discovery. / JumTunes is connection. / Streaming is reach. / JumTunes is loyalty. / Streaming is exposure. / JumTunes is ownership.
+
+This will use existing glass-card styling to match the page design.
+
+### 7. Update Final CTA (Role CTA Section)
+
+Update the "Join the Revolution" section heading and subtitle:
+
+| Element | Current | New |
+|---------|---------|-----|
+| Heading | "Join the Revolution" | "Turn listeners into super fans." |
+| Subtitle | "Whether you're a fan, artist, or label..." | *(remove or keep as secondary context)* |
+
+Add a standalone CTA button "Start Your Exclusive Drop" linking to signup.
+
+---
+
+## Files Modified
+
+1. **`src/pages/Index.tsx`** -- All hero text, stats removal, features array, new brand statement section, final CTA update
+2. **`src/components/home/PWAInstallBanner.tsx`** -- Install banner message update
+
+## Technical Notes
+
+- The `features` array icons will be updated to match new messaging (e.g., Heart, Disc3, Users, Zap -- all already imported)
+- The `stats` array and its rendering blocks will be fully removed
+- The new brand statement section will be a simple JSX block inserted between existing sections, using existing utility classes
+- No new dependencies, components, or structural changes required
 
