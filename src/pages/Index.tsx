@@ -22,34 +22,21 @@ import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { useFeaturedArtists, useFeaturedLabels, useFeaturedTracks } from "@/hooks/useFeaturedContent";
 const features = [{
+  icon: Heart,
+  title: "Direct Fan Support",
+  description: "Every download represents a real supporter — not just a stream count."
+}, {
   icon: Disc3,
-  title: "Own Your Music",
-  description: "Collect exclusive tracks and own them forever. Your music, your collection."
+  title: "Exclusive Releases",
+  description: "Drop early versions, remixes, bonus tracks, or limited editions before streaming."
 }, {
   icon: Users,
-  title: "Support Artists",
-  description: "Connect directly with artists and support their creative journey."
+  title: "Own Your Relationship",
+  description: "Know who supports you. Build community beyond algorithms."
 }, {
-  icon: Building2,
-  title: "Label Management",
-  description: "Labels can manage rosters and release music on behalf of their artists."
-}, {
-  icon: Shield,
-  title: "Secure & Transparent",
-  description: "Every transaction is secure and ownership is verifiable."
-}];
-const stats = [{
-  value: "50K+",
-  label: "Tracks"
-}, {
-  value: "10K+",
-  label: "Artists"
-}, {
-  value: "500K+",
-  label: "Collectors"
-}, {
-  value: "$2M+",
-  label: "Artist Earnings"
+  icon: Zap,
+  title: "Streaming-Friendly Model",
+  description: "JumTunes complements streaming platforms — it doesn't replace them."
 }];
 
 // Featured Artists Section Component - Banner style with carousel
@@ -752,26 +739,27 @@ export default function Index() {
       // Not logged in - show motivating marketing
       return {
         badge: {
-          text: "Join 10K+ Creators",
+          text: "Built for the Superfans Behind the Streams",
           icon: TrendingUp
         },
         heading: <>
-            <span className="text-foreground">Where Artists</span>
+            <span className="text-foreground">Where Superfans</span>
             <br />
-            <span className="text-gradient">Thrive.</span>
+            <span className="text-gradient">Go Deeper.</span>
           </>,
-        subheading: "Your sound. Your earnings. Your legacy. Join thousands of artists building their future on JumTunes.",
+        subheading: "Streaming helps artists get discovered. JumTunes helps artists build direct relationships, exclusive drops, and real fan support.",
+        supportingLine: "This is your VIP room — the place where your biggest supporters show up first.",
         ctas: <>
             <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 text-lg px-8" asChild>
               <Link to="/auth?mode=signup">
                 <Rocket className="w-5 h-5 mr-2" />
-                Start Creating
+                Launch Your VIP Drop
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="border-glass-border hover:bg-glass hover:border-primary/50 transition-all duration-300 text-lg px-8" asChild>
               <Link to="/browse">
                 <Music className="w-5 h-5 mr-2" />
-                Explore Music
+                Explore Exclusive Releases
               </Link>
             </Button>
           </>
@@ -916,32 +904,22 @@ export default function Index() {
               </h1>
 
               {/* Subheading */}
-              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0">
+              <p className="text-lg md:text-xl text-muted-foreground mb-4 max-w-xl mx-auto lg:mx-0">
                 {heroContent.subheading}
               </p>
+
+              {/* Supporting Line */}
+              {'supportingLine' in heroContent && heroContent.supportingLine && (
+                <p className="text-sm text-muted-foreground/80 mb-8 max-w-xl mx-auto lg:mx-0 italic">
+                  {heroContent.supportingLine as string}
+                </p>
+              )}
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 {heroContent.ctas}
               </div>
 
-              {/* Quick Stats for Guests */}
-              {!user && <div className="flex items-center justify-center lg:justify-start gap-6 mt-8 pt-8 border-t border-glass-border">
-                  <div className="text-center lg:text-left">
-                    <div className="text-2xl font-bold text-gradient">50K+</div>
-                    <div className="text-xs text-muted-foreground">Tracks</div>
-                  </div>
-                  <div className="w-px h-8 bg-glass-border" />
-                  <div className="text-center lg:text-left">
-                    <div className="text-2xl font-bold text-gradient">10K+</div>
-                    <div className="text-xs text-muted-foreground">Artists</div>
-                  </div>
-                  <div className="w-px h-8 bg-glass-border" />
-                  <div className="text-center lg:text-left">
-                    <div className="text-2xl font-bold text-gradient">$2M+</div>
-                    <div className="text-xs text-muted-foreground">Earned</div>
-                  </div>
-                </div>}
             </div>
 
             {/* Right Side - Featured Content Carousel */}
@@ -1078,28 +1056,17 @@ export default function Index() {
           </div>
         </section>}
 
-      {/* Stats Section - Only show for guests */}
-      {!user && <section className="py-10 md:py-14 bg-card/20">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {stats.map((stat, index) => <div key={index} className="text-center">
-                  <div className="text-4xl md:text-5xl font-bold text-gradient mb-2">{stat.value}</div>
-                  <div className="text-muted-foreground">{stat.label}</div>
-                </div>)}
-            </div>
-          </div>
-        </section>}
 
       {/* Features Section - Only show for guests */}
       {!user && <section className="py-10 md:py-14">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-5xl font-bold mb-4">
-                <span className="text-foreground">Why </span>
-                <span className="text-gradient">JumTunes?</span>
+                <span className="text-foreground">Why Artists Use </span>
+                <span className="text-gradient">JumTunes</span>
               </h2>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                A new era of music ownership where fans, artists, and labels thrive together.
+                Built to complement streaming — not compete with it.
               </p>
             </div>
 
@@ -1118,16 +1085,29 @@ export default function Index() {
           </div>
         </section>}
 
+      {/* Brand Statement Section - Only show for guests */}
+      {!user && <section className="py-10 md:py-14">
+          <div className="container mx-auto px-4">
+            <div className="glass-card-bordered p-8 md:p-12 text-center max-w-3xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-8">
+                The VIP Room Inside the Streaming Club.
+              </h2>
+              <div className="space-y-4 text-lg text-muted-foreground">
+                <p>Streaming is discovery.<br /><span className="text-foreground font-medium">JumTunes is connection.</span></p>
+                <p>Streaming is reach.<br /><span className="text-foreground font-medium">JumTunes is loyalty.</span></p>
+                <p>Streaming is exposure.<br /><span className="text-foreground font-medium">JumTunes is ownership.</span></p>
+              </div>
+            </div>
+          </div>
+        </section>}
+
       {/* Role CTA Section - Only show for guests */}
       {!user && <section className="py-10 md:py-14 bg-card/20">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">
-                Join the Revolution
+                Turn listeners into super fans.
               </h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Whether you're a fan, artist, or label – there's a place for you on JumTunes.
-              </p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -1172,6 +1152,15 @@ export default function Index() {
                   <Link to="/auth?mode=signup&role=label">Join as Label</Link>
                 </Button>
               </div>
+            </div>
+
+            <div className="text-center mt-12">
+              <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 text-lg px-8" asChild>
+                <Link to="/auth?mode=signup">
+                  <Rocket className="w-5 h-5 mr-2" />
+                  Start Your Exclusive Drop
+                </Link>
+              </Button>
             </div>
           </div>
         </section>}
