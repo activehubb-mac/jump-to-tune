@@ -99,7 +99,7 @@ export function PWAInstallBanner() {
       case "ios":
         return "Tap Share → Add to Home Screen";
       case "android":
-        return "Install for quick access and offline support";
+        return "Support artists directly. Unlock exclusive music before it hits streaming.";
       default:
         return "Install our app for the best experience";
     }
