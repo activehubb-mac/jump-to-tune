@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_feed: {
+        Row: {
+          artist_id: string
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          title: string
+          type: string
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          title: string
+          type: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       albums: {
         Row: {
           artist_id: string
@@ -131,6 +161,42 @@ export type Database = {
         }
         Relationships: []
       }
+      artist_superfan_settings: {
+        Row: {
+          artist_id: string
+          created_at: string
+          custom_level_names: Json | null
+          id: string
+          loyalty_enabled: boolean
+          public_leaderboard: boolean
+          show_founding_fans: boolean
+          show_top_supporters: boolean
+          updated_at: string
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          custom_level_names?: Json | null
+          id?: string
+          loyalty_enabled?: boolean
+          public_leaderboard?: boolean
+          show_founding_fans?: boolean
+          show_top_supporters?: boolean
+          updated_at?: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          custom_level_names?: Json | null
+          id?: string
+          loyalty_enabled?: boolean
+          public_leaderboard?: boolean
+          show_founding_fans?: boolean
+          show_top_supporters?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       collection_bookmarks: {
         Row: {
           created_at: string
@@ -231,6 +297,39 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      fan_loyalty: {
+        Row: {
+          artist_id: string
+          created_at: string
+          fan_id: string
+          id: string
+          level: string
+          points: number
+          show_public: boolean
+          updated_at: string
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          fan_id: string
+          id?: string
+          level?: string
+          points?: number
+          show_public?: boolean
+          updated_at?: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          fan_id?: string
+          id?: string
+          level?: string
+          points?: number
+          show_public?: boolean
+          updated_at?: string
         }
         Relationships: []
       }

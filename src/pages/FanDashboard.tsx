@@ -367,8 +367,14 @@ export default function FanDashboard() {
         {/* Quick Actions - Horizontal scroll on mobile */}
         <div className="mt-4 sm:mt-6 flex flex-nowrap sm:flex-wrap gap-2 sm:gap-3 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:overflow-visible">
           <Button asChild className="gradient-accent neon-glow-subtle shrink-0 text-xs sm:text-sm">
-            <Link to="/for-you">
+            <Link to="/vault">
               <Sparkles className="w-4 h-4 mr-1 sm:mr-2" />
+              My Vault
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="border-glass-border shrink-0 text-xs sm:text-sm">
+            <Link to="/for-you">
+              <Heart className="w-4 h-4 mr-1 sm:mr-2" />
               For You
             </Link>
           </Button>
