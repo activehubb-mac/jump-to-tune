@@ -1,33 +1,49 @@
 
 
-# Fix: Artist Store Link Missing from Mobile Menu
+# Mobile Compatibility Fix for Edge Functions
 
-## Problem
+## What's Working
+All 37 edge functions are deployed, accept requests, and handle CORS preflight (OPTIONS). The native app can reach them.
 
-The "My Store" link only appears in the desktop profile dropdown menu. It is completely absent from the mobile slide-out navigation menu, so artists on mobile devices cannot find or access their store.
+## What Needs Fixing
 
-## Solution
+### 1. Incomplete CORS Headers (17 functions)
+17 older functions use a short CORS header list that's missing the Supabase client platform headers. This can cause failed requests on certain mobile WebView versions.
 
-Add the "My Store" link to the mobile menu, right after the "Upload Music" link -- matching the same `role === "artist"` condition used in the desktop dropdown.
+**Functions to update:**
+- artist-payout-status
+- award-loyalty-points
+- check-subscription
+- create-checkout
+- create-connect-account
+- customer-portal
+- delete-account
+- download-track
+- fan-reengagement
+- get-wallet-balance
+- pause-subscription
+- process-pending-payouts
+- purchase-credits
+- send-push-notification
+- spend-credits
+- stripe-webhook
+- validate-tier-change
 
-## Technical Change
+Each will get the full header string:
+`authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version`
 
-**File: `src/components/layout/Navbar.tsx`** (around line 540, after the Upload Music link block)
+### 2. Missing Mobile Deep Link Detection (2 payment functions)
+`create-store-checkout` and `create-superfan-checkout` do not detect the `x-jumtunes-mobile` header. When an artist store purchase or superfan membership is bought from the native app, the Stripe success/cancel URLs point to the website instead of back to the app.
 
-Add a new conditional link block:
+**Fix:** Add mobile detection to both functions so they return `jumtunes://` URLs when the request comes from the native app.
 
-```tsx
-{role === "artist" && (
-  <Link
-    to="/artist/store"
-    onClick={() => setIsOpen(false)}
-    className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
-  >
-    <Store className="w-5 h-5" />
-    My Store
-  </Link>
-)}
-```
+### 3. Client-Side: Missing Mobile Headers on Store/Superfan Calls
+The hooks that call `create-store-checkout` and `create-superfan-checkout` (likely `useStoreCheckout` and `useSuperfanMembership`) need to send the `x-jumtunes-mobile` header, and use `openPaymentUrl` instead of `window.location.href` for native compatibility.
 
-This mirrors the existing desktop dropdown entry (line 304-310) and uses the same `Store` icon already imported in the file. No other files need changes.
+## Technical Summary
+
+- Update CORS headers in 17 edge function files (single line change each)
+- Add `x-jumtunes-mobile` detection to 2 checkout functions (3-4 lines each)
+- Update 2 client hooks to pass `getMobileHeaders()` and use `openPaymentUrl()`
+- Redeploy all modified functions
 
