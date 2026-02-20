@@ -77,6 +77,9 @@ serve(async (req) => {
     const applicationFeeAmount = Math.ceil(membership.monthly_price_cents * platformFeeFraction);
 
     const origin = req.headers.get("origin") || "https://jump-to-tune.lovable.app";
+    const isMobileApp = req.headers.get("x-jumtunes-mobile") === "true";
+    const successBaseUrl = isMobileApp ? "jumtunes:/" : origin;
+    const cancelBaseUrl = isMobileApp ? "jumtunes:/" : origin;
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -114,8 +117,8 @@ serve(async (req) => {
         membership_id: membershipId,
         fan_id: user.id,
       },
-      success_url: `${origin}/artist/${artistId}/superfan?success=true`,
-      cancel_url: `${origin}/artist/${artistId}/superfan?canceled=true`,
+      success_url: `${successBaseUrl}/artist/${artistId}/superfan?success=true`,
+      cancel_url: `${cancelBaseUrl}/artist/${artistId}/superfan?canceled=true`,
     });
 
     logStep("Checkout session created", { sessionId: session.id });
