@@ -80,6 +80,7 @@ export default function Terms() {
                     <li>Miscellaneous</li>
                     <li>DMCA Copyright Policy and Repeat Infringer Policy</li>
                     <li>Music Purchase Ownership and Verified Personal Use Rights</li>
+                    <li>Seller Responsibility</li>
                     <li>Contact Us</li>
                   </ol>
                 </section>
@@ -588,9 +589,34 @@ export default function Terms() {
                   </p>
                 </section>
 
-                {/* 31. Contact Us */}
+                {/* 31. Seller Responsibility */}
                 <section className="space-y-4">
-                  <h2 className="text-2xl font-semibold text-foreground">31. Contact Us</h2>
+                  <h2 className="text-2xl font-semibold text-foreground">31. Seller Responsibility</h2>
+                  <p className="text-muted-foreground leading-relaxed">
+                    JumTunes provides a technology platform that enables independent artists to sell digital and physical products directly to fans.
+                  </p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Artists using JumTunes storefront features act as independent merchants and are solely responsible for:
+                  </p>
+                  <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
+                    <li>Product fulfillment</li>
+                    <li>Customer service</li>
+                    <li>Refunds</li>
+                    <li>Chargebacks and disputes</li>
+                    <li>Taxes and regulatory compliance</li>
+                    <li>Intellectual property rights</li>
+                  </ul>
+                  <p className="text-muted-foreground leading-relaxed">
+                    JumTunes does not act as the merchant of record for artist storefront transactions.
+                  </p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    All payments are processed through third-party payment providers (e.g., Stripe Connect), and funds are transferred directly to the artist, minus applicable platform fees.
+                  </p>
+                </section>
+
+                {/* 32. Contact Us */}
+                <section className="space-y-4">
+                  <h2 className="text-2xl font-semibold text-foreground">32. Contact Us</h2>
                   <p className="text-muted-foreground leading-relaxed">
                     In order to resolve a complaint regarding the Services or to receive further information regarding use of the Services, please contact us at:
                   </p>
