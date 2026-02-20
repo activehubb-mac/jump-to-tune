@@ -41,6 +41,8 @@ export function ArtistStoreTab({ artistId, artistName }: Props) {
   const digitalTracks = activeProducts.filter((p) => p.type === "digital_track" || p.type === "digital_bundle");
   const limitedEditions = activeProducts.filter((p) => p.inventory_limit && p.inventory_limit > 0);
   const merch = activeProducts.filter((p) => p.type === "merch");
+  const tickets = activeProducts.filter((p) => p.type === "ticket");
+  const limitedDrops = activeProducts.filter((p) => p.type === "limited_drop");
 
   if (activeProducts.length === 0) {
     return (
@@ -51,67 +53,41 @@ export function ArtistStoreTab({ artistId, artistName }: Props) {
     );
   }
 
+  const renderSection = (title: string, items: typeof activeProducts) => {
+    if (items.length === 0) return null;
+    return (
+      <section>
+        <h3 className="text-lg font-bold text-foreground mb-4">{title}</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {items.map((product) => (
+            <StoreProductCard
+              key={product.id}
+              product={product}
+              owned={ownedProductIds?.has(product.id)}
+              onBuy={checkout}
+              isCheckingOut={isCheckingOut}
+              artistName={artistName}
+            />
+          ))}
+        </div>
+      </section>
+    );
+  };
+
   return (
     <div className="space-y-8">
       {/* Support Header */}
       <div className="glass-card p-6 text-center">
         <h3 className="text-xl font-bold text-foreground mb-2">Support {artistName} Directly</h3>
         <p className="text-sm text-muted-foreground">Every purchase goes directly to the artist. Browse exclusive drops, merch, and more.</p>
+        <p className="text-xs text-muted-foreground mt-2">Sold and fulfilled by {artistName}</p>
       </div>
 
-      {/* Digital Drops */}
-      {digitalTracks.length > 0 && (
-        <section>
-          <h3 className="text-lg font-bold text-foreground mb-4">Digital Drops</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {digitalTracks.map((product) => (
-              <StoreProductCard
-                key={product.id}
-                product={product}
-                owned={ownedProductIds?.has(product.id)}
-                onBuy={checkout}
-                isCheckingOut={isCheckingOut}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Limited Editions */}
-      {limitedEditions.length > 0 && (
-        <section>
-          <h3 className="text-lg font-bold text-foreground mb-4">Limited Editions</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {limitedEditions.map((product) => (
-              <StoreProductCard
-                key={product.id}
-                product={product}
-                owned={ownedProductIds?.has(product.id)}
-                onBuy={checkout}
-                isCheckingOut={isCheckingOut}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Merch */}
-      {merch.length > 0 && (
-        <section>
-          <h3 className="text-lg font-bold text-foreground mb-4">Merch</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {merch.map((product) => (
-              <StoreProductCard
-                key={product.id}
-                product={product}
-                owned={ownedProductIds?.has(product.id)}
-                onBuy={checkout}
-                isCheckingOut={isCheckingOut}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      {renderSection("Digital Drops", digitalTracks)}
+      {renderSection("Limited Editions", limitedEditions)}
+      {renderSection("Limited Drops", limitedDrops)}
+      {renderSection("Merch", merch)}
+      {renderSection("Tickets & Access", tickets)}
 
       {/* Superfan Banner */}
       <div className="glass-card-bordered p-6 text-center">

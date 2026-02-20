@@ -33,6 +33,7 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
+  const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
@@ -66,6 +67,7 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
       setBio(profile.bio || "");
       setAvatarUrl(profile.avatar_url);
       setBannerUrl(profile.banner_image_url);
+      setSocialLinks((profile as any).social_links || {});
     }
   }, [open, profile]);
 
@@ -95,6 +97,7 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
         display_name: displayName.trim() || null,
         display_name_font: displayNameFont,
         bio: bio.trim() || null,
+        social_links: socialLinks,
       })
       .eq("id", user.id);
 
@@ -269,6 +272,33 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Social Links */}
+          <div className="space-y-3">
+            <Label>Social Links</Label>
+            <p className="text-xs text-muted-foreground">
+              Add your links so fans can find you everywhere
+            </p>
+            {[
+              { key: "instagram", label: "Instagram", placeholder: "https://instagram.com/..." },
+              { key: "tiktok", label: "TikTok", placeholder: "https://tiktok.com/@..." },
+              { key: "youtube", label: "YouTube", placeholder: "https://youtube.com/..." },
+              { key: "spotify", label: "Spotify", placeholder: "https://open.spotify.com/artist/..." },
+              { key: "apple_music", label: "Apple Music", placeholder: "https://music.apple.com/..." },
+              { key: "soundcloud", label: "SoundCloud", placeholder: "https://soundcloud.com/..." },
+              { key: "booking", label: "Booking Email", placeholder: "booking@example.com" },
+            ].map((platform) => (
+              <div key={platform.key}>
+                <Label className="text-xs text-muted-foreground">{platform.label}</Label>
+                <Input
+                  value={(socialLinks as Record<string, string>)?.[platform.key] || ""}
+                  onChange={(e) => setSocialLinks((prev: Record<string, string>) => ({ ...prev, [platform.key]: e.target.value }))}
+                  placeholder={platform.placeholder}
+                  className="bg-muted/50 border-glass-border mt-1"
+                />
+              </div>
+            ))}
           </div>
 
           {/* Bio */}

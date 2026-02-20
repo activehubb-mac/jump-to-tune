@@ -60,13 +60,14 @@ export function StoreSetupTab() {
       <div className="glass-card p-6">
         <h3 className="text-lg font-semibold text-foreground mb-4">Seller Agreement</h3>
         <div className="space-y-3 text-sm text-muted-foreground mb-4">
-          <p>By activating your store, you agree to:</p>
-          <ul className="list-disc list-inside space-y-1 ml-2">
-            <li>You are the merchant of record for all sales</li>
-            <li>You are responsible for order fulfillment and shipping (merch)</li>
-            <li>You handle all customer disputes through Stripe</li>
-            <li>You are responsible for applicable taxes</li>
+          <p className="font-medium text-foreground">Merchant Responsibility Agreement</p>
+          <p className="italic">
+            "I understand that I am the merchant of record for all products sold through my JumTunes store. I am responsible for fulfillment, shipping, product quality, and dispute resolution. JumTunes provides marketplace infrastructure only and is not responsible for inventory, delivery, or chargebacks."
+          </p>
+          <ul className="list-disc list-inside space-y-1 ml-2 mt-2">
             <li>JumTunes collects a 15% platform fee on all sales</li>
+            <li>Remaining funds are sent directly to your Stripe account</li>
+            <li>You are responsible for applicable taxes</li>
           </ul>
         </div>
         <label className="flex items-start gap-3 cursor-pointer">

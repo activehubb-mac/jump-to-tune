@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock, Star, Store, Megaphone } from "lucide-react";
+import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock, Star, Store, Megaphone, Info, Globe } from "lucide-react";
 import { ActivityFeed } from "@/components/artist/ActivityFeed";
 import { useArtistProfile } from "@/hooks/useArtistProfile";
 import { useTracks } from "@/hooks/useTracks";
@@ -20,6 +20,10 @@ import { BannerUpload } from "@/components/profile/BannerUpload";
 import { useQueryClient } from "@tanstack/react-query";
 import { useArtistStore } from "@/hooks/useArtistStore";
 import { ArtistStoreTab } from "@/components/store/ArtistStoreTab";
+import { SocialLinksSection } from "@/components/profile/SocialLinksSection";
+import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function ArtistProfile() {
   const { id } = useParams();
@@ -35,13 +39,19 @@ export default function ArtistProfile() {
   const queryClient = useQueryClient();
   const { isActive: hasActiveStore } = useArtistStore(id);
 
+  // Fetch genres for About tab
+  const { data: genres } = useQuery({
+    queryKey: ["profile-genres", id],
+    queryFn: async () => {
+      const { data } = await supabase.from("profile_genres").select("genre").eq("profile_id", id!);
+      return data?.map((g) => g.genre) || [];
+    },
+    enabled: !!id,
+  });
+
   const handleFollow = async () => {
     if (!user) {
-      showFeedback({
-        type: "warning",
-        title: "Sign in required",
-        message: "Please sign in to follow artists",
-      });
+      showFeedback({ type: "warning", title: "Sign in required", message: "Please sign in to follow artists" });
       return;
     }
     if (id && artist) {
@@ -54,11 +64,7 @@ export default function ArtistProfile() {
           autoCloseDelay: 2000,
         });
       } catch {
-        showFeedback({
-          type: "error",
-          title: "Error",
-          message: "Failed to update follow status",
-        });
+        showFeedback({ type: "error", title: "Error", message: "Failed to update follow status" });
       }
     }
   };
@@ -132,17 +138,7 @@ export default function ArtistProfile() {
                   onClick={handleFollow}
                   disabled={isToggling}
                 >
-                  {following ? (
-                    <>
-                      <UserMinus className="w-4 h-4 mr-2" />
-                      Following
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Follow
-                    </>
-                  )}
+                  {following ? <><UserMinus className="w-4 h-4 mr-2" />Following</> : <><UserPlus className="w-4 h-4 mr-2" />Follow</>}
                 </Button>
               )}
               <Button variant="outline" className="border-glass-border hover:border-primary/50" onClick={() => { navigator.clipboard.writeText(window.location.href); showFeedback({ type: "success", title: "Link copied!", message: "Profile link copied to clipboard", autoCloseDelay: 2000 }); }}><Share2 className="w-4 h-4 mr-2" />Share</Button>
@@ -157,24 +153,54 @@ export default function ArtistProfile() {
           </div>
         </div>
 
-        {/* Content Tabs */}
-        <Tabs defaultValue="tracks" className="mb-12">
-          <TabsList className="glass mb-6">
-            <TabsTrigger value="tracks" className="flex items-center gap-2">
-              <Music className="w-4 h-4" /> Tracks
+        {/* Content Tabs - Locked Order: Superfan | Store | Music | Activity | About | Find Me Everywhere */}
+        <Tabs defaultValue="superfan" className="mb-12">
+          <TabsList className="glass mb-6 flex-wrap">
+            <TabsTrigger value="superfan" className="flex items-center gap-2">
+              <Star className="w-4 h-4" /> Superfan
             </TabsTrigger>
             {hasActiveStore && (
               <TabsTrigger value="store" className="flex items-center gap-2">
                 <Store className="w-4 h-4" /> Store
               </TabsTrigger>
             )}
+            <TabsTrigger value="music" className="flex items-center gap-2">
+              <Music className="w-4 h-4" /> Music
+            </TabsTrigger>
             <TabsTrigger value="activity" className="flex items-center gap-2">
               <Megaphone className="w-4 h-4" /> Activity
             </TabsTrigger>
+            <TabsTrigger value="about" className="flex items-center gap-2">
+              <Info className="w-4 h-4" /> About
+            </TabsTrigger>
+            <TabsTrigger value="links" className="flex items-center gap-2">
+              <Globe className="w-4 h-4" /> Find Me
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="tracks">
-            {/* Featured On Carousel */}
+          {/* Superfan Tab - Links to Superfan Room */}
+          <TabsContent value="superfan">
+            <div className="glass-card p-8 text-center space-y-4">
+              <Star className="w-12 h-12 text-primary mx-auto" />
+              <h3 className="text-2xl font-bold text-foreground">Superfan Room</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Get exclusive content, early access, direct messaging, and VIP supporter badges.
+              </p>
+              <Button className="gradient-accent" asChild>
+                <Link to={`/artist/${id}/superfan`}>Enter Superfan Room</Link>
+              </Button>
+            </div>
+          </TabsContent>
+
+          {/* Store Tab */}
+          {hasActiveStore && (
+            <TabsContent value="store">
+              <ArtistStoreTab artistId={id!} artistName={artist.display_name || "Artist"} />
+            </TabsContent>
+          )}
+
+          {/* Music Tab */}
+          <TabsContent value="music">
             {featuredOnTracks && featuredOnTracks.length > 0 && (
               <FeaturedOnCarousel
                 tracks={featuredOnTracks}
@@ -255,14 +281,58 @@ export default function ArtistProfile() {
             </section>
           </TabsContent>
 
-          {hasActiveStore && (
-            <TabsContent value="store">
-              <ArtistStoreTab artistId={id!} artistName={artist.display_name || "Artist"} />
-            </TabsContent>
-          )}
-
+          {/* Activity Tab */}
           <TabsContent value="activity">
             <ActivityFeed artistId={id!} />
+          </TabsContent>
+
+          {/* About Tab */}
+          <TabsContent value="about">
+            <div className="space-y-6 max-w-2xl">
+              <div className="glass-card p-6">
+                <h3 className="text-lg font-bold text-foreground mb-3">About</h3>
+                <p className="text-muted-foreground">{artist.bio || "No bio available."}</p>
+                {artist.is_verified && (
+                  <Badge className="mt-3 bg-primary/20 text-primary">✓ Verified Artist</Badge>
+                )}
+              </div>
+
+              {genres && genres.length > 0 && (
+                <div className="glass-card p-6">
+                  <h3 className="text-lg font-bold text-foreground mb-3">Genres</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {genres.map((genre) => (
+                      <Badge key={genre} variant="outline" className="border-glass-border">{genre}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {artist.website_url && (
+                <div className="glass-card p-6">
+                  <h3 className="text-lg font-bold text-foreground mb-3">Website</h3>
+                  <a href={artist.website_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-2">
+                    <ExternalLink className="w-4 h-4" />
+                    {artist.website_url}
+                  </a>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Find Me Everywhere Tab */}
+          <TabsContent value="links">
+            <div className="max-w-2xl">
+              <div className="glass-card p-6 mb-6 text-center">
+                <Globe className="w-8 h-8 text-primary mx-auto mb-3" />
+                <h3 className="text-lg font-bold text-foreground mb-1">Find Me Everywhere</h3>
+                <p className="text-sm text-muted-foreground">Connect with {artist.display_name || "this artist"} across platforms</p>
+              </div>
+              <SocialLinksSection
+                socialLinks={(artist as any).social_links || null}
+                isVerified={artist.is_verified || false}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

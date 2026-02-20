@@ -89,3 +89,15 @@ verify_jwt = false
 
 [functions.fan-reengagement]
 verify_jwt = false
+
+[functions.refund-store-order]
+verify_jwt = false
+
+[functions.purchase-message-credits]
+verify_jwt = false
+
+[functions.send-paid-message]
+verify_jwt = false
+
+[functions.process-message-expiry]
+verify_jwt = false
