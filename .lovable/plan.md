@@ -1,184 +1,237 @@
 
-# Superfan Room - Implementation Plan
 
-Build the Superfan Room as a native extension of the artist profile page, using existing JumTunes glass-card styling, buttons, and layout patterns. No visual theme changes.
+# Artist Store System - Implementation Plan
+
+This builds on the existing Stripe Connect infrastructure and Superfan Room to add a full storefront for artists. No visual theme changes.
+
+---
+
+## What Already Exists (No Rebuild Needed)
+
+- Stripe Connect Express onboarding (`create-connect-account` edge function, `useStripeConnect` hook)
+- Artist Payouts page (`/artist/payouts`) with status badges (Active/Pending/Not Connected)
+- 85/15 revenue split in `spend-credits` and `create-superfan-checkout`
+- Superfan memberships and subscriptions (tables + checkout + webhook handling)
+- Seller Responsibility clause in Terms of Service
 
 ---
 
 ## Phase 1: Database Tables (Migration)
 
-Create 3 new tables to support the Superfan Room:
-
-### `superfan_memberships`
+### `artist_stores`
 | Column | Type | Notes |
 |--------|------|-------|
 | id | uuid | PK |
 | artist_id | uuid | unique, references profiles |
-| monthly_price_cents | integer | default 499 (i.e. $4.99) |
-| description | text | nullable, artist-written pitch |
-| perks | jsonb | default list of perks |
-| is_active | boolean | default false |
+| store_status | text | 'inactive' / 'active', default 'inactive' |
+| platform_fee_percentage | integer | default 15 |
+| seller_agreement_accepted | boolean | default false |
+| seller_agreement_accepted_at | timestamptz | nullable |
 | created_at / updated_at | timestamptz | |
 
-### `superfan_subscribers`
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | PK |
-| membership_id | uuid | FK to superfan_memberships |
-| artist_id | uuid | for easy querying |
-| fan_id | uuid | the subscriber |
-| status | text | 'active', 'canceled', 'expired' |
-| tier_level | text | 'bronze', 'gold', 'elite' |
-| lifetime_spent_cents | integer | default 0 |
-| stripe_subscription_id | text | nullable |
-| subscribed_at | timestamptz | |
-| created_at | timestamptz | |
+RLS: Artists manage own store. Public can view active stores.
 
-### `superfan_messages`
+### `store_products`
 | Column | Type | Notes |
 |--------|------|-------|
 | id | uuid | PK |
+| artist_id | uuid | FK |
+| type | text | 'digital_track', 'digital_bundle', 'merch', 'superfan' |
+| title | text | |
+| description | text | nullable |
+| price_cents | integer | |
+| image_url | text | nullable |
+| audio_url | text | nullable (for digital tracks) |
+| inventory_limit | integer | nullable (unlimited if null) |
+| inventory_sold | integer | default 0 |
+| is_exclusive | boolean | default false |
+| is_early_release | boolean | default false |
+| variants | jsonb | nullable, for merch sizes/colors |
+| is_active | boolean | default true |
+| created_at / updated_at | timestamptz | |
+
+RLS: Artists manage own. Public views active products from active stores.
+
+### `store_orders`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid | PK |
+| product_id | uuid | FK |
+| buyer_id | uuid | |
 | artist_id | uuid | |
-| fan_id | uuid | |
-| sender_id | uuid | either artist or fan |
-| message | text | |
+| stripe_payment_intent_id | text | nullable |
+| amount_cents | integer | |
+| platform_fee_cents | integer | |
+| status | text | 'pending', 'completed', 'fulfilled', 'shipped', 'refunded' |
+| shipping_address | jsonb | nullable, for merch |
+| buyer_name | text | nullable |
+| buyer_email | text | nullable |
+| edition_number | integer | nullable, for limited editions |
 | created_at | timestamptz | |
 
-**RLS Policies:**
-- Memberships: Artists manage their own. Public can view active ones.
-- Subscribers: Fans see their own. Artists see their subscribers. Service role manages all.
-- Messages: Only the artist and the specific fan in the conversation can read/write.
+RLS: Buyers see own. Artists see their orders. Admins see all.
+
+### Storage bucket
+- Create `store-images` bucket (public) for product images
 
 ---
 
-## Phase 2: New Route and Page
+## Phase 2: "Store & Earnings" Tab on Artist Dashboard
 
-### Add route `/artist/:id/superfan`
+### New page: `/artist/store`
 
-New file: `src/pages/SuperfanRoom.tsx`
+Add a new route and page `ArtistStore.tsx` with tabs:
 
-This page loads the artist profile data and the fan's subscription status, then renders 5 sections using existing glass-card styling.
+**Tab 1: Store Setup**
+- Stripe Connect status display (reuse `useStripeConnect` hook)
+- "Activate My Store" toggle (disabled until Stripe is active)
+- Seller agreement checkbox with confirmation text
+- Store status indicator
 
----
+**Tab 2: Products**
+- List of artist's store products with filters by type
+- "Add Product" button opens a modal/form
+- Product creation form with fields per type:
+  - Digital Track: audio upload, cover, title, description, price, optional limited qty, early release badge
+  - Digital Bundle: multiple audio files, cover, title, description, price
+  - Merch: images, title, description, price, variants (size/color JSON), inventory
+- Edit/deactivate products
+- Inventory tracking display
 
-## Phase 3: Superfan Room UI Sections
+**Tab 3: Orders**
+- List of orders with status badges
+- For merch orders: show shipping address, buyer name
+- Artist can mark orders as "Fulfilled" or "Shipped"
+- Filter by status (Pending / Fulfilled / Shipped)
 
-All sections use `glass-card` / `glass-card-bordered` containers, existing Button variants, and the current color tokens (primary gold, accent copper, muted grays).
+**Tab 4: Analytics**
+- Total revenue, platform fees paid, total orders
+- Top product by sales
+- Superfan count (from existing superfan_subscribers)
+- Recent orders list
+- Simple stats cards using existing glass-card styling
 
-### A. "Enter Superfan Room" Button
-- Added to `ArtistProfile.tsx` in the action buttons row (next to Follow and Share)
-- Links to `/artist/:id/superfan`
-- Uses existing `Button` with `variant="outline"` and a Star icon
-
-### B. Status Panel (Top of Superfan Room)
-
-**Not subscribed:**
-- Glass card with short description: "Unlock exclusive content and early access."
-- Subscribe button (triggers Stripe checkout)
-- Bullet list: Early drops, Exclusive versions, Direct support access
-
-**Subscribed:**
-- Glass card showing: Superfan badge, join date, lifetime support amount, tier indicator (Bronze / Gold / Elite based on lifetime_spent_cents thresholds), "Thank you for supporting" message
-
-### C. Exclusive Drops Section
-- Queries tracks marked as `is_exclusive` (uses existing track card layout)
-- Tags: "Superfan Exclusive", "Early Access", "Limited Edition (X remaining)", "Owned"
-- If not subscribed: CSS blur + overlay "Subscribe to unlock"
-
-### D. VIP Perks Section
-- Content cards for perks (static for now, expandable later)
-- Behind-the-scenes, bonus content, announcements, countdown
-- If locked: slight blur + lock icon + CTA
-
-### E. Top Supporters Strip
-- Small section showing top 3 supporters this month (by purchases of that artist's tracks)
-- Current user's rank if applicable
-- Uses existing compact layout, no gamification
-
-### F. Direct Messages Section
-- Non-subscribers see: "Subscribe to message this artist."
-- Subscribers see a minimal text chat interface
-- Clean input + message list using glass-card styling
-- Messages stored in `superfan_messages` table
+### Dashboard Quick Action
+Add "My Store" link to ArtistDashboard quick actions panel.
 
 ---
 
-## Phase 4: Subscription Flow
+## Phase 3: Store Checkout Edge Function
 
-### New edge function: `create-superfan-checkout`
-- Creates a Stripe Checkout session in subscription mode
-- Uses Stripe Connect: `application_fee_amount` (15%) + `transfer_data.destination` to artist's connected account
-- On success, creates/updates `superfan_subscribers` row
+### New: `create-store-checkout/index.ts`
+- Accepts product_id, quantity, and optional shipping_address (for merch)
+- Validates product exists and is active
+- Checks inventory if limited
+- Creates Stripe Checkout session with:
+  - `application_fee_amount` (15%)
+  - `transfer_data.destination` to artist's Connect account
+  - For merch: collects shipping address via Stripe Checkout
+  - Metadata: `type: "store"`, `product_id`, `artist_id`, `buyer_id`
 - Returns checkout URL
 
-### Webhook handling
-- Add superfan subscription handling to existing `stripe-webhook` edge function
-- On `checkout.session.completed` with superfan metadata: insert subscriber record
-- On `customer.subscription.deleted`: update status to 'expired'
+### Webhook updates in `stripe-webhook/index.ts`
+- Handle `checkout.session.completed` with `metadata.type === "store"`:
+  - Insert into `store_orders` with status 'completed' (digital) or 'pending' (merch)
+  - Increment `inventory_sold` on `store_products`
+  - Assign edition number for limited products
+  - Create earnings record in `artist_earnings`
 
 ---
 
-## Phase 5: Hooks
+## Phase 4: Secure Digital Delivery
 
-### `useSuperfanMembership(artistId)`
-- Fetches the artist's membership config (price, description, active status)
-
-### `useSuperfanStatus(artistId, fanId)`
-- Checks if the current user is an active subscriber to this artist
-- Returns subscription details, tier, lifetime spent
-
-### `useSuperfanMessages(artistId, fanId)`
-- Fetches messages between artist and fan
-- Provides send function
-
-### `useTopSupporters(artistId)`
-- Queries purchases table for top spenders on this artist's tracks in current month
+### New: `download-store-product/index.ts`
+- Verifies buyer has a completed order for the product
+- Generates signed URL from private storage bucket
+- Returns temporary download link
+- Mirrors existing `download-track` pattern
 
 ---
 
-## Files Created/Modified
+## Phase 5: Public Artist Store Tab
 
-### New files:
-1. `src/pages/SuperfanRoom.tsx` -- Main Superfan Room page
-2. `src/components/superfan/StatusPanel.tsx` -- Subscribe/status card
-3. `src/components/superfan/ExclusiveDrops.tsx` -- Exclusive tracks with blur/lock
-4. `src/components/superfan/VIPPerks.tsx` -- Perks cards with lock state
-5. `src/components/superfan/TopSupporters.tsx` -- Supporter leaderboard strip
-6. `src/components/superfan/DirectMessages.tsx` -- Chat section
-7. `src/hooks/useSuperfanMembership.ts` -- Membership data hook
-8. `src/hooks/useSuperfanStatus.ts` -- Subscriber status hook
-9. `src/hooks/useSuperfanMessages.ts` -- Messages hook
-10. `src/hooks/useTopSupporters.ts` -- Top supporters hook
-11. `supabase/functions/create-superfan-checkout/index.ts` -- Stripe checkout for superfan subscriptions
+### Modified: `ArtistProfile.tsx`
+- Add "Store" tab/section alongside existing Tracks section
+- Only visible if artist has an active store (`artist_stores.store_status = 'active'`)
 
-### Modified files:
-1. `src/pages/ArtistProfile.tsx` -- Add "Enter Superfan Room" button
-2. `src/App.tsx` -- Add `/artist/:id/superfan` route
-3. `supabase/functions/stripe-webhook/index.ts` -- Handle superfan subscription events
-4. `supabase/config.toml` -- Add new edge function config
+### New component: `ArtistStoreTab.tsx`
+- Sections: Featured Product, Digital Drops, Limited Editions, Merch, Superfan Banner
+- Each product card shows: image, title, price, type badge, "Owned" badge if purchased
+- Buy button triggers `create-store-checkout`
+- "Support Directly" messaging on store header
+- Limited edition items show "X of Y remaining"
+- Merch items show variant selector (size/color)
 
 ---
 
-## Design Rules Followed
+## Phase 6: Hooks
 
-- No new colors, fonts, or theme tokens
-- All containers use `glass-card` / `glass-card-bordered`
-- All buttons use existing `Button` component variants
-- Blur/lock overlay uses CSS `backdrop-filter: blur()` with semi-transparent background
-- Mobile-first responsive with existing grid patterns
-- Smooth transitions via existing `transition-all duration-300`
-- Tone is confident and premium, never aggressive
+| Hook | Purpose |
+|------|---------|
+| `useArtistStore(artistId)` | Fetch/manage store config |
+| `useStoreProducts(artistId, filters)` | Fetch products with type filters |
+| `useStoreOrders(artistId)` | Fetch orders for artist dashboard |
+| `useStoreCheckout()` | Handle checkout flow |
+
+---
+
+## Files Created
+
+1. `src/pages/ArtistStore.tsx` -- Store management page with tabs
+2. `src/components/store/StoreSetupTab.tsx` -- Stripe connect + activation
+3. `src/components/store/ProductsTab.tsx` -- Product list + add/edit
+4. `src/components/store/AddProductModal.tsx` -- Product creation form
+5. `src/components/store/OrdersTab.tsx` -- Order management
+6. `src/components/store/StoreAnalyticsTab.tsx` -- Revenue stats
+7. `src/components/store/ArtistStoreTab.tsx` -- Public-facing store on profile
+8. `src/components/store/StoreProductCard.tsx` -- Product display card
+9. `src/hooks/useArtistStore.ts`
+10. `src/hooks/useStoreProducts.ts`
+11. `src/hooks/useStoreOrders.ts`
+12. `src/hooks/useStoreCheckout.ts`
+13. `supabase/functions/create-store-checkout/index.ts`
+14. `supabase/functions/download-store-product/index.ts`
+
+## Files Modified
+
+1. `src/App.tsx` -- Add `/artist/store` route
+2. `src/pages/ArtistDashboard.tsx` -- Add "My Store" quick action
+3. `src/pages/ArtistProfile.tsx` -- Add Store tab for public profiles
+4. `src/components/layout/Navbar.tsx` -- Add Store link in artist menu
+5. `supabase/functions/stripe-webhook/index.ts` -- Handle store purchases
+6. `supabase/config.toml` -- Register new edge functions
 
 ---
 
 ## Implementation Order
 
 ```text
-Step 1: Database migration (3 tables + RLS)
-Step 2: Hooks (useSuperfanMembership, useSuperfanStatus, useTopSupporters, useSuperfanMessages)
-Step 3: UI components (StatusPanel, ExclusiveDrops, VIPPerks, TopSupporters, DirectMessages)
-Step 4: SuperfanRoom page + route
-Step 5: "Enter Superfan Room" button on ArtistProfile
-Step 6: create-superfan-checkout edge function
-Step 7: Webhook updates for superfan subscriptions
+Step 1: Database migration (3 tables + storage bucket + RLS)
+Step 2: Hooks (useArtistStore, useStoreProducts, useStoreOrders, useStoreCheckout)
+Step 3: Artist Store management page with all 4 tabs
+Step 4: create-store-checkout edge function
+Step 5: Webhook updates for store purchases
+Step 6: download-store-product edge function
+Step 7: Public store tab on ArtistProfile
+Step 8: Route + navigation integration
 ```
+
+---
+
+## Design Rules
+
+- All UI uses existing `glass-card` / `glass-card-bordered` containers
+- Existing Button, Badge, Card, Tabs components only
+- No new colors, fonts, or theme tokens
+- Mobile-first responsive using existing grid patterns
+- "Support Directly" tone -- no anti-streaming language
+
+## Future-Ready Structure
+
+The `store_products.type` field and `variants` JSONB column are designed to later support:
+- Print-on-demand API integration (add `fulfillment_provider` column)
+- Ticket sales (type: 'ticket', add event date to variants)
+- Live event access (type: 'event')
+- NFT-style limited releases (already supported via `inventory_limit` + `edition_number`)
+- AI fan features (query `store_orders` for fan segmentation)
+
