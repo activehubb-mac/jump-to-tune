@@ -844,6 +844,113 @@ export type Database = {
           },
         ]
       }
+      superfan_memberships: {
+        Row: {
+          artist_id: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          monthly_price_cents: number
+          perks: Json
+          updated_at: string
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          monthly_price_cents?: number
+          perks?: Json
+          updated_at?: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          monthly_price_cents?: number
+          perks?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      superfan_messages: {
+        Row: {
+          artist_id: string
+          created_at: string
+          fan_id: string
+          id: string
+          message: string
+          sender_id: string
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          fan_id: string
+          id?: string
+          message: string
+          sender_id: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          fan_id?: string
+          id?: string
+          message?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
+      superfan_subscribers: {
+        Row: {
+          artist_id: string
+          created_at: string
+          fan_id: string
+          id: string
+          lifetime_spent_cents: number
+          membership_id: string
+          status: string
+          stripe_subscription_id: string | null
+          subscribed_at: string
+          tier_level: string
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          fan_id: string
+          id?: string
+          lifetime_spent_cents?: number
+          membership_id: string
+          status?: string
+          stripe_subscription_id?: string | null
+          subscribed_at?: string
+          tier_level?: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          fan_id?: string
+          id?: string
+          lifetime_spent_cents?: number
+          membership_id?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          subscribed_at?: string
+          tier_level?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "superfan_subscribers_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "superfan_memberships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       track_credits: {
         Row: {
           created_at: string

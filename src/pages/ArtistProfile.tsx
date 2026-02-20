@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock } from "lucide-react";
+import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock, Star } from "lucide-react";
 import { useArtistProfile } from "@/hooks/useArtistProfile";
 import { useTracks } from "@/hooks/useTracks";
 import { useFeaturedOnTracks } from "@/hooks/useFeaturedOnTracks";
@@ -141,6 +141,12 @@ export default function ArtistProfile() {
                 </Button>
               )}
               <Button variant="outline" className="border-glass-border hover:border-primary/50" onClick={() => { navigator.clipboard.writeText(window.location.href); showFeedback({ type: "success", title: "Link copied!", message: "Profile link copied to clipboard", autoCloseDelay: 2000 }); }}><Share2 className="w-4 h-4 mr-2" />Share</Button>
+              <Button variant="outline" className="border-glass-border hover:border-primary/50" asChild>
+                <Link to={`/artist/${id}/superfan`}>
+                  <Star className="w-4 h-4 mr-2" />
+                  Superfan Room
+                </Link>
+              </Button>
               {artist.website_url && <Button variant="ghost" className="text-muted-foreground hover:text-foreground" asChild><a href={artist.website_url} target="_blank" rel="noopener noreferrer"><ExternalLink className="w-4 h-4 mr-2" />Website</a></Button>}
             </div>
           </div>

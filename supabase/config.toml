@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.generate-certificate]
 verify_jwt = false
+
+[functions.create-superfan-checkout]
+verify_jwt = false

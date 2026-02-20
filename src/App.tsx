@@ -62,6 +62,7 @@ import Privacy from "./pages/Privacy";
 import HelpCenter from "./pages/HelpCenter";
 import Install from "./pages/Install";
 import NotificationCenter from "./pages/NotificationCenter";
+import SuperfanRoom from "./pages/SuperfanRoom";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +85,7 @@ function RouterContent() {
         <Route path="/artists" element={<Artists />} />
         <Route path="/labels" element={<Labels />} />
         <Route path="/artist/:id" element={<ArtistProfile />} />
+        <Route path="/artist/:id/superfan" element={<SuperfanRoom />} />
         <Route path="/label/:id" element={<LabelProfile />} />
         <Route path="/profile/:id" element={<UserProfile />} />
         <Route path="/library" element={<Collection />} />
