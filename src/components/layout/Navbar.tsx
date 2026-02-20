@@ -538,6 +538,16 @@ export function Navbar() {
                         Upload Music
                       </Link>
                     )}
+                    {role === "artist" && (
+                      <Link
+                        to="/artist/store"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+                      >
+                        <Store className="w-5 h-5" />
+                        My Store
+                      </Link>
+                    )}
                     <Link
                       to="/vault"
                       onClick={() => setIsOpen(false)}
