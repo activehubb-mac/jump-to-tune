@@ -1,237 +1,274 @@
 
+# Superfan AI Retention System
 
-# Artist Store System - Implementation Plan
-
-This builds on the existing Stripe Connect infrastructure and Superfan Room to add a full storefront for artists. No visual theme changes.
-
----
-
-## What Already Exists (No Rebuild Needed)
-
-- Stripe Connect Express onboarding (`create-connect-account` edge function, `useStripeConnect` hook)
-- Artist Payouts page (`/artist/payouts`) with status badges (Active/Pending/Not Connected)
-- 85/15 revenue split in `spend-credits` and `create-superfan-checkout`
-- Superfan memberships and subscriptions (tables + checkout + webhook handling)
-- Seller Responsibility clause in Terms of Service
+A comprehensive fan retention engine that adds loyalty leveling, a premium Fan Vault, AI-driven insights for artists, and smart reward triggers -- all built on top of the existing Store, Superfan, and purchase infrastructure.
 
 ---
 
-## Phase 1: Database Tables (Migration)
+## Phase 1: Database Migration
 
-### `artist_stores`
+### New Tables
+
+**fan_loyalty** (one row per user-artist pair)
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid | PK |
+| fan_id | uuid | references profiles |
+| artist_id | uuid | references profiles |
+| points | integer | default 0 |
+| level | text | 'listener', 'supporter', 'insider', 'elite', 'founding_superfan' |
+| show_public | boolean | default false (fan toggle) |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+RLS: Fans manage their own rows. Artists can view rows for their artist_id. Public can view rows where show_public = true.
+
+**artist_superfan_settings** (one row per artist)
 | Column | Type | Notes |
 |--------|------|-------|
 | id | uuid | PK |
 | artist_id | uuid | unique, references profiles |
-| store_status | text | 'inactive' / 'active', default 'inactive' |
-| platform_fee_percentage | integer | default 15 |
-| seller_agreement_accepted | boolean | default false |
-| seller_agreement_accepted_at | timestamptz | nullable |
+| loyalty_enabled | boolean | default false |
+| public_leaderboard | boolean | default false |
+| show_top_supporters | boolean | default true |
+| show_founding_fans | boolean | default true |
+| custom_level_names | jsonb | nullable, override default level names |
 | created_at / updated_at | timestamptz | |
 
-RLS: Artists manage own store. Public can view active stores.
+RLS: Artists manage their own. Public can view where loyalty_enabled = true.
 
-### `store_products`
+**activity_feed**
 | Column | Type | Notes |
 |--------|------|-------|
 | id | uuid | PK |
-| artist_id | uuid | FK |
-| type | text | 'digital_track', 'digital_bundle', 'merch', 'superfan' |
+| artist_id | uuid | |
+| type | text | 'new_drop', 'limited_release', 'superfan_exclusive', 'merch_restock', 'announcement' |
 | title | text | |
 | description | text | nullable |
-| price_cents | integer | |
-| image_url | text | nullable |
-| audio_url | text | nullable (for digital tracks) |
-| inventory_limit | integer | nullable (unlimited if null) |
-| inventory_sold | integer | default 0 |
-| is_exclusive | boolean | default false |
-| is_early_release | boolean | default false |
-| variants | jsonb | nullable, for merch sizes/colors |
-| is_active | boolean | default true |
-| created_at / updated_at | timestamptz | |
-
-RLS: Artists manage own. Public views active products from active stores.
-
-### `store_orders`
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | PK |
-| product_id | uuid | FK |
-| buyer_id | uuid | |
-| artist_id | uuid | |
-| stripe_payment_intent_id | text | nullable |
-| amount_cents | integer | |
-| platform_fee_cents | integer | |
-| status | text | 'pending', 'completed', 'fulfilled', 'shipped', 'refunded' |
-| shipping_address | jsonb | nullable, for merch |
-| buyer_name | text | nullable |
-| buyer_email | text | nullable |
-| edition_number | integer | nullable, for limited editions |
+| metadata | jsonb | nullable (product_id, track_id, etc.) |
 | created_at | timestamptz | |
 
-RLS: Buyers see own. Artists see their orders. Admins see all.
-
-### Storage bucket
-- Create `store-images` bucket (public) for product images
+RLS: Public can view all. Artists can insert/update/delete their own.
 
 ---
 
-## Phase 2: "Store & Earnings" Tab on Artist Dashboard
+## Phase 2: Edge Function -- AI Fan Insights
 
-### New page: `/artist/store`
+### New: `supabase/functions/fan-insights/index.ts`
 
-Add a new route and page `ArtistStore.tsx` with tabs:
+Uses Lovable AI (Gemini Flash) to analyze fan data for an artist and return structured insights.
 
-**Tab 1: Store Setup**
-- Stripe Connect status display (reuse `useStripeConnect` hook)
-- "Activate My Store" toggle (disabled until Stripe is active)
-- Seller agreement checkbox with confirmation text
-- Store status indicator
+**Input:** artist_id (from authenticated artist)
 
-**Tab 2: Products**
-- List of artist's store products with filters by type
-- "Add Product" button opens a modal/form
-- Product creation form with fields per type:
-  - Digital Track: audio upload, cover, title, description, price, optional limited qty, early release badge
-  - Digital Bundle: multiple audio files, cover, title, description, price
-  - Merch: images, title, description, price, variants (size/color JSON), inventory
-- Edit/deactivate products
-- Inventory tracking display
+**Logic:**
+1. Query purchases, store_orders, superfan_subscribers for the artist
+2. Aggregate per-fan: purchase count, total spent, last purchase date, subscription status, loyalty level
+3. Send summary to Lovable AI with a structured tool call to classify fans into:
+   - Top 10 Supporters (by total spend)
+   - Rising Supporters (increasing purchase frequency)
+   - At-Risk Subscribers (no activity in 30+ days)
+   - Fans Near Next Level (within 20% of level threshold)
+4. Return structured JSON
 
-**Tab 3: Orders**
-- List of orders with status badges
-- For merch orders: show shipping address, buyer name
-- Artist can mark orders as "Fulfilled" or "Shipped"
-- Filter by status (Pending / Fulfilled / Shipped)
-
-**Tab 4: Analytics**
-- Total revenue, platform fees paid, total orders
-- Top product by sales
-- Superfan count (from existing superfan_subscribers)
-- Recent orders list
-- Simple stats cards using existing glass-card styling
-
-### Dashboard Quick Action
-Add "My Store" link to ArtistDashboard quick actions panel.
+**Rate limit handling:** Surface 429/402 errors to the client.
 
 ---
 
-## Phase 3: Store Checkout Edge Function
+## Phase 3: Loyalty Points Engine
 
-### New: `create-store-checkout/index.ts`
-- Accepts product_id, quantity, and optional shipping_address (for merch)
-- Validates product exists and is active
-- Checks inventory if limited
-- Creates Stripe Checkout session with:
-  - `application_fee_amount` (15%)
-  - `transfer_data.destination` to artist's Connect account
-  - For merch: collects shipping address via Stripe Checkout
-  - Metadata: `type: "store"`, `product_id`, `artist_id`, `buyer_id`
-- Returns checkout URL
+### New: `supabase/functions/award-loyalty-points/index.ts`
 
-### Webhook updates in `stripe-webhook/index.ts`
-- Handle `checkout.session.completed` with `metadata.type === "store"`:
-  - Insert into `store_orders` with status 'completed' (digital) or 'pending' (merch)
-  - Increment `inventory_sold` on `store_products`
-  - Assign edition number for limited products
-  - Create earnings record in `artist_earnings`
+Called by the existing `stripe-webhook` after a purchase/subscription event.
 
----
+**Point awards:**
+- Purchase digital product: 10 points
+- Buy merch: 15 points
+- Subscribe to Superfan: 50 points
+- Buy limited edition: 25 points
+- Early release purchase: 20 points
 
-## Phase 4: Secure Digital Delivery
+**Level thresholds:**
+- Listener: 0 points
+- Supporter: 50 points
+- Insider: 150 points
+- Elite: 500 points
+- Founding Superfan: 1000 points
 
-### New: `download-store-product/index.ts`
-- Verifies buyer has a completed order for the product
-- Generates signed URL from private storage bucket
-- Returns temporary download link
-- Mirrors existing `download-track` pattern
+When a fan crosses a level threshold, insert a notification into the `notifications` table with type `level_up`.
 
 ---
 
-## Phase 5: Public Artist Store Tab
+## Phase 4: Fan Vault Page
 
-### Modified: `ArtistProfile.tsx`
-- Add "Store" tab/section alongside existing Tracks section
-- Only visible if artist has an active store (`artist_stores.store_status = 'active'`)
+### New route: `/vault`
 
-### New component: `ArtistStoreTab.tsx`
-- Sections: Featured Product, Digital Drops, Limited Editions, Merch, Superfan Banner
-- Each product card shows: image, title, price, type badge, "Owned" badge if purchased
-- Buy button triggers `create-store-checkout`
-- "Support Directly" messaging on store header
-- Limited edition items show "X of Y remaining"
-- Merch items show variant selector (size/color)
+### New page: `src/pages/FanVault.tsx`
+
+Premium-feeling dashboard for fans showing:
+
+**Sections:**
+1. **Vault Header** -- Fan's loyalty level badge, total points, level progress bar
+2. **Digital Collection** -- Purchased tracks displayed as a grid of "CD cases" (cover art with edition numbers)
+3. **Limited Editions** -- Filtered view of purchases with edition numbers, highlighted with scarcity badges ("Edition 247 of 1000")
+4. **Superfan Subscriptions** -- Active artist subscriptions with tier badges
+5. **Order History** -- Store orders with status badges
+6. **Loyalty Level Card** -- Current level, points to next level, progress visualization
+
+All sections use existing `glass-card` / `glass-card-bordered` containers.
+
+### New components:
+- `src/components/vault/VaultHeader.tsx`
+- `src/components/vault/DigitalCollection.tsx`
+- `src/components/vault/LimitedEditions.tsx`
+- `src/components/vault/LoyaltyLevelCard.tsx`
+- `src/components/vault/VaultOrderHistory.tsx`
 
 ---
 
-## Phase 6: Hooks
+## Phase 5: Fan Visibility Toggle
+
+### Modified: `src/pages/AccountSettings.tsx`
+
+Add a "Superfan Visibility" card:
+- Toggle: "Show My Superfan Status" (updates `fan_loyalty.show_public`)
+- Description: When enabled, your level badge appears on artist pages and you are eligible for Top Supporter leaderboards
+
+---
+
+## Phase 6: Artist Superfan Center
+
+### New tab in ArtistStore.tsx: "Superfan Center"
+
+Add a 5th tab to the existing Store & Earnings page.
+
+### New component: `src/components/store/SuperfanCenterTab.tsx`
+
+**Sections:**
+1. **Loyalty System Toggle** -- Enable/disable loyalty for your fans
+2. **Leaderboard Settings** -- Toggle public leaderboard, top supporters display, founding fan recognition
+3. **Custom Level Names** -- Optional overrides for default level names
+4. **Superfan Insights** (powered by AI):
+   - Top 10 Supporters cards
+   - Rising Supporters list
+   - At-Risk Subscribers (inactive 30+ days)
+   - Fans Near Next Level
+5. **Create Superfan-Only Drop** -- Link to product creation with `is_exclusive` pre-checked
+
+---
+
+## Phase 7: Activity Feed on Artist Profile
+
+### Modified: `src/pages/ArtistProfile.tsx`
+
+Add "Activity" tab alongside Tracks and Store tabs.
+
+### New component: `src/components/artist/ActivityFeed.tsx`
+
+Displays recent activity_feed entries for the artist:
+- New Drops, Limited Releases, Superfan Exclusives, Merch Restock, Announcements
+- Each entry uses a glass-card with icon, title, timestamp
+- Follows existing card patterns
+
+---
+
+## Phase 8: Smart Notifications
+
+### Modified: `stripe-webhook/index.ts`
+
+After processing a purchase or subscription event:
+1. Call `award-loyalty-points` to update points
+2. If level-up detected, insert `level_up` notification
+
+### New: `supabase/functions/fan-reengagement/index.ts`
+
+Designed to be called on a schedule (or manually by artist):
+- Queries fans with no purchase/activity in 30+ days
+- Inserts a soft notification: "New exclusive drop from [Artist Name]"
+- Only triggers once per fan per 30-day window (check last notification date)
+- No spam -- behavior-based only
+
+---
+
+## Phase 9: AI Personalization (Subtle Suggestions)
+
+### Modified: `src/pages/FanVault.tsx`
+
+Add a "Suggested For You" section at the bottom:
+- Query fan's purchase history (genres, artists)
+- Use existing `useRecommendedArtists` pattern to suggest:
+  - Drops they might like (from followed artists)
+  - Similar artists based on purchase behavior
+  - Subtle "Become a Superfan" prompt if high purchase frequency but no subscription
+
+No aggressive upselling -- framed as "You might enjoy" with existing glass-card styling.
+
+---
+
+## Hooks
 
 | Hook | Purpose |
 |------|---------|
-| `useArtistStore(artistId)` | Fetch/manage store config |
-| `useStoreProducts(artistId, filters)` | Fetch products with type filters |
-| `useStoreOrders(artistId)` | Fetch orders for artist dashboard |
-| `useStoreCheckout()` | Handle checkout flow |
+| `useFanLoyalty(fanId, artistId?)` | Fetch loyalty points, level, and progress |
+| `useArtistSuperfanSettings(artistId)` | Fetch/manage artist superfan config |
+| `useActivityFeed(artistId)` | Fetch activity feed entries |
+| `useFanInsights(artistId)` | Trigger and fetch AI insights |
 
 ---
 
 ## Files Created
 
-1. `src/pages/ArtistStore.tsx` -- Store management page with tabs
-2. `src/components/store/StoreSetupTab.tsx` -- Stripe connect + activation
-3. `src/components/store/ProductsTab.tsx` -- Product list + add/edit
-4. `src/components/store/AddProductModal.tsx` -- Product creation form
-5. `src/components/store/OrdersTab.tsx` -- Order management
-6. `src/components/store/StoreAnalyticsTab.tsx` -- Revenue stats
-7. `src/components/store/ArtistStoreTab.tsx` -- Public-facing store on profile
-8. `src/components/store/StoreProductCard.tsx` -- Product display card
-9. `src/hooks/useArtistStore.ts`
-10. `src/hooks/useStoreProducts.ts`
-11. `src/hooks/useStoreOrders.ts`
-12. `src/hooks/useStoreCheckout.ts`
-13. `supabase/functions/create-store-checkout/index.ts`
-14. `supabase/functions/download-store-product/index.ts`
+1. `src/pages/FanVault.tsx` -- Fan Vault page
+2. `src/components/vault/VaultHeader.tsx` -- Level badge and stats
+3. `src/components/vault/DigitalCollection.tsx` -- Purchased tracks grid
+4. `src/components/vault/LimitedEditions.tsx` -- Limited edition showcase
+5. `src/components/vault/LoyaltyLevelCard.tsx` -- Level progress visualization
+6. `src/components/vault/VaultOrderHistory.tsx` -- Order history list
+7. `src/components/store/SuperfanCenterTab.tsx` -- Artist superfan management
+8. `src/components/artist/ActivityFeed.tsx` -- Public activity feed
+9. `src/hooks/useFanLoyalty.ts`
+10. `src/hooks/useArtistSuperfanSettings.ts`
+11. `src/hooks/useActivityFeed.ts`
+12. `src/hooks/useFanInsights.ts`
+13. `supabase/functions/fan-insights/index.ts` -- AI analysis
+14. `supabase/functions/award-loyalty-points/index.ts` -- Points engine
+15. `supabase/functions/fan-reengagement/index.ts` -- Re-engagement notifications
 
 ## Files Modified
 
-1. `src/App.tsx` -- Add `/artist/store` route
-2. `src/pages/ArtistDashboard.tsx` -- Add "My Store" quick action
-3. `src/pages/ArtistProfile.tsx` -- Add Store tab for public profiles
-4. `src/components/layout/Navbar.tsx` -- Add Store link in artist menu
-5. `supabase/functions/stripe-webhook/index.ts` -- Handle store purchases
-6. `supabase/config.toml` -- Register new edge functions
+1. `src/App.tsx` -- Add `/vault` route
+2. `src/pages/ArtistStore.tsx` -- Add "Superfan Center" tab
+3. `src/pages/ArtistProfile.tsx` -- Add "Activity" tab
+4. `src/pages/AccountSettings.tsx` -- Add visibility toggle
+5. `src/pages/FanDashboard.tsx` -- Add "My Vault" quick action
+6. `src/components/layout/Navbar.tsx` -- Add Vault link in fan menu
+7. `supabase/functions/stripe-webhook/index.ts` -- Trigger loyalty point awards
+8. `supabase/config.toml` -- Register new edge functions
 
 ---
 
 ## Implementation Order
 
 ```text
-Step 1: Database migration (3 tables + storage bucket + RLS)
-Step 2: Hooks (useArtistStore, useStoreProducts, useStoreOrders, useStoreCheckout)
-Step 3: Artist Store management page with all 4 tabs
-Step 4: create-store-checkout edge function
-Step 5: Webhook updates for store purchases
-Step 6: download-store-product edge function
-Step 7: Public store tab on ArtistProfile
-Step 8: Route + navigation integration
+Step 1: Database migration (3 tables + RLS)
+Step 2: Hooks (useFanLoyalty, useArtistSuperfanSettings, useActivityFeed, useFanInsights)
+Step 3: Fan Vault page + components
+Step 4: award-loyalty-points edge function
+Step 5: Superfan Center tab on Artist Store
+Step 6: fan-insights AI edge function
+Step 7: Activity Feed on Artist Profile
+Step 8: Visibility toggle in Account Settings
+Step 9: fan-reengagement edge function
+Step 10: Smart notifications in stripe-webhook
+Step 11: Route + navigation integration
 ```
 
 ---
 
 ## Design Rules
 
-- All UI uses existing `glass-card` / `glass-card-bordered` containers
+- All UI uses existing glass-card / glass-card-bordered containers
 - Existing Button, Badge, Card, Tabs components only
 - No new colors, fonts, or theme tokens
 - Mobile-first responsive using existing grid patterns
-- "Support Directly" tone -- no anti-streaming language
-
-## Future-Ready Structure
-
-The `store_products.type` field and `variants` JSONB column are designed to later support:
-- Print-on-demand API integration (add `fulfillment_provider` column)
-- Ticket sales (type: 'ticket', add event date to variants)
-- Live event access (type: 'event')
-- NFT-style limited releases (already supported via `inventory_limit` + `edition_number`)
-- AI fan features (query `store_orders` for fan segmentation)
-
+- Subtle, non-aggressive AI suggestions
+- Position as enhancement, not replacement for streaming
