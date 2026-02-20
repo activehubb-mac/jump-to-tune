@@ -18,7 +18,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown, Bell, Check, ArrowUp, ArrowDown, Sparkles, Wallet, Heart, AlertTriangle, UserPlus, DollarSign, Mic2, Shield, Store } from "lucide-react";
+import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown, Bell, Check, ArrowUp, ArrowDown, Sparkles, Wallet, Heart, AlertTriangle, UserPlus, DollarSign, Mic2, Shield, Store, Gem } from "lucide-react";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { CreditBalanceChip } from "@/components/wallet/CreditBalanceChip";
 import { SubscriptionCountdownChip } from "@/components/subscription/SubscriptionCountdownChip";
@@ -312,6 +312,12 @@ export function Navbar() {
                         </>
                       )}
                       <DropdownMenuItem asChild>
+                        <Link to="/vault" className="flex items-center gap-2 cursor-pointer">
+                          <Gem className="w-4 h-4" />
+                          My Vault
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/library" className="flex items-center gap-2 cursor-pointer">
                           <Library className="w-4 h-4" />
                           Library
@@ -532,6 +538,14 @@ export function Navbar() {
                         Upload Music
                       </Link>
                     )}
+                    <Link
+                      to="/vault"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+                    >
+                      <Gem className="w-5 h-5" />
+                      My Vault
+                    </Link>
                     <Link
                       to="/wallet"
                       onClick={() => setIsOpen(false)}

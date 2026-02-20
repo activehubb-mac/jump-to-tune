@@ -3,7 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock, Star, Store } from "lucide-react";
+import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock, Star, Store, Megaphone } from "lucide-react";
+import { ActivityFeed } from "@/components/artist/ActivityFeed";
 import { useArtistProfile } from "@/hooks/useArtistProfile";
 import { useTracks } from "@/hooks/useTracks";
 import { useFeaturedOnTracks } from "@/hooks/useFeaturedOnTracks";
@@ -167,6 +168,9 @@ export default function ArtistProfile() {
                 <Store className="w-4 h-4" /> Store
               </TabsTrigger>
             )}
+            <TabsTrigger value="activity" className="flex items-center gap-2">
+              <Megaphone className="w-4 h-4" /> Activity
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="tracks">
@@ -256,6 +260,10 @@ export default function ArtistProfile() {
               <ArtistStoreTab artistId={id!} artistName={artist.display_name || "Artist"} />
             </TabsContent>
           )}
+
+          <TabsContent value="activity">
+            <ActivityFeed artistId={id!} />
+          </TabsContent>
         </Tabs>
       </div>
     </Layout>

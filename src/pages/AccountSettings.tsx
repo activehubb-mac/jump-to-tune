@@ -6,8 +6,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { 
   User, Settings, Shield, CreditCard, Bell, LogOut, 
-  Loader2, ChevronRight, Trash2, Info, RefreshCw
+  Loader2, ChevronRight, Trash2, Info, RefreshCw, Eye
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { useFanLoyalty } from "@/hooks/useFanLoyalty";
 
 declare const __BUILD_TIMESTAMP__: string;
 import { EmailVerificationCard } from "@/components/account/EmailVerificationCard";
@@ -24,6 +26,7 @@ export default function AccountSettings() {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isClearingCache, setIsClearingCache] = useState(false);
+  const { loyaltyEntries, toggleVisibility } = useFanLoyalty();
 
   const clearAudioCache = async () => {
     setIsClearingCache(true);
@@ -197,6 +200,30 @@ export default function AccountSettings() {
               );
             })}
           </div>
+
+          {/* Superfan Visibility */}
+          {loyaltyEntries && loyaltyEntries.length > 0 && (
+            <div className="glass-card p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Eye className="w-4 h-4 text-primary" />
+                <h3 className="font-medium text-foreground text-sm">Superfan Visibility</h3>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                When enabled, your level badge appears on artist pages and you're eligible for Top Supporter leaderboards.
+              </p>
+              <div className="space-y-2">
+                {loyaltyEntries.map((entry: any) => (
+                  <div key={entry.id} className="flex items-center justify-between">
+                    <span className="text-sm text-foreground">Show status publicly</span>
+                    <Switch
+                      checked={entry.show_public}
+                      onCheckedChange={(v) => toggleVisibility.mutate({ artistId: entry.artist_id, showPublic: v })}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Danger Zone */}
           <div className="space-y-3">
