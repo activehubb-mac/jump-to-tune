@@ -95,6 +95,46 @@ serve(async (req) => {
         const metadata = session.metadata || {};
         logStep("Checkout session completed", { sessionId: session.id, metadata });
 
+        // Handle Superfan subscription checkout
+        if (metadata.type === "superfan" && session.mode === "subscription") {
+          const fanId = metadata.fan_id;
+          const artistId = metadata.artist_id;
+          const membershipId = metadata.membership_id;
+
+          if (fanId && artistId && membershipId) {
+            logStep("Processing superfan subscription", { fanId, artistId, membershipId });
+
+            // Upsert subscriber record
+            const { error: subError } = await supabaseClient
+              .from("superfan_subscribers")
+              .upsert({
+                membership_id: membershipId,
+                artist_id: artistId,
+                fan_id: fanId,
+                status: "active",
+                tier_level: "bronze",
+                stripe_subscription_id: session.subscription as string,
+                subscribed_at: new Date().toISOString(),
+              }, { onConflict: "artist_id,fan_id" });
+
+            if (subError) {
+              logStep("Error creating superfan subscriber", { error: subError });
+            } else {
+              logStep("Superfan subscriber created/updated");
+            }
+
+            // Notify artist
+            await supabaseClient.from("notifications").insert({
+              user_id: artistId,
+              type: "new_superfan",
+              title: "New Superfan!",
+              message: "Someone just subscribed to your Superfan Room!",
+              metadata: { fan_id: fanId },
+            });
+          }
+          break;
+        }
+
         if (session.mode === "subscription") {
           // Handle subscription creation
           const userId = metadata.user_id;
@@ -635,6 +675,17 @@ serve(async (req) => {
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
         logStep("Subscription deleted", { subscriptionId: subscription.id });
+
+        // Check if this is a superfan subscription
+        const subMeta = subscription.metadata || {};
+        if (subMeta.type === "superfan") {
+          logStep("Superfan subscription deleted", { artistId: subMeta.artist_id, fanId: subMeta.fan_id });
+          await supabaseClient
+            .from("superfan_subscribers")
+            .update({ status: "expired" })
+            .eq("stripe_subscription_id", subscription.id);
+          break;
+        }
 
         const { data: subRecord } = await supabaseClient
           .from("subscriptions")
