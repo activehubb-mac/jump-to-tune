@@ -94,7 +94,8 @@ serve(async (req) => {
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
-        .single();
+        .neq("role", "admin")
+        .maybeSingle();
       
       const actualRole = roleData?.role || "fan";
       
