@@ -1,189 +1,184 @@
 
+# Superfan Room - Implementation Plan
 
-# Superfan Store & Marketplace Infrastructure - Phased Plan
-
-This is a large feature set. Below is a phased approach so each piece ships independently and builds on the last.
-
----
-
-## What's Already Done (No Changes Needed)
-
-- Stripe Connect Express onboarding and account management
-- 85/15 revenue split with automatic Stripe transfers
-- Artist payouts dashboard with earnings tracking
-- Payment flow (checkout, webhooks, credit wallet purchases)
+Build the Superfan Room as a native extension of the artist profile page, using existing JumTunes glass-card styling, buttons, and layout patterns. No visual theme changes.
 
 ---
 
-## Phase 1: Seller Agreement (Terms of Service Update)
+## Phase 1: Database Tables (Migration)
 
-**File**: `src/pages/Terms.tsx`
+Create 3 new tables to support the Superfan Room:
 
-Add a new "Seller Responsibility" section to the existing Terms of Service page with the legal language provided:
-
-- Artists act as independent merchants
-- Responsible for fulfillment, refunds, chargebacks, taxes, IP rights
-- JumTunes is not merchant of record
-- Payments processed via Stripe Connect, funds transferred directly minus platform fees
-
----
-
-## Phase 2: Database Schema (New Tables)
-
-Create the following tables via migration:
-
-### `artist_stores` table
+### `superfan_memberships`
 | Column | Type | Notes |
 |--------|------|-------|
 | id | uuid | PK |
-| artist_id | uuid | FK to profiles, unique |
-| store_status | text | 'active' / 'inactive', default 'inactive' |
-| platform_fee_percentage | integer | default 15 |
-| created_at / updated_at | timestamptz | |
-
-RLS: Artists can manage their own store. Public can view active stores.
-
-### `store_products` table
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | PK |
-| artist_id | uuid | FK to profiles |
-| type | text | 'track', 'merch', 'ticket', 'bundle' |
-| title | text | |
-| description | text | nullable |
-| price | numeric | in dollars |
-| inventory_limit | integer | nullable (unlimited if null) |
-| is_exclusive | boolean | default false |
-| image_url | text | nullable |
-| is_active | boolean | default true |
-| created_at / updated_at | timestamptz | |
-
-RLS: Artists manage own products. Public views active products.
-
-### `store_orders` table
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | PK |
-| product_id | uuid | FK to store_products |
-| buyer_id | uuid | |
-| artist_id | uuid | |
-| stripe_payment_intent_id | text | nullable |
-| amount_cents | integer | |
-| platform_fee_cents | integer | |
-| status | text | 'pending', 'completed', 'refunded' |
-| created_at | timestamptz | |
-
-RLS: Buyers see own orders. Artists see orders for their products. Admins see all.
-
-### `superfan_memberships` table
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | PK |
-| artist_id | uuid | unique |
-| monthly_price_cents | integer | |
-| perks_description | text | nullable |
+| artist_id | uuid | unique, references profiles |
+| monthly_price_cents | integer | default 499 (i.e. $4.99) |
+| description | text | nullable, artist-written pitch |
+| perks | jsonb | default list of perks |
 | is_active | boolean | default false |
 | created_at / updated_at | timestamptz | |
 
-RLS: Artists manage own. Public views active memberships.
-
-### `superfan_subscribers` table
+### `superfan_subscribers`
 | Column | Type | Notes |
 |--------|------|-------|
 | id | uuid | PK |
-| membership_id | uuid | FK |
-| fan_id | uuid | |
-| status | text | 'active', 'canceled' |
+| membership_id | uuid | FK to superfan_memberships |
+| artist_id | uuid | for easy querying |
+| fan_id | uuid | the subscriber |
+| status | text | 'active', 'canceled', 'expired' |
+| tier_level | text | 'bronze', 'gold', 'elite' |
+| lifetime_spent_cents | integer | default 0 |
 | stripe_subscription_id | text | nullable |
 | subscribed_at | timestamptz | |
+| created_at | timestamptz | |
 
-RLS: Fans see own subscriptions. Artists see subscribers to their membership.
+### `superfan_messages`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid | PK |
+| artist_id | uuid | |
+| fan_id | uuid | |
+| sender_id | uuid | either artist or fan |
+| message | text | |
+| created_at | timestamptz | |
 
----
-
-## Phase 3: Superfan Center Tab (Artist Dashboard)
-
-Add a new page `/artist/superfan-center` accessible from the Artist Dashboard, with tabs:
-
-### Tab A: Storefront
-- List of artist's store products (tracks, merch, tickets, bundles)
-- Add/edit/deactivate products
-- Inventory tracking
-- Links to existing track upload for track-type products
-
-### Tab B: Superfan Membership
-- Enable/disable membership
-- Set monthly price
-- Edit perks description
-- View subscriber count and list
-
-### Tab C: Fan Insights (Phase 1 of "AI Tools")
-- Top supporters leaderboard (by total spend from purchases table)
-- Recent supporters
-- Fan engagement stats (likes, purchases, follows)
-- These use existing data -- no AI needed initially
-
-### Tab D: Social Links
-- Artist can add/edit social media links (Instagram, TikTok, YouTube)
-- Displayed on artist profile page
-- Requires adding a `social_links` JSONB column to profiles table
+**RLS Policies:**
+- Memberships: Artists manage their own. Public can view active ones.
+- Subscribers: Fans see their own. Artists see their subscribers. Service role manages all.
+- Messages: Only the artist and the specific fan in the conversation can read/write.
 
 ---
 
-## Phase 4: Store Checkout Flow
+## Phase 2: New Route and Page
 
-### New edge function: `create-store-checkout`
-- Creates Stripe Checkout for store_products (merch, tickets, bundles)
-- Uses existing Stripe Connect with `application_fee_amount` and `transfer_data.destination`
-- Records order in `store_orders` table
-- Sends notifications to buyer and seller
+### Add route `/artist/:id/superfan`
 
-### Webhook updates
-- Handle store product purchases in existing `stripe-webhook`
-- Update order status on payment completion
+New file: `src/pages/SuperfanRoom.tsx`
+
+This page loads the artist profile data and the fan's subscription status, then renders 5 sections using existing glass-card styling.
 
 ---
 
-## Phase 5: Fan-Facing Storefront
+## Phase 3: Superfan Room UI Sections
 
-### Artist Profile Enhancement
-- Add "Store" tab to artist profile page (`/artist/:id`)
-- Display active store products with purchase buttons
-- Show superfan membership signup option
-- Display social links
+All sections use `glass-card` / `glass-card-bordered` containers, existing Button variants, and the current color tokens (primary gold, accent copper, muted grays).
 
-### Superfan Badge
-- Fans who subscribe get a VIP badge shown on their profile
-- Badge visible in comments/interactions
+### A. "Enter Superfan Room" Button
+- Added to `ArtistProfile.tsx` in the action buttons row (next to Follow and Share)
+- Links to `/artist/:id/superfan`
+- Uses existing `Button` with `variant="outline"` and a Star icon
+
+### B. Status Panel (Top of Superfan Room)
+
+**Not subscribed:**
+- Glass card with short description: "Unlock exclusive content and early access."
+- Subscribe button (triggers Stripe checkout)
+- Bullet list: Early drops, Exclusive versions, Direct support access
+
+**Subscribed:**
+- Glass card showing: Superfan badge, join date, lifetime support amount, tier indicator (Bronze / Gold / Elite based on lifetime_spent_cents thresholds), "Thank you for supporting" message
+
+### C. Exclusive Drops Section
+- Queries tracks marked as `is_exclusive` (uses existing track card layout)
+- Tags: "Superfan Exclusive", "Early Access", "Limited Edition (X remaining)", "Owned"
+- If not subscribed: CSS blur + overlay "Subscribe to unlock"
+
+### D. VIP Perks Section
+- Content cards for perks (static for now, expandable later)
+- Behind-the-scenes, bonus content, announcements, countdown
+- If locked: slight blur + lock icon + CTA
+
+### E. Top Supporters Strip
+- Small section showing top 3 supporters this month (by purchases of that artist's tracks)
+- Current user's rank if applicable
+- Uses existing compact layout, no gamification
+
+### F. Direct Messages Section
+- Non-subscribers see: "Subscribe to message this artist."
+- Subscribers see a minimal text chat interface
+- Clean input + message list using glass-card styling
+- Messages stored in `superfan_messages` table
 
 ---
 
-## Phase 6: Future Enhancements (Not in Initial Build)
+## Phase 4: Subscription Flow
 
-These are noted for future iterations:
-- Direct fan chat / broadcast messaging
-- Paid message unlock
-- Fan streak tracking
-- AI-powered fan segments
-- Merch shop embedding
+### New edge function: `create-superfan-checkout`
+- Creates a Stripe Checkout session in subscription mode
+- Uses Stripe Connect: `application_fee_amount` (15%) + `transfer_data.destination` to artist's connected account
+- On success, creates/updates `superfan_subscribers` row
+- Returns checkout URL
+
+### Webhook handling
+- Add superfan subscription handling to existing `stripe-webhook` edge function
+- On `checkout.session.completed` with superfan metadata: insert subscriber record
+- On `customer.subscription.deleted`: update status to 'expired'
+
+---
+
+## Phase 5: Hooks
+
+### `useSuperfanMembership(artistId)`
+- Fetches the artist's membership config (price, description, active status)
+
+### `useSuperfanStatus(artistId, fanId)`
+- Checks if the current user is an active subscriber to this artist
+- Returns subscription details, tier, lifetime spent
+
+### `useSuperfanMessages(artistId, fanId)`
+- Fetches messages between artist and fan
+- Provides send function
+
+### `useTopSupporters(artistId)`
+- Queries purchases table for top spenders on this artist's tracks in current month
+
+---
+
+## Files Created/Modified
+
+### New files:
+1. `src/pages/SuperfanRoom.tsx` -- Main Superfan Room page
+2. `src/components/superfan/StatusPanel.tsx` -- Subscribe/status card
+3. `src/components/superfan/ExclusiveDrops.tsx` -- Exclusive tracks with blur/lock
+4. `src/components/superfan/VIPPerks.tsx` -- Perks cards with lock state
+5. `src/components/superfan/TopSupporters.tsx` -- Supporter leaderboard strip
+6. `src/components/superfan/DirectMessages.tsx` -- Chat section
+7. `src/hooks/useSuperfanMembership.ts` -- Membership data hook
+8. `src/hooks/useSuperfanStatus.ts` -- Subscriber status hook
+9. `src/hooks/useSuperfanMessages.ts` -- Messages hook
+10. `src/hooks/useTopSupporters.ts` -- Top supporters hook
+11. `supabase/functions/create-superfan-checkout/index.ts` -- Stripe checkout for superfan subscriptions
+
+### Modified files:
+1. `src/pages/ArtistProfile.tsx` -- Add "Enter Superfan Room" button
+2. `src/App.tsx` -- Add `/artist/:id/superfan` route
+3. `supabase/functions/stripe-webhook/index.ts` -- Handle superfan subscription events
+4. `supabase/config.toml` -- Add new edge function config
+
+---
+
+## Design Rules Followed
+
+- No new colors, fonts, or theme tokens
+- All containers use `glass-card` / `glass-card-bordered`
+- All buttons use existing `Button` component variants
+- Blur/lock overlay uses CSS `backdrop-filter: blur()` with semi-transparent background
+- Mobile-first responsive with existing grid patterns
+- Smooth transitions via existing `transition-all duration-300`
+- Tone is confident and premium, never aggressive
 
 ---
 
 ## Implementation Order
 
 ```text
-Phase 1 --> Phase 2 --> Phase 3 --> Phase 4 --> Phase 5
-(Terms)    (Database)   (Dashboard)  (Checkout)  (Fan UI)
+Step 1: Database migration (3 tables + RLS)
+Step 2: Hooks (useSuperfanMembership, useSuperfanStatus, useTopSupporters, useSuperfanMessages)
+Step 3: UI components (StatusPanel, ExclusiveDrops, VIPPerks, TopSupporters, DirectMessages)
+Step 4: SuperfanRoom page + route
+Step 5: "Enter Superfan Room" button on ArtistProfile
+Step 6: create-superfan-checkout edge function
+Step 7: Webhook updates for superfan subscriptions
 ```
-
-Each phase can be approved and built independently. Phase 1 and 2 have no UI dependencies and can ship together. Phase 3 builds the artist-facing management UI. Phase 4 adds the payment flow. Phase 5 exposes everything to fans.
-
----
-
-## Technical Notes
-
-- No new secrets needed -- uses existing STRIPE_SECRET_KEY
-- Store products for type 'track' will reference existing tracks table rather than duplicating
-- The `platform_fee_percentage` field on `artist_stores` allows future per-artist fee customization but defaults to 15%
-- Social links stored as JSONB on profiles avoids creating a separate table for simple key-value pairs
-- Superfan memberships will use Stripe recurring billing through the existing Connect infrastructure
