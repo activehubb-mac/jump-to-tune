@@ -1,26 +1,33 @@
 
 
-# Fix: Social Links Not Showing on "Find Me" Tab
+# Fix: Artist Store Link Missing from Mobile Menu
 
 ## Problem
 
-When you add social media links in "Edit Profile", they save to the database correctly, but they never appear on the "Find Me Everywhere" tab. The root cause is in the `useArtistProfile` hook -- it fetches the data from the database but then drops it when building the return object.
+The "My Store" link only appears in the desktop profile dropdown menu. It is completely absent from the mobile slide-out navigation menu, so artists on mobile devices cannot find or access their store.
 
-## What Needs to Change
+## Solution
 
-### 1. Update `src/hooks/useArtistProfile.ts`
+Add the "My Store" link to the mobile menu, right after the "Upload Music" link -- matching the same `role === "artist"` condition used in the desktop dropdown.
 
-- Add `social_links` to the `ArtistProfile` TypeScript interface
-- Include `social_links` in the returned object (it's already fetched, just not passed through)
+## Technical Change
 
-### 2. Remove the `(artist as any)` cast in `src/pages/ArtistProfile.tsx`
+**File: `src/components/layout/Navbar.tsx`** (around line 540, after the Upload Music link block)
 
-- Line 332 currently uses `(artist as any).social_links` as a workaround
-- Once the hook properly returns `social_links`, this cast becomes unnecessary and can be replaced with `artist.social_links`
+Add a new conditional link block:
 
-## Technical Details
+```tsx
+{role === "artist" && (
+  <Link
+    to="/artist/store"
+    onClick={() => setIsOpen(false)}
+    className="flex items-center gap-3 px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+  >
+    <Store className="w-5 h-5" />
+    My Store
+  </Link>
+)}
+```
 
-The hook already does `select("*")` on `profiles_public`, which includes `social_links`. The data exists in `profile.social_links` but is never mapped into the return value (lines 66-78 of `useArtistProfile.ts`). Adding one line to the interface and one to the return object fixes the entire flow.
-
-No database changes needed -- the `social_links` column already exists in `profiles` and is exposed through `profiles_public`.
+This mirrors the existing desktop dropdown entry (line 304-310) and uses the same `Store` icon already imported in the file. No other files need changes.
 
