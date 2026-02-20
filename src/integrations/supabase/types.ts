@@ -44,6 +44,30 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_feature_flags: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          feature_key: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          feature_key: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          feature_key?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
       albums: {
         Row: {
           artist_id: string
@@ -168,7 +192,10 @@ export type Database = {
           custom_level_names: Json | null
           id: string
           loyalty_enabled: boolean
+          message_price_credits: number | null
+          messaging_enabled: boolean | null
           public_leaderboard: boolean
+          response_window_hours: number | null
           show_founding_fans: boolean
           show_top_supporters: boolean
           updated_at: string
@@ -179,7 +206,10 @@ export type Database = {
           custom_level_names?: Json | null
           id?: string
           loyalty_enabled?: boolean
+          message_price_credits?: number | null
+          messaging_enabled?: boolean | null
           public_leaderboard?: boolean
+          response_window_hours?: number | null
           show_founding_fans?: boolean
           show_top_supporters?: boolean
           updated_at?: string
@@ -190,7 +220,10 @@ export type Database = {
           custom_level_names?: Json | null
           id?: string
           loyalty_enabled?: boolean
+          message_price_credits?: number | null
+          messaging_enabled?: boolean | null
           public_leaderboard?: boolean
+          response_window_hours?: number | null
           show_founding_fans?: boolean
           show_top_supporters?: boolean
           updated_at?: string
@@ -521,6 +554,75 @@ export type Database = {
           },
         ]
       }
+      message_credits: {
+        Row: {
+          balance: number
+          created_at: string
+          fan_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          fan_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          fan_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      message_threads: {
+        Row: {
+          artist_id: string
+          created_at: string
+          credit_cost: number
+          expires_at: string
+          fan_id: string
+          id: string
+          message: string
+          refunded: boolean
+          replied_at: string | null
+          reply: string | null
+          sent_at: string
+          status: string
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          credit_cost?: number
+          expires_at?: string
+          fan_id: string
+          id?: string
+          message: string
+          refunded?: boolean
+          replied_at?: string | null
+          reply?: string | null
+          sent_at?: string
+          status?: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          credit_cost?: number
+          expires_at?: string
+          fan_id?: string
+          id?: string
+          message?: string
+          refunded?: boolean
+          replied_at?: string | null
+          reply?: string | null
+          sent_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string | null
@@ -752,6 +854,7 @@ export type Database = {
           id: string
           is_verified: boolean | null
           onboarding_completed: boolean | null
+          social_links: Json | null
           stripe_account_id: string | null
           stripe_account_status: string | null
           stripe_payouts_enabled: boolean | null
@@ -768,6 +871,7 @@ export type Database = {
           id: string
           is_verified?: boolean | null
           onboarding_completed?: boolean | null
+          social_links?: Json | null
           stripe_account_id?: string | null
           stripe_account_status?: string | null
           stripe_payouts_enabled?: boolean | null
@@ -784,6 +888,7 @@ export type Database = {
           id?: string
           is_verified?: boolean | null
           onboarding_completed?: boolean | null
+          social_links?: Json | null
           stripe_account_id?: string | null
           stripe_account_status?: string | null
           stripe_payouts_enabled?: boolean | null
@@ -927,13 +1032,16 @@ export type Database = {
           buyer_id: string
           buyer_name: string | null
           created_at: string
+          download_count: number | null
           edition_number: number | null
           id: string
+          max_downloads: number | null
           platform_fee_cents: number
           product_id: string
           shipping_address: Json | null
           status: string
           stripe_payment_intent_id: string | null
+          tracking_number: string | null
         }
         Insert: {
           amount_cents: number
@@ -942,13 +1050,16 @@ export type Database = {
           buyer_id: string
           buyer_name?: string | null
           created_at?: string
+          download_count?: number | null
           edition_number?: number | null
           id?: string
+          max_downloads?: number | null
           platform_fee_cents: number
           product_id: string
           shipping_address?: Json | null
           status?: string
           stripe_payment_intent_id?: string | null
+          tracking_number?: string | null
         }
         Update: {
           amount_cents?: number
@@ -957,13 +1068,16 @@ export type Database = {
           buyer_id?: string
           buyer_name?: string | null
           created_at?: string
+          download_count?: number | null
           edition_number?: number | null
           id?: string
+          max_downloads?: number | null
           platform_fee_cents?: number
           product_id?: string
           shipping_address?: Json | null
           status?: string
           stripe_payment_intent_id?: string | null
+          tracking_number?: string | null
         }
         Relationships: [
           {
@@ -988,11 +1102,15 @@ export type Database = {
           is_active: boolean
           is_early_release: boolean
           is_exclusive: boolean
+          is_featured: boolean | null
           price_cents: number
+          shipping_price_cents: number | null
           title: string
           type: string
           updated_at: string
           variants: Json | null
+          visibility: string | null
+          visibility_expires_at: string | null
         }
         Insert: {
           artist_id: string
@@ -1006,11 +1124,15 @@ export type Database = {
           is_active?: boolean
           is_early_release?: boolean
           is_exclusive?: boolean
+          is_featured?: boolean | null
           price_cents: number
+          shipping_price_cents?: number | null
           title: string
           type: string
           updated_at?: string
           variants?: Json | null
+          visibility?: string | null
+          visibility_expires_at?: string | null
         }
         Update: {
           artist_id?: string
@@ -1024,11 +1146,15 @@ export type Database = {
           is_active?: boolean
           is_early_release?: boolean
           is_exclusive?: boolean
+          is_featured?: boolean | null
           price_cents?: number
+          shipping_price_cents?: number | null
           title?: string
           type?: string
           updated_at?: string
           variants?: Json | null
+          visibility?: string | null
+          visibility_expires_at?: string | null
         }
         Relationships: []
       }
@@ -1128,7 +1254,10 @@ export type Database = {
           created_at: string
           fan_id: string
           id: string
+          is_hidden: boolean | null
+          is_pinned: boolean | null
           message: string
+          message_type: string | null
           sender_id: string
         }
         Insert: {
@@ -1136,7 +1265,10 @@ export type Database = {
           created_at?: string
           fan_id: string
           id?: string
+          is_hidden?: boolean | null
+          is_pinned?: boolean | null
           message: string
+          message_type?: string | null
           sender_id: string
         }
         Update: {
@@ -1144,7 +1276,10 @@ export type Database = {
           created_at?: string
           fan_id?: string
           id?: string
+          is_hidden?: boolean | null
+          is_pinned?: boolean | null
           message?: string
+          message_type?: string | null
           sender_id?: string
         }
         Relationships: []
@@ -1478,6 +1613,7 @@ export type Database = {
           id: string | null
           is_verified: boolean | null
           onboarding_completed: boolean | null
+          social_links: Json | null
           updated_at: string | null
           website_url: string | null
         }
@@ -1491,6 +1627,7 @@ export type Database = {
           id?: string | null
           is_verified?: boolean | null
           onboarding_completed?: boolean | null
+          social_links?: Json | null
           updated_at?: string | null
           website_url?: string | null
         }
@@ -1504,6 +1641,7 @@ export type Database = {
           id?: string | null
           is_verified?: boolean | null
           onboarding_completed?: boolean | null
+          social_links?: Json | null
           updated_at?: string | null
           website_url?: string | null
         }
