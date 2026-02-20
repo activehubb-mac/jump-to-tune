@@ -18,7 +18,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown, Bell, Check, ArrowUp, ArrowDown, Sparkles, Wallet, Heart, AlertTriangle, UserPlus, DollarSign, Mic2, Shield } from "lucide-react";
+import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown, Bell, Check, ArrowUp, ArrowDown, Sparkles, Wallet, Heart, AlertTriangle, UserPlus, DollarSign, Mic2, Shield, Store } from "lucide-react";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { CreditBalanceChip } from "@/components/wallet/CreditBalanceChip";
 import { SubscriptionCountdownChip } from "@/components/subscription/SubscriptionCountdownChip";
@@ -294,12 +294,22 @@ export function Navbar() {
                         </Link>
                       </DropdownMenuItem>
                       {(role === "artist" || role === "label") && (
-                        <DropdownMenuItem asChild>
-                          <Link to="/upload" className="flex items-center gap-2 cursor-pointer">
-                            <Upload className="w-4 h-4" />
-                            Upload Music
-                          </Link>
-                        </DropdownMenuItem>
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link to="/upload" className="flex items-center gap-2 cursor-pointer">
+                              <Upload className="w-4 h-4" />
+                              Upload Music
+                            </Link>
+                          </DropdownMenuItem>
+                          {role === "artist" && (
+                            <DropdownMenuItem asChild>
+                              <Link to="/artist/store" className="flex items-center gap-2 cursor-pointer">
+                                <Store className="w-4 h-4" />
+                                My Store
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
+                        </>
                       )}
                       <DropdownMenuItem asChild>
                         <Link to="/library" className="flex items-center gap-2 cursor-pointer">

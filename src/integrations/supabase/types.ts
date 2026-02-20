@@ -98,6 +98,39 @@ export type Database = {
         }
         Relationships: []
       }
+      artist_stores: {
+        Row: {
+          artist_id: string
+          created_at: string
+          id: string
+          platform_fee_percentage: number
+          seller_agreement_accepted: boolean
+          seller_agreement_accepted_at: string | null
+          store_status: string
+          updated_at: string
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          id?: string
+          platform_fee_percentage?: number
+          seller_agreement_accepted?: boolean
+          seller_agreement_accepted_at?: string | null
+          store_status?: string
+          updated_at?: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          id?: string
+          platform_fee_percentage?: number
+          seller_agreement_accepted?: boolean
+          seller_agreement_accepted_at?: string | null
+          store_status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       collection_bookmarks: {
         Row: {
           created_at: string
@@ -784,6 +817,119 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
+        }
+        Relationships: []
+      }
+      store_orders: {
+        Row: {
+          amount_cents: number
+          artist_id: string
+          buyer_email: string | null
+          buyer_id: string
+          buyer_name: string | null
+          created_at: string
+          edition_number: number | null
+          id: string
+          platform_fee_cents: number
+          product_id: string
+          shipping_address: Json | null
+          status: string
+          stripe_payment_intent_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          artist_id: string
+          buyer_email?: string | null
+          buyer_id: string
+          buyer_name?: string | null
+          created_at?: string
+          edition_number?: number | null
+          id?: string
+          platform_fee_cents: number
+          product_id: string
+          shipping_address?: Json | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          artist_id?: string
+          buyer_email?: string | null
+          buyer_id?: string
+          buyer_name?: string | null
+          created_at?: string
+          edition_number?: number | null
+          id?: string
+          platform_fee_cents?: number
+          product_id?: string
+          shipping_address?: Json | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "store_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_products: {
+        Row: {
+          artist_id: string
+          audio_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          inventory_limit: number | null
+          inventory_sold: number
+          is_active: boolean
+          is_early_release: boolean
+          is_exclusive: boolean
+          price_cents: number
+          title: string
+          type: string
+          updated_at: string
+          variants: Json | null
+        }
+        Insert: {
+          artist_id: string
+          audio_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          inventory_limit?: number | null
+          inventory_sold?: number
+          is_active?: boolean
+          is_early_release?: boolean
+          is_exclusive?: boolean
+          price_cents: number
+          title: string
+          type: string
+          updated_at?: string
+          variants?: Json | null
+        }
+        Update: {
+          artist_id?: string
+          audio_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          inventory_limit?: number | null
+          inventory_sold?: number
+          is_active?: boolean
+          is_early_release?: boolean
+          is_exclusive?: boolean
+          price_cents?: number
+          title?: string
+          type?: string
+          updated_at?: string
+          variants?: Json | null
         }
         Relationships: []
       }

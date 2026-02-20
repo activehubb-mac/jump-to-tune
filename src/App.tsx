@@ -63,6 +63,7 @@ import HelpCenter from "./pages/HelpCenter";
 import Install from "./pages/Install";
 import NotificationCenter from "./pages/NotificationCenter";
 import SuperfanRoom from "./pages/SuperfanRoom";
+import ArtistStore from "./pages/ArtistStore";
 
 const queryClient = new QueryClient();
 
@@ -112,6 +113,7 @@ function RouterContent() {
         <Route path="/subscription" element={<Subscription />} />
         <Route path="/wallet" element={<Wallet />} />
         <Route path="/artist/payouts" element={<ArtistPayouts />} />
+        <Route path="/artist/store" element={<ArtistStore />} />
         <Route path="/settings/notifications" element={<NotificationSettings />} />
         <Route path="/settings" element={<AccountSettings />} />
         <Route path="/theme-preview" element={<ThemePreview />} />
