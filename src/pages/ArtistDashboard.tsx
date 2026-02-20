@@ -323,6 +323,12 @@ export default function ArtistDashboard() {
                     My Wallet
                   </Link>
                 </Button>
+                <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50 text-sm" asChild>
+                  <Link to="/artist/store">
+                    <DollarSign className="w-4 h-4 mr-2" />
+                    My Store
+                  </Link>
+                </Button>
               </div>
             </div>
 

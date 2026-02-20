@@ -104,7 +104,6 @@ serve(async (req) => {
           if (fanId && artistId && membershipId) {
             logStep("Processing superfan subscription", { fanId, artistId, membershipId });
 
-            // Upsert subscriber record
             const { error: subError } = await supabaseClient
               .from("superfan_subscribers")
               .upsert({
@@ -123,7 +122,6 @@ serve(async (req) => {
               logStep("Superfan subscriber created/updated");
             }
 
-            // Notify artist
             await supabaseClient.from("notifications").insert({
               user_id: artistId,
               type: "new_superfan",
@@ -131,6 +129,97 @@ serve(async (req) => {
               message: "Someone just subscribed to your Superfan Room!",
               metadata: { fan_id: fanId },
             });
+          }
+          break;
+        }
+
+        // Handle Store product checkout
+        if (metadata.type === "store" && session.mode === "payment") {
+          const productId = metadata.product_id;
+          const artistId = metadata.artist_id;
+          const buyerId = metadata.buyer_id;
+          const productType = metadata.product_type;
+
+          if (productId && artistId && buyerId) {
+            logStep("Processing store purchase", { productId, artistId, buyerId, productType });
+
+            // Get product for inventory tracking
+            const { data: product } = await supabaseClient
+              .from("store_products")
+              .select("inventory_limit, inventory_sold, price_cents, title")
+              .eq("id", productId)
+              .single();
+
+            const amountCents = product?.price_cents || 0;
+            const platformFeeCents = Math.ceil(amountCents * 0.15);
+            const artistPayoutCents = amountCents - platformFeeCents;
+
+            // Calculate edition number for limited products
+            let editionNumber: number | null = null;
+            if (product?.inventory_limit) {
+              editionNumber = (product.inventory_sold || 0) + 1;
+            }
+
+            // Determine order status based on product type
+            const orderStatus = productType === "merch" ? "pending" : "completed";
+
+            // Get shipping address from Stripe session
+            let shippingAddress = null;
+            if (session.shipping_details?.address) {
+              shippingAddress = session.shipping_details.address;
+            }
+
+            // Create order
+            const { data: order, error: orderError } = await supabaseClient
+              .from("store_orders")
+              .insert({
+                product_id: productId,
+                buyer_id: buyerId,
+                artist_id: artistId,
+                stripe_payment_intent_id: session.payment_intent as string,
+                amount_cents: amountCents,
+                platform_fee_cents: platformFeeCents,
+                status: orderStatus,
+                shipping_address: shippingAddress,
+                buyer_name: session.customer_details?.name || null,
+                buyer_email: session.customer_details?.email || null,
+                edition_number: editionNumber,
+              })
+              .select()
+              .single();
+
+            if (orderError) {
+              logStep("Error creating store order", { error: orderError });
+            } else {
+              logStep("Store order created", { orderId: order.id, status: orderStatus });
+
+              // Increment inventory_sold
+              if (product) {
+                await supabaseClient
+                  .from("store_products")
+                  .update({ inventory_sold: (product.inventory_sold || 0) + 1 })
+                  .eq("id", productId);
+              }
+
+              // Create earnings record
+              await supabaseClient.from("artist_earnings").insert({
+                artist_id: artistId,
+                purchase_id: order.id,
+                gross_amount_cents: amountCents,
+                platform_fee_cents: platformFeeCents,
+                artist_payout_cents: artistPayoutCents,
+                status: "pending",
+              });
+
+              // Notify artist
+              await supabaseClient.from("notifications").insert({
+                user_id: artistId,
+                type: "store_sale",
+                title: "New Store Sale!",
+                message: `Someone purchased "${product?.title || "a product"}" from your store.`,
+                metadata: { product_id: productId, order_id: order.id },
+              });
+            }
           }
           break;
         }
