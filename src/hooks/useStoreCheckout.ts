@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { getMobileHeaders, openPaymentUrl } from "@/lib/platformBrowser";
 
 export function useStoreCheckout() {
   const [isLoading, setIsLoading] = useState(false);
@@ -20,13 +21,13 @@ export function useStoreCheckout() {
       if (!sessionData.session) throw new Error("Not authenticated");
 
       const { data, error } = await supabase.functions.invoke("create-store-checkout", {
-        headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
+        headers: { Authorization: `Bearer ${sessionData.session.access_token}`, ...getMobileHeaders() },
         body: { productId, quantity },
       });
 
       if (error) throw error;
       if (data?.url) {
-        window.open(data.url, "_blank");
+        await openPaymentUrl(data.url);
       } else {
         throw new Error("No checkout URL received");
       }

@@ -80,6 +80,9 @@ serve(async (req) => {
 
     const applicationFeeAmount = Math.ceil(product.price_cents * quantity * 0.15);
     const origin = req.headers.get("origin") || "https://jump-to-tune.lovable.app";
+    const isMobileApp = req.headers.get("x-jumtunes-mobile") === "true";
+    const successBaseUrl = isMobileApp ? "jumtunes:/" : origin;
+    const cancelBaseUrl = isMobileApp ? "jumtunes:/" : origin;
 
     const isMerch = product.type === "merch";
 
@@ -121,8 +124,8 @@ serve(async (req) => {
         buyer_id: user.id,
         product_type: product.type,
       },
-      success_url: `${origin}/artist/${product.artist_id}?store_success=true`,
-      cancel_url: `${origin}/artist/${product.artist_id}?store_canceled=true`,
+      success_url: `${successBaseUrl}/artist/${product.artist_id}?store_success=true`,
+      cancel_url: `${cancelBaseUrl}/artist/${product.artist_id}?store_canceled=true`,
     };
 
     // Collect shipping for merch

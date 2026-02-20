@@ -20,6 +20,7 @@ import { ChatRoom } from "@/components/superfan/ChatRoom";
 import { MessageCreditsPanel } from "@/components/superfan/MessageCreditsPanel";
 import { CheckoutLoadingOverlay } from "@/components/subscription/CheckoutLoadingOverlay";
 import { supabase } from "@/integrations/supabase/client";
+import { getMobileHeaders, openPaymentUrl } from "@/lib/platformBrowser";
 
 export default function SuperfanRoom() {
   const { id: artistId } = useParams();
@@ -49,12 +50,14 @@ export default function SuperfanRoom() {
 
     setIsCheckingOut(true);
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
       const { data, error } = await supabase.functions.invoke("create-superfan-checkout", {
+        headers: { Authorization: `Bearer ${sessionData.session?.access_token}`, ...getMobileHeaders() },
         body: { artistId, membershipId: membership.id },
       });
       if (error) throw error;
       if (data?.url) {
-        window.location.href = data.url;
+        await openPaymentUrl(data.url);
       }
     } catch (err) {
       console.error("Checkout error:", err);
