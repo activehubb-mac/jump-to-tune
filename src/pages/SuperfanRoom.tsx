@@ -16,6 +16,8 @@ import { ExclusiveDrops } from "@/components/superfan/ExclusiveDrops";
 import { VIPPerks } from "@/components/superfan/VIPPerks";
 import { TopSupporters } from "@/components/superfan/TopSupporters";
 import { DirectMessages } from "@/components/superfan/DirectMessages";
+import { ChatRoom } from "@/components/superfan/ChatRoom";
+import { MessageCreditsPanel } from "@/components/superfan/MessageCreditsPanel";
 import { CheckoutLoadingOverlay } from "@/components/subscription/CheckoutLoadingOverlay";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -33,8 +35,6 @@ export default function SuperfanRoom() {
   const { purchasedTrackIds } = usePurchases();
 
   const isSubscribed = !!subscription && subscription.status === "active";
-
-  // Filter exclusive tracks (for now, show latest tracks as "exclusive" content)
   const exclusiveTracks = (tracks || []).slice(0, 6);
 
   const handleSubscribe = async () => {
@@ -52,7 +52,6 @@ export default function SuperfanRoom() {
       const { data, error } = await supabase.functions.invoke("create-superfan-checkout", {
         body: { artistId, membershipId: membership.id },
       });
-
       if (error) throw error;
       if (data?.url) {
         window.location.href = data.url;
@@ -65,42 +64,21 @@ export default function SuperfanRoom() {
   };
 
   if (artistLoading || membershipLoading) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-24 flex justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </Layout>
-    );
+    return <Layout><div className="container mx-auto px-4 py-24 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div></Layout>;
   }
 
   if (!artist) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-24 text-center">
-          <h1 className="text-2xl font-bold text-foreground">Artist not found</h1>
-        </div>
-      </Layout>
-    );
+    return <Layout><div className="container mx-auto px-4 py-24 text-center"><h1 className="text-2xl font-bold text-foreground">Artist not found</h1></div></Layout>;
   }
 
-  const defaultPerks = [
-    "Early access to new drops",
-    "Exclusive versions & remixes",
-    "Direct message access",
-    "VIP supporter badge",
-  ];
-
-  const perks = membership?.perks
-    ? (Array.isArray(membership.perks) ? membership.perks : defaultPerks)
-    : defaultPerks;
+  const defaultPerks = ["Early access to new drops", "Exclusive versions & remixes", "Direct message access", "VIP supporter badge"];
+  const perks = membership?.perks ? (Array.isArray(membership.perks) ? membership.perks : defaultPerks) : defaultPerks;
 
   return (
     <Layout>
       <CheckoutLoadingOverlay isVisible={isCheckingOut} message="Preparing superfan checkout..." />
 
       <div className="container mx-auto px-4 py-8 max-w-2xl space-y-6">
-        {/* Back button */}
         <Link to={`/artist/${artistId}`}>
           <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4" />
@@ -108,7 +86,6 @@ export default function SuperfanRoom() {
           </Button>
         </Link>
 
-        {/* Status Panel */}
         <StatusPanel
           isSubscribed={isSubscribed}
           subscription={subscription || null}
@@ -120,7 +97,6 @@ export default function SuperfanRoom() {
           isLoggedIn={!!user}
         />
 
-        {/* Exclusive Drops */}
         <ExclusiveDrops
           tracks={exclusiveTracks}
           isSubscribed={isSubscribed}
@@ -129,11 +105,19 @@ export default function SuperfanRoom() {
           ownedTrackIds={purchasedTrackIds}
         />
 
-        {/* VIP Perks */}
         <VIPPerks isSubscribed={isSubscribed} perks={perks as string[]} />
 
-        {/* Top Supporters */}
         <TopSupporters supporters={supporters || []} currentUserId={user?.id} />
+
+        {/* Superfan Chat Room */}
+        <ChatRoom
+          artistId={artistId!}
+          isSubscribed={isSubscribed}
+          currentUserId={user?.id}
+        />
+
+        {/* Message Credits Panel */}
+        {user && <MessageCreditsPanel />}
 
         {/* Direct Messages */}
         <DirectMessages

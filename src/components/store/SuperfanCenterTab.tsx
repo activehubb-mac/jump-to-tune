@@ -4,7 +4,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Loader2, Users, Trophy, TrendingUp, AlertTriangle, ArrowUp, Sparkles, Brain } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Users, Trophy, TrendingUp, AlertTriangle, ArrowUp, Sparkles, Brain, MessageCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useArtistSuperfanSettings } from "@/hooks/useArtistSuperfanSettings";
 import { useFanInsights, type FanInsightEntry } from "@/hooks/useFanInsights";
@@ -49,6 +50,15 @@ export function SuperfanCenterTab() {
     }
   };
 
+  const handleNumberChange = async (key: string, value: number) => {
+    try {
+      await upsertSettings.mutateAsync({ [key]: value } as any);
+      showFeedback({ type: "success", title: "Updated", message: "Setting saved", autoClose: true, autoCloseDelay: 1500 });
+    } catch {
+      showFeedback({ type: "error", title: "Error", message: "Failed to update setting" });
+    }
+  };
+
   if (isLoading) {
     return <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
@@ -67,6 +77,62 @@ export function SuperfanCenterTab() {
             checked={settings?.loyalty_enabled ?? false}
             onCheckedChange={(v) => handleToggle("loyalty_enabled", v)}
           />
+        </div>
+      </div>
+
+      {/* Messaging Controls */}
+      <div className="glass-card p-6 space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <MessageCircle className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-semibold text-foreground">Messaging Controls</h3>
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium text-foreground text-sm">Enable Paid Messaging</p>
+            <p className="text-xs text-muted-foreground">Fans can send you paid messages</p>
+          </div>
+          <Switch
+            checked={(settings as any)?.messaging_enabled ?? true}
+            onCheckedChange={(v) => handleToggle("messaging_enabled", v)}
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium text-foreground text-sm">Cost Per Message</p>
+            <p className="text-xs text-muted-foreground">1-5 credits per message</p>
+          </div>
+          <Select
+            value={String((settings as any)?.message_price_credits || 1)}
+            onValueChange={(v) => handleNumberChange("message_price_credits", parseInt(v))}
+          >
+            <SelectTrigger className="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium text-foreground text-sm">Response Window</p>
+            <p className="text-xs text-muted-foreground">Auto-refund if no reply (hours)</p>
+          </div>
+          <Select
+            value={String((settings as any)?.response_window_hours || 72)}
+            onValueChange={(v) => handleNumberChange("response_window_hours", parseInt(v))}
+          >
+            <SelectTrigger className="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[24, 48, 72, 96, 120].map((n) => (
+                <SelectItem key={n} value={String(n)}>{n}h</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
