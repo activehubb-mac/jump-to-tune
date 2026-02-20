@@ -13,6 +13,7 @@ interface ArtistProfile {
   trackCount: number;
   followerCount: number;
   likeCount: number;
+  social_links: Record<string, string> | null;
 }
 
 export function useArtistProfile(artistId: string | undefined) {
@@ -75,6 +76,7 @@ export function useArtistProfile(artistId: string | undefined) {
         trackCount: trackCount || 0,
         followerCount: followerCount || 0,
         likeCount,
+        social_links: profile.social_links as Record<string, string> | null,
       };
     },
     enabled: !!artistId,

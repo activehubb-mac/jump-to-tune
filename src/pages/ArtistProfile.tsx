@@ -329,7 +329,7 @@ export default function ArtistProfile() {
                 <p className="text-sm text-muted-foreground">Connect with {artist.display_name || "this artist"} across platforms</p>
               </div>
               <SocialLinksSection
-                socialLinks={(artist as any).social_links || null}
+                socialLinks={artist.social_links || null}
                 isVerified={artist.is_verified || false}
               />
             </div>
