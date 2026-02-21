@@ -113,6 +113,30 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_cache: {
+        Row: {
+          computed_at: string
+          data: Json
+          entity_id: string
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          computed_at?: string
+          data?: Json
+          entity_id: string
+          entity_type?: string
+          id?: string
+        }
+        Update: {
+          computed_at?: string
+          data?: Json
+          entity_id?: string
+          entity_type?: string
+          id?: string
+        }
+        Relationships: []
+      }
       announcement_reactions: {
         Row: {
           announcement_id: string
@@ -578,6 +602,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      job_queue: {
+        Row: {
+          attempts: number
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          id: string
+          job_type: string
+          max_attempts: number
+          payload: Json
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          job_type: string
+          max_attempts?: number
+          payload?: Json
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          job_type?: string
+          max_attempts?: number
+          payload?: Json
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
       }
       label_roster: {
         Row: {
@@ -1100,6 +1163,30 @@ export type Database = {
           token?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          action: string
+          id: string
+          request_count: number
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          action: string
+          id?: string
+          request_count?: number
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          action?: string
+          id?: string
+          request_count?: number
+          user_id?: string
+          window_start?: string
         }
         Relationships: []
       }
@@ -1720,6 +1807,30 @@ export type Database = {
           },
         ]
       }
+      trending_cache: {
+        Row: {
+          cache_key: string
+          computed_at: string
+          data: Json
+          expires_at: string
+          id: string
+        }
+        Insert: {
+          cache_key?: string
+          computed_at?: string
+          data?: Json
+          expires_at?: string
+          id?: string
+        }
+        Update: {
+          cache_key?: string
+          computed_at?: string
+          data?: Json
+          expires_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           artist_id: string | null
@@ -1854,6 +1965,16 @@ export type Database = {
         Args: { p_amount_cents: number; p_user_id: string }
         Returns: Json
       }
+      check_rate_limit: {
+        Args: {
+          p_action: string
+          p_max_requests: number
+          p_user_id: string
+          p_window_seconds?: number
+        }
+        Returns: Json
+      }
+      cleanup_rate_limits: { Args: never; Returns: undefined }
       decrement_inventory_atomic: {
         Args: { p_product_id: string; p_quantity?: number }
         Returns: Json
