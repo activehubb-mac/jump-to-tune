@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Music, Package, Gift, Star, CheckCircle, Ticket, Sparkles } from "lucide-react";
 import type { StoreProduct } from "@/hooks/useStoreProducts";
+import { WaitlistButton } from "./WaitlistButton";
+import { ScheduledReleaseBadge } from "./ScheduledReleaseBadge";
 
 const typeIcons: Record<string, React.ReactNode> = {
   digital_track: <Music className="w-3 h-3" />,
@@ -22,6 +24,8 @@ interface Props {
 
 export function StoreProductCard({ product, owned, onBuy, isCheckingOut, artistName }: Props) {
   const remaining = product.inventory_limit ? product.inventory_limit - product.inventory_sold : null;
+  const isSoldOut = remaining !== null && remaining <= 0;
+  const isScheduled = product.scheduled_release_at && new Date(product.scheduled_release_at).getTime() > Date.now();
 
   return (
     <div className="glass-card p-4 group hover:bg-primary/5 transition-all duration-300">
@@ -44,11 +48,17 @@ export function StoreProductCard({ product, owned, onBuy, isCheckingOut, artistN
           {(product as any).is_featured && (
             <Badge className="bg-yellow-500/90 text-white text-xs">⭐ Featured</Badge>
           )}
+          {isScheduled && (
+            <ScheduledReleaseBadge scheduledAt={product.scheduled_release_at!} />
+          )}
           {product.is_early_release && (
             <Badge className="bg-accent/90 text-accent-foreground text-xs">Early Access</Badge>
           )}
           {product.is_exclusive && (
             <Badge className="bg-primary/90 text-primary-foreground text-xs">Exclusive</Badge>
+          )}
+          {product.parent_product_id && (
+            <Badge className="bg-secondary/90 text-secondary-foreground text-xs">V2</Badge>
           )}
           {owned && (
             <Badge className="bg-green-500/90 text-white text-xs">
@@ -74,15 +84,19 @@ export function StoreProductCard({ product, owned, onBuy, isCheckingOut, artistN
         <span className="text-primary font-bold">${(product.price_cents / 100).toFixed(2)}</span>
         {owned ? (
           <Badge variant="outline" className="text-xs">Purchased</Badge>
+        ) : isSoldOut ? (
+          <WaitlistButton productId={product.id} compact />
+        ) : isScheduled ? (
+          <Badge variant="outline" className="text-xs">Coming Soon</Badge>
         ) : (
           <Button
             size="sm"
             className="gradient-accent"
             onClick={() => onBuy(product.id)}
-            disabled={isCheckingOut || (remaining !== null && remaining <= 0)}
+            disabled={isCheckingOut}
           >
             <ShoppingCart className="w-3 h-3 mr-1" />
-            {remaining !== null && remaining <= 0 ? "Sold Out" : "Buy"}
+            Buy
           </Button>
         )}
       </div>

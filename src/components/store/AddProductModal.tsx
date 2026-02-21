@@ -27,6 +27,8 @@ export function AddProductModal({ open, onOpenChange }: Props) {
   const [visibility, setVisibility] = useState("public");
   const [isFeatured, setIsFeatured] = useState(false);
   const [shippingPriceDollars, setShippingPriceDollars] = useState("");
+  const [maxPerAccount, setMaxPerAccount] = useState("");
+  const [scheduledRelease, setScheduledRelease] = useState("");
 
   const handleSubmit = () => {
     const priceCents = Math.round(parseFloat(priceDollars || "0") * 100);
@@ -46,6 +48,8 @@ export function AddProductModal({ open, onOpenChange }: Props) {
         visibility,
         is_featured: isFeatured,
         shipping_price_cents: shippingCents,
+        max_per_account: maxPerAccount ? parseInt(maxPerAccount) : null,
+        scheduled_release_at: scheduledRelease || null,
       } as any,
       {
         onSuccess: () => {
@@ -57,6 +61,10 @@ export function AddProductModal({ open, onOpenChange }: Props) {
           setIsExclusive(false);
           setIsEarlyRelease(false);
           setVisibility("public");
+          setIsFeatured(false);
+          setShippingPriceDollars("");
+          setMaxPerAccount("");
+          setScheduledRelease("");
           setIsFeatured(false);
           setShippingPriceDollars("");
         },
@@ -110,6 +118,18 @@ export function AddProductModal({ open, onOpenChange }: Props) {
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Limited Qty (optional)</label>
               <Input type="number" min="1" value={inventoryLimit} onChange={(e) => setInventoryLimit(e.target.value)} placeholder="Unlimited" />
+            </div>
+          </div>
+
+          {/* Max Per Account & Scheduled Release */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Max Per Fan (optional)</label>
+              <Input type="number" min="1" value={maxPerAccount} onChange={(e) => setMaxPerAccount(e.target.value)} placeholder="No limit" />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Scheduled Release</label>
+              <Input type="datetime-local" value={scheduledRelease} onChange={(e) => setScheduledRelease(e.target.value)} />
             </div>
           </div>
 

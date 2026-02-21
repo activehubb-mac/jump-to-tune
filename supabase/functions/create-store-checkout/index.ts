@@ -48,12 +48,33 @@ serve(async (req) => {
     if (prodError || !product) throw new Error("Product not found");
     if (!product.is_active) throw new Error("Product is not active");
 
+    // Check scheduled release
+    if (product.scheduled_release_at && new Date(product.scheduled_release_at) > new Date()) {
+      throw new Error("This product has not been released yet");
+    }
+
     // Check inventory
     if (product.inventory_limit !== null) {
       if (product.inventory_sold >= product.inventory_limit) {
         throw new Error("Product is sold out");
       }
     }
+
+    // Check max per account
+    if (product.max_per_account !== null) {
+      const { count, error: countError } = await supabaseClient
+        .from("store_orders")
+        .select("*", { count: "exact", head: true })
+        .eq("product_id", productId)
+        .eq("buyer_id", user.id)
+        .in("status", ["completed", "pending"]);
+
+      if (countError) throw new Error("Failed to check purchase limit");
+      if ((count ?? 0) >= product.max_per_account) {
+        throw new Error(`You can only purchase this product ${product.max_per_account} time(s)`);
+      }
+    }
+
     logStep("Product validated", { title: product.title, type: product.type });
 
     // Get artist's Stripe Connect account

@@ -20,6 +20,10 @@ export interface StoreProduct {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  max_per_account: number | null;
+  scheduled_release_at: string | null;
+  parent_product_id: string | null;
+  status: string;
 }
 
 interface CreateProductData {
@@ -33,6 +37,9 @@ interface CreateProductData {
   is_exclusive?: boolean;
   is_early_release?: boolean;
   variants?: Record<string, unknown> | null;
+  max_per_account?: number | null;
+  scheduled_release_at?: string | null;
+  parent_product_id?: string | null;
 }
 
 export function useStoreProducts(artistId?: string, typeFilter?: string) {

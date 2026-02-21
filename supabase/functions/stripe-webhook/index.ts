@@ -193,11 +193,20 @@ serve(async (req) => {
             } else {
               logStep("Store order created", { orderId: order.id, status: orderStatus });
 
-              // Increment inventory_sold
+              // Increment inventory_sold and check if sold out
               if (product) {
+                const newSoldCount = (product.inventory_sold || 0) + 1;
+                const updateData: Record<string, unknown> = { inventory_sold: newSoldCount };
+                
+                // Auto-update status to sold_out if inventory exhausted
+                if (product.inventory_limit !== null && newSoldCount >= product.inventory_limit) {
+                  updateData.status = "sold_out";
+                  logStep("Product sold out, updating status", { productId, newSoldCount, limit: product.inventory_limit });
+                }
+
                 await supabaseClient
                   .from("store_products")
-                  .update({ inventory_sold: (product.inventory_sold || 0) + 1 })
+                  .update(updateData)
                   .eq("id", productId);
               }
 
