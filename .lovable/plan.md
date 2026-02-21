@@ -1,187 +1,198 @@
 
 
-# Superfan Commerce Platform -- Backend Implementation
+# Secure Payment and Ownership System -- Hardening Plan
 
 ## Current State Assessment
 
-The existing database and codebase already covers roughly 80% of the spec:
+The existing system covers the happy path well but has critical gaps in idempotency, refund automation, atomic inventory, and message credit confirmation.
 
-**Already Built (no changes needed):**
-- User roles (fan/artist/admin) in `user_roles` table with `has_role()` security definer
-- Profiles with Stripe Connect fields (`stripe_account_id`, `stripe_payouts_enabled`)
-- Artist superfan settings (`messaging_enabled`, `show_follower_count` equivalent via `show_top_supporters`)
-- Follow system with unique constraint and notification trigger
-- Store products with inventory tracking (`store_products`)
-- Store orders with platform fee, edition numbers, shipping
-- Stripe Connect checkout with 15% application fee (`create-store-checkout`)
-- Stripe webhook handling store purchases (inventory increment, earnings, notifications)
-- Fan loyalty / badge system (`fan_loyalty` with levels)
-- Pay-per-message system (`message_credits`, `message_threads`)
-- Artist analytics (earnings, followers, repeat buyers)
-- Trending algorithm (`useTrendingTracks`)
-- Activity feed on artist profiles
-- Notification center with push support
+## Gap Analysis
 
-**What Needs to Be Built (the gaps):**
+### Gap 1: No Idempotency (Critical)
+The webhook processes every event it receives with no deduplication. If Stripe retries a webhook (which it does regularly), the system will:
+- Create duplicate orders
+- Double-decrement inventory
+- Double-award loyalty points
 
-### Phase 1: Database Schema Changes
+**Fix:** Create a `webhook_events` table to track processed Stripe event IDs. Check before processing; skip if already seen.
 
-**Add columns to `store_products`:**
-- `max_per_account` (integer, nullable) -- per-fan purchase cap
-- `scheduled_release_at` (timestamptz, nullable) -- future drop scheduling
-- `parent_product_id` (uuid, nullable, self-referencing FK) -- V2 drop versioning
-- `status` (text, default 'active') -- draft/active/sold_out/archived lifecycle
+### Gap 2: Non-Atomic Inventory Decrement (Critical)
+The webhook reads `inventory_sold`, adds 1 in JavaScript, then writes back. Two concurrent purchases can both read `sold=9`, both write `sold=10`, causing overselling.
 
-**New table: `drop_waitlists`**
-- `id` uuid PK
-- `product_id` uuid FK to store_products
-- `user_id` uuid (authenticated user)
-- `created_at` timestamptz
-- Unique constraint on (product_id, user_id) to prevent duplicates
-- RLS: users manage their own entries; artists can view waitlists for their products; anyone can count
+**Fix:** Create a Postgres function `decrement_inventory_atomic(p_product_id, p_quantity)` that uses `UPDATE ... WHERE inventory_sold + p_quantity <= inventory_limit RETURNING ...`. This guarantees no overselling at the database level.
 
-**New table: `announcements`**
-- `id` uuid PK
-- `artist_id` uuid
-- `title` text
-- `body` text
-- `image_url` text (nullable)
-- `cta_label` text (nullable)
-- `cta_url` text (nullable)
-- `is_highlighted` boolean (default false)
-- `audience_filter` jsonb (nullable) -- targeting: all_followers, paying_supporters, drop_owners, badge_tier, waitlist_members
-- `created_at` timestamptz
-- RLS: artists CRUD their own; fans read announcements from followed artists
+### Gap 3: No Webhook-Driven Refund Handling (Critical)
+The `refund-store-order` function creates a Stripe refund and updates order status, but:
+- Does NOT restore inventory
+- Does NOT remove ownership/badges
+- Does NOT reactivate sold-out products
+- The webhook doesn't listen for `charge.refunded` events at all
 
-**New table: `announcement_reactions`**
-- `id` uuid PK
-- `announcement_id` uuid FK to announcements
-- `user_id` uuid
-- `emoji` text (constrained to allowed set)
-- `created_at` timestamptz
-- Unique constraint on (announcement_id, user_id) -- one reaction per fan per announcement
-- RLS: authenticated users add/remove their own; public read
+**Fix:** Add `charge.refunded` handler to the webhook that:
+1. Finds the order by `stripe_payment_intent_id`
+2. Updates order status to `refunded`
+3. Restores inventory atomically
+4. Re-evaluates loyalty points (subtract)
+5. If product was `sold_out` and inventory is now available, set status back to `active`
 
-### Phase 2: Waitlist System
+### Gap 4: Message Credits Not Confirmed via Webhook
+The `purchase-message-credits` function creates a Stripe checkout with `metadata.type = "message_credits"`, but the webhook has no handler for this type. Credits are never actually added after payment.
 
-**New file: `src/hooks/useWaitlist.ts`**
-- `joinWaitlist(productId)` -- insert into drop_waitlists
-- `leaveWaitlist(productId)` -- delete from drop_waitlists
-- `isOnWaitlist(productId)` -- check membership
-- `waitlistCount(productId)` -- public count query
+**Fix:** Add `message_credits` handler to the webhook's `checkout.session.completed` branch that upserts the `message_credits` table balance.
 
-**New file: `src/components/store/WaitlistButton.tsx`**
-- Replaces "Buy" button when product is sold out
-- Shows "Join Waitlist" / "On Waitlist" toggle
-- Displays public waitlist count
+### Gap 5: Loyalty Points Not Triggered on Store Purchases
+The webhook's store purchase handler creates orders and earnings but never calls `award-loyalty-points`. Badge evaluation is missing.
 
-**Modify: `src/components/store/StoreProductCard.tsx`**
-- When `remaining === 0`: show WaitlistButton instead of disabled "Sold Out" button
-- Show waitlist count badge
+**Fix:** Add a non-blocking call to `award-loyalty-points` after successful store order creation in the webhook.
 
-### Phase 3: Announcement System
+### Gap 6: Refund Function Incomplete
+The `refund-store-order` edge function only updates order status. It should also restore inventory and trigger badge re-evaluation, as a defense-in-depth measure alongside the webhook handler.
 
-**New file: `src/hooks/useAnnouncements.ts`**
-- CRUD operations for artist announcements
-- Audience filter support
-- Rate limiting (max 3 per 24h, client-enforced)
+**Fix:** Update `refund-store-order` to restore inventory and subtract loyalty points.
 
-**New file: `src/hooks/useAnnouncementReactions.ts`**
-- Add/remove emoji reactions
-- Fetch reaction counts per announcement
+## Implementation Plan
 
-**New file: `src/components/store/AnnouncementsTab.tsx`**
-- Artist-facing composer: title, body, image upload, CTA, audience filter, highlight toggle
-- List of existing announcements with reaction counts
+### Phase 1: Database Migration
 
-**New file: `src/components/artist/AnnouncementCard.tsx`**
-- Fan-facing announcement display
-- Emoji reaction buttons (fire, gem, rocket, thumbsup)
-- CTA button rendering
+**New table: `webhook_events`**
+- `id` text PK (Stripe event ID like `evt_xxx`)
+- `type` text (event type)
+- `processed_at` timestamptz default now()
+- No RLS needed (only service role accesses this)
 
-**Modify: `src/pages/ArtistStore.tsx`**
-- Add "Announcements" tab with Megaphone icon
+**New function: `decrement_inventory_atomic`**
+```sql
+CREATE FUNCTION decrement_inventory_atomic(p_product_id uuid, p_quantity int DEFAULT 1)
+RETURNS jsonb AS $$
+DECLARE
+  v_new_sold int;
+  v_limit int;
+  v_title text;
+BEGIN
+  UPDATE store_products
+  SET inventory_sold = inventory_sold + p_quantity,
+      status = CASE
+        WHEN inventory_limit IS NOT NULL AND inventory_sold + p_quantity >= inventory_limit THEN 'sold_out'
+        ELSE status
+      END,
+      updated_at = now()
+  WHERE id = p_product_id
+    AND (inventory_limit IS NULL OR inventory_sold + p_quantity <= inventory_limit)
+  RETURNING inventory_sold, inventory_limit, title
+  INTO v_new_sold, v_limit, v_title;
 
-**Modify: `src/pages/ArtistProfile.tsx`**
-- Show highlighted announcements as banner
-- Show announcement feed in activity section
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('success', false, 'reason', 'insufficient_inventory');
+  END IF;
 
-### Phase 4: Drop Versioning
+  RETURN jsonb_build_object(
+    'success', true,
+    'new_sold', v_new_sold,
+    'limit', v_limit,
+    'edition_number', v_new_sold,
+    'is_sold_out', v_limit IS NOT NULL AND v_new_sold >= v_limit
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
 
-**New file: `src/components/store/CreateVersionModal.tsx`**
-- Triggered from sold-out products
-- Pre-fills from parent product
-- Sets `parent_product_id` to original
-- Separate supply and analytics
+**New function: `restore_inventory_atomic`**
+```sql
+CREATE FUNCTION restore_inventory_atomic(p_product_id uuid, p_quantity int DEFAULT 1)
+RETURNS jsonb AS $$
+DECLARE
+  v_new_sold int;
+  v_was_sold_out boolean;
+BEGIN
+  SELECT (status = 'sold_out') INTO v_was_sold_out
+  FROM store_products WHERE id = p_product_id;
 
-**Modify: `src/components/store/ProductsTab.tsx`**
-- "Create V2" button on sold-out items
-- Version lineage indicator (V1 Sold Out -> V2 Available)
+  UPDATE store_products
+  SET inventory_sold = GREATEST(inventory_sold - p_quantity, 0),
+      status = CASE
+        WHEN status = 'sold_out' AND inventory_limit IS NOT NULL
+             AND GREATEST(inventory_sold - p_quantity, 0) < inventory_limit
+        THEN 'active'
+        ELSE status
+      END,
+      updated_at = now()
+  WHERE id = p_product_id
+  RETURNING inventory_sold INTO v_new_sold;
 
-**Modify: `src/hooks/useStoreProducts.ts`**
-- Add new columns to StoreProduct interface
-- Include `parent_product_id`, `max_per_account`, `scheduled_release_at`, `status`
+  RETURN jsonb_build_object(
+    'success', true,
+    'new_sold', v_new_sold,
+    'was_sold_out', COALESCE(v_was_sold_out, false),
+    'reactivated', COALESCE(v_was_sold_out, false) AND v_new_sold < (
+      SELECT inventory_limit FROM store_products WHERE id = p_product_id
+    )
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
 
-### Phase 5: Demand-Based Trending
+### Phase 2: Webhook Hardening (stripe-webhook/index.ts)
 
-**Modify: `src/hooks/useTrendingTracks.ts`**
-- Add demand ratio calculation: `waitlist_count / inventory_limit`
-- Factor into engagement score
-- Sold-out products with active waitlists remain in trending
+**Changes:**
+1. Add idempotency check at the top of event processing (after signature verification, before switch):
+   - Query `webhook_events` for `event.id`
+   - If found, return 200 immediately (already processed)
+   - If not found, insert the event ID, then proceed
 
-### Phase 6: Per-Account Limits and Scheduled Releases
+2. Replace JavaScript inventory math with `decrement_inventory_atomic` RPC call in the store purchase handler
 
-**Modify: `supabase/functions/create-store-checkout/index.ts`**
-- Validate `max_per_account`: count existing orders for this buyer + product, block if limit reached
-- Validate `scheduled_release_at`: block purchase before release time
+3. Add `charge.refunded` event handler:
+   - Look up order by `payment_intent` from the charge
+   - Update order to `refunded`
+   - Call `restore_inventory_atomic`
+   - Subtract loyalty points (call award-loyalty-points with negative event or direct DB update)
+   - Notify artist
 
-**New file: `src/components/store/ScheduledReleaseBadge.tsx`**
-- Countdown timer for scheduled drops
-- Purchase button locked until release time
+4. Add `message_credits` handler in `checkout.session.completed`:
+   - Read `metadata.type === "message_credits"` and `metadata.credits`
+   - Upsert `message_credits` table (increment balance)
+   - Notify fan
 
-**Modify: `src/components/store/StoreProductCard.tsx`**
-- Show countdown for scheduled releases
-- Show remaining purchase allowance when `max_per_account` is set
+5. Add `award-loyalty-points` call after store order creation
 
-**Modify: `src/components/store/AddProductModal.tsx`**
-- Add `max_per_account` field
-- Add `scheduled_release_at` datetime picker
+### Phase 3: Refund Edge Function Enhancement (refund-store-order/index.ts)
 
-### Phase 7: Webhook Enhancement
+**Changes:**
+- After updating order status to `refunded`, call `restore_inventory_atomic` RPC
+- Subtract loyalty points from `fan_loyalty` for the buyer
+- This provides defense-in-depth alongside the webhook handler
 
-**Modify: `supabase/functions/stripe-webhook/index.ts`**
-- After store purchase: award loyalty points via existing `award-loyalty-points` function
-- After store purchase: check if product just sold out, auto-update status to 'sold_out'
-- When V2 created: notify all waitlist members for parent product
+### Phase 4: Message Credit Checkout Isolation
+
+The `purchase-message-credits` function already uses a separate `metadata.type = "message_credits"`. The webhook handler (Phase 2) will process this independently from store purchases. No changes needed to the checkout function itself.
+
+## Files to Modify
+
+| File | Change |
+|------|--------|
+| `supabase/functions/stripe-webhook/index.ts` | Add idempotency, atomic inventory, refund handler, message credits handler, loyalty points trigger |
+| `supabase/functions/refund-store-order/index.ts` | Add inventory restoration and loyalty point subtraction |
+
+## Files to Create
+
+None -- all changes are to existing files plus a database migration.
 
 ## What This Does NOT Change
 
-- Music player logic (completely untouched)
-- Upload flow (completely untouched)
-- Existing purchase flow for tracks
-- Existing loyalty tier system
-- Follow mechanics
-- Pay-per-message system
-- Stripe Connect onboarding
-- Admin dashboard
+- Music player logic (untouched)
+- Upload flow (untouched)
+- Frontend checkout flow (untouched)
+- Stripe Connect onboarding (untouched)
+- create-store-checkout edge function (untouched -- pre-checkout validation stays as-is)
+- spend-credits edge function (untouched -- already uses atomic deduction)
 
-## Implementation Order
+## Security Summary
 
-1. Database migration (new tables + columns + RLS policies)
-2. Waitlist hook + UI
-3. Announcement hook + composer + feed + reactions
-4. Drop versioning modal + lineage UI
-5. Demand ratio in trending
-6. Per-account limits + scheduled releases in checkout + UI
-7. Webhook enhancements (auto sold-out, waitlist notifications)
-
-## Security Enforced
-
-- Unique constraints prevent duplicate follows, waitlist entries, and reactions
-- Stripe account required before checkout (already enforced)
-- 15% platform fee hardcoded in edge function (not configurable by artist)
-- Artist controls all store settings (pricing, messaging, visibility)
-- Platform never stores card data (Stripe handles everything)
-- RLS policies on all new tables using `auth.uid()` checks
-- Atomic inventory decrement via webhook (already implemented)
+- Webhook signature verification: already implemented (kept)
+- Idempotency: NEW -- prevents duplicate processing
+- Atomic inventory: NEW -- prevents overselling via Postgres function
+- Refund reversal: NEW -- ownership and inventory restored on refund
+- Message credits isolated: NEW -- separate flow from store purchases
+- 15% fee hardcoded: already enforced (kept)
+- All analytics derived from confirmed payments only: enforced by webhook-only processing
 
