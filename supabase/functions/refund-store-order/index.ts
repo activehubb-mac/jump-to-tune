@@ -7,6 +7,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const LEVEL_THRESHOLDS = [
+  { level: "founding_superfan", points: 1000 },
+  { level: "elite", points: 500 },
+  { level: "insider", points: 150 },
+  { level: "supporter", points: 50 },
+  { level: "listener", points: 0 },
+];
+
+function getLevelFromPoints(points: number): string {
+  for (const t of LEVEL_THRESHOLDS) {
+    if (points >= t.points) return t.level;
+  }
+  return "listener";
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -70,6 +85,31 @@ serve(async (req) => {
       .from("store_orders")
       .update({ status: "refunded" })
       .eq("id", orderId);
+
+    // ── RESTORE INVENTORY (defense-in-depth) ─────────────────────────────
+    const { data: restoreResult } = await adminClient.rpc(
+      "restore_inventory_atomic",
+      { p_product_id: order.product_id, p_quantity: 1 }
+    );
+    console.log("[REFUND] Inventory restored", restoreResult);
+
+    // ── SUBTRACT LOYALTY POINTS (defense-in-depth) ───────────────────────
+    const { data: loyaltyRow } = await adminClient
+      .from("fan_loyalty")
+      .select("id, points, level")
+      .eq("fan_id", order.buyer_id)
+      .eq("artist_id", order.artist_id)
+      .maybeSingle();
+
+    if (loyaltyRow) {
+      const newPoints = Math.max(loyaltyRow.points - 10, 0);
+      const newLevel = getLevelFromPoints(newPoints);
+      await adminClient
+        .from("fan_loyalty")
+        .update({ points: newPoints, level: newLevel })
+        .eq("id", loyaltyRow.id);
+      console.log("[REFUND] Loyalty points adjusted", { newPoints, newLevel });
+    }
 
     return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {

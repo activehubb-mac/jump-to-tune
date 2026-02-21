@@ -1720,6 +1720,24 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_events: {
+        Row: {
+          id: string
+          processed_at: string
+          type: string
+        }
+        Insert: {
+          id: string
+          processed_at?: string
+          type: string
+        }
+        Update: {
+          id?: string
+          processed_at?: string
+          type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       profiles_public: {
@@ -1773,6 +1791,10 @@ export type Database = {
         Args: { p_amount_cents: number; p_user_id: string }
         Returns: Json
       }
+      decrement_inventory_atomic: {
+        Args: { p_product_id: string; p_quantity?: number }
+        Returns: Json
+      }
       deduct_credits_atomic: {
         Args: { p_amount_cents: number; p_user_id: string }
         Returns: Json
@@ -1797,6 +1819,10 @@ export type Database = {
       is_playlist_owner: {
         Args: { _playlist_id: string; _user_id: string }
         Returns: boolean
+      }
+      restore_inventory_atomic: {
+        Args: { p_product_id: string; p_quantity?: number }
+        Returns: Json
       }
     }
     Enums: {

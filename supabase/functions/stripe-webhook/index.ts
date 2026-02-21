@@ -60,7 +60,6 @@ serve(async (req) => {
     
     if (webhookSecret && signature) {
       try {
-        // Deno requires async signature verification (SubtleCrypto)
         event = await stripe.webhooks.constructEventAsync(bodyText, signature, webhookSecret);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
@@ -82,12 +81,34 @@ serve(async (req) => {
         });
       }
     } else {
-      // Parse without verification (for testing only - not recommended for production)
       logStep("WARNING: Parsing event without signature verification");
       event = JSON.parse(bodyText);
     }
 
     logStep("Event received", { type: event.type, id: event.id });
+
+    // ── IDEMPOTENCY CHECK ──────────────────────────────────────────────
+    // Prevent duplicate processing if Stripe retries the webhook
+    const { data: existingEvent } = await supabaseClient
+      .from("webhook_events")
+      .select("id")
+      .eq("id", event.id)
+      .maybeSingle();
+
+    if (existingEvent) {
+      logStep("Event already processed, skipping", { eventId: event.id });
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // Record event as being processed
+    await supabaseClient.from("webhook_events").insert({
+      id: event.id,
+      type: event.type,
+    });
+    logStep("Event recorded for idempotency", { eventId: event.id });
 
     switch (event.type) {
       case "checkout.session.completed": {
@@ -133,6 +154,46 @@ serve(async (req) => {
           break;
         }
 
+        // ── MESSAGE CREDITS HANDLER ──────────────────────────────────────
+        if (metadata.type === "message_credits" && session.mode === "payment") {
+          const fanId = metadata.fan_id;
+          const credits = parseInt(metadata.credits || "5", 10);
+
+          if (fanId && credits > 0) {
+            logStep("Processing message credits purchase", { fanId, credits });
+
+            // Upsert message_credits balance
+            const { data: existing } = await supabaseClient
+              .from("message_credits")
+              .select("id, balance")
+              .eq("fan_id", fanId)
+              .maybeSingle();
+
+            if (existing) {
+              await supabaseClient
+                .from("message_credits")
+                .update({ balance: existing.balance + credits, updated_at: new Date().toISOString() })
+                .eq("id", existing.id);
+            } else {
+              await supabaseClient
+                .from("message_credits")
+                .insert({ fan_id: fanId, balance: credits });
+            }
+
+            logStep("Message credits added", { fanId, credits, newBalance: (existing?.balance || 0) + credits });
+
+            // Notify fan
+            await supabaseClient.from("notifications").insert({
+              user_id: fanId,
+              type: "credits_purchased",
+              title: "Message Credits Added!",
+              message: `${credits} message credits have been added to your account.`,
+              metadata: { credits },
+            });
+          }
+          break;
+        }
+
         // Handle Store product checkout
         if (metadata.type === "store" && session.mode === "payment") {
           const productId = metadata.product_id;
@@ -143,22 +204,42 @@ serve(async (req) => {
           if (productId && artistId && buyerId) {
             logStep("Processing store purchase", { productId, artistId, buyerId, productType });
 
-            // Get product for inventory tracking
+            // ── ATOMIC INVENTORY DECREMENT ────────────────────────────────
+            const { data: inventoryResult, error: inventoryError } = await supabaseClient.rpc(
+              "decrement_inventory_atomic",
+              { p_product_id: productId, p_quantity: 1 }
+            );
+
+            if (inventoryError || !inventoryResult?.success) {
+              logStep("Inventory decrement failed", {
+                error: inventoryError?.message,
+                reason: inventoryResult?.reason,
+              });
+              // Inventory insufficient — issue refund
+              try {
+                if (session.payment_intent) {
+                  await stripe.refunds.create({ payment_intent: session.payment_intent as string });
+                  logStep("Auto-refund issued for oversold product", { productId });
+                }
+              } catch (refundErr) {
+                logStep("Auto-refund failed", { error: refundErr instanceof Error ? refundErr.message : String(refundErr) });
+              }
+              break;
+            }
+
+            const editionNumber = inventoryResult.edition_number || null;
+            const isSoldOut = inventoryResult.is_sold_out || false;
+
+            // Get product price for earnings calculation
             const { data: product } = await supabaseClient
               .from("store_products")
-              .select("inventory_limit, inventory_sold, price_cents, title")
+              .select("price_cents, title")
               .eq("id", productId)
               .single();
 
             const amountCents = product?.price_cents || 0;
             const platformFeeCents = Math.ceil(amountCents * 0.15);
             const artistPayoutCents = amountCents - platformFeeCents;
-
-            // Calculate edition number for limited products
-            let editionNumber: number | null = null;
-            if (product?.inventory_limit) {
-              editionNumber = (product.inventory_sold || 0) + 1;
-            }
 
             // Determine order status based on product type
             const orderStatus = productType === "merch" ? "pending" : "completed";
@@ -191,24 +272,7 @@ serve(async (req) => {
             if (orderError) {
               logStep("Error creating store order", { error: orderError });
             } else {
-              logStep("Store order created", { orderId: order.id, status: orderStatus });
-
-              // Increment inventory_sold and check if sold out
-              if (product) {
-                const newSoldCount = (product.inventory_sold || 0) + 1;
-                const updateData: Record<string, unknown> = { inventory_sold: newSoldCount };
-                
-                // Auto-update status to sold_out if inventory exhausted
-                if (product.inventory_limit !== null && newSoldCount >= product.inventory_limit) {
-                  updateData.status = "sold_out";
-                  logStep("Product sold out, updating status", { productId, newSoldCount, limit: product.inventory_limit });
-                }
-
-                await supabaseClient
-                  .from("store_products")
-                  .update(updateData)
-                  .eq("id", productId);
-              }
+              logStep("Store order created", { orderId: order.id, status: orderStatus, editionNumber, isSoldOut });
 
               // Create earnings record
               await supabaseClient.from("artist_earnings").insert({
@@ -228,6 +292,35 @@ serve(async (req) => {
                 message: `Someone purchased "${product?.title || "a product"}" from your store.`,
                 metadata: { product_id: productId, order_id: order.id },
               });
+
+              // ── AWARD LOYALTY POINTS (non-blocking) ──────────────────────
+              try {
+                const loyaltyEventType = productType === "merch" ? "purchase_merch" :
+                  metadata.is_limited === "true" ? "purchase_limited" :
+                  metadata.is_early === "true" ? "purchase_early" :
+                  "purchase_digital";
+
+                fetch(
+                  `${Deno.env.get("SUPABASE_URL")}/functions/v1/award-loyalty-points`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                    },
+                    body: JSON.stringify({
+                      fan_id: buyerId,
+                      artist_id: artistId,
+                      event_type: loyaltyEventType,
+                    }),
+                  }
+                ).then(res => {
+                  if (!res.ok) logStep("Loyalty points award failed", { status: res.status });
+                  else logStep("Loyalty points awarded");
+                }).catch(err => logStep("Loyalty points error", { error: err.message }));
+              } catch (loyaltyErr) {
+                logStep("Loyalty points error (non-blocking)", { error: loyaltyErr instanceof Error ? loyaltyErr.message : "Unknown" });
+              }
             }
           }
           break;
@@ -410,13 +503,10 @@ serve(async (req) => {
             const userId = metadata.user_id;
             const creditsCents = parseInt(metadata.credits_cents || "0", 10);
             const feeCents = parseInt(metadata.fee_cents || "0", 10);
-            const amountCents = parseInt(metadata.amount_cents || "0", 10);
 
             if (userId && creditsCents > 0) {
               logStep("Processing credit purchase", { userId, creditsCents, feeCents });
 
-              // ATOMIC: Add credits using atomic database function
-              // This prevents race conditions with concurrent webhook calls
               const { data: addResult, error: addError } = await supabaseClient.rpc(
                 'add_credits_atomic',
                 { p_user_id: userId, p_amount_cents: creditsCents }
@@ -428,51 +518,28 @@ serve(async (req) => {
                 const previousBalance = addResult.previous_balance;
                 const newBalance = addResult.new_balance;
                 
-                logStep("Credits added atomically", { 
-                  previousBalance, 
-                  added: creditsCents, 
-                  newBalance 
-                });
+                logStep("Credits added atomically", { previousBalance, added: creditsCents, newBalance });
 
-                // Record transaction
-                await supabaseClient
-                  .from("credit_transactions")
-                  .insert({
-                    user_id: userId,
-                    type: "purchase",
-                    amount_cents: creditsCents,
-                    fee_cents: feeCents,
-                    stripe_payment_intent_id: session.payment_intent as string,
-                    description: `Added $${(creditsCents / 100).toFixed(2)} credits`,
-                  });
-                
+                await supabaseClient.from("credit_transactions").insert({
+                  user_id: userId,
+                  type: "purchase",
+                  amount_cents: creditsCents,
+                  fee_cents: feeCents,
+                  stripe_payment_intent_id: session.payment_intent as string,
+                  description: `Added $${(creditsCents / 100).toFixed(2)} credits`,
+                });
                 logStep("Credit transaction recorded");
 
-                // Create notification for credit purchase
-                await supabaseClient
-                  .from("notifications")
-                  .insert({
-                    user_id: userId,
-                    type: "credit_purchase",
-                    title: "Credits Added!",
-                    message: `$${(creditsCents / 100).toFixed(2)} credits have been added to your wallet.`,
-                    metadata: {
-                      amount_cents: creditsCents,
-                      fee_cents: feeCents,
-                      new_balance: newBalance,
-                    },
-                  });
+                await supabaseClient.from("notifications").insert({
+                  user_id: userId,
+                  type: "credit_purchase",
+                  title: "Credits Added!",
+                  message: `$${(creditsCents / 100).toFixed(2)} credits have been added to your wallet.`,
+                  metadata: { amount_cents: creditsCents, fee_cents: feeCents, new_balance: newBalance },
+                });
                 logStep("Credit purchase notification created");
 
-                // Send credit purchase email (non-blocking)
                 try {
-                  const emailPayload = {
-                    userId,
-                    amountCents: creditsCents,
-                    feeCents,
-                    newBalanceCents: newBalance,
-                  };
-
                   fetch(
                     `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-credit-email`,
                     {
@@ -481,16 +548,14 @@ serve(async (req) => {
                         "Content-Type": "application/json",
                         "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
                       },
-                      body: JSON.stringify(emailPayload),
+                      body: JSON.stringify({ userId, amountCents: creditsCents, feeCents, newBalanceCents: newBalance }),
                     }
                   ).then(res => {
                     if (!res.ok) logStep("Credit email failed", { status: res.status });
                     else logStep("Credit email sent");
                   }).catch(err => logStep("Credit email error", { error: err.message }));
                 } catch (emailError) {
-                  logStep("Credit email error (non-blocking)", { 
-                    error: emailError instanceof Error ? emailError.message : "Unknown" 
-                  });
+                  logStep("Credit email error (non-blocking)", { error: emailError instanceof Error ? emailError.message : "Unknown" });
                 }
               }
             }
@@ -502,7 +567,6 @@ serve(async (req) => {
             const tipAmount = parseFloat(metadata.tip_amount || "0");
 
             if (userId && trackId) {
-              // Get current editions sold
               const { data: track } = await supabaseClient
                 .from("tracks")
                 .select("editions_sold, total_editions, artist_id, title")
@@ -516,7 +580,6 @@ serve(async (req) => {
                 const platformFeeCents = Math.ceil(priceCents * 0.15);
                 const artistPayoutCents = priceCents - platformFeeCents;
 
-                // Create purchase record
                 const { data: purchase, error: purchaseError } = await supabaseClient
                   .from("purchases")
                   .insert({
@@ -532,28 +595,21 @@ serve(async (req) => {
                 if (purchaseError) {
                   logStep("Error creating purchase", { error: purchaseError });
                 } else {
-                  // Update editions sold
                   await supabaseClient
                     .from("tracks")
                     .update({ editions_sold: editionNumber })
                     .eq("id", trackId);
 
-                  // Record artist earnings
-                  await supabaseClient
-                    .from("artist_earnings")
-                    .insert({
-                      artist_id: track.artist_id,
-                      purchase_id: purchase.id,
-                      gross_amount_cents: priceCents,
-                      platform_fee_cents: platformFeeCents,
-                      artist_payout_cents: artistPayoutCents,
-                      status: "pending",
-                    });
-
-                  logStep("Purchase created successfully", { 
-                    editionNumber, 
-                    artistEarnings: artistPayoutCents / 100 
+                  await supabaseClient.from("artist_earnings").insert({
+                    artist_id: track.artist_id,
+                    purchase_id: purchase.id,
+                    gross_amount_cents: priceCents,
+                    platform_fee_cents: platformFeeCents,
+                    artist_payout_cents: artistPayoutCents,
+                    status: "pending",
                   });
+
+                  logStep("Purchase created successfully", { editionNumber, artistEarnings: artistPayoutCents / 100 });
                 }
               } else {
                 logStep("Track sold out or not found");
@@ -561,6 +617,94 @@ serve(async (req) => {
             }
           }
         }
+        break;
+      }
+
+      // ── CHARGE REFUNDED HANDLER ──────────────────────────────────────────
+      case "charge.refunded": {
+        const charge = event.data.object as Stripe.Charge;
+        const paymentIntentId = charge.payment_intent as string;
+        logStep("Charge refunded", { chargeId: charge.id, paymentIntentId });
+
+        if (!paymentIntentId) {
+          logStep("No payment_intent on refunded charge, skipping");
+          break;
+        }
+
+        // Find the order by payment intent
+        const { data: refundedOrder, error: orderLookupError } = await supabaseClient
+          .from("store_orders")
+          .select("id, product_id, buyer_id, artist_id, status")
+          .eq("stripe_payment_intent_id", paymentIntentId)
+          .maybeSingle();
+
+        if (orderLookupError || !refundedOrder) {
+          logStep("No store order found for refunded charge", { paymentIntentId });
+          break;
+        }
+
+        if (refundedOrder.status === "refunded") {
+          logStep("Order already refunded, skipping", { orderId: refundedOrder.id });
+          break;
+        }
+
+        // Update order status to refunded
+        await supabaseClient
+          .from("store_orders")
+          .update({ status: "refunded" })
+          .eq("id", refundedOrder.id);
+        logStep("Order marked as refunded", { orderId: refundedOrder.id });
+
+        // Restore inventory atomically
+        const { data: restoreResult } = await supabaseClient.rpc(
+          "restore_inventory_atomic",
+          { p_product_id: refundedOrder.product_id, p_quantity: 1 }
+        );
+        logStep("Inventory restored", { result: restoreResult });
+
+        // Subtract loyalty points (direct DB update — defense-in-depth)
+        const { data: loyaltyRow } = await supabaseClient
+          .from("fan_loyalty")
+          .select("id, points, level")
+          .eq("fan_id", refundedOrder.buyer_id)
+          .eq("artist_id", refundedOrder.artist_id)
+          .maybeSingle();
+
+        if (loyaltyRow) {
+          const newPoints = Math.max(loyaltyRow.points - 10, 0);
+          const LEVEL_THRESHOLDS = [
+            { level: "founding_superfan", points: 1000 },
+            { level: "elite", points: 500 },
+            { level: "insider", points: 150 },
+            { level: "supporter", points: 50 },
+            { level: "listener", points: 0 },
+          ];
+          let newLevel = "listener";
+          for (const t of LEVEL_THRESHOLDS) {
+            if (newPoints >= t.points) { newLevel = t.level; break; }
+          }
+          await supabaseClient
+            .from("fan_loyalty")
+            .update({ points: newPoints, level: newLevel })
+            .eq("id", loyaltyRow.id);
+          logStep("Loyalty points subtracted on refund", { newPoints, newLevel });
+        }
+
+        // Notify artist about refund
+        const { data: refundedProduct } = await supabaseClient
+          .from("store_products")
+          .select("title")
+          .eq("id", refundedOrder.product_id)
+          .single();
+
+        await supabaseClient.from("notifications").insert({
+          user_id: refundedOrder.artist_id,
+          type: "store_refund",
+          title: "Order Refunded",
+          message: `An order for "${refundedProduct?.title || "a product"}" has been refunded.`,
+          metadata: { order_id: refundedOrder.id, product_id: refundedOrder.product_id },
+        });
+        logStep("Refund notification sent to artist");
         break;
       }
 
