@@ -1,6 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Store, Package, ShoppingCart, BarChart3, Lock, Loader2, AlertCircle, Brain } from "lucide-react";
+import { Store, Package, ShoppingCart, BarChart3, Lock, Loader2, AlertCircle, Brain, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +9,7 @@ import { ProductsTab } from "@/components/store/ProductsTab";
 import { OrdersTab } from "@/components/store/OrdersTab";
 import { StoreAnalyticsTab } from "@/components/store/StoreAnalyticsTab";
 import { SuperfanCenterTab } from "@/components/store/SuperfanCenterTab";
+import { AnnouncementsTab } from "@/components/store/AnnouncementsTab";
 
 export default function ArtistStore() {
   const { user, role, isLoading } = useAuth();
@@ -71,6 +72,9 @@ export default function ArtistStore() {
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" /> Analytics
             </TabsTrigger>
+            <TabsTrigger value="announcements" className="flex items-center gap-2">
+              <Megaphone className="w-4 h-4" /> Announcements
+            </TabsTrigger>
             <TabsTrigger value="superfan" className="flex items-center gap-2">
               <Brain className="w-4 h-4" /> Superfan Center
             </TabsTrigger>
@@ -80,6 +84,7 @@ export default function ArtistStore() {
           <TabsContent value="products"><ProductsTab /></TabsContent>
           <TabsContent value="orders"><OrdersTab /></TabsContent>
           <TabsContent value="analytics"><StoreAnalyticsTab /></TabsContent>
+          <TabsContent value="announcements"><AnnouncementsTab /></TabsContent>
           <TabsContent value="superfan"><SuperfanCenterTab /></TabsContent>
         </Tabs>
       </div>

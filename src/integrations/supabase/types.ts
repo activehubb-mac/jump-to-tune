@@ -113,6 +113,77 @@ export type Database = {
         }
         Relationships: []
       }
+      announcement_reactions: {
+        Row: {
+          announcement_id: string
+          created_at: string
+          emoji: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          created_at?: string
+          emoji: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_reactions_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      announcements: {
+        Row: {
+          artist_id: string
+          audience_filter: Json | null
+          body: string
+          created_at: string
+          cta_label: string | null
+          cta_url: string | null
+          id: string
+          image_url: string | null
+          is_highlighted: boolean
+          title: string
+        }
+        Insert: {
+          artist_id: string
+          audience_filter?: Json | null
+          body: string
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          id?: string
+          image_url?: string | null
+          is_highlighted?: boolean
+          title: string
+        }
+        Update: {
+          artist_id?: string
+          audience_filter?: Json | null
+          body?: string
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          id?: string
+          image_url?: string | null
+          is_highlighted?: boolean
+          title?: string
+        }
+        Relationships: []
+      }
       artist_earnings: {
         Row: {
           artist_id: string
@@ -332,6 +403,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      drop_waitlists: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drop_waitlists_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "store_products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fan_loyalty: {
         Row: {
@@ -1103,8 +1203,12 @@ export type Database = {
           is_early_release: boolean
           is_exclusive: boolean
           is_featured: boolean | null
+          max_per_account: number | null
+          parent_product_id: string | null
           price_cents: number
+          scheduled_release_at: string | null
           shipping_price_cents: number | null
+          status: string
           title: string
           type: string
           updated_at: string
@@ -1125,8 +1229,12 @@ export type Database = {
           is_early_release?: boolean
           is_exclusive?: boolean
           is_featured?: boolean | null
+          max_per_account?: number | null
+          parent_product_id?: string | null
           price_cents: number
+          scheduled_release_at?: string | null
           shipping_price_cents?: number | null
+          status?: string
           title: string
           type: string
           updated_at?: string
@@ -1147,8 +1255,12 @@ export type Database = {
           is_early_release?: boolean
           is_exclusive?: boolean
           is_featured?: boolean | null
+          max_per_account?: number | null
+          parent_product_id?: string | null
           price_cents?: number
+          scheduled_release_at?: string | null
           shipping_price_cents?: number | null
+          status?: string
           title?: string
           type?: string
           updated_at?: string
@@ -1156,7 +1268,15 @@ export type Database = {
           visibility?: string | null
           visibility_expires_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "store_products_parent_product_id_fkey"
+            columns: ["parent_product_id"]
+            isOneToOne: false
+            referencedRelation: "store_products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {

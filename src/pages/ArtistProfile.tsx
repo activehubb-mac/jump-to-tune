@@ -3,7 +3,9 @@ import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock, Star, Store, Megaphone, Info, Globe } from "lucide-react";
+import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock, Star, Store, Megaphone, Info, Globe, Bell } from "lucide-react";
+import { AnnouncementCard } from "@/components/artist/AnnouncementCard";
+import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { ActivityFeed } from "@/components/artist/ActivityFeed";
 import { useArtistProfile } from "@/hooks/useArtistProfile";
 import { useTracks } from "@/hooks/useTracks";
@@ -48,6 +50,9 @@ export default function ArtistProfile() {
     },
     enabled: !!id,
   });
+
+  const { announcements } = useAnnouncements(id);
+  const highlightedAnnouncement = announcements.find((a) => a.is_highlighted);
 
   const handleFollow = async () => {
     if (!user) {
@@ -153,7 +158,20 @@ export default function ArtistProfile() {
           </div>
         </div>
 
-        {/* Content Tabs - Locked Order: Superfan | Store | Music | Activity | About | Find Me Everywhere */}
+        {/* Highlighted Announcement Banner */}
+        {highlightedAnnouncement && (
+          <div className="glass-card p-4 mb-6 border-l-4 border-primary">
+            <div className="flex items-start gap-3">
+              <Bell className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-semibold text-foreground">{highlightedAnnouncement.title}</h4>
+                <p className="text-sm text-muted-foreground line-clamp-2">{highlightedAnnouncement.body}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Content Tabs */}
         <Tabs defaultValue="superfan" className="mb-12">
           <TabsList className="glass mb-6 flex-wrap">
             <TabsTrigger value="superfan" className="flex items-center gap-2">
@@ -283,6 +301,16 @@ export default function ArtistProfile() {
 
           {/* Activity Tab */}
           <TabsContent value="activity">
+            {announcements.length > 0 && (
+              <div className="space-y-4 mb-8">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <Megaphone className="w-5 h-5 text-primary" /> Announcements
+                </h3>
+                {announcements.slice(0, 5).map((a) => (
+                  <AnnouncementCard key={a.id} announcement={a} />
+                ))}
+              </div>
+            )}
             <ActivityFeed artistId={id!} />
           </TabsContent>
 
