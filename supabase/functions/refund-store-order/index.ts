@@ -111,6 +111,24 @@ serve(async (req) => {
       console.log("[REFUND] Loyalty points adjusted", { newPoints, newLevel });
     }
 
+    // ── RE-EVALUATE BADGES (non-blocking) ──────────────────────────────
+    try {
+      fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/evaluate-badges`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ user_id: order.buyer_id }),
+        }
+      ).then(res => {
+        if (!res.ok) console.log("[REFUND] Badge re-evaluation failed", res.status);
+        else console.log("[REFUND] Badge re-evaluation triggered");
+      }).catch(err => console.log("[REFUND] Badge error", err.message));
+    } catch (_) { /* non-blocking */ }
+
     return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });

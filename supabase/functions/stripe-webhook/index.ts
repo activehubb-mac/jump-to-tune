@@ -293,6 +293,24 @@ serve(async (req) => {
                 metadata: { product_id: productId, order_id: order.id },
               });
 
+              // ── EVALUATE BADGES (non-blocking) ──────────────────────────
+              try {
+                fetch(
+                  `${Deno.env.get("SUPABASE_URL")}/functions/v1/evaluate-badges`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                    },
+                    body: JSON.stringify({ user_id: buyerId }),
+                  }
+                ).then(res => {
+                  if (!res.ok) logStep("Badge evaluation failed (store)", { status: res.status });
+                  else logStep("Badge evaluation triggered (store)");
+                }).catch(err => logStep("Badge evaluation error", { error: err.message }));
+              } catch (_) { /* non-blocking */ }
+
               // ── AWARD LOYALTY POINTS (non-blocking) ──────────────────────
               try {
                 const loyaltyEventType = productType === "merch" ? "purchase_merch" :
@@ -610,6 +628,24 @@ serve(async (req) => {
                   });
 
                   logStep("Purchase created successfully", { editionNumber, artistEarnings: artistPayoutCents / 100 });
+
+                  // ── EVALUATE BADGES (non-blocking) ──────────────────
+                  try {
+                    fetch(
+                      `${Deno.env.get("SUPABASE_URL")}/functions/v1/evaluate-badges`,
+                      {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                        },
+                        body: JSON.stringify({ user_id: userId }),
+                      }
+                    ).then(res => {
+                      if (!res.ok) logStep("Badge evaluation failed (track purchase)", { status: res.status });
+                      else logStep("Badge evaluation triggered (track purchase)");
+                    }).catch(err => logStep("Badge evaluation error", { error: err.message }));
+                  } catch (_) { /* non-blocking */ }
                 }
               } else {
                 logStep("Track sold out or not found");
@@ -705,6 +741,25 @@ serve(async (req) => {
           metadata: { order_id: refundedOrder.id, product_id: refundedOrder.product_id },
         });
         logStep("Refund notification sent to artist");
+
+        // ── RE-EVALUATE BADGES after refund (non-blocking) ────────────
+        try {
+          fetch(
+            `${Deno.env.get("SUPABASE_URL")}/functions/v1/evaluate-badges`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              },
+              body: JSON.stringify({ user_id: refundedOrder.buyer_id }),
+            }
+          ).then(res => {
+            if (!res.ok) logStep("Badge re-evaluation failed (refund)", { status: res.status });
+            else logStep("Badge re-evaluation triggered (refund)");
+          }).catch(err => logStep("Badge re-evaluation error", { error: err.message }));
+        } catch (_) { /* non-blocking */ }
+
         break;
       }
 
