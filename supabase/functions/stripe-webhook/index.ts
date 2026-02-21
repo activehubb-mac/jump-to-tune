@@ -293,8 +293,21 @@ serve(async (req) => {
                 metadata: { product_id: productId, order_id: order.id },
               });
 
-              // ── EVALUATE BADGES (non-blocking) ──────────────────────────
+              // ── ENQUEUE ASYNC JOBS (non-blocking) ──────────────────────
+              // Badge eval, analytics refresh, and trending refresh via job queue
               try {
+                const jobInserts = [
+                  { job_type: "evaluate_badges", payload: { user_id: buyerId } },
+                  { job_type: "refresh_analytics", payload: { artist_id: artistId } },
+                  { job_type: "refresh_trending", payload: {} },
+                ];
+                supabaseClient.from("job_queue").insert(jobInserts)
+                  .then(({ error: jobErr }) => {
+                    if (jobErr) logStep("Job queue insert failed", { error: jobErr.message });
+                    else logStep("Background jobs enqueued (badges, analytics, trending)");
+                  });
+
+                // Also fire badge eval directly for immediate feedback
                 fetch(
                   `${Deno.env.get("SUPABASE_URL")}/functions/v1/evaluate-badges`,
                   {
@@ -305,10 +318,7 @@ serve(async (req) => {
                     },
                     body: JSON.stringify({ user_id: buyerId }),
                   }
-                ).then(res => {
-                  if (!res.ok) logStep("Badge evaluation failed (store)", { status: res.status });
-                  else logStep("Badge evaluation triggered (store)");
-                }).catch(err => logStep("Badge evaluation error", { error: err.message }));
+                ).catch(() => {});
               } catch (_) { /* non-blocking */ }
 
               // ── AWARD LOYALTY POINTS (non-blocking) ──────────────────────

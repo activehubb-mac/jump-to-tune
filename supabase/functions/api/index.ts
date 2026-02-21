@@ -89,6 +89,58 @@ function requireRole(auth: AuthContext, allowed: string[]): Response | null {
   return null;
 }
 
+// ── RATE LIMITING ─────────────────────────────────────────────────────────
+
+// Rate limit config: action → { max requests, window in seconds }
+const RATE_LIMITS: Record<string, { max: number; window: number }> = {
+  checkout: { max: 5, window: 60 },
+  waitlist_join: { max: 10, window: 60 },
+  follow: { max: 20, window: 60 },
+  message_send: { max: 5, window: 60 },
+  announcement_react: { max: 30, window: 60 },
+  drop_create: { max: 10, window: 300 },
+  drop_activate: { max: 5, window: 300 },
+};
+
+async function checkRateLimit(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  action: string,
+): Promise<Response | null> {
+  const config = RATE_LIMITS[action];
+  if (!config) return null;
+
+  const { data: result, error } = await supabase.rpc("check_rate_limit", {
+    p_user_id: userId,
+    p_action: action,
+    p_max_requests: config.max,
+    p_window_seconds: config.window,
+  });
+
+  if (error) {
+    log("Rate limit check error", { error: error.message });
+    return null; // Fail open — don't block on rate limit errors
+  }
+
+  if (!result?.allowed) {
+    return json(
+      { success: false, data: null, error: `Rate limit exceeded. Try again in ${result.retry_after}s.` },
+      429,
+    );
+  }
+  return null;
+}
+
+// ── JOB QUEUE HELPER ──────────────────────────────────────────────────────
+
+async function enqueueJob(
+  supabase: ReturnType<typeof createClient>,
+  jobType: string,
+  payload: Record<string, any>,
+) {
+  await supabase.from("job_queue").insert({ job_type: jobType, payload });
+}
+
 // ── ROUTE HANDLERS ─────────────────────────────────────────────────────────
 
 async function handleAuthMe(
@@ -623,6 +675,28 @@ async function handleArtistAnalytics(
   const sub = segments[2]; // overview | drops | supporters
 
   if (sub === "overview") {
+    // Try cached analytics first
+    const { data: cached } = await supabase
+      .from("analytics_cache")
+      .select("data, computed_at")
+      .eq("entity_id", auth.userId)
+      .eq("entity_type", "artist")
+      .single();
+
+    // If cache is fresh (< 5 minutes), return it
+    if (cached && Date.now() - new Date(cached.computed_at).getTime() < 5 * 60 * 1000) {
+      return ok(cached.data);
+    }
+
+    // Enqueue refresh for next time
+    enqueueJob(supabase, "refresh_analytics", { artist_id: auth.userId }).catch(() => {});
+
+    // Serve stale cache if available
+    if (cached?.data) {
+      return ok(cached.data);
+    }
+
+    // No cache — compute inline (first request)
     const [followers, earnings, orders] = await Promise.all([
       supabase
         .from("follows")
@@ -661,7 +735,6 @@ async function handleArtistAnalytics(
   }
 
   if (sub === "supporters") {
-    // Fan loyalty data — no sensitive payment info
     const { data } = await supabase
       .from("fan_loyalty")
       .select("fan_id, points, level, created_at, fan:profiles!fan_loyalty_fan_id_fkey(display_name, avatar_url)")
@@ -674,10 +747,29 @@ async function handleArtistAnalytics(
   return fail("Invalid analytics endpoint", 404);
 }
 
-// ── TRENDING ───────────────────────────────────────────────────────────────
+// ── TRENDING (CACHED) ──────────────────────────────────────────────────
 
 async function handleTrending(supabase: ReturnType<typeof createClient>) {
-  // Server-calculated demand ratio — never expose scoring formula
+  // Try cache first
+  const { data: cached } = await supabase
+    .from("trending_cache")
+    .select("data, computed_at, expires_at")
+    .eq("cache_key", "global")
+    .single();
+
+  if (cached && new Date(cached.expires_at) > new Date()) {
+    return ok(cached.data);
+  }
+
+  // Cache miss — trigger async refresh
+  enqueueJob(supabase, "refresh_trending", {}).catch(() => {});
+
+  // Serve stale data if available (stale-while-revalidate)
+  if (cached?.data) {
+    return ok(cached.data);
+  }
+
+  // No cache — compute inline (first request only)
   const { data: products } = await supabase
     .from("store_products")
     .select("id, title, price_cents, inventory_sold, inventory_limit, status, image_url, artist_id, created_at, is_featured")
@@ -687,19 +779,15 @@ async function handleTrending(supabase: ReturnType<typeof createClient>) {
 
   if (!products) return ok([]);
 
-  // Admin-pinned items first, then by demand ratio
   const scored = products.map((p) => {
     const limit = p.inventory_limit || 1000;
     const demandRatio = p.inventory_sold / limit;
     const recencyBonus = Math.max(0, 1 - (Date.now() - new Date(p.created_at).getTime()) / (30 * 86400000));
-    // Score is internal — never returned
     const _score = demandRatio * 0.7 + recencyBonus * 0.3 + (p.is_featured ? 10 : 0);
     return { ...p, _score };
   });
 
   scored.sort((a, b) => b._score - a._score);
-
-  // Strip internal score before returning
   const trending = scored.map(({ _score, ...rest }) => rest);
   return ok(trending);
 }
@@ -841,6 +929,10 @@ serve(async (req) => {
       // POST/DELETE waitlist requires auth
       const auth = await authenticate(req, supabase);
       if (auth instanceof Response) return auth;
+      if (method === "POST") {
+        const rl = await checkRateLimit(supabase, auth.userId, "waitlist_join");
+        if (rl) return rl;
+      }
       return handleWaitlist(method, segments[1], auth, supabase);
     }
 
@@ -853,6 +945,8 @@ serve(async (req) => {
     if (segments.length === 3 && segments[2] === "checkout-session") {
       const auth = await authenticate(req, supabase);
       if (auth instanceof Response) return auth;
+      const rl = await checkRateLimit(supabase, auth.userId, "checkout");
+      if (rl) return rl;
       return handlePublicDrops(method, segments, auth, supabase);
     }
 
@@ -890,11 +984,24 @@ serve(async (req) => {
 
   // POST/DELETE /artists/{id}/follow
   if (segments[0] === "artists" && segments.length === 3 && segments[2] === "follow") {
+    if (method === "POST") {
+      const rl = await checkRateLimit(supabase, auth.userId, "follow");
+      if (rl) return rl;
+    }
     return handleFollow(method, segments[1], auth, supabase);
   }
 
   // /artist/drops/*
   if (segments[0] === "artist" && segments[1] === "drops") {
+    // Rate limit drop creation and activation
+    if (method === "POST" && segments.length === 2) {
+      const rl = await checkRateLimit(supabase, auth.userId, "drop_create");
+      if (rl) return rl;
+    }
+    if (method === "POST" && segments.length === 4 && segments[3] === "activate") {
+      const rl = await checkRateLimit(supabase, auth.userId, "drop_activate");
+      if (rl) return rl;
+    }
     return handleArtistDrops(method, segments, auth, supabase, body);
   }
 
@@ -905,11 +1012,17 @@ serve(async (req) => {
 
   // POST /announcements/{id}/react
   if (segments[0] === "announcements" && segments.length === 3 && segments[2] === "react") {
+    const rl = await checkRateLimit(supabase, auth.userId, "announcement_react");
+    if (rl) return rl;
     return handleAnnouncementReact(method, segments[1], auth, supabase, body);
   }
 
   // /messages/*
   if (segments[0] === "messages") {
+    if (method === "POST" && segments[1] === "send") {
+      const rl = await checkRateLimit(supabase, auth.userId, "message_send");
+      if (rl) return rl;
+    }
     return handleMessages(method, segments, auth, supabase, body);
   }
 

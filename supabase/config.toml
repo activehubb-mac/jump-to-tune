@@ -107,3 +107,6 @@ verify_jwt = false
 
 [functions.api]
 verify_jwt = false
+
+[functions.background-jobs]
+verify_jwt = false
