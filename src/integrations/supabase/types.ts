@@ -301,6 +301,27 @@ export type Database = {
         }
         Relationships: []
       }
+      badge_settings: {
+        Row: {
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          setting_key: string
+          setting_value?: Json
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       collection_bookmarks: {
         Row: {
           created_at: string
@@ -1698,6 +1719,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_badges: {
+        Row: {
+          artist_id: string | null
+          awarded_at: string
+          badge_key: string
+          badge_type: string
+          created_at: string
+          id: string
+          is_public: boolean
+          metadata: Json | null
+          product_id: string | null
+          tier: string
+          user_id: string
+        }
+        Insert: {
+          artist_id?: string | null
+          awarded_at?: string
+          badge_key: string
+          badge_type: string
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          metadata?: Json | null
+          product_id?: string | null
+          tier?: string
+          user_id: string
+        }
+        Update: {
+          artist_id?: string | null
+          awarded_at?: string
+          badge_key?: string
+          badge_type?: string
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          metadata?: Json | null
+          product_id?: string | null
+          tier?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

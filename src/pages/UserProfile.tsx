@@ -8,6 +8,8 @@ import {
   UserPlus, UserMinus, Building2, Library, Play, Pause, ListPlus, Lock 
 } from "lucide-react";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useUserBadges } from "@/hooks/useUserBadges";
+import { BadgeDisplay } from "@/components/badges/BadgeDisplay";
 import { useTracks } from "@/hooks/useTracks";
 import { useFollow } from "@/hooks/useFollows";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +23,7 @@ import { BannerUpload } from "@/components/profile/BannerUpload";
 export default function UserProfile() {
   const { id } = useParams();
   const { data: profile, isLoading } = useUserProfile(id);
+  const { data: badges } = useUserBadges(id);
   const { data: tracks, isLoading: tracksLoading } = useTracks({
     artistId: profile?.role === "artist" ? id : undefined,
     labelId: profile?.role === "label" ? id : undefined,
@@ -191,6 +194,11 @@ export default function UserProfile() {
                 </Badge>
               )}
             </div>
+            {badges && badges.length > 0 && (
+              <div className="mb-2">
+                <BadgeDisplay badges={badges} />
+              </div>
+            )}
             <h1 
               className="text-4xl md:text-5xl font-bold text-foreground mb-2"
               style={{ fontFamily: `'${profile.display_name_font || 'Inter'}', sans-serif` }}
