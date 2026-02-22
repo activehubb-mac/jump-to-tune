@@ -36,6 +36,7 @@ const DISPLAY_LOCATIONS: Record<FeaturedContentType, { value: string; label: str
   artist: [
     { value: "artists_page", label: "Artists Page - Featured Section" },
     { value: "home_hero", label: "Home Page - Hero Carousel" },
+    { value: "home_discover_artists", label: "Home Page - Discover Artists" },
   ],
   label: [
     { value: "labels_page", label: "Labels Page - Featured Section" },
@@ -44,10 +45,13 @@ const DISPLAY_LOCATIONS: Record<FeaturedContentType, { value: string; label: str
   track: [
     { value: "home_hero", label: "Home Page - Hero Carousel" },
     { value: "browse_page", label: "Browse Page - Featured Section" },
+    { value: "home_new_releases", label: "Home Page - New Releases" },
+    { value: "home_trending", label: "Home Page - Trending Now" },
   ],
   album: [
     { value: "browse_page", label: "Browse Page - Featured Section" },
     { value: "home_hero", label: "Home Page - Hero Carousel" },
+    { value: "home_new_releases", label: "Home Page - New Releases" },
   ],
 };
 

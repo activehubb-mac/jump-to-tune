@@ -640,6 +640,9 @@ export default function Index() {
     data: adminSettings
   } = useAdminHomeSettings();
   const {
+    data: pinnedDiscoverArtists
+  } = useFeaturedArtists("home_discover_artists");
+  const {
     data: recommendedArtists,
     isLoading: recommendationsLoading
   } = useRecommendedArtists(adminSettings?.discover_artists_limit ?? 6);
@@ -946,7 +949,7 @@ export default function Index() {
       <FeaturedLabelsSection />
 
       {/* Discover Section - Only show for authenticated users */}
-      {user && (adminSettings?.discover_artists_enabled !== false) && recommendedArtists && recommendedArtists.length > 0 && <section className="py-10 md:py-14 bg-card/20">
+      {user && (adminSettings?.discover_artists_enabled !== false) && ((recommendedArtists && recommendedArtists.length > 0) || (pinnedDiscoverArtists && pinnedDiscoverArtists.length > 0)) && <section className="py-10 md:py-14 bg-card/20">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -964,7 +967,26 @@ export default function Index() {
             {recommendationsLoading ? <div className="flex justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div> : <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {recommendedArtists.map(artist => {
+                {/* Pinned discover artists */}
+                {pinnedDiscoverArtists?.map(pa => {
+                  if (!pa.profile) return null;
+                  const following = isFollowing(pa.content_id);
+                  return <div key={`pinned-${pa.content_id}`} className="glass-card-bordered p-4 text-center group hover:bg-primary/10 transition-all duration-300 ring-1 ring-accent/20">
+                    <Link to={`/artist/${pa.content_id}`}>
+                      <div className="w-20 h-20 mx-auto rounded-full bg-muted/50 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform overflow-hidden">
+                        {pa.profile.avatar_url ? <img src={pa.profile.avatar_url} alt={pa.profile.display_name || "Artist"} className="w-full h-full object-cover" /> : <Music className="w-8 h-8 text-muted-foreground" />}
+                      </div>
+                      <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                        {pa.profile.display_name || "Unknown"}
+                      </h3>
+                    </Link>
+                    <Button size="sm" variant={following ? "outline" : "default"} className={`mt-3 w-full ${following ? "border-glass-border" : "bg-primary text-primary-foreground hover:bg-primary/90"}`} onClick={() => handleFollow(pa.content_id, pa.profile?.display_name || "Artist")}>
+                      {following ? <><UserMinus className="w-3 h-3 mr-1" />Following</> : <><UserPlus className="w-3 h-3 mr-1" />Follow</>}
+                    </Button>
+                  </div>;
+                })}
+                {/* Recommended artists (excluding pinned) */}
+                {(recommendedArtists || []).filter(a => !pinnedDiscoverArtists?.some(pa => pa.content_id === a.id)).map(artist => {
               const following = isFollowing(artist.id);
               return <div key={artist.id} className="glass-card-bordered p-4 text-center group hover:bg-primary/10 transition-all duration-300">
                       <Link to={`/artist/${artist.id}`}>
