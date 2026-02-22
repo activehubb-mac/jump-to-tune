@@ -1,0 +1,1 @@
+UPDATE admin_home_settings SET setting_value = '"https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"', updated_at = now() WHERE setting_key = 'spotify_embed_uri';
