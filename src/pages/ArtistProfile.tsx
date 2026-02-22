@@ -23,6 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useArtistStore } from "@/hooks/useArtistStore";
 import { ArtistStoreTab } from "@/components/store/ArtistStoreTab";
 import { SocialLinksSection } from "@/components/profile/SocialLinksSection";
+import { SpotifyEmbed } from "@/components/profile/SpotifyEmbed";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -356,6 +357,26 @@ export default function ArtistProfile() {
                 <h3 className="text-lg font-bold text-foreground mb-1">Find Me Everywhere</h3>
                 <p className="text-sm text-muted-foreground">Connect with {artist.display_name || "this artist"} across platforms</p>
               </div>
+
+              {/* Spotify Embed — only when artist enabled it and has a valid Spotify URL */}
+              {(() => {
+                const sl = artist.social_links as Record<string, string> | null;
+                const showEmbed = sl?.show_spotify_embed === "true";
+                const spotifyUrl = sl?.spotify_playlist || sl?.spotify_track || sl?.spotify;
+                if (!showEmbed || !spotifyUrl) return null;
+                return (
+                  <div className="glass-card p-4 mb-6">
+                    <h4 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+                      🎧 Listen on Spotify
+                    </h4>
+                    <SpotifyEmbed
+                      url={spotifyUrl}
+                      variant={sl?.spotify_playlist ? "full" : "compact"}
+                    />
+                  </div>
+                );
+              })()}
+
               <SocialLinksSection
                 socialLinks={artist.social_links || null}
                 isVerified={artist.is_verified || false}

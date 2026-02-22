@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Loader2, Camera, ImageIcon, Trash2, Check } from "lucide-react";
+import { Loader2, Camera, ImageIcon, Trash2, Check, Music2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { AvatarUpload } from "./AvatarUpload";
 import { useBannerUpload } from "@/hooks/useBannerUpload";
 import { cn } from "@/lib/utils";
 import { PROFILE_FONTS } from "@/lib/profileFonts";
+import { Switch } from "@/components/ui/switch";
 import {
   Sheet,
   SheetContent,
@@ -301,7 +302,51 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
             ))}
           </div>
 
-          {/* Bio */}
+          {/* Spotify Embed Settings */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Music2 className="w-4 h-4 text-primary" />
+              <Label>Spotify Player Embed</Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Embed a Spotify player on your profile. Uses official Spotify embeds only.
+            </p>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-glass-border">
+              <div>
+                <p className="text-sm font-medium text-foreground">Show Spotify Player on Profile</p>
+                <p className="text-xs text-muted-foreground">Fans can listen without leaving JumTunes</p>
+              </div>
+              <Switch
+                checked={!!socialLinks?.show_spotify_embed}
+                onCheckedChange={(checked) =>
+                  setSocialLinks((prev) => ({ ...prev, show_spotify_embed: checked ? "true" : "" }))
+                }
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Spotify Playlist URL (optional)</Label>
+              <Input
+                value={socialLinks?.spotify_playlist || ""}
+                onChange={(e) => setSocialLinks((prev) => ({ ...prev, spotify_playlist: e.target.value }))}
+                placeholder="https://open.spotify.com/playlist/..."
+                className="bg-muted/50 border-glass-border mt-1"
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Spotify Track URL (optional)</Label>
+              <Input
+                value={socialLinks?.spotify_track || ""}
+                onChange={(e) => setSocialLinks((prev) => ({ ...prev, spotify_track: e.target.value }))}
+                placeholder="https://open.spotify.com/track/..."
+                className="bg-muted/50 border-glass-border mt-1"
+              />
+            </div>
+            {socialLinks?.spotify && !socialLinks.spotify.includes("open.spotify.com") && socialLinks.spotify.trim() && (
+              <p className="text-xs text-destructive">Please use a valid Spotify URL (https://open.spotify.com/...)</p>
+            )}
+          </div>
+
+
           <div className="space-y-2">
             <Label htmlFor="bio">Bio</Label>
             <Textarea
