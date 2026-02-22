@@ -3,14 +3,16 @@ import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Users, Music, DollarSign, Shield, LayoutDashboard, Flag, BarChart3, Star } from 'lucide-react';
+import { Loader2, Users, Music, DollarSign, Shield, LayoutDashboard, Flag, BarChart3, Star, Home, Store } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const adminNavItems = [
   { path: '/admin', label: 'Overview', icon: LayoutDashboard, exact: true },
+  { path: '/admin/home', label: 'Home', icon: Home },
   { path: '/admin/users', label: 'Users', icon: Users },
   { path: '/admin/tracks', label: 'Tracks', icon: Music },
   { path: '/admin/featured', label: 'Featured', icon: Star },
+  { path: '/admin/stores', label: 'Stores', icon: Store },
   { path: '/admin/finance', label: 'Finance', icon: DollarSign },
   { path: '/admin/reports', label: 'Reports', icon: Flag },
   { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },

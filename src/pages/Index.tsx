@@ -12,6 +12,8 @@ import { useRecommendedArtists } from "@/hooks/useRecommendedArtists";
 import { useFollow } from "@/hooks/useFollows";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { useNewReleases } from "@/hooks/useNewReleases";
+import { useAdminHomeSettings } from "@/hooks/useAdminHomeSettings";
+import { SpotifyEmbedSection } from "@/components/home/SpotifyEmbedSection";
 import { useRecentlyPlayed } from "@/hooks/useRecentlyPlayed";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { formatCompactNumber } from "@/lib/formatters";
@@ -635,13 +637,16 @@ export default function Index() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const {
+    data: adminSettings
+  } = useAdminHomeSettings();
+  const {
     data: recommendedArtists,
     isLoading: recommendationsLoading
-  } = useRecommendedArtists(6);
+  } = useRecommendedArtists(adminSettings?.discover_artists_limit ?? 6);
   const {
     data: newReleases,
     isLoading: newReleasesLoading
-  } = useNewReleases(6);
+  } = useNewReleases(adminSettings?.new_releases_limit ?? 6, adminSettings?.new_releases_lookback_days ?? 7);
   const {
     recentlyPlayed
   } = useRecentlyPlayed(6);
@@ -941,7 +946,7 @@ export default function Index() {
       <FeaturedLabelsSection />
 
       {/* Discover Section - Only show for authenticated users */}
-      {user && recommendedArtists && recommendedArtists.length > 0 && <section className="py-10 md:py-14 bg-card/20">
+      {user && (adminSettings?.discover_artists_enabled !== false) && recommendedArtists && recommendedArtists.length > 0 && <section className="py-10 md:py-14 bg-card/20">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -1166,7 +1171,7 @@ export default function Index() {
         </section>}
 
       {/* New Releases Section */}
-      {newReleases && newReleases.length > 0 && <section className="py-10 md:py-14 bg-card/20">
+      {(adminSettings?.new_releases_enabled !== false) && newReleases && newReleases.length > 0 && <section className="py-10 md:py-14 bg-card/20">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -1174,7 +1179,7 @@ export default function Index() {
                   <Clock className="w-5 h-5 text-primary" />
                   New Releases
                 </h2>
-                <p className="text-muted-foreground mt-2">Fresh tracks from the last 7 days</p>
+                <p className="text-muted-foreground mt-2">Fresh tracks from the last {adminSettings?.new_releases_lookback_days ?? 7} days</p>
               </div>
               <Button variant="outline" className="hidden md:flex" asChild>
                 <Link to="/browse">View All</Link>
@@ -1238,7 +1243,10 @@ export default function Index() {
         </section>}
 
       {/* Trending Section - Now a Carousel */}
-      <TrendingCarousel onAddToQueue={handleAddToQueue} />
+      {(adminSettings?.trending_enabled !== false) && <TrendingCarousel onAddToQueue={handleAddToQueue} limit={adminSettings?.trending_limit ?? 12} />}
+
+      {/* Spotify Embed Section */}
+      {adminSettings?.spotify_embed_uri && <SpotifyEmbedSection uri={adminSettings.spotify_embed_uri} />}
 
       {/* Karaoke Promo Banner */}
       <KaraokePromoBanner />

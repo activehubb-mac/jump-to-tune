@@ -57,6 +57,8 @@ import AdminFeatured from "./pages/admin/AdminFeatured";
 import AdminFinance from "./pages/admin/AdminFinance";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminHome from "./pages/admin/AdminHome";
+import AdminStores from "./pages/admin/AdminStores";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import HelpCenter from "./pages/HelpCenter";
@@ -127,10 +129,12 @@ function RouterContent() {
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminDashboard />}>
           <Route index element={<AdminOverview />} />
+          <Route path="home" element={<AdminHome />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="tracks" element={<AdminTracks />} />
           <Route path="featured" element={<AdminFeatured />} />
           <Route path="finance" element={<AdminFinance />} />
+          <Route path="stores" element={<AdminStores />} />
           <Route path="reports" element={<AdminReports />} />
           <Route path="analytics" element={<AdminAnalytics />} />
         </Route>
