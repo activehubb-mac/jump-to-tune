@@ -108,12 +108,12 @@ export function SpotifyEmbedSection({ uri }: SpotifyEmbedSectionProps) {
               height="352"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
               loading="lazy"
-              sandbox="allow-scripts allow-same-origin allow-popups"
-              className="border-0 md:h-[352px] h-[152px]"
+              sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"
+              className="border-0 w-full h-[352px]"
               title="Spotify Player"
             />
           ) : (
-            <div className="w-full h-[152px] md:h-[352px] bg-muted/30 flex items-center justify-center">
+            <div className="w-full h-[352px] bg-muted/30 flex items-center justify-center">
               <Music className="w-8 h-8 text-muted-foreground animate-pulse" />
             </div>
           )}
