@@ -1,84 +1,140 @@
 
-# Admin Dashboard Expansion + Spotify Embed
+
+# Admin Home Controls, Stores Tab, and Homepage Integration
 
 ## Overview
-Add admin controls for managing home page sections (New Releases, Trending Now, Discover Artists) and a new Stores management tab, plus embed a Spotify player widget on the home page.
+Build the remaining admin dashboard features: a "Home" tab for controlling homepage sections (New Releases, Trending, Discover Artists, Spotify embed), a "Stores" tab for managing artist stores, and wire the homepage to respect these admin settings. All views will be mobile-optimized.
 
 ---
 
-## 1. Admin Home Page Controls (New Admin Tab)
+## Step 1: Database Migration
 
-Create a new admin sub-page **"Home"** (`/admin/home`) that gives admins control over the home page sections:
+Create the `admin_home_settings` table to store key-value configuration:
 
-### New Releases Control
-- Toggle section visibility on/off
-- Set the lookback window (default 7 days, adjustable to 14, 30, etc.)
-- Set max items displayed (default 6)
-- Pin specific tracks to always appear in New Releases
+| Column | Type | Details |
+|--------|------|---------|
+| id | uuid | Primary key |
+| setting_key | text | Unique key (e.g. `new_releases_enabled`) |
+| setting_value | jsonb | The value |
+| updated_at | timestamptz | Auto-updated |
 
-### Trending Now Control
-- Toggle section visibility on/off
-- Pin/unpin specific tracks to the top of trending
-- Override trending order manually
-- Set the number of items displayed
+**RLS Policies:**
+- Public can SELECT (homepage needs to read settings)
+- Admins can INSERT/UPDATE/DELETE (via `has_admin_role`)
+- Service role full access
 
-### Discover Artists Control
-- Toggle section visibility on/off
-- Manually feature specific artists in the Discover section
-- Set the number of artists shown
-
-These settings will be stored in a new `admin_home_settings` table with key-value pairs so they can be read by the home page.
+**Default seed data (8 rows):**
+- `new_releases_enabled` -> true
+- `new_releases_lookback_days` -> 7
+- `new_releases_limit` -> 6
+- `trending_enabled` -> true
+- `trending_limit` -> 12
+- `discover_artists_enabled` -> true
+- `discover_artists_limit` -> 6
+- `spotify_embed_uri` -> "" (empty = hidden)
 
 ---
 
-## 2. Artist Stores Tab (Admin)
+## Step 2: New Hook - useAdminHomeSettings
 
-Add a new **"Stores"** tab (`/admin/stores`) to the admin dashboard showing:
+Create `src/hooks/useAdminHomeSettings.ts`:
+- `useAdminHomeSettings()` -- reads all settings as a typed object (used by homepage and admin page)
+- `useUpdateAdminHomeSetting()` -- mutation to upsert a single setting (admin only)
+- Strongly typed interface for all setting keys
 
-- List of all artist stores with status (active/inactive)
-- Store owner name and avatar
-- Product count and total revenue per store
-- Ability to toggle store active/inactive (moderation)
+---
+
+## Step 3: Admin Home Page (`/admin/home`)
+
+Create `src/pages/admin/AdminHome.tsx` with three card sections, mobile-responsive:
+
+**New Releases Card:**
+- Toggle enabled/disabled (Switch)
+- Lookback window selector (7, 14, 30 days)
+- Max items slider (3-12)
+
+**Trending Now Card:**
+- Toggle enabled/disabled
+- Max items slider (6-24)
+
+**Discover Artists Card:**
+- Toggle enabled/disabled
+- Max items slider (3-12)
+
+**Spotify Embed Card:**
+- Text input for Spotify URI (playlist/album/track URL)
+- Preview of the embed below the input
+- Clear button to remove
+
+Layout: Single column on mobile, 2-column grid on desktop.
+
+---
+
+## Step 4: Admin Stores Page (`/admin/stores`)
+
+Create `src/pages/admin/AdminStores.tsx`:
+- Query `artist_stores` joined with `profiles_public` for artist info
+- Query `store_products` for product counts per store
+- Query `store_orders` for revenue aggregates per store
+- Display as responsive card grid (1 col mobile, 2 col tablet, 3 col desktop)
+- Each card shows: artist avatar, name, store status badge, product count, total revenue
+- Toggle button to activate/deactivate store (updates `store_status`)
 - Link to view the artist's store page
 
 ---
 
-## 3. Spotify Embedded Player
+## Step 5: Update Admin Dashboard Navigation
 
-Add a Spotify embed widget to the home page:
-
-- Place it as a section on the home page (after Trending or before the footer)
-- Use Spotify's oEmbed iframe (`open.spotify.com/embed`)
-- Admin can set the Spotify URI (playlist, album, or track) from the Admin Home settings tab
-- Default to a JumTunes-curated Spotify playlist URI
-- Responsive sizing for mobile and desktop
+Modify `src/pages/admin/AdminDashboard.tsx`:
+- Add "Home" nav item (Home icon) at `/admin/home`
+- Add "Stores" nav item (Store icon) at `/admin/stores`
 
 ---
 
-## Technical Details
+## Step 6: Update Routes
 
-### Database Migration
-- **`admin_home_settings`** table:
-  - `id` (uuid, PK)
-  - `setting_key` (text, unique) -- e.g. `new_releases_enabled`, `trending_pinned_ids`, `spotify_embed_uri`
-  - `setting_value` (jsonb)
-  - `updated_at` (timestamptz)
-  - RLS: admins can read/write, public can read
+Modify `src/App.tsx`:
+- Import `AdminHome` and `AdminStores`
+- Add nested routes: `<Route path="home" element={<AdminHome />} />` and `<Route path="stores" element={<AdminStores />} />`
 
-### New Files
-- `src/pages/admin/AdminHome.tsx` -- Home page section controls
-- `src/pages/admin/AdminStores.tsx` -- Artist stores management
-- `src/hooks/useAdminHomeSettings.ts` -- Hook to read/write home settings
-- `src/components/home/SpotifyEmbed.tsx` -- Spotify embed component
+---
 
-### Modified Files
-- `src/pages/admin/AdminDashboard.tsx` -- Add "Home" and "Stores" nav items
-- `src/App.tsx` -- Add routes for `/admin/home` and `/admin/stores`
-- `src/pages/Index.tsx` -- Read admin settings for section visibility, pinned items, and render Spotify embed
-- `src/hooks/useNewReleases.ts` -- Accept admin overrides (lookback window, pinned tracks)
-- `src/hooks/useTrendingTracks.ts` -- Accept admin-pinned tracks
+## Step 7: Wire Homepage to Admin Settings
 
-### Admin Nav Update
-Add two new tabs to the admin sidebar:
-- **Home** (icon: Home) at `/admin/home`
-- **Stores** (icon: Store) at `/admin/stores`
+Modify `src/pages/Index.tsx`:
+- Import and call `useAdminHomeSettings()`
+- Conditionally render New Releases section based on `new_releases_enabled`
+- Pass `new_releases_lookback_days` and `new_releases_limit` to `useNewReleases`
+- Conditionally render Trending section based on `trending_enabled`
+- Conditionally render Discover Artists section based on `discover_artists_enabled`
+- Render Spotify embed section if `spotify_embed_uri` is non-empty
+
+Modify `src/hooks/useNewReleases.ts`:
+- Accept optional `lookbackDays` and `limit` parameters (defaults preserved)
+
+Modify `src/components/home/TrendingCarousel.tsx`:
+- Accept optional `limit` prop override
+
+Create `src/components/home/SpotifyEmbedSection.tsx`:
+- Accepts a Spotify URI string
+- Validates and converts to embed URL
+- Renders responsive iframe in a styled container
+- Lazy-loads with IntersectionObserver
+
+---
+
+## Files Summary
+
+| Action | File |
+|--------|------|
+| Create | `src/hooks/useAdminHomeSettings.ts` |
+| Create | `src/pages/admin/AdminHome.tsx` |
+| Create | `src/pages/admin/AdminStores.tsx` |
+| Create | `src/components/home/SpotifyEmbedSection.tsx` |
+| Modify | `src/pages/admin/AdminDashboard.tsx` |
+| Modify | `src/App.tsx` |
+| Modify | `src/pages/Index.tsx` |
+| Modify | `src/hooks/useNewReleases.ts` |
+| Modify | `src/components/home/TrendingCarousel.tsx` |
+| Migration | `admin_home_settings` table + RLS + seed data |
+
