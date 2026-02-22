@@ -1,32 +1,38 @@
 
 
-# Make Spotify Player Fully Interactive for All Users
+# Fix Spotify Player Visibility on Homepage
 
-## Problem
-The Spotify embed iframe currently has a restrictive `sandbox` attribute (`allow-scripts allow-same-origin allow-popups`) that blocks users from signing into their Spotify account. Users see the player but can't log in or interact with it fully.
+## Two Problems Found
 
-## Fix
+### Problem 1: Invalid Admin URI
+The admin setting `spotify_embed_uri` is currently set to `https://open.spotify.com/` -- this is just the Spotify homepage, not a valid playlist or track URL. The component needs a URL like `https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M` to work. That's why nothing shows up.
 
-### Update `src/components/home/SpotifyEmbedSection.tsx`
+**Fix**: Update the admin setting to a valid Spotify playlist URL. I'll set it to a popular playlist so the player works immediately.
 
-1. **Fix sandbox permissions** -- add `allow-popups-to-escape-sandbox` and `allow-forms` so the Spotify login popup and authentication flow work correctly
-2. **Increase mobile height** from 152px to 352px so the full player (with login prompt and controls) is visible on all devices
-3. **Result**: Users land on the homepage, see the Spotify player, tap "Log in", sign into their Spotify account, and stream music while browsing JumTunes
+### Problem 2: Floating Spotify Button Should Always Show
+Right now, the floating button only appears when the player is collapsed AND the URI is valid. The user wants a floating Spotify logo always visible on the homepage that opens the full player when clicked.
 
-### What changes in the iframe tag
-```
-Before:  sandbox="allow-scripts allow-same-origin allow-popups"
-After:   sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"
+**Fix**: Redesign the component so the floating button shows even when the player starts collapsed (default to collapsed instead of expanded), and use the Spotify brand icon/logo instead of a generic headphones icon.
 
-Before:  className="border-0 md:h-[352px] h-[152px]"
-After:   className="border-0 w-full h-[352px]"
-```
+## Changes
+
+### 1. Update admin setting in database
+Set `spotify_embed_uri` to a valid Spotify playlist URL (e.g., a popular global playlist).
+
+### 2. Update `src/components/home/SpotifyEmbedSection.tsx`
+- Default state: **collapsed** (floating button visible) instead of expanded
+- Replace the headphones icon with a recognizable Spotify-green circular button with the Spotify logo
+- Make the floating button more prominent and always visible when URI is configured
+- When clicked, expand the full player inline and scroll to it
+- Keep the X button to collapse back to the floating logo
+
+### 3. Update `src/pages/Index.tsx`
+- Always render `SpotifyEmbedSection` when a URI is configured (no change needed here, just ensuring it stays)
 
 ## Technical Details
 
 | File | Change |
 |------|--------|
-| `src/components/home/SpotifyEmbedSection.tsx` | Update `sandbox` attribute to allow login; set consistent 352px height on all devices |
-
-No database changes needed.
+| Database: `admin_home_settings` | Update `spotify_embed_uri` to a valid playlist URL |
+| `src/components/home/SpotifyEmbedSection.tsx` | Default to collapsed; use Spotify-branded floating button with green circle and music icon; make it more prominent |
 
