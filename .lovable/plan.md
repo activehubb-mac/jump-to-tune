@@ -1,45 +1,32 @@
 
 
-# User-Controllable Spotify Player on Home Screen
+# Make Spotify Player Fully Interactive for All Users
 
-## Overview
-Add a toggleable Spotify player widget on the home screen that any user (logged in or guest) can show/hide. The player stays visible while browsing the homepage and remembers the user's preference via localStorage.
+## Problem
+The Spotify embed iframe currently has a restrictive `sandbox` attribute (`allow-scripts allow-same-origin allow-popups`) that blocks users from signing into their Spotify account. Users see the player but can't log in or interact with it fully.
 
-## What Changes
+## Fix
 
-### 1. Update SpotifyEmbedSection Component
-Modify `src/components/home/SpotifyEmbedSection.tsx` to include:
-- A visible toggle/close button (X icon) in the header to collapse the player
-- A "minimize" state that shows a small "Open Spotify Player" bar when toggled off
-- localStorage persistence for the toggle state (`jumtunes_spotify_player_visible`)
-- Compact height on mobile (152px for single track, 352px for playlist)
+### Update `src/components/home/SpotifyEmbedSection.tsx`
 
-### 2. Add a Floating "Spotify" Mini-Button
-When the player is toggled off, show a small sticky floating pill/button at the bottom of the homepage (above the JumTunes mini-player if present) that says "Spotify" with a music icon. Tapping it re-opens the embed section and scrolls to it.
+1. **Fix sandbox permissions** -- add `allow-popups-to-escape-sandbox` and `allow-forms` so the Spotify login popup and authentication flow work correctly
+2. **Increase mobile height** from 152px to 352px so the full player (with login prompt and controls) is visible on all devices
+3. **Result**: Users land on the homepage, see the Spotify player, tap "Log in", sign into their Spotify account, and stream music while browsing JumTunes
 
-This will be built directly into the `SpotifyEmbedSection` component as two render states (expanded vs collapsed pill).
+### What changes in the iframe tag
+```
+Before:  sandbox="allow-scripts allow-same-origin allow-popups"
+After:   sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"
 
-### 3. Homepage Integration
-Update `src/pages/Index.tsx`:
-- Move the Spotify embed to a more prominent position (after the hero/featured sections, before New Releases)
-- Always render the section when an admin URI is configured -- the user toggle controls visibility of the iframe itself
+Before:  className="border-0 md:h-[352px] h-[152px]"
+After:   className="border-0 w-full h-[352px]"
+```
 
 ## Technical Details
 
-### Files Modified
-
 | File | Change |
 |------|--------|
-| `src/components/home/SpotifyEmbedSection.tsx` | Add toggle button, collapsed state, localStorage persistence, floating re-open pill |
-| `src/pages/Index.tsx` | Reposition Spotify section higher on page |
+| `src/components/home/SpotifyEmbedSection.tsx` | Update `sandbox` attribute to allow login; set consistent 352px height on all devices |
 
-### No database changes needed
-Toggle state is stored in localStorage per device -- no user-specific DB column required.
-
-### Toggle Behavior
-- Default: Player is **shown** (expanded) when admin has set a URI
-- User clicks X/toggle: Player collapses to a small pill "Listen on Spotify"
-- User clicks pill: Player re-expands
-- Preference remembered across page reloads via localStorage
-- Works for both logged-in users and guests
+No database changes needed.
 
