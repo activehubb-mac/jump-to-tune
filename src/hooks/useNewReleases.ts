@@ -13,12 +13,12 @@ export interface NewRelease {
   created_at: string;
 }
 
-export function useNewReleases(limit: number = 6) {
+export function useNewReleases(limit: number = 6, lookbackDays: number = 7) {
   return useQuery({
-    queryKey: ["newReleases", limit],
+    queryKey: ["newReleases", limit, lookbackDays],
     queryFn: async (): Promise<NewRelease[]> => {
       const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - lookbackDays);
 
       // Step 1: Fetch tracks without profile join
       const { data: tracks, error } = await supabase

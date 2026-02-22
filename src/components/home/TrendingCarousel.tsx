@@ -10,10 +10,11 @@ import { useTrendingTracks, TrendingTrack } from "@/hooks/useTrendingTracks";
 
 interface TrendingCarouselProps {
   onAddToQueue: (track: Parameters<ReturnType<typeof useAudioPlayer>["addToQueue"]>[0]) => void;
+  limit?: number;
 }
 
-export function TrendingCarousel({ onAddToQueue }: TrendingCarouselProps) {
-  const { data: trendingTracks, isLoading } = useTrendingTracks(12);
+export function TrendingCarousel({ onAddToQueue, limit = 12 }: TrendingCarouselProps) {
+  const { data: trendingTracks, isLoading } = useTrendingTracks(limit);
   const { playTrack, currentTrack, isPlaying } = useAudioPlayer();
   const { canUseFeature } = useFeatureGate();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
