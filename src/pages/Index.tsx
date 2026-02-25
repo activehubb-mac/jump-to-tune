@@ -48,39 +48,8 @@ function FeaturedArtistsSection() {
     isLoading
   } = useFeaturedArtists("home_hero");
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [artistStats, setArtistStats] = useState<Record<string, {
-    trackCount: number;
-    followerCount: number;
-  }>>({});
 
-  // Fetch stats for all featured artists
-  useEffect(() => {
-    if (!featuredArtists || featuredArtists.length === 0) return;
-    const fetchStats = async () => {
-      const {
-        supabase
-      } = await import("@/integrations/supabase/client");
-      const stats: Record<string, {
-        trackCount: number;
-        followerCount: number;
-      }> = {};
-      await Promise.all(featuredArtists.map(async artist => {
-        const [tracksResult, followersResult] = await Promise.all([supabase.from("tracks").select("id", {
-          count: "exact",
-          head: true
-        }).eq("artist_id", artist.content_id).eq("is_draft", false), supabase.from("follows").select("id", {
-          count: "exact",
-          head: true
-        }).eq("following_id", artist.content_id)]);
-        stats[artist.content_id] = {
-          trackCount: tracksResult.count || 0,
-          followerCount: followersResult.count || 0
-        };
-      }));
-      setArtistStats(stats);
-    };
-    fetchStats();
-  }, [featuredArtists]);
+
 
   // Auto-rotate carousel when more than 1 artist
   useEffect(() => {
@@ -104,7 +73,7 @@ function FeaturedArtistsSection() {
   }
   const currentArtist = featuredArtists[currentIndex];
   const showCarouselControls = featuredArtists.length > 1;
-  const currentStats = artistStats[currentArtist.content_id];
+  
   return <section className="py-10 md:py-14">
       <div className="container mx-auto px-4">
         <div className="relative overflow-hidden glass-card-bordered p-6 md:p-10">
@@ -163,31 +132,7 @@ function FeaturedArtistsSection() {
                     {currentArtist.profile.bio}
                   </p>}
                 
-                {/* Stats */}
-                <div className="flex items-center justify-center md:justify-start gap-6 mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                      <Music className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-lg font-bold text-foreground">
-                        {formatCompactNumber(currentStats?.trackCount || 0)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Tracks</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
-                      <Users className="w-4 h-4 text-accent" />
-                    </div>
-                    <div>
-                      <p className="text-lg font-bold text-foreground">
-                        {formatCompactNumber(currentStats?.followerCount || 0)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Followers</p>
-                    </div>
-                  </div>
-                </div>
+
                 
                 <div className="flex items-center justify-center md:justify-start gap-4">
                   <Button className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300" onClick={e => e.stopPropagation()}>

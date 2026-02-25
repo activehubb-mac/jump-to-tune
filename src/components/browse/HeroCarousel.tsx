@@ -41,7 +41,7 @@ export function HeroCarousel() {
       type: "artist" as const,
       id: artist.id,
       title: artist.display_name || "Unknown Artist",
-      subtitle: `${artist.trackCount} tracks • ${formatCompactNumber(artist.followerCount)} fans`,
+      subtitle: artist.display_name || "Artist",
       image: artist.avatar_url,
     })) || []),
   ];
