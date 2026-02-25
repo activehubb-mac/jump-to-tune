@@ -60,9 +60,7 @@ export function SearchResultsView({ query, results, isLoading }: SearchResultsVi
                 <h4 className="font-medium text-foreground truncate group-hover:text-primary transition-colors">
                   {artist.display_name || "Unknown Artist"}
                 </h4>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {artist.trackCount} tracks • {formatCompactNumber(artist.followerCount)} fans
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">Artist</p>
               </Link>
             ))}
           </div>
