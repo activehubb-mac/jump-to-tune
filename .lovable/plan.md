@@ -1,38 +1,62 @@
 
 
-# Fix Spotify Player Visibility on Homepage
+# Fix: Fan Account Credit Top-Up Returning Non-2xx Error
 
-## Two Problems Found
+## Root Causes Identified
 
-### Problem 1: Invalid Admin URI
-The admin setting `spotify_embed_uri` is currently set to `https://open.spotify.com/` -- this is just the Spotify homepage, not a valid playlist or track URL. The component needs a URL like `https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M` to work. That's why nothing shows up.
+### 1. Invalid Stripe API Version
+The `purchase-credits` edge function uses `apiVersion: "2025-11-17.clover"` which is not a valid Stripe API version. The latest stable version is `2025-08-27.basil`. This can cause Stripe SDK initialization failures or checkout session creation errors for some requests.
 
-**Fix**: Update the admin setting to a valid Spotify playlist URL. I'll set it to a popular playlist so the player works immediately.
+### 2. Unsafe Email Access
+The code uses `user.email!` (non-null assertion) when creating the Stripe checkout session. If a fan account was created without an email (e.g., via phone or social login), this will pass `undefined` to Stripe, causing it to throw an error.
 
-### Problem 2: Floating Spotify Button Should Always Show
-Right now, the floating button only appears when the player is collapsed AND the URI is valid. The user wants a floating Spotify logo always visible on the homepage that opens the full player when clicked.
-
-**Fix**: Redesign the component so the floating button shows even when the player starts collapsed (default to collapsed instead of expanded), and use the Spotify brand icon/logo instead of a generic headphones icon.
+### 3. Poor Error Visibility
+All errors return HTTP 500, and the frontend only sees the generic "edge function returned a non-2xx status code" message from the Supabase SDK. The actual error details from Stripe are lost.
 
 ## Changes
 
-### 1. Update admin setting in database
-Set `spotify_embed_uri` to a valid Spotify playlist URL (e.g., a popular global playlist).
+### File: `supabase/functions/purchase-credits/index.ts`
 
-### 2. Update `src/components/home/SpotifyEmbedSection.tsx`
-- Default state: **collapsed** (floating button visible) instead of expanded
-- Replace the headphones icon with a recognizable Spotify-green circular button with the Spotify logo
-- Make the floating button more prominent and always visible when URI is configured
-- When clicked, expand the full player inline and scroll to it
-- Keep the X button to collapse back to the floating logo
+| Change | Detail |
+|--------|--------|
+| Fix Stripe API version | Change from `2025-11-17.clover` to `2025-08-27.basil` |
+| Safe email handling | Add a check for `user.email` before using it, return a clear error if missing |
+| Better error responses | Return 400 for validation errors instead of 500 so the SDK error message is more useful |
 
-### 3. Update `src/pages/Index.tsx`
-- Always render `SpotifyEmbedSection` when a URI is configured (no change needed here, just ensuring it stays)
+### File: `src/hooks/useWallet.ts`
+
+| Change | Detail |
+|--------|--------|
+| Better error extraction | Parse the actual error message from the edge function response body instead of showing the generic SDK error |
 
 ## Technical Details
 
-| File | Change |
-|------|--------|
-| Database: `admin_home_settings` | Update `spotify_embed_uri` to a valid playlist URL |
-| `src/components/home/SpotifyEmbedSection.tsx` | Default to collapsed; use Spotify-branded floating button with green circle and music icon; make it more prominent |
+**Edge function fix** -- the key changes in `purchase-credits/index.ts`:
+
+```typescript
+// Fix API version
+apiVersion: "2025-08-27.basil"
+
+// Safe email check
+if (!user.email) {
+  return new Response(
+    JSON.stringify({ error: "No email associated with your account" }),
+    { headers: corsHeaders, status: 400 }
+  );
+}
+
+// Validation errors return 400, not 500
+```
+
+**Frontend fix** -- in `useWallet.ts`, extract the real error:
+
+```typescript
+if (error) {
+  // Try to get the actual error message from the response
+  const errorMsg = error.context?.body 
+    ? JSON.parse(error.context.body).error 
+    : error.message;
+  showFeedback({ type: "error", title: "Purchase Failed", message: errorMsg });
+}
+```
 
