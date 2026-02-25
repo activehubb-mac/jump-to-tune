@@ -1,62 +1,24 @@
 
+# Make Recent Updates Available for Mobile
 
-# Fix: Fan Account Credit Top-Up Returning Non-2xx Error
+The recent changes (hiding track/follower counts from artist cards, hiding price/collectors from track cards) were applied to the homepage and browse pages, but several other pages still display this data on cards. These pages are used on both desktop and mobile.
 
-## Root Causes Identified
+## Changes Required
 
-### 1. Invalid Stripe API Version
-The `purchase-credits` edge function uses `apiVersion: "2025-11-17.clover"` which is not a valid Stripe API version. The latest stable version is `2025-08-27.basil`. This can cause Stripe SDK initialization failures or checkout session creation errors for some requests.
+### 1. `src/pages/Artists.tsx` -- Remove tracks/fans from artist cards
 
-### 2. Unsafe Email Access
-The code uses `user.email!` (non-null assertion) when creating the Stripe checkout session. If a fan account was created without an email (e.g., via phone or social login), this will pass `undefined` to Stripe, causing it to throw an error.
+**Featured Artists section (lines 149-152):** Remove the stats row showing "X tracks" and "X fans"
 
-### 3. Poor Error Visibility
-All errors return HTTP 500, and the frontend only sees the generic "edge function returned a non-2xx status code" message from the Supabase SDK. The actual error details from Stripe are lost.
+**All Artists grid (lines 183-187):** Remove "X tracks" text and "X fans" text below each artist name
 
-## Changes
+### 2. `src/pages/FanDashboard.tsx` -- Remove stats from followed artist cards
 
-### File: `supabase/functions/purchase-credits/index.ts`
+**Line 277:** Change `{artist.trackCount} tracks . {artist.followerCount} followers` to just `"Artist"` label
 
-| Change | Detail |
-|--------|--------|
-| Fix Stripe API version | Change from `2025-11-17.clover` to `2025-08-27.basil` |
-| Safe email handling | Add a check for `user.email` before using it, return a clear error if missing |
-| Better error responses | Return 400 for validation errors instead of 500 so the SDK error message is more useful |
+### 3. Cleanup: Remove unused imports/data
 
-### File: `src/hooks/useWallet.ts`
+- In `Artists.tsx`: Remove `useFollowerCounts` import and hook call since follower counts are no longer displayed on cards
+- Remove `formatCompactNumber` import if no longer used
+- Remove the `followers` variable assignments in the map callbacks
 
-| Change | Detail |
-|--------|--------|
-| Better error extraction | Parse the actual error message from the edge function response body instead of showing the generic SDK error |
-
-## Technical Details
-
-**Edge function fix** -- the key changes in `purchase-credits/index.ts`:
-
-```typescript
-// Fix API version
-apiVersion: "2025-08-27.basil"
-
-// Safe email check
-if (!user.email) {
-  return new Response(
-    JSON.stringify({ error: "No email associated with your account" }),
-    { headers: corsHeaders, status: 400 }
-  );
-}
-
-// Validation errors return 400, not 500
-```
-
-**Frontend fix** -- in `useWallet.ts`, extract the real error:
-
-```typescript
-if (error) {
-  // Try to get the actual error message from the response
-  const errorMsg = error.context?.body 
-    ? JSON.parse(error.context.body).error 
-    : error.message;
-  showFeedback({ type: "error", title: "Purchase Failed", message: errorMsg });
-}
-```
-
+These are all the remaining places where track/follower counts appear on artist cards and price/editions appear on track cards outside of profile/detail views. The changes ensure consistency across desktop and mobile.
