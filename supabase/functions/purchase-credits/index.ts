@@ -46,15 +46,30 @@ serve(async (req) => {
     const user = userData.user;
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Ensure user has an email for Stripe
+    if (!user.email) {
+      logStep("ERROR: No email on account");
+      return new Response(
+        JSON.stringify({ error: "No email associated with your account. Please add an email in your account settings." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
     const { amount_cents } = await req.json();
     
     // Validate amount
     if (!amount_cents || typeof amount_cents !== "number") {
-      throw new Error("Invalid amount");
+      return new Response(
+        JSON.stringify({ error: "Invalid amount" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
 
     if (amount_cents < MIN_CUSTOM_AMOUNT) {
-      throw new Error(`Minimum purchase amount is $${MIN_CUSTOM_AMOUNT / 100}`);
+      return new Response(
+        JSON.stringify({ error: `Minimum purchase amount is $${MIN_CUSTOM_AMOUNT / 100}` }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
 
     logStep("Purchase amount validated", { amount_cents });
@@ -67,7 +82,7 @@ serve(async (req) => {
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2025-11-17.clover",
+      apiVersion: "2025-08-27.basil",
     });
 
     // Check if customer exists
