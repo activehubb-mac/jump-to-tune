@@ -587,12 +587,8 @@ export default function Browse() {
                             )}
                           </div>
                         )}
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-sm font-medium text-primary">{formatPrice(track.price)}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatEditions(track.editions_sold, track.total_editions)}
-                          </span>
-                        </div>
+
+
                       </div>
                     </div>
                   );
