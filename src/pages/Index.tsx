@@ -377,39 +377,8 @@ function FeaturedTracksSection() {
     isLoading
   } = useFeaturedTracks("home_hero");
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [trackStats, setTrackStats] = useState<Record<string, {
-    likeCount: number;
-    purchaseCount: number;
-  }>>({});
 
-  // Fetch stats for all featured tracks
-  useEffect(() => {
-    if (!featuredTracks || featuredTracks.length === 0) return;
-    const fetchStats = async () => {
-      const {
-        supabase
-      } = await import("@/integrations/supabase/client");
-      const stats: Record<string, {
-        likeCount: number;
-        purchaseCount: number;
-      }> = {};
-      await Promise.all(featuredTracks.map(async track => {
-        const [likesResult, purchasesResult] = await Promise.all([supabase.from("likes").select("id", {
-          count: "exact",
-          head: true
-        }).eq("track_id", track.content_id), supabase.from("purchases").select("id", {
-          count: "exact",
-          head: true
-        }).eq("track_id", track.content_id)]);
-        stats[track.content_id] = {
-          likeCount: likesResult.count || 0,
-          purchaseCount: purchasesResult.count || 0
-        };
-      }));
-      setTrackStats(stats);
-    };
-    fetchStats();
-  }, [featuredTracks]);
+
 
   // Auto-rotate carousel when more than 1 track
   useEffect(() => {
@@ -433,7 +402,7 @@ function FeaturedTracksSection() {
   }
   const currentTrack = featuredTracks[currentIndex];
   const showCarouselControls = featuredTracks.length > 1;
-  const currentStats = trackStats[currentTrack.content_id];
+  
   return <section className="py-10 md:py-14">
       <div className="container mx-auto px-4">
         <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-md p-6 md:p-10">
@@ -498,42 +467,8 @@ function FeaturedTracksSection() {
                   by <span className="text-foreground font-medium">{currentTrack.track?.artist_name || "Unknown Artist"}</span>
                 </p>
                 
-                {/* Stats */}
-                <div className="flex items-center justify-center md:justify-start gap-6 mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
-                      <Heart className="w-4 h-4 text-accent" />
-                    </div>
-                    <div>
-                      <p className="text-lg font-bold text-foreground">
-                        {formatCompactNumber(currentStats?.likeCount || 0)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Likes</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                      <Users className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-lg font-bold text-foreground">
-                        {formatCompactNumber(currentStats?.purchaseCount || 0)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Collectors</p>
-                    </div>
-                  </div>
-                  {currentTrack.track?.price && <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center">
-                        <Zap className="w-4 h-4 text-secondary" />
-                      </div>
-                      <div>
-                        <p className="text-lg font-bold text-foreground">
-                          ${currentTrack.track.price.toFixed(2)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Price</p>
-                      </div>
-                    </div>}
-                </div>
+
+
                 
                 <div className="flex items-center justify-center md:justify-start gap-4">
                   <Button className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300" onClick={e => e.stopPropagation()}>

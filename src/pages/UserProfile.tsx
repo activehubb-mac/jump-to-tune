@@ -395,12 +395,8 @@ export default function UserProfile() {
                       </div>
                     </div>
                     <h3 className="font-semibold text-foreground truncate">{track.title}</h3>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-sm text-primary">{formatPrice(track.price)}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {formatEditions(track.editions_sold, track.total_editions)}
-                      </span>
-                    </div>
+
+
                   </div>
                 ))}
               </div>
