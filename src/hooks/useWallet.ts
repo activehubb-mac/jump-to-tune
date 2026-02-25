@@ -184,10 +184,21 @@ export function useWallet() {
       });
 
       if (error) {
+        // Extract the actual error message from the edge function response
+        let errorMsg = "Failed to create checkout. Please try again.";
+        try {
+          if (error.context?.body) {
+            const body = JSON.parse(error.context.body);
+            if (body.error) errorMsg = body.error;
+          }
+        } catch {
+          // fallback to generic message
+        }
+        if (!errorMsg && error.message) errorMsg = error.message;
         showFeedback({
           type: "error",
           title: "Purchase Failed",
-          message: error.message || "Failed to create checkout. Please try again.",
+          message: errorMsg,
           autoClose: true,
         });
         return null;
