@@ -6,11 +6,9 @@ import { Search, Music, Users, Loader2, UserPlus, UserMinus, CheckCircle, Star }
 import { Link } from "react-router-dom";
 import { useArtists } from "@/hooks/useArtists";
 import { useFollow } from "@/hooks/useFollows";
-import { useFollowerCounts } from "@/hooks/useFollowerCounts";
 import { useFeaturedArtists } from "@/hooks/useFeaturedContent";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
-import { formatCompactNumber } from "@/lib/formatters";
 
 export default function Artists() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,8 +18,8 @@ export default function Artists() {
   const { user } = useAuth();
   const { showFeedback } = useFeedbackSafe();
 
-  const artistIds = useMemo(() => artists?.map((a) => a.id) || [], [artists]);
-  const { data: followerCounts = {} } = useFollowerCounts(artistIds);
+
+
 
   // Use admin-curated featured artists if available, otherwise fall back to first 3
   const featuredArtistIds = useMemo(() => 
@@ -106,7 +104,6 @@ export default function Artists() {
                   {featuredArtists.map((artist) => {
                     const following = isFollowing(artist.id);
                     const isOwnProfile = user?.id === artist.id;
-                    const followers = followerCounts[artist.id] || artist.followerCount || 0;
                     
                     return (
                       <Link key={artist.id} to={`/artist/${artist.id}`} className="glass-card p-4 sm:p-6 group hover:bg-primary/10 transition-all duration-300">
@@ -146,10 +143,6 @@ export default function Artists() {
                               )}
                             </div>
                             <p className="text-muted-foreground text-sm mt-1 line-clamp-2">{artist.bio || "No bio available"}</p>
-                            <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
-                              <span className="flex items-center gap-1"><Music className="w-4 h-4" />{artist.trackCount} tracks</span>
-                              <span className="flex items-center gap-1"><Users className="w-4 h-4" />{formatCompactNumber(followers)} fans</span>
-                            </div>
                           </div>
                         </div>
                       </Link>
@@ -165,7 +158,6 @@ export default function Artists() {
                 {allArtists.map((artist) => {
                   const following = isFollowing(artist.id);
                   const isOwnProfile = user?.id === artist.id;
-                  const followers = followerCounts[artist.id] || artist.followerCount || 0;
 
                   return (
                     <Link key={artist.id} to={`/artist/${artist.id}`} className="glass-card p-3 sm:p-4 text-center group hover:bg-primary/10 transition-all duration-300">
@@ -180,11 +172,7 @@ export default function Artists() {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">{artist.trackCount} tracks</p>
-                      <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 mt-1">
-                        <Users className="w-3 h-3" />
-                        {formatCompactNumber(followers)} fans
-                      </p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Artist</p>
                       {!isOwnProfile && (
                         <Button
                           size="sm"

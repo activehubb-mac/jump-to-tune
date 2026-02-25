@@ -273,9 +273,7 @@ export default function FanDashboard() {
                         <p className="font-medium text-sm truncate">
                           {artist.display_name || "Unknown Artist"}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          {artist.trackCount} tracks • {artist.followerCount} followers
-                        </p>
+                        <p className="text-xs text-muted-foreground">Artist</p>
                       </div>
                     </Link>
                   ))}
