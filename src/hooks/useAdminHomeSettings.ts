@@ -38,7 +38,16 @@ export function useAdminHomeSettings() {
         for (const row of data as any[]) {
           const key = row.setting_key as keyof AdminHomeSettings;
           if (key in settings) {
-            (settings as any)[key] = row.setting_value;
+            const defaultVal = DEFAULTS[key];
+            const raw = row.setting_value;
+            // Coerce to match the expected type from DEFAULTS
+            if (typeof defaultVal === "number") {
+              (settings as any)[key] = Number(raw);
+            } else if (typeof defaultVal === "boolean") {
+              (settings as any)[key] = raw === true || raw === "true";
+            } else {
+              (settings as any)[key] = raw ?? defaultVal;
+            }
           }
         }
       }
