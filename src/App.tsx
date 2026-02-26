@@ -87,6 +87,8 @@ function RouterContent() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/browse" element={<Browse />} />
         <Route path="/karaoke" element={<Karaoke />} />
+        <Route path="/go-dj" element={<GoDJ />} />
+        <Route path="/go-dj/:sessionId" element={<GoDJSession />} />
         <Route path="/for-you" element={<ForYou />} />
         <Route path="/artists" element={<Artists />} />
         <Route path="/labels" element={<Labels />} />
