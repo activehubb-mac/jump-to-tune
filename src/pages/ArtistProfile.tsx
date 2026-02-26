@@ -27,6 +27,12 @@ import { SpotifyEmbed } from "@/components/profile/SpotifyEmbed";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useDJSessions } from "@/hooks/useDJSessions";
+import { useDJTier } from "@/hooks/useDJTiers";
+import { SessionCard } from "@/components/godj/SessionCard";
+import { DJBadge } from "@/components/godj/DJBadge";
+import { Headphones } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function ArtistProfile() {
   const { id } = useParams();
