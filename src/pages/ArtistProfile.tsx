@@ -50,6 +50,8 @@ export default function ArtistProfile() {
   const { isActive: hasActiveStore } = useArtistStore(id);
   const { data: djSessions } = useDJSessions(id);
   const { data: djTier } = useDJTier(id);
+  const { isActivated: djActivated, isLoading: djActivationLoading, activate: djActivate } = useDJActivation();
+  const [showCreateSession, setShowCreateSession] = useState(false);
 
   // Fetch genres for About tab
   const { data: genres } = useQuery({
