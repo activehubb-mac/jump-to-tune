@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock, Star, Store, Megaphone, Info, Globe, Bell, Plus } from "lucide-react";
+import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock, Star, Store, Megaphone, Info, Globe, Bell, Plus, Pencil, Trash2 } from "lucide-react";
 import { AnnouncementCard } from "@/components/artist/AnnouncementCard";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { ActivityFeed } from "@/components/artist/ActivityFeed";
