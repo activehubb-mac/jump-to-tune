@@ -71,14 +71,14 @@ export function useDJSessionSpotify(sessionId?: string) {
   return useQuery({
     queryKey: ["dj-session-spotify", sessionId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("dj_session_spotify" as any)
+      const { data, error } = await (supabase as any)
+        .from("dj_session_spotify")
         .select("*")
         .eq("session_id", sessionId!)
         .single();
 
       if (error) throw error;
-      return data as { session_id: string; spotify_url_raw: string; spotify_embed_url: string };
+      return data as { session_id: string; spotify_url_raw: string; spotify_embed_url: string } | null;
     },
     enabled: !!sessionId,
   });
