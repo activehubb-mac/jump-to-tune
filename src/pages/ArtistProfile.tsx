@@ -47,6 +47,8 @@ export default function ArtistProfile() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const queryClient = useQueryClient();
   const { isActive: hasActiveStore } = useArtistStore(id);
+  const { data: djSessions } = useDJSessions(id);
+  const { data: djTier } = useDJTier(id);
 
   // Fetch genres for About tab
   const { data: genres } = useQuery({
