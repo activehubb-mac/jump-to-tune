@@ -67,6 +67,8 @@ import NotificationCenter from "./pages/NotificationCenter";
 import SuperfanRoom from "./pages/SuperfanRoom";
 import ArtistStore from "./pages/ArtistStore";
 import FanVault from "./pages/FanVault";
+import GoDJ from "./pages/GoDJ";
+import GoDJSession from "./pages/GoDJSession";
 
 const queryClient = new QueryClient();
 
