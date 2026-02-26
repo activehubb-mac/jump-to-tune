@@ -32,7 +32,6 @@ import { useDJTier } from "@/hooks/useDJTiers";
 import { SessionCard } from "@/components/godj/SessionCard";
 import { DJBadge } from "@/components/godj/DJBadge";
 import { Headphones } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 export default function ArtistProfile() {
   const { id } = useParams();
