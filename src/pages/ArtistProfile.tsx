@@ -27,6 +27,11 @@ import { SpotifyEmbed } from "@/components/profile/SpotifyEmbed";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useDJSessions } from "@/hooks/useDJSessions";
+import { useDJTier } from "@/hooks/useDJTiers";
+import { SessionCard } from "@/components/godj/SessionCard";
+import { DJBadge } from "@/components/godj/DJBadge";
+import { Headphones } from "lucide-react";
 
 export default function ArtistProfile() {
   const { id } = useParams();
@@ -41,6 +46,8 @@ export default function ArtistProfile() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const queryClient = useQueryClient();
   const { isActive: hasActiveStore } = useArtistStore(id);
+  const { data: djSessions } = useDJSessions(id);
+  const { data: djTier } = useDJTier(id);
 
   // Fetch genres for About tab
   const { data: genres } = useQuery({
@@ -183,6 +190,9 @@ export default function ArtistProfile() {
                 <Store className="w-4 h-4" /> Store
               </TabsTrigger>
             )}
+            <TabsTrigger value="godj" className="flex items-center gap-2">
+              <Disc3 className="w-4 h-4" /> Go DJ
+            </TabsTrigger>
             <TabsTrigger value="music" className="flex items-center gap-2">
               <Music className="w-4 h-4" /> Music
             </TabsTrigger>
@@ -217,6 +227,69 @@ export default function ArtistProfile() {
               <ArtistStoreTab artistId={id!} artistName={artist.display_name || "Artist"} />
             </TabsContent>
           )}
+
+          {/* Go DJ Tab */}
+          <TabsContent value="godj">
+            <div className="space-y-6">
+              <div className="glass-card p-6 flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                  <Disc3 className="w-8 h-8 text-primary" />
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">Go DJ</h3>
+                    <p className="text-sm text-muted-foreground">Curated sessions by {artist.display_name}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {djTier && <DJBadge tier={djTier.current_tier} />}
+                  {djTier && (
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <Headphones className="w-4 h-4" />
+                      <span>{djTier.lifetime_listeners.toLocaleString()} lifetime listeners</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {(() => {
+                const active = djSessions?.filter(s => s.status === 'active') || [];
+                const scheduled = djSessions?.filter(s => s.status === 'scheduled') || [];
+                const archived = djSessions?.filter(s => s.status === 'archived') || [];
+                return (
+                  <>
+                    {active.length > 0 && (
+                      <div>
+                        <h4 className="text-lg font-semibold text-foreground mb-3">Active Sessions</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {active.map(s => <SessionCard key={s.id} session={s} artistName={artist.display_name || "DJ"} artistAvatar={artist.avatar_url || undefined} tier={djTier?.current_tier} />)}
+                        </div>
+                      </div>
+                    )}
+                    {scheduled.length > 0 && (
+                      <div>
+                        <h4 className="text-lg font-semibold text-foreground mb-3">Upcoming Sessions</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {scheduled.map(s => <SessionCard key={s.id} session={s} artistName={artist.display_name || "DJ"} artistAvatar={artist.avatar_url || undefined} tier={djTier?.current_tier} />)}
+                        </div>
+                      </div>
+                    )}
+                    {archived.length > 0 && (
+                      <div>
+                        <h4 className="text-lg font-semibold text-foreground mb-3">Archived</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {archived.map(s => <SessionCard key={s.id} session={s} artistName={artist.display_name || "DJ"} artistAvatar={artist.avatar_url || undefined} tier={djTier?.current_tier} />)}
+                        </div>
+                      </div>
+                    )}
+                    {!active.length && !scheduled.length && !archived.length && (
+                      <div className="glass-card p-12 text-center">
+                        <Disc3 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                        <p className="text-muted-foreground">No Go DJ sessions yet</p>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          </TabsContent>
 
           {/* Music Tab */}
           <TabsContent value="music">

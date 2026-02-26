@@ -470,6 +470,301 @@ export type Database = {
         }
         Relationships: []
       }
+      dj_leaderboard: {
+        Row: {
+          artist_id: string
+          computed_at: string
+          id: string
+          listener_count: number
+          period: string
+          rank: number
+          reaction_count: number
+          session_count: number
+        }
+        Insert: {
+          artist_id: string
+          computed_at?: string
+          id?: string
+          listener_count?: number
+          period?: string
+          rank?: number
+          reaction_count?: number
+          session_count?: number
+        }
+        Update: {
+          artist_id?: string
+          computed_at?: string
+          id?: string
+          listener_count?: number
+          period?: string
+          rank?: number
+          reaction_count?: number
+          session_count?: number
+        }
+        Relationships: []
+      }
+      dj_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dj_reactions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "dj_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dj_session_listeners: {
+        Row: {
+          counted: boolean
+          created_at: string
+          id: string
+          listened_seconds: number
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          counted?: boolean
+          created_at?: string
+          id?: string
+          listened_seconds?: number
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          counted?: boolean
+          created_at?: string
+          id?: string
+          listened_seconds?: number
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dj_session_listeners_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "dj_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dj_session_tracks: {
+        Row: {
+          added_at: string
+          embed_type: string
+          embed_url: string | null
+          id: string
+          position: number
+          session_id: string
+          track_id: string | null
+        }
+        Insert: {
+          added_at?: string
+          embed_type?: string
+          embed_url?: string | null
+          id?: string
+          position?: number
+          session_id: string
+          track_id?: string | null
+        }
+        Update: {
+          added_at?: string
+          embed_type?: string
+          embed_url?: string | null
+          id?: string
+          position?: number
+          session_id?: string
+          track_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dj_session_tracks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "dj_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dj_session_tracks_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dj_sessions: {
+        Row: {
+          artist_id: string
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          gating: string
+          id: string
+          max_seats: number | null
+          pinned_track_ids: Json | null
+          refund_policy: string | null
+          scheduled_at: string | null
+          sort_mode: string
+          status: string
+          submission_guidelines: string | null
+          submission_price_cents: number
+          submissions_enabled: boolean
+          title: string
+          updated_at: string
+          weekly_submission_cap: number | null
+        }
+        Insert: {
+          artist_id: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          gating?: string
+          id?: string
+          max_seats?: number | null
+          pinned_track_ids?: Json | null
+          refund_policy?: string | null
+          scheduled_at?: string | null
+          sort_mode?: string
+          status?: string
+          submission_guidelines?: string | null
+          submission_price_cents?: number
+          submissions_enabled?: boolean
+          title: string
+          updated_at?: string
+          weekly_submission_cap?: number | null
+        }
+        Update: {
+          artist_id?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          gating?: string
+          id?: string
+          max_seats?: number | null
+          pinned_track_ids?: Json | null
+          refund_policy?: string | null
+          scheduled_at?: string | null
+          sort_mode?: string
+          status?: string
+          submission_guidelines?: string | null
+          submission_price_cents?: number
+          submissions_enabled?: boolean
+          title?: string
+          updated_at?: string
+          weekly_submission_cap?: number | null
+        }
+        Relationships: []
+      }
+      dj_submissions: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          featured_at: string | null
+          id: string
+          min_feature_until: string | null
+          platform_fee_cents: number
+          session_id: string
+          status: string
+          stripe_payment_intent_id: string | null
+          submitter_id: string
+          track_id: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          featured_at?: string | null
+          id?: string
+          min_feature_until?: string | null
+          platform_fee_cents?: number
+          session_id: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          submitter_id: string
+          track_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          featured_at?: string | null
+          id?: string
+          min_feature_until?: string | null
+          platform_fee_cents?: number
+          session_id?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          submitter_id?: string
+          track_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dj_submissions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "dj_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dj_submissions_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dj_tiers: {
+        Row: {
+          artist_id: string
+          badge_name: string | null
+          current_tier: number
+          id: string
+          lifetime_listeners: number
+          max_slots: number
+          updated_at: string
+        }
+        Insert: {
+          artist_id: string
+          badge_name?: string | null
+          current_tier?: number
+          id?: string
+          lifetime_listeners?: number
+          max_slots?: number
+          updated_at?: string
+        }
+        Update: {
+          artist_id?: string
+          badge_name?: string | null
+          current_tier?: number
+          id?: string
+          lifetime_listeners?: number
+          max_slots?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       drop_waitlists: {
         Row: {
           created_at: string
