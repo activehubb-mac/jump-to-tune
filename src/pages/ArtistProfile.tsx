@@ -31,6 +31,8 @@ import { useDJSessions } from "@/hooks/useDJSessions";
 import { useDJTier } from "@/hooks/useDJTiers";
 import { SessionCard } from "@/components/godj/SessionCard";
 import { DJBadge } from "@/components/godj/DJBadge";
+import { CreateSessionModal } from "@/components/godj/CreateSessionModal";
+import { useDJActivation } from "@/hooks/useDJActivation";
 import { Headphones } from "lucide-react";
 
 export default function ArtistProfile() {
