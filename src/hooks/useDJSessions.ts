@@ -118,3 +118,50 @@ export function useDJSessionDetail(sessionId?: string) {
     enabled: !!sessionId,
   });
 }
+
+export function useUpdateDJSession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...updates
+    }: {
+      id: string;
+      title?: string;
+      description?: string | null;
+      cover_image_url?: string | null;
+      status?: string;
+    }) => {
+      const { data, error } = await supabase
+        .from("dj_sessions")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dj-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["dj-session"] });
+    },
+  });
+}
+
+export function useDeleteDJSession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (sessionId: string) => {
+      const { error } = await supabase
+        .from("dj_sessions")
+        .delete()
+        .eq("id", sessionId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dj-sessions"] });
+    },
+  });
+}
