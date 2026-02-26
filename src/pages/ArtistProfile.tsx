@@ -27,13 +27,17 @@ import { SpotifyEmbed } from "@/components/profile/SpotifyEmbed";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useDJSessions } from "@/hooks/useDJSessions";
+import { useDJSessions, useDeleteDJSession } from "@/hooks/useDJSessions";
 import { useDJTier } from "@/hooks/useDJTiers";
 import { SessionCard } from "@/components/godj/SessionCard";
 import { DJBadge } from "@/components/godj/DJBadge";
 import { CreateSessionModal } from "@/components/godj/CreateSessionModal";
+import { EditSessionModal } from "@/components/godj/EditSessionModal";
 import { useDJActivation } from "@/hooks/useDJActivation";
 import { Headphones } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import type { DJSession } from "@/hooks/useDJSessions";
 
 export default function ArtistProfile() {
   const { id } = useParams();
