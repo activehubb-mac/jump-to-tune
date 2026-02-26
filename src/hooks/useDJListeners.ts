@@ -30,14 +30,14 @@ export function useDJSessionTracks(sessionId?: string) {
 
       if (error) throw error;
 
-      // Fetch track details separately for jumtunes tracks
+      // Fetch full track details for jumtunes tracks (including audio_url for playback)
       const trackIds = (data || []).filter(d => d.track_id).map(d => d.track_id!);
       let trackMap: Record<string, any> = {};
-      
+
       if (trackIds.length > 0) {
         const { data: trackData } = await supabase
           .from("tracks")
-          .select("id, title, cover_art_url, artist_id")
+          .select("id, title, cover_art_url, artist_id, audio_url, duration, price")
           .in("id", trackIds);
 
         if (trackData) {
@@ -62,7 +62,23 @@ export function useDJSessionTracks(sessionId?: string) {
         ...item,
         tracks: item.track_id ? trackMap[item.track_id] || null : null,
       }));
+    },
+    enabled: !!sessionId,
+  });
+}
 
+export function useDJSessionSpotify(sessionId?: string) {
+  return useQuery({
+    queryKey: ["dj-session-spotify", sessionId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("dj_session_spotify" as any)
+        .select("*")
+        .eq("session_id", sessionId!)
+        .single();
+
+      if (error) throw error;
+      return data as { session_id: string; spotify_url_raw: string; spotify_embed_url: string };
     },
     enabled: !!sessionId,
   });

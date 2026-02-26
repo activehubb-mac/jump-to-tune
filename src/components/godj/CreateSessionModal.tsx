@@ -5,21 +5,20 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, X, Music, Link as LinkIcon, Loader2, Search, Image } from "lucide-react";
+import { Plus, X, Music, Link as LinkIcon, Loader2, Search, Image, Disc3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreateDJSession } from "@/hooks/useDJSessions";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { normalizeSpotifyUrl } from "@/lib/spotifyUtils";
 
 interface TrackItem {
   id: string;
-  type: "jumtunes" | "spotify" | "apple_music" | "youtube";
+  type: "jumtunes";
   title: string;
-  trackId?: string;
-  embedUrl?: string;
+  trackId: string;
+  coverUrl?: string | null;
 }
 
 interface CreateSessionModalProps {
@@ -34,21 +33,26 @@ export function CreateSessionModal({ open, onOpenChange, activeCount, maxSlots }
   const createSession = useCreateDJSession();
   const queryClient = useQueryClient();
 
+  // Step: "type" | "details" | "content"
+  const [step, setStep] = useState<"type" | "details" | "content">("type");
+  const [sessionType, setSessionType] = useState<"jumtunes" | "spotify">("jumtunes");
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  const [tracks, setTracks] = useState<TrackItem[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
 
-  // Track search state
+  // JumTunes tracks
+  const [tracks, setTracks] = useState<TrackItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Embed state
-  const [embedUrl, setEmbedUrl] = useState("");
-  const [embedType, setEmbedType] = useState<"spotify" | "apple_music" | "youtube">("spotify");
+  // Spotify
+  const [spotifyUrl, setSpotifyUrl] = useState("");
+  const [spotifyEmbedUrl, setSpotifyEmbedUrl] = useState<string | null>(null);
+  const [spotifyError, setSpotifyError] = useState<string | null>(null);
 
   const handleCoverSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -68,7 +72,7 @@ export function CreateSessionModal({ open, onOpenChange, activeCount, maxSlots }
     setIsSearching(true);
     const { data } = await supabase
       .from("tracks")
-      .select("id, title, artist_id, cover_art_url")
+      .select("id, title, artist_id, cover_art_url, audio_url")
       .ilike("title", `%${q}%`)
       .limit(8);
     setSearchResults(data || []);
@@ -82,39 +86,50 @@ export function CreateSessionModal({ open, onOpenChange, activeCount, maxSlots }
       type: "jumtunes",
       title: track.title,
       trackId: track.id,
+      coverUrl: track.cover_art_url,
     }]);
     setSearchQuery("");
     setSearchResults([]);
-  };
-
-  const addEmbed = () => {
-    if (!embedUrl.trim()) return;
-    setTracks(prev => [...prev, {
-      id: crypto.randomUUID(),
-      type: embedType,
-      title: embedUrl.substring(0, 60),
-      embedUrl: embedUrl.trim(),
-    }]);
-    setEmbedUrl("");
   };
 
   const removeTrack = (id: string) => {
     setTracks(prev => prev.filter(t => t.id !== id));
   };
 
+  const handleSpotifyPaste = (url: string) => {
+    setSpotifyUrl(url);
+    setSpotifyError(null);
+    if (!url.trim()) {
+      setSpotifyEmbedUrl(null);
+      return;
+    }
+    const embed = normalizeSpotifyUrl(url);
+    if (embed) {
+      setSpotifyEmbedUrl(embed);
+    } else {
+      setSpotifyEmbedUrl(null);
+      setSpotifyError("Invalid Spotify URL. Paste a playlist, album, or track link.");
+    }
+  };
+
   const handlePublish = async () => {
     if (!title.trim() || !user) return;
-    setIsPublishing(true);
+    if (sessionType === "jumtunes" && tracks.length === 0) {
+      toast.error("Add at least one track");
+      return;
+    }
+    if (sessionType === "spotify" && !spotifyEmbedUrl) {
+      toast.error("Paste a valid Spotify link");
+      return;
+    }
 
+    setIsPublishing(true);
     try {
       let coverUrl: string | null = null;
-
       if (coverFile) {
         const ext = coverFile.name.split(".").pop();
         const path = `dj-sessions/${user.id}/${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("covers")
-          .upload(path, coverFile);
+        const { error: uploadError } = await supabase.storage.from("covers").upload(path, coverFile);
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("covers").getPublicUrl(path);
         coverUrl = urlData.publicUrl;
@@ -124,21 +139,29 @@ export function CreateSessionModal({ open, onOpenChange, activeCount, maxSlots }
         title: title.trim(),
         description: description.trim() || undefined,
         cover_image_url: coverUrl || undefined,
+        session_type: sessionType,
       });
 
-      // Insert tracks
-      if (tracks.length > 0 && session?.id) {
+      if (!session?.id) throw new Error("Session creation failed");
+
+      if (sessionType === "jumtunes" && tracks.length > 0) {
         const trackRows = tracks.map((t, i) => ({
           session_id: session.id,
-          track_id: t.trackId || null,
-          embed_url: t.embedUrl || null,
-          embed_type: t.type,
+          track_id: t.trackId,
+          embed_type: "jumtunes",
           position: i,
         }));
-        const { error: trackError } = await supabase
-          .from("dj_session_tracks")
-          .insert(trackRows);
+        const { error: trackError } = await supabase.from("dj_session_tracks").insert(trackRows);
         if (trackError) throw trackError;
+      }
+
+      if (sessionType === "spotify" && spotifyEmbedUrl) {
+        const { error: spotifyError } = await supabase.from("dj_session_spotify" as any).insert({
+          session_id: session.id,
+          spotify_url_raw: spotifyUrl.trim(),
+          spotify_embed_url: spotifyEmbedUrl,
+        });
+        if (spotifyError) throw spotifyError;
       }
 
       queryClient.invalidateQueries({ queryKey: ["dj-sessions"] });
@@ -153,19 +176,28 @@ export function CreateSessionModal({ open, onOpenChange, activeCount, maxSlots }
   };
 
   const resetForm = () => {
+    setStep("type");
+    setSessionType("jumtunes");
     setTitle("");
     setDescription("");
     setCoverFile(null);
     setCoverPreview(null);
     setTracks([]);
     setSearchQuery("");
-    setEmbedUrl("");
+    setSearchResults([]);
+    setSpotifyUrl("");
+    setSpotifyEmbedUrl(null);
+    setSpotifyError(null);
   };
 
   const slotsLeft = maxSlots - activeCount;
 
+  const canProceedFromType = true;
+  const canProceedFromDetails = title.trim().length > 0;
+  const canPublish = sessionType === "jumtunes" ? tracks.length > 0 : !!spotifyEmbedUrl;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -174,59 +206,80 @@ export function CreateSessionModal({ open, onOpenChange, activeCount, maxSlots }
               {activeCount}/{maxSlots} slots used
             </Badge>
           </DialogTitle>
-          <DialogDescription>Build your curated DJ session.</DialogDescription>
+          <DialogDescription>
+            {step === "type" && "Choose your session type."}
+            {step === "details" && "Add session info."}
+            {step === "content" && (sessionType === "jumtunes" ? "Add JumTunes tracks." : "Paste your Spotify link.")}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5">
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="session-title">Title *</Label>
-            <Input
-              id="session-title"
-              placeholder="My session name..."
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              maxLength={100}
-            />
+        {/* Step 1: Type Selection */}
+        {step === "type" && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => setSessionType("jumtunes")}
+                className={`p-6 rounded-xl border-2 text-center transition-all ${
+                  sessionType === "jumtunes"
+                    ? "border-primary bg-primary/10"
+                    : "border-border hover:border-primary/40"
+                }`}
+              >
+                <Music className="w-10 h-10 mx-auto mb-3 text-primary" />
+                <h4 className="font-semibold text-foreground">JumTunes Session</h4>
+                <p className="text-xs text-muted-foreground mt-1">Curate and play JumTunes tracks</p>
+              </button>
+              <button
+                onClick={() => setSessionType("spotify")}
+                className={`p-6 rounded-xl border-2 text-center transition-all ${
+                  sessionType === "spotify"
+                    ? "border-[hsl(141,73%,42%)] bg-[hsl(141,73%,42%)]/10"
+                    : "border-border hover:border-[hsl(141,73%,42%)]/40"
+                }`}
+              >
+                <Disc3 className="w-10 h-10 mx-auto mb-3 text-[hsl(141,73%,42%)]" />
+                <h4 className="font-semibold text-foreground">Spotify Session</h4>
+                <p className="text-xs text-muted-foreground mt-1">Embed a Spotify playlist, album, or track</p>
+              </button>
+            </div>
           </div>
+        )}
 
-          {/* Cover Image */}
-          <div className="space-y-2">
-            <Label>Cover Image</Label>
-            {coverPreview ? (
-              <div className="flex items-center gap-3">
-                <img src={coverPreview} alt="Cover" className="w-20 h-20 rounded-lg object-cover" />
-                <Button variant="ghost" size="sm" onClick={() => { setCoverFile(null); setCoverPreview(null); }}>
-                  <X className="w-4 h-4 mr-1" /> Remove
-                </Button>
-              </div>
-            ) : (
-              <label className="flex items-center gap-3 p-4 border-2 border-dashed border-muted-foreground/20 rounded-lg cursor-pointer hover:border-primary/40 transition-colors">
-                <Image className="w-6 h-6 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Upload cover art (PNG, JPG up to 10MB)</span>
-                <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleCoverSelect} />
-              </label>
-            )}
+        {/* Step 2: Session Details */}
+        {step === "details" && (
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="session-title">Title *</Label>
+              <Input id="session-title" placeholder="My session name..." value={title} onChange={e => setTitle(e.target.value)} maxLength={100} />
+            </div>
+            <div className="space-y-2">
+              <Label>Cover Image</Label>
+              {coverPreview ? (
+                <div className="flex items-center gap-3">
+                  <img src={coverPreview} alt="Cover" className="w-20 h-20 rounded-lg object-cover" />
+                  <Button variant="ghost" size="sm" onClick={() => { setCoverFile(null); setCoverPreview(null); }}>
+                    <X className="w-4 h-4 mr-1" /> Remove
+                  </Button>
+                </div>
+              ) : (
+                <label className="flex items-center gap-3 p-4 border-2 border-dashed border-muted-foreground/20 rounded-lg cursor-pointer hover:border-primary/40 transition-colors">
+                  <Image className="w-6 h-6 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Upload cover art (PNG, JPG up to 10MB)</span>
+                  <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleCoverSelect} />
+                </label>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="session-desc">Description</Label>
+              <Textarea id="session-desc" placeholder="What's this session about?" value={description} onChange={e => setDescription(e.target.value)} rows={3} maxLength={500} />
+            </div>
           </div>
+        )}
 
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="session-desc">Description</Label>
-            <Textarea
-              id="session-desc"
-              placeholder="What's this session about?"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              rows={3}
-              maxLength={500}
-            />
-          </div>
-
-          {/* Add Tracks */}
-          <div className="space-y-3">
-            <Label>Tracks</Label>
-
-            {/* JumTunes search */}
+        {/* Step 3: Content */}
+        {step === "content" && sessionType === "jumtunes" && (
+          <div className="space-y-4">
+            <Label>Add JumTunes Tracks</Label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -256,42 +309,13 @@ export function CreateSessionModal({ open, onOpenChange, activeCount, maxSlots }
               {isSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />}
             </div>
 
-            {/* Embed URL */}
-            <div className="flex gap-2">
-              <Select value={embedType} onValueChange={(v: any) => setEmbedType(v)}>
-                <SelectTrigger className="w-36">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="spotify">Spotify</SelectItem>
-                  <SelectItem value="apple_music">Apple Music</SelectItem>
-                  <SelectItem value="youtube">YouTube</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
-                placeholder="Paste embed URL..."
-                value={embedUrl}
-                onChange={e => setEmbedUrl(e.target.value)}
-                className="flex-1"
-              />
-              <Button variant="outline" size="icon" onClick={addEmbed} disabled={!embedUrl.trim()}>
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* Track List */}
             {tracks.length > 0 && (
-              <div className="space-y-1.5 mt-2">
+              <div className="space-y-1.5">
                 {tracks.map((t, i) => (
                   <div key={t.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30">
                     <span className="text-xs text-muted-foreground w-5">{i + 1}.</span>
-                    {t.type === "jumtunes" ? (
-                      <Music className="w-4 h-4 text-primary shrink-0" />
-                    ) : (
-                      <LinkIcon className="w-4 h-4 text-muted-foreground shrink-0" />
-                    )}
+                    <Music className="w-4 h-4 text-primary shrink-0" />
                     <span className="text-sm text-foreground truncate flex-1">{t.title}</span>
-                    <Badge variant="outline" className="text-[10px] shrink-0">{t.type}</Badge>
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeTrack(t.id)}>
                       <X className="w-3 h-3" />
                     </Button>
@@ -300,16 +324,59 @@ export function CreateSessionModal({ open, onOpenChange, activeCount, maxSlots }
               </div>
             )}
           </div>
-        </div>
+        )}
 
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button
-            onClick={handlePublish}
-            disabled={!title.trim() || isPublishing || slotsLeft <= 0}
-          >
-            {isPublishing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Publishing...</> : "Publish Session"}
-          </Button>
+        {step === "content" && sessionType === "spotify" && (
+          <div className="space-y-4">
+            <Label>Paste Spotify Link</Label>
+            <Input
+              placeholder="https://open.spotify.com/playlist/..."
+              value={spotifyUrl}
+              onChange={e => handleSpotifyPaste(e.target.value)}
+            />
+            {spotifyError && (
+              <p className="text-sm text-destructive">{spotifyError}</p>
+            )}
+            {spotifyEmbedUrl && (
+              <div className="rounded-xl overflow-hidden border border-border">
+                <iframe
+                  src={spotifyEmbedUrl}
+                  width="100%"
+                  height="352"
+                  frameBorder="0"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  className="rounded-xl"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        <DialogFooter className="mt-4 flex gap-2">
+          {step !== "type" && (
+            <Button variant="outline" onClick={() => setStep(step === "content" ? "details" : "type")}>
+              Back
+            </Button>
+          )}
+          {step === "type" && (
+            <>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button onClick={() => setStep("details")} disabled={!canProceedFromType}>
+                Next
+              </Button>
+            </>
+          )}
+          {step === "details" && (
+            <Button onClick={() => setStep("content")} disabled={!canProceedFromDetails}>
+              Next
+            </Button>
+          )}
+          {step === "content" && (
+            <Button onClick={handlePublish} disabled={!canPublish || isPublishing || slotsLeft <= 0}>
+              {isPublishing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Publishing...</> : "Publish Session"}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
