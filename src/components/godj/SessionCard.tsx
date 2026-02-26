@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Disc3, Users, Headphones } from "lucide-react";
+import { Disc3, Users, Headphones, Music } from "lucide-react";
 import { DJBadge } from "./DJBadge";
 import { CountdownTimer } from "./CountdownTimer";
 import type { DJSession } from "@/hooks/useDJSessions";
@@ -16,6 +16,7 @@ interface SessionCardProps {
 
 export function SessionCard({ session, artistName, artistAvatar, listenerCount, tier }: SessionCardProps) {
   const isScheduled = session.status === "scheduled" && session.scheduled_at;
+  const isSpotify = session.session_type === "spotify";
 
   return (
     <Link to={`/go-dj/${session.id}`}>
@@ -34,7 +35,7 @@ export function SessionCard({ session, artistName, artistAvatar, listenerCount, 
           )}
 
           {/* Status badge */}
-          <div className="absolute top-2 left-2">
+          <div className="absolute top-2 left-2 flex gap-1.5">
             {isScheduled ? (
               <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm text-xs">
                 ⏳ Upcoming
@@ -44,6 +45,13 @@ export function SessionCard({ session, artistName, artistAvatar, listenerCount, 
                 🔴 Live
               </Badge>
             ) : null}
+            <Badge variant="outline" className="bg-background/80 backdrop-blur-sm text-[10px]">
+              {isSpotify ? (
+                <><Disc3 className="w-3 h-3 mr-0.5" />Spotify</>
+              ) : (
+                <><Music className="w-3 h-3 mr-0.5" />JumTunes</>
+              )}
+            </Badge>
           </div>
 
           {/* Listener count */}

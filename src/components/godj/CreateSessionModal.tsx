@@ -156,7 +156,7 @@ export function CreateSessionModal({ open, onOpenChange, activeCount, maxSlots }
       }
 
       if (sessionType === "spotify" && spotifyEmbedUrl) {
-        const { error: spotifyError } = await supabase.from("dj_session_spotify" as any).insert({
+        const { error: spotifyError } = await (supabase as any).from("dj_session_spotify").insert({
           session_id: session.id,
           spotify_url_raw: spotifyUrl.trim(),
           spotify_embed_url: spotifyEmbedUrl,
