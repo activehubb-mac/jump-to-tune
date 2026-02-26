@@ -190,6 +190,9 @@ export default function ArtistProfile() {
                 <Store className="w-4 h-4" /> Store
               </TabsTrigger>
             )}
+            <TabsTrigger value="godj" className="flex items-center gap-2">
+              <Disc3 className="w-4 h-4" /> Go DJ
+            </TabsTrigger>
             <TabsTrigger value="music" className="flex items-center gap-2">
               <Music className="w-4 h-4" /> Music
             </TabsTrigger>
