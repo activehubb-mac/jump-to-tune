@@ -9,6 +9,7 @@ export interface DJSession {
   description: string | null;
   cover_image_url: string | null;
   status: string;
+  session_type: string;
   gating: string;
   max_seats: number | null;
   sort_mode: string;
@@ -68,7 +69,14 @@ export function useCreateDJSession() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (session: { title: string; description?: string; cover_image_url?: string; gating?: string; scheduled_at?: string }) => {
+    mutationFn: async (session: {
+      title: string;
+      description?: string;
+      cover_image_url?: string;
+      gating?: string;
+      scheduled_at?: string;
+      session_type?: string;
+    }) => {
       if (!user) throw new Error("Must be logged in");
       const { data, error } = await supabase
         .from("dj_sessions")
@@ -80,6 +88,7 @@ export function useCreateDJSession() {
           gating: session.gating || "public",
           status: session.scheduled_at ? "scheduled" : "active",
           scheduled_at: session.scheduled_at || null,
+          session_type: session.session_type || "jumtunes",
         })
         .select()
         .single();

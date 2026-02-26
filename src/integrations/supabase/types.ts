@@ -570,6 +570,35 @@ export type Database = {
           },
         ]
       }
+      dj_session_spotify: {
+        Row: {
+          created_at: string
+          session_id: string
+          spotify_embed_url: string
+          spotify_url_raw: string
+        }
+        Insert: {
+          created_at?: string
+          session_id: string
+          spotify_embed_url: string
+          spotify_url_raw: string
+        }
+        Update: {
+          created_at?: string
+          session_id?: string
+          spotify_embed_url?: string
+          spotify_url_raw?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dj_session_spotify_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "dj_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dj_session_tracks: {
         Row: {
           added_at: string
@@ -627,6 +656,7 @@ export type Database = {
           pinned_track_ids: Json | null
           refund_policy: string | null
           scheduled_at: string | null
+          session_type: string
           sort_mode: string
           status: string
           submission_guidelines: string | null
@@ -647,6 +677,7 @@ export type Database = {
           pinned_track_ids?: Json | null
           refund_policy?: string | null
           scheduled_at?: string | null
+          session_type?: string
           sort_mode?: string
           status?: string
           submission_guidelines?: string | null
@@ -667,6 +698,7 @@ export type Database = {
           pinned_track_ids?: Json | null
           refund_policy?: string | null
           scheduled_at?: string | null
+          session_type?: string
           sort_mode?: string
           status?: string
           submission_guidelines?: string | null

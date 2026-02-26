@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { useDJSessionDetail } from "@/hooks/useDJSessions";
 import { useDJReactions } from "@/hooks/useDJReactions";
-import { useDJListenerCount, useDJSessionTracks } from "@/hooks/useDJListeners";
+import { useDJListenerCount, useDJSessionTracks, useDJSessionSpotify } from "@/hooks/useDJListeners";
 import { useDJTier } from "@/hooks/useDJTiers";
 import { ReactionBar } from "@/components/godj/ReactionBar";
 import { SessionTrackList } from "@/components/godj/SessionTrackList";
@@ -11,11 +11,12 @@ import { LoginWallModal } from "@/components/godj/LoginWallModal";
 import { DJBadge } from "@/components/godj/DJBadge";
 import { CountdownTimer } from "@/components/godj/CountdownTimer";
 import { Badge } from "@/components/ui/badge";
-import { Disc3, Headphones, Loader2, Users } from "lucide-react";
+import { Disc3, Headphones, Loader2, Users, Music } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import { isSpotifySingleTrack } from "@/lib/spotifyUtils";
 
 export default function GoDJSession() {
   const { sessionId } = useParams();
@@ -27,6 +28,9 @@ export default function GoDJSession() {
   const { data: listenerCount } = useDJListenerCount(sessionId);
   const { data: tracks } = useDJSessionTracks(sessionId);
   const { data: tier } = useDJTier(session?.artist_id);
+  const { data: spotifyData } = useDJSessionSpotify(
+    session?.session_type === "spotify" ? sessionId : undefined
+  );
 
   // Fetch artist profile
   const { data: artist } = useQuery({
@@ -73,6 +77,10 @@ export default function GoDJSession() {
   }
 
   const isScheduled = session.status === "scheduled" && session.scheduled_at;
+  const isSpotifySession = session.session_type === "spotify";
+  const isSingleTrack = spotifyData?.spotify_embed_url
+    ? isSpotifySingleTrack(spotifyData.spotify_embed_url)
+    : false;
 
   return (
     <Layout>
@@ -98,6 +106,13 @@ export default function GoDJSession() {
               ) : (
                 <Badge variant="secondary">Archived</Badge>
               )}
+              <Badge variant="outline" className="bg-background/80 backdrop-blur-sm text-xs">
+                {isSpotifySession ? (
+                  <><Disc3 className="w-3 h-3 mr-1" />Spotify</>
+                ) : (
+                  <><Music className="w-3 h-3 mr-1" />JumTunes</>
+                )}
+              </Badge>
               {session.gating !== "public" && (
                 <Badge variant="outline" className="bg-background/80 backdrop-blur-sm">
                   {session.gating === "followers" ? "Followers" : session.gating === "superfan" ? "Superfan" : "Limited"}
@@ -160,14 +175,42 @@ export default function GoDJSession() {
           )}
         </div>
 
-        {/* Track List */}
-        <div className="glass-card p-4">
-          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <Disc3 className="w-4 h-4 text-primary" />
-            Tracklist
-          </h3>
-          <SessionTrackList tracks={tracks || []} />
-        </div>
+        {/* Content: Spotify Embed OR JumTunes Track List */}
+        {isSpotifySession ? (
+          <div className="glass-card p-4 space-y-3">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Disc3 className="w-4 h-4 text-[hsl(141,73%,42%)]" />
+              Spotify Player
+            </h3>
+            {spotifyData?.spotify_embed_url ? (
+              <div className="rounded-xl overflow-hidden">
+                <iframe
+                  src={spotifyData.spotify_embed_url}
+                  width="100%"
+                  height={isSingleTrack ? 152 : 352}
+                  frameBorder="0"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  className="rounded-xl"
+                  style={{ borderRadius: "12px" }}
+                />
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Disc3 className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Spotify embed loading...</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="glass-card p-4">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Disc3 className="w-4 h-4 text-primary" />
+              Tracklist
+            </h3>
+            <SessionTrackList tracks={tracks || []} />
+          </div>
+        )}
       </div>
     </Layout>
   );
