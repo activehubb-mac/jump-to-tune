@@ -63,8 +63,6 @@ export function useDJSessionTracks(sessionId?: string) {
         tracks: item.track_id ? trackMap[item.track_id] || null : null,
       }));
 
-      if (error) throw error;
-      return data || [];
     },
     enabled: !!sessionId,
   });
