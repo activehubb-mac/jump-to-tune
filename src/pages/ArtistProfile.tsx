@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock, Star, Store, Megaphone, Info, Globe, Bell, Plus } from "lucide-react";
+import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock, Star, Store, Megaphone, Info, Globe, Bell, Plus, Pencil, Trash2 } from "lucide-react";
 import { AnnouncementCard } from "@/components/artist/AnnouncementCard";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { ActivityFeed } from "@/components/artist/ActivityFeed";
@@ -27,13 +27,17 @@ import { SpotifyEmbed } from "@/components/profile/SpotifyEmbed";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useDJSessions } from "@/hooks/useDJSessions";
+import { useDJSessions, useDeleteDJSession } from "@/hooks/useDJSessions";
 import { useDJTier } from "@/hooks/useDJTiers";
 import { SessionCard } from "@/components/godj/SessionCard";
 import { DJBadge } from "@/components/godj/DJBadge";
 import { CreateSessionModal } from "@/components/godj/CreateSessionModal";
+import { EditSessionModal } from "@/components/godj/EditSessionModal";
 import { useDJActivation } from "@/hooks/useDJActivation";
 import { Headphones } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import type { DJSession } from "@/hooks/useDJSessions";
 
 export default function ArtistProfile() {
   const { id } = useParams();
@@ -52,6 +56,9 @@ export default function ArtistProfile() {
   const { data: djTier } = useDJTier(id);
   const { isActivated: djActivated, isLoading: djActivationLoading, activate: djActivate } = useDJActivation();
   const [showCreateSession, setShowCreateSession] = useState(false);
+  const [editSession, setEditSession] = useState<DJSession | null>(null);
+  const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
+  const deleteSession = useDeleteDJSession();
 
   // Fetch genres for About tab
   const { data: genres } = useQuery({
@@ -294,13 +301,40 @@ export default function ArtistProfile() {
                 const active = djSessions?.filter(s => s.status === 'active') || [];
                 const scheduled = djSessions?.filter(s => s.status === 'scheduled') || [];
                 const archived = djSessions?.filter(s => s.status === 'archived') || [];
+
+                const renderSessionCard = (s: DJSession) => (
+                  <div key={s.id} className="relative group">
+                    <SessionCard session={s} artistName={artist.display_name || "DJ"} artistAvatar={artist.avatar_url || undefined} tier={djTier?.current_tier} />
+                    {isOwnProfile && (
+                      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="h-7 w-7 bg-background/80 backdrop-blur-sm"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditSession(s); }}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          className="h-7 w-7"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteSessionId(s.id); }}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                );
+
                 return (
                   <>
                     {active.length > 0 && (
                       <div>
                         <h4 className="text-lg font-semibold text-foreground mb-3">Active Sessions</h4>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          {active.map(s => <SessionCard key={s.id} session={s} artistName={artist.display_name || "DJ"} artistAvatar={artist.avatar_url || undefined} tier={djTier?.current_tier} />)}
+                          {active.map(renderSessionCard)}
                         </div>
                       </div>
                     )}
@@ -308,7 +342,7 @@ export default function ArtistProfile() {
                       <div>
                         <h4 className="text-lg font-semibold text-foreground mb-3">Upcoming Sessions</h4>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          {scheduled.map(s => <SessionCard key={s.id} session={s} artistName={artist.display_name || "DJ"} artistAvatar={artist.avatar_url || undefined} tier={djTier?.current_tier} />)}
+                          {scheduled.map(renderSessionCard)}
                         </div>
                       </div>
                     )}
@@ -316,7 +350,7 @@ export default function ArtistProfile() {
                       <div>
                         <h4 className="text-lg font-semibold text-foreground mb-3">Archived</h4>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          {archived.map(s => <SessionCard key={s.id} session={s} artistName={artist.display_name || "DJ"} artistAvatar={artist.avatar_url || undefined} tier={djTier?.current_tier} />)}
+                          {archived.map(renderSessionCard)}
                         </div>
                       </div>
                     )}
@@ -340,6 +374,45 @@ export default function ArtistProfile() {
                 maxSlots={djTier.max_slots}
               />
             )}
+
+            {/* Edit Session Modal */}
+            {editSession && (
+              <EditSessionModal
+                open={!!editSession}
+                onOpenChange={(v) => { if (!v) setEditSession(null); }}
+                session={editSession}
+              />
+            )}
+
+            {/* Delete Confirmation */}
+            <AlertDialog open={!!deleteSessionId} onOpenChange={(v) => { if (!v) setDeleteSessionId(null); }}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this session?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete the session and all its tracks. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={async () => {
+                      if (!deleteSessionId) return;
+                      try {
+                        await deleteSession.mutateAsync(deleteSessionId);
+                        toast.success("Session deleted");
+                      } catch {
+                        toast.error("Failed to delete session");
+                      }
+                      setDeleteSessionId(null);
+                    }}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </TabsContent>
 
           {/* Music Tab */}
