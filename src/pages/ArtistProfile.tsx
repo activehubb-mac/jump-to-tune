@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock, Star, Store, Megaphone, Info, Globe, Bell } from "lucide-react";
+import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock, Star, Store, Megaphone, Info, Globe, Bell, Plus } from "lucide-react";
 import { AnnouncementCard } from "@/components/artist/AnnouncementCard";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { ActivityFeed } from "@/components/artist/ActivityFeed";
@@ -31,6 +31,8 @@ import { useDJSessions } from "@/hooks/useDJSessions";
 import { useDJTier } from "@/hooks/useDJTiers";
 import { SessionCard } from "@/components/godj/SessionCard";
 import { DJBadge } from "@/components/godj/DJBadge";
+import { CreateSessionModal } from "@/components/godj/CreateSessionModal";
+import { useDJActivation } from "@/hooks/useDJActivation";
 import { Headphones } from "lucide-react";
 
 export default function ArtistProfile() {
@@ -48,6 +50,8 @@ export default function ArtistProfile() {
   const { isActive: hasActiveStore } = useArtistStore(id);
   const { data: djSessions } = useDJSessions(id);
   const { data: djTier } = useDJTier(id);
+  const { isActivated: djActivated, isLoading: djActivationLoading, activate: djActivate } = useDJActivation();
+  const [showCreateSession, setShowCreateSession] = useState(false);
 
   // Fetch genres for About tab
   const { data: genres } = useQuery({
@@ -231,24 +235,61 @@ export default function ArtistProfile() {
           {/* Go DJ Tab */}
           <TabsContent value="godj">
             <div className="space-y-6">
-              <div className="glass-card p-6 flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-3">
-                  <Disc3 className="w-8 h-8 text-primary" />
-                  <div>
-                    <h3 className="text-lg font-bold text-foreground">Go DJ</h3>
-                    <p className="text-sm text-muted-foreground">Curated sessions by {artist.display_name}</p>
+              {/* Own profile: activation or creation controls */}
+              {isOwnProfile && !djActivated && !djActivationLoading && (
+                <div className="glass-card p-8 text-center space-y-4">
+                  <Disc3 className="w-12 h-12 text-primary mx-auto" />
+                  <h3 className="text-2xl font-bold text-foreground">Enable Go DJ Mode</h3>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    Start curating sessions, build your listener base, and unlock paid submissions.
+                  </p>
+                  <Button
+                    className="bg-primary text-primary-foreground"
+                    onClick={() => djActivate.mutate()}
+                    disabled={djActivate.isPending}
+                  >
+                    {djActivate.isPending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Activating...</> : "Activate Go DJ"}
+                  </Button>
+                </div>
+              )}
+
+              {/* Header with badge + create button */}
+              {(djActivated || !isOwnProfile) && (
+                <div className="glass-card p-6 flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-3">
+                    <Disc3 className="w-8 h-8 text-primary" />
+                    <div>
+                      <h3 className="text-lg font-bold text-foreground">Go DJ</h3>
+                      <p className="text-sm text-muted-foreground">Curated sessions by {artist.display_name}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {djTier && <DJBadge tier={djTier.current_tier} />}
+                    {djTier && (
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Headphones className="w-4 h-4" />
+                        <span>{djTier.lifetime_listeners.toLocaleString()} lifetime listeners</span>
+                      </div>
+                    )}
+                    {isOwnProfile && djTier && (
+                      <>
+                        <Badge variant="outline" className="text-xs">
+                          {(djSessions?.filter(s => s.status === 'active' || s.status === 'scheduled').length || 0)}/{djTier.max_slots} slots
+                        </Badge>
+                        <Button
+                          size="sm"
+                          onClick={() => setShowCreateSession(true)}
+                          disabled={(djSessions?.filter(s => s.status === 'active' || s.status === 'scheduled').length || 0) >= djTier.max_slots}
+                        >
+                          <Plus className="w-4 h-4 mr-1" /> New Session
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  {djTier && <DJBadge tier={djTier.current_tier} />}
-                  {djTier && (
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <Headphones className="w-4 h-4" />
-                      <span>{djTier.lifetime_listeners.toLocaleString()} lifetime listeners</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+              )}
+
+              {/* Session lists */}
               {(() => {
                 const active = djSessions?.filter(s => s.status === 'active') || [];
                 const scheduled = djSessions?.filter(s => s.status === 'scheduled') || [];
@@ -279,7 +320,7 @@ export default function ArtistProfile() {
                         </div>
                       </div>
                     )}
-                    {!active.length && !scheduled.length && !archived.length && (
+                    {!active.length && !scheduled.length && !archived.length && (djActivated || !isOwnProfile) && (
                       <div className="glass-card p-12 text-center">
                         <Disc3 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
                         <p className="text-muted-foreground">No Go DJ sessions yet</p>
@@ -289,6 +330,16 @@ export default function ArtistProfile() {
                 );
               })()}
             </div>
+
+            {/* Create Session Modal */}
+            {isOwnProfile && djTier && (
+              <CreateSessionModal
+                open={showCreateSession}
+                onOpenChange={setShowCreateSession}
+                activeCount={djSessions?.filter(s => s.status === 'active' || s.status === 'scheduled').length || 0}
+                maxSlots={djTier.max_slots}
+              />
+            )}
           </TabsContent>
 
           {/* Music Tab */}
