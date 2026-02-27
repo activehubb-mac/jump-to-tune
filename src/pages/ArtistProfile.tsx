@@ -433,7 +433,7 @@ export default function ArtistProfile() {
               />
             )}
 
-            {/* Delete Confirmation */}
+            {/* Delete Confirmation (legacy sessions) */}
             <AlertDialog open={!!deleteSessionId} onOpenChange={(v) => { if (!v) setDeleteSessionId(null); }}>
               <AlertDialogContent>
                 <AlertDialogHeader>
