@@ -60,9 +60,13 @@ export default function ArtistProfile() {
   const { data: djTier } = useDJTier(id);
   const { isActivated: djActivated, isLoading: djActivationLoading, activate: djActivate } = useDJActivation();
   const [showCreateSession, setShowCreateSession] = useState(false);
+  const [showMixWizard, setShowMixWizard] = useState(false);
   const [editSession, setEditSession] = useState<DJSession | null>(null);
   const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
   const deleteSession = useDeleteDJSession();
+  const { data: mixSessions } = useGoDJSessions(id);
+  const { data: goDJProfile } = useGoDJProfile(id);
+  const activateGoDJ = useActivateGoDJ();
 
   // Fetch genres for About tab
   const { data: genres } = useQuery({
