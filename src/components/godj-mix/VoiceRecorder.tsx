@@ -16,6 +16,7 @@ export function VoiceRecorder({
   sessionId,
   maxClipSeconds = 20,
   maxTotalSeconds = 120,
+  onClipSaved,
 }: VoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
