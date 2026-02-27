@@ -90,6 +90,8 @@ function RouterContent() {
         <Route path="/browse" element={<Browse />} />
         <Route path="/karaoke" element={<Karaoke />} />
         <Route path="/go-dj" element={<GoDJ />} />
+        <Route path="/go-dj/mix/:sessionId/edit" element={<GoDJMixBuilder />} />
+        <Route path="/go-dj/mix/:sessionId" element={<GoDJMixPlayback />} />
         <Route path="/go-dj/:sessionId" element={<GoDJSession />} />
         <Route path="/for-you" element={<ForYou />} />
         <Route path="/artists" element={<Artists />} />
