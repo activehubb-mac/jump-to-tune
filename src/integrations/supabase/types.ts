@@ -951,6 +951,252 @@ export type Database = {
           },
         ]
       }
+      go_dj_listens: {
+        Row: {
+          id: string
+          listened_at: string
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          listened_at?: string
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          listened_at?: string
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "go_dj_listens_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "go_dj_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      go_dj_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          enabled_at: string | null
+          id: string
+          is_enabled: boolean
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          enabled_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          enabled_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      go_dj_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          reaction: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reaction: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reaction?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "go_dj_reactions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "go_dj_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      go_dj_segments: {
+        Row: {
+          created_at: string
+          ducking_db: number
+          ducking_enabled: boolean
+          fade_in_sec: number
+          fade_out_sec: number
+          id: string
+          order_index: number
+          overlay_end_sec: number | null
+          overlay_start_sec: number | null
+          segment_type: string
+          session_id: string
+          track_id: string | null
+          trim_end_sec: number | null
+          trim_start_sec: number
+          voice_clip_id: string | null
+          voice_volume: number
+        }
+        Insert: {
+          created_at?: string
+          ducking_db?: number
+          ducking_enabled?: boolean
+          fade_in_sec?: number
+          fade_out_sec?: number
+          id?: string
+          order_index?: number
+          overlay_end_sec?: number | null
+          overlay_start_sec?: number | null
+          segment_type: string
+          session_id: string
+          track_id?: string | null
+          trim_end_sec?: number | null
+          trim_start_sec?: number
+          voice_clip_id?: string | null
+          voice_volume?: number
+        }
+        Update: {
+          created_at?: string
+          ducking_db?: number
+          ducking_enabled?: boolean
+          fade_in_sec?: number
+          fade_out_sec?: number
+          id?: string
+          order_index?: number
+          overlay_end_sec?: number | null
+          overlay_start_sec?: number | null
+          segment_type?: string
+          session_id?: string
+          track_id?: string | null
+          trim_end_sec?: number | null
+          trim_start_sec?: number
+          voice_clip_id?: string | null
+          voice_volume?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "go_dj_segments_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "go_dj_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "go_dj_segments_voice_clip_id_fkey"
+            columns: ["voice_clip_id"]
+            isOneToOne: false
+            referencedRelation: "go_dj_voice_clips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      go_dj_sessions: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          dj_user_id: string
+          duration_sec: number | null
+          id: string
+          mix_audio_url: string | null
+          mode: string
+          status: string
+          title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          dj_user_id: string
+          duration_sec?: number | null
+          id?: string
+          mix_audio_url?: string | null
+          mode?: string
+          status?: string
+          title: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          dj_user_id?: string
+          duration_sec?: number | null
+          id?: string
+          mix_audio_url?: string | null
+          mode?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
+      go_dj_voice_clips: {
+        Row: {
+          created_at: string
+          dj_user_id: string
+          duration_sec: number
+          file_url: string
+          id: string
+          label: string
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dj_user_id: string
+          duration_sec?: number
+          file_url: string
+          id?: string
+          label?: string
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dj_user_id?: string
+          duration_sec?: number
+          file_url?: string
+          id?: string
+          label?: string
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "go_dj_voice_clips_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "go_dj_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_queue: {
         Row: {
           attempts: number
