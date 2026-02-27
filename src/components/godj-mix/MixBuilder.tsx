@@ -190,12 +190,14 @@ export function MixBuilder({ session }: MixBuilderProps) {
         <VoiceRecorder sessionId={session.id} onClipSaved={(clipId) => handleAddVoiceClip(clipId)} />
 
         {/* Add voice clip to timeline */}
-        {voiceClips.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Mic className="w-4 h-4" />
-              Insert Voice to Timeline
-            </h3>
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Mic className="w-4 h-4" />
+            Insert Voice to Timeline
+          </h3>
+          {voiceClips.length === 0 ? (
+            <p className="text-xs text-muted-foreground px-2">Record a voice drop above, then insert it here</p>
+          ) : (
             <div className="space-y-1">
               {voiceClips.map(clip => {
                 const alreadyAdded = segments.some(s => s.voice_clip_id === clip.id);
@@ -218,8 +220,8 @@ export function MixBuilder({ session }: MixBuilderProps) {
                 );
               })}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Right: Timeline + Preview */}
