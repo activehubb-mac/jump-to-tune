@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useAdminHomeSettings, useUpdateAdminHomeSetting } from "@/hooks/useAdminHomeSettings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -13,6 +14,18 @@ import { SpotifyEmbed } from "@/components/profile/SpotifyEmbed";
 export default function AdminHome() {
   const { data: settings, isLoading } = useAdminHomeSettings();
   const { mutate: updateSetting, isPending } = useUpdateAdminHomeSetting();
+
+  const [newReleasesLimit, setNewReleasesLimit] = useState(6);
+  const [trendingLimit, setTrendingLimit] = useState(12);
+  const [discoverArtistsLimit, setDiscoverArtistsLimit] = useState(6);
+
+  useEffect(() => {
+    if (settings) {
+      setNewReleasesLimit(settings.new_releases_limit);
+      setTrendingLimit(settings.trending_limit);
+      setDiscoverArtistsLimit(settings.discover_artists_limit);
+    }
+  }, [settings]);
 
   const handleUpdate = (key: Parameters<typeof updateSetting>[0]["key"], value: any) => {
     updateSetting({ key, value }, {
@@ -72,9 +85,10 @@ export default function AdminHome() {
               </Select>
             </div>
             <div>
-              <Label className="text-sm">Max Items: {settings.new_releases_limit}</Label>
+              <Label className="text-sm">Max Items: {newReleasesLimit}</Label>
               <Slider
-                value={[settings.new_releases_limit]}
+                value={[newReleasesLimit]}
+                onValueChange={(v) => setNewReleasesLimit(v[0])}
                 onValueCommit={(v) => handleUpdate("new_releases_limit", v[0])}
                 min={3} max={12} step={1}
                 className="mt-2"
@@ -101,9 +115,10 @@ export default function AdminHome() {
             <CardDescription>Show trending tracks carousel</CardDescription>
           </CardHeader>
           <CardContent>
-            <Label className="text-sm">Max Items: {settings.trending_limit}</Label>
+            <Label className="text-sm">Max Items: {trendingLimit}</Label>
             <Slider
-              value={[settings.trending_limit]}
+              value={[trendingLimit]}
+              onValueChange={(v) => setTrendingLimit(v[0])}
               onValueCommit={(v) => handleUpdate("trending_limit", v[0])}
               min={6} max={24} step={1}
               className="mt-2"
@@ -129,9 +144,10 @@ export default function AdminHome() {
             <CardDescription>Show recommended artists section</CardDescription>
           </CardHeader>
           <CardContent>
-            <Label className="text-sm">Max Items: {settings.discover_artists_limit}</Label>
+            <Label className="text-sm">Max Items: {discoverArtistsLimit}</Label>
             <Slider
-              value={[settings.discover_artists_limit]}
+              value={[discoverArtistsLimit]}
+              onValueChange={(v) => setDiscoverArtistsLimit(v[0])}
               onValueCommit={(v) => handleUpdate("discover_artists_limit", v[0])}
               min={3} max={12} step={1}
               className="mt-2"
