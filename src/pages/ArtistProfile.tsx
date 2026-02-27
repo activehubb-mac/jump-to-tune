@@ -373,13 +373,26 @@ export default function ArtistProfile() {
                         <h4 className="text-lg font-semibold text-foreground mb-3">Session Mixes</h4>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                           {mixSessions.map((ms) => (
-                            <MixSessionCard
-                              key={ms.id}
-                              session={ms}
-                              djName={artist.display_name || "DJ"}
-                              djAvatar={artist.avatar_url}
-                              isOwner={isOwnProfile}
-                            />
+                            <div key={ms.id} className="relative group">
+                              <MixSessionCard
+                                session={ms}
+                                djName={artist.display_name || "DJ"}
+                                djAvatar={artist.avatar_url}
+                                isOwner={isOwnProfile}
+                              />
+                              {isOwnProfile && (
+                                <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                  <Button
+                                    size="icon"
+                                    variant="destructive"
+                                    className="h-7 w-7"
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteMixSessionId(ms.id); }}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </div>
                       </div>
