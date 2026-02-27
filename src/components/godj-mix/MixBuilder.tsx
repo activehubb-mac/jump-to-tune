@@ -187,15 +187,19 @@ export function MixBuilder({ session }: MixBuilderProps) {
         </div>
 
         {/* Voice Recorder */}
-        <VoiceRecorder sessionId={session.id} />
+        <div id="voice-recorder-section">
+          <VoiceRecorder sessionId={session.id} onClipSaved={(clipId) => handleAddVoiceClip(clipId)} />
+        </div>
 
         {/* Add voice clip to timeline */}
-        {voiceClips.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Mic className="w-4 h-4" />
-              Insert Voice to Timeline
-            </h3>
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Mic className="w-4 h-4" />
+            Insert Voice to Timeline
+          </h3>
+          {voiceClips.length === 0 ? (
+            <p className="text-xs text-muted-foreground px-2">Record a voice drop above, then insert it here</p>
+          ) : (
             <div className="space-y-1">
               {voiceClips.map(clip => {
                 const alreadyAdded = segments.some(s => s.voice_clip_id === clip.id);
@@ -218,8 +222,8 @@ export function MixBuilder({ session }: MixBuilderProps) {
                 );
               })}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Right: Timeline + Preview */}
@@ -245,7 +249,7 @@ export function MixBuilder({ session }: MixBuilderProps) {
           {segments.length === 0 ? (
             <div className="border border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
               <Music className="w-8 h-8 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Add tracks and voice clips to build your mix</p>
+              <p className="text-sm">Search for tracks on the left, or record a voice drop to get started</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -280,6 +284,21 @@ export function MixBuilder({ session }: MixBuilderProps) {
                 )
               )}
             </div>
+          )}
+
+          {/* Quick-record shortcut at bottom of timeline */}
+          {segments.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full gap-2 mt-2"
+              onClick={() => {
+                document.getElementById("voice-recorder-section")?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              <Mic className="w-4 h-4" />
+              + Voice Drop
+            </Button>
           )}
         </div>
       </div>

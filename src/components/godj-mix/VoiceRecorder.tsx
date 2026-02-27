@@ -9,12 +9,14 @@ interface VoiceRecorderProps {
   sessionId: string;
   maxClipSeconds?: number;
   maxTotalSeconds?: number;
+  onClipSaved?: (clipId: string) => void;
 }
 
 export function VoiceRecorder({
   sessionId,
   maxClipSeconds = 20,
   maxTotalSeconds = 120,
+  onClipSaved,
 }: VoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -103,13 +105,14 @@ export function VoiceRecorder({
   const handleSave = async () => {
     if (!recordedBlob) return;
     try {
-      await uploadClip.mutateAsync({
+      const result = await uploadClip.mutateAsync({
         sessionId,
         audioBlob: recordedBlob,
         durationSec: timer,
         label: clipLabel || "Voice Clip",
       });
-      toast({ title: "Voice clip saved!" });
+      toast({ title: "Voice clip saved & added to timeline!" });
+      onClipSaved?.(result.id);
       setRecordedBlob(null);
       setRecordedUrl(null);
       setTimer(0);
