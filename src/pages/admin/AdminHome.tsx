@@ -15,6 +15,18 @@ export default function AdminHome() {
   const { data: settings, isLoading } = useAdminHomeSettings();
   const { mutate: updateSetting, isPending } = useUpdateAdminHomeSetting();
 
+  const [newReleasesLimit, setNewReleasesLimit] = useState(6);
+  const [trendingLimit, setTrendingLimit] = useState(12);
+  const [discoverArtistsLimit, setDiscoverArtistsLimit] = useState(6);
+
+  useEffect(() => {
+    if (settings) {
+      setNewReleasesLimit(settings.new_releases_limit);
+      setTrendingLimit(settings.trending_limit);
+      setDiscoverArtistsLimit(settings.discover_artists_limit);
+    }
+  }, [settings]);
+
   const handleUpdate = (key: Parameters<typeof updateSetting>[0]["key"], value: any) => {
     updateSetting({ key, value }, {
       onSuccess: () => toast.success("Setting updated"),
