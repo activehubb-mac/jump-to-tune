@@ -372,7 +372,26 @@ export default function ArtistProfile() {
                         </div>
                       </div>
                     )}
-                    {!active.length && !scheduled.length && !archived.length && (djActivated || !isOwnProfile) && (
+
+                    {/* Mix Sessions (new system) */}
+                    {mixSessions && mixSessions.length > 0 && (
+                      <div>
+                        <h4 className="text-lg font-semibold text-foreground mb-3">Session Mixes</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {mixSessions.map((ms) => (
+                            <MixSessionCard
+                              key={ms.id}
+                              session={ms}
+                              djName={artist.display_name || "DJ"}
+                              djAvatar={artist.avatar_url}
+                              isOwner={isOwnProfile}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {!active.length && !scheduled.length && !archived.length && (!mixSessions || mixSessions.length === 0) && (djActivated || !isOwnProfile) && (
                       <div className="glass-card p-12 text-center">
                         <Disc3 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
                         <p className="text-muted-foreground">No Go DJ sessions yet</p>
@@ -391,6 +410,11 @@ export default function ArtistProfile() {
                 activeCount={djSessions?.filter(s => s.status === 'active' || s.status === 'scheduled').length || 0}
                 maxSlots={djTier.max_slots}
               />
+            )}
+
+            {/* Mix Wizard Modal */}
+            {isOwnProfile && (
+              <MixWizard open={showMixWizard} onOpenChange={setShowMixWizard} />
             )}
 
             {/* Edit Session Modal */}
