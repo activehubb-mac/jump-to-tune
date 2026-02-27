@@ -187,7 +187,9 @@ export function MixBuilder({ session }: MixBuilderProps) {
         </div>
 
         {/* Voice Recorder */}
-        <VoiceRecorder sessionId={session.id} onClipSaved={(clipId) => handleAddVoiceClip(clipId)} />
+        <div id="voice-recorder-section">
+          <VoiceRecorder sessionId={session.id} onClipSaved={(clipId) => handleAddVoiceClip(clipId)} />
+        </div>
 
         {/* Add voice clip to timeline */}
         <div className="space-y-2">

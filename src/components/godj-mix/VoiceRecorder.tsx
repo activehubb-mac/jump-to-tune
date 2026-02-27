@@ -105,7 +105,7 @@ export function VoiceRecorder({
   const handleSave = async () => {
     if (!recordedBlob) return;
     try {
-      await uploadClip.mutateAsync({
+      const result = await uploadClip.mutateAsync({
         sessionId,
         audioBlob: recordedBlob,
         durationSec: timer,
