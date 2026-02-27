@@ -34,7 +34,7 @@ import { DJBadge } from "@/components/godj/DJBadge";
 import { CreateSessionModal } from "@/components/godj/CreateSessionModal";
 import { EditSessionModal } from "@/components/godj/EditSessionModal";
 import { useDJActivation } from "@/hooks/useDJActivation";
-import { useGoDJSessions } from "@/hooks/useGoDJSessions";
+import { useGoDJSessions, useDeleteGoDJSession } from "@/hooks/useGoDJSessions";
 import { useGoDJProfile, useActivateGoDJ } from "@/hooks/useGoDJProfile";
 import { MixWizard } from "@/components/godj-mix/MixWizard";
 import { MixSessionCard } from "@/components/godj-mix/MixSessionCard";
@@ -65,6 +65,8 @@ export default function ArtistProfile() {
   const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
   const deleteSession = useDeleteDJSession();
   const { data: mixSessions } = useGoDJSessions(id);
+  const deleteMixSession = useDeleteGoDJSession();
+  const [deleteMixSessionId, setDeleteMixSessionId] = useState<string | null>(null);
   const { data: goDJProfile } = useGoDJProfile(id);
   const activateGoDJ = useActivateGoDJ();
 
@@ -294,19 +296,11 @@ export default function ArtistProfile() {
                         <Badge variant="outline" className="text-xs">
                           {(djSessions?.filter(s => s.status === 'active' || s.status === 'scheduled').length || 0)}/{djTier.max_slots} slots
                         </Badge>
-                         <Button
-                          size="sm"
-                          onClick={() => setShowCreateSession(true)}
-                          disabled={(djSessions?.filter(s => s.status === 'active' || s.status === 'scheduled').length || 0) >= djTier.max_slots}
-                        >
-                          <Plus className="w-4 h-4 mr-1" /> New Session
-                        </Button>
                         <Button
                           size="sm"
-                          variant="outline"
                           onClick={() => setShowMixWizard(true)}
                         >
-                          <Plus className="w-4 h-4 mr-1" /> New Session Mix
+                          <Plus className="w-4 h-4 mr-1" /> New Session
                         </Button>
                       </>
                     )}
@@ -379,13 +373,26 @@ export default function ArtistProfile() {
                         <h4 className="text-lg font-semibold text-foreground mb-3">Session Mixes</h4>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                           {mixSessions.map((ms) => (
-                            <MixSessionCard
-                              key={ms.id}
-                              session={ms}
-                              djName={artist.display_name || "DJ"}
-                              djAvatar={artist.avatar_url}
-                              isOwner={isOwnProfile}
-                            />
+                            <div key={ms.id} className="relative group">
+                              <MixSessionCard
+                                session={ms}
+                                djName={artist.display_name || "DJ"}
+                                djAvatar={artist.avatar_url}
+                                isOwner={isOwnProfile}
+                              />
+                              {isOwnProfile && (
+                                <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                  <Button
+                                    size="icon"
+                                    variant="destructive"
+                                    className="h-7 w-7"
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteMixSessionId(ms.id); }}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </div>
                       </div>
@@ -426,7 +433,7 @@ export default function ArtistProfile() {
               />
             )}
 
-            {/* Delete Confirmation */}
+            {/* Delete Confirmation (legacy sessions) */}
             <AlertDialog open={!!deleteSessionId} onOpenChange={(v) => { if (!v) setDeleteSessionId(null); }}>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -448,6 +455,36 @@ export default function ArtistProfile() {
                         toast.error("Failed to delete session");
                       }
                       setDeleteSessionId(null);
+                    }}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Delete Confirmation (mix sessions) */}
+            <AlertDialog open={!!deleteMixSessionId} onOpenChange={(v) => { if (!v) setDeleteMixSessionId(null); }}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this mix session?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete the session and all its segments. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={async () => {
+                      if (!deleteMixSessionId) return;
+                      try {
+                        await deleteMixSession.mutateAsync(deleteMixSessionId);
+                        toast.success("Mix session deleted");
+                      } catch {
+                        toast.error("Failed to delete mix session");
+                      }
+                      setDeleteMixSessionId(null);
                     }}
                   >
                     Delete

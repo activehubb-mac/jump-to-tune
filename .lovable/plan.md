@@ -1,32 +1,24 @@
 
+# Make Recent Updates Available for Mobile
 
-# Fix Go DJ Tab: Remove Duplicate Button and Add Draft Deletion
+The recent changes (hiding track/follower counts from artist cards, hiding price/collectors from track cards) were applied to the homepage and browse pages, but several other pages still display this data on cards. These pages are used on both desktop and mobile.
 
-## Issues
-1. **Extra "New Session" button**: There are two creation buttons side by side -- "New Session" (legacy) and "New Session Mix" (new). The legacy one should be removed since you're using the new Mix Builder system.
-2. **No way to delete mix session drafts**: Legacy session cards have edit/delete icon overlays on hover, but the new `MixSessionCard` components have no delete option.
+## Changes Required
 
-## Changes
+### 1. `src/pages/Artists.tsx` -- Remove tracks/fans from artist cards
 
-### `src/pages/ArtistProfile.tsx`
+**Featured Artists section (lines 149-152):** Remove the stats row showing "X tracks" and "X fans"
 
-**Remove the legacy "New Session" button** (lines 297-303):
-- Remove the `Button` that opens `setShowCreateSession(true)` with label "+ New Session"
-- Rename the remaining button from "+ New Session Mix" to just "+ New Session"
-- Optionally remove the `CreateSessionModal` render block (lines 406-413) since it's no longer triggered, or keep it for any remaining legacy sessions that might need it
+**All Artists grid (lines 183-187):** Remove "X tracks" text and "X fans" text below each artist name
 
-**Add delete functionality to mix session cards** (around lines 381-389):
-- Wrap each `MixSessionCard` in a `relative group` div (same pattern as legacy cards)
-- Add a delete icon button overlay (Trash2 icon) that appears on hover, visible only for `isOwnProfile`
-- Wire the delete button to set a new `deleteMixSessionId` state
-- Import and use `useDeleteGoDJSession` hook (already exported from `useGoDJSessions.ts`)
-- Add a second `AlertDialog` (or reuse the existing one with a flag) for confirming mix session deletion
+### 2. `src/pages/FanDashboard.tsx` -- Remove stats from followed artist cards
 
-**New state and hook additions:**
-- `const deleteMixSession = useDeleteGoDJSession();`
-- `const [deleteMixSessionId, setDeleteMixSessionId] = useState<string | null>(null);`
+**Line 277:** Change `{artist.trackCount} tracks . {artist.followerCount} followers` to just `"Artist"` label
 
-### No other files need changes
-- `MixSessionCard` component stays as-is (the delete overlay is added at the parent level, matching the legacy pattern)
-- `useDeleteGoDJSession` hook already exists and handles cascade deletion
+### 3. Cleanup: Remove unused imports/data
 
+- In `Artists.tsx`: Remove `useFollowerCounts` import and hook call since follower counts are no longer displayed on cards
+- Remove `formatCompactNumber` import if no longer used
+- Remove the `followers` variable assignments in the map callbacks
+
+These are all the remaining places where track/follower counts appear on artist cards and price/editions appear on track cards outside of profile/detail views. The changes ensure consistency across desktop and mobile.
