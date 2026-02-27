@@ -1,24 +1,29 @@
 
-# Make Recent Updates Available for Mobile
 
-The recent changes (hiding track/follower counts from artist cards, hiding price/collectors from track cards) were applied to the homepage and browse pages, but several other pages still display this data on cards. These pages are used on both desktop and mobile.
+# Fix Admin Homepage Sliders Not Responding to Drag
 
-## Changes Required
+## Problem
+The sliders on the Admin Homepage Controls page don't move when dragged. This is because they are fully controlled components (`value={[settings.xxx]}`) but only have `onValueCommit` (fires on release). Without an `onValueChange` handler, React re-renders the slider to its original position on every frame, making it appear stuck.
 
-### 1. `src/pages/Artists.tsx` -- Remove tracks/fans from artist cards
+## Solution
+Add local state for each slider value. Use `onValueChange` to update the local state (so the thumb moves visually during drag), and keep `onValueCommit` to save to the database when the user releases.
 
-**Featured Artists section (lines 149-152):** Remove the stats row showing "X tracks" and "X fans"
+## Changes
 
-**All Artists grid (lines 183-187):** Remove "X tracks" text and "X fans" text below each artist name
+### `src/pages/admin/AdminHome.tsx`
 
-### 2. `src/pages/FanDashboard.tsx` -- Remove stats from followed artist cards
+1. Add three `useState` hooks initialized from `settings`:
+   - `newReleasesLimit` 
+   - `trendingLimit`
+   - `discoverArtistsLimit`
 
-**Line 277:** Change `{artist.trackCount} tracks . {artist.followerCount} followers` to just `"Artist"` label
+2. Sync local state when `settings` data changes (via `useEffect`)
 
-### 3. Cleanup: Remove unused imports/data
+3. For each Slider, update to:
+   - `value={[localState]}` instead of `value={[settings.xxx]}`
+   - Add `onValueChange={(v) => setLocalState(v[0])}` for live visual feedback
+   - Keep `onValueCommit` to persist to database
 
-- In `Artists.tsx`: Remove `useFollowerCounts` import and hook call since follower counts are no longer displayed on cards
-- Remove `formatCompactNumber` import if no longer used
-- Remove the `followers` variable assignments in the map callbacks
+4. Update the label text to show `localState` instead of `settings.xxx` so the number updates live during drag
 
-These are all the remaining places where track/follower counts appear on artist cards and price/editions appear on track cards outside of profile/detail views. The changes ensure consistency across desktop and mobile.
+No other files need changes. The Slider component itself is fine -- `touch-none` is standard Radix behavior that prevents scroll interference during drag.
