@@ -167,6 +167,7 @@ export default function GoDJ() {
           </div>
         </section>
       </div>
+      <MixWizard open={showWizard} onOpenChange={setShowWizard} />
     </Layout>
   );
 }
