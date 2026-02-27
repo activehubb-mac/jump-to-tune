@@ -283,6 +283,21 @@ export function MixBuilder({ session }: MixBuilderProps) {
               )}
             </div>
           )}
+
+          {/* Quick-record shortcut at bottom of timeline */}
+          {segments.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full gap-2 mt-2"
+              onClick={() => {
+                document.getElementById("voice-recorder-section")?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              <Mic className="w-4 h-4" />
+              + Voice Drop
+            </Button>
+          )}
         </div>
       </div>
     </div>
