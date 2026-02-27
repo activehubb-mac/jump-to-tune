@@ -115,9 +115,10 @@ export default function AdminHome() {
             <CardDescription>Show trending tracks carousel</CardDescription>
           </CardHeader>
           <CardContent>
-            <Label className="text-sm">Max Items: {settings.trending_limit}</Label>
+            <Label className="text-sm">Max Items: {trendingLimit}</Label>
             <Slider
-              value={[settings.trending_limit]}
+              value={[trendingLimit]}
+              onValueChange={(v) => setTrendingLimit(v[0])}
               onValueCommit={(v) => handleUpdate("trending_limit", v[0])}
               min={6} max={24} step={1}
               className="mt-2"
