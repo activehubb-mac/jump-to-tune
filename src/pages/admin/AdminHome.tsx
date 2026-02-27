@@ -144,9 +144,10 @@ export default function AdminHome() {
             <CardDescription>Show recommended artists section</CardDescription>
           </CardHeader>
           <CardContent>
-            <Label className="text-sm">Max Items: {settings.discover_artists_limit}</Label>
+            <Label className="text-sm">Max Items: {discoverArtistsLimit}</Label>
             <Slider
-              value={[settings.discover_artists_limit]}
+              value={[discoverArtistsLimit]}
+              onValueChange={(v) => setDiscoverArtistsLimit(v[0])}
               onValueCommit={(v) => handleUpdate("discover_artists_limit", v[0])}
               min={3} max={12} step={1}
               className="mt-2"
