@@ -34,7 +34,7 @@ import { DJBadge } from "@/components/godj/DJBadge";
 import { CreateSessionModal } from "@/components/godj/CreateSessionModal";
 import { EditSessionModal } from "@/components/godj/EditSessionModal";
 import { useDJActivation } from "@/hooks/useDJActivation";
-import { useGoDJSessions } from "@/hooks/useGoDJSessions";
+import { useGoDJSessions, useDeleteGoDJSession } from "@/hooks/useGoDJSessions";
 import { useGoDJProfile, useActivateGoDJ } from "@/hooks/useGoDJProfile";
 import { MixWizard } from "@/components/godj-mix/MixWizard";
 import { MixSessionCard } from "@/components/godj-mix/MixSessionCard";
