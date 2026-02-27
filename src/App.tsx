@@ -69,6 +69,8 @@ import ArtistStore from "./pages/ArtistStore";
 import FanVault from "./pages/FanVault";
 import GoDJ from "./pages/GoDJ";
 import GoDJSession from "./pages/GoDJSession";
+import GoDJMixBuilder from "./pages/GoDJMixBuilder";
+import GoDJMixPlayback from "./pages/GoDJMixPlayback";
 
 const queryClient = new QueryClient();
 
