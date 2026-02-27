@@ -296,19 +296,11 @@ export default function ArtistProfile() {
                         <Badge variant="outline" className="text-xs">
                           {(djSessions?.filter(s => s.status === 'active' || s.status === 'scheduled').length || 0)}/{djTier.max_slots} slots
                         </Badge>
-                         <Button
-                          size="sm"
-                          onClick={() => setShowCreateSession(true)}
-                          disabled={(djSessions?.filter(s => s.status === 'active' || s.status === 'scheduled').length || 0) >= djTier.max_slots}
-                        >
-                          <Plus className="w-4 h-4 mr-1" /> New Session
-                        </Button>
                         <Button
                           size="sm"
-                          variant="outline"
                           onClick={() => setShowMixWizard(true)}
                         >
-                          <Plus className="w-4 h-4 mr-1" /> New Session Mix
+                          <Plus className="w-4 h-4 mr-1" /> New Session
                         </Button>
                       </>
                     )}
