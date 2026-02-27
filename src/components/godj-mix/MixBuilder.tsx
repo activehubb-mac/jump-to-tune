@@ -187,7 +187,7 @@ export function MixBuilder({ session }: MixBuilderProps) {
         </div>
 
         {/* Voice Recorder */}
-        <VoiceRecorder sessionId={session.id} />
+        <VoiceRecorder sessionId={session.id} onClipSaved={(clipId) => handleAddVoiceClip(clipId)} />
 
         {/* Add voice clip to timeline */}
         {voiceClips.length > 0 && (
