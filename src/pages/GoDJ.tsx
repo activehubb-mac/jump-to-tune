@@ -1,12 +1,23 @@
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useDJSessionsByStatus } from "@/hooks/useDJSessions";
 import { SessionCard } from "@/components/godj/SessionCard";
 import { LeaderboardTable } from "@/components/godj/LeaderboardTable";
-import { Disc3, Flame, Rocket, Clock, Trophy, Sparkles } from "lucide-react";
+import { MixSessionCard } from "@/components/godj-mix/MixSessionCard";
+import { MixWizard } from "@/components/godj-mix/MixWizard";
+import { useGoDJProfile } from "@/hooks/useGoDJProfile";
+import { usePublishedGoDJSessions } from "@/hooks/useGoDJSessions";
+import { useAuth } from "@/contexts/AuthContext";
+import { Disc3, Flame, Rocket, Clock, Trophy, Sparkles, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 export default function GoDJ() {
+  const { user } = useAuth();
+  const { data: djProfile } = useGoDJProfile(user?.id);
+  const { data: publishedMixes, isLoading: mixesLoading } = usePublishedGoDJSessions(12);
+  const [showWizard, setShowWizard] = useState(false);
   const { data: activeSessions, isLoading: activeLoading } = useDJSessionsByStatus("active", 12);
   const { data: scheduledSessions, isLoading: scheduledLoading } = useDJSessionsByStatus("scheduled", 8);
 
@@ -69,7 +80,27 @@ export default function GoDJ() {
           <p className="text-muted-foreground max-w-xl mx-auto">
             Explore playlists curated by rising DJs. Listen, react, and support the curators shaping the sound.
           </p>
+          {djProfile?.is_enabled && (
+            <Button onClick={() => setShowWizard(true)} className="gap-2 mt-2">
+              <Plus className="w-4 h-4" /> Start a Go DJ Session
+            </Button>
+          )}
         </div>
+
+        {/* Published Mixes */}
+        {publishedMixes && publishedMixes.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <h2 className="text-2xl font-bold text-foreground">DJ Mixes</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {publishedMixes.map((mix) => (
+                <MixSessionCard key={mix.id} session={mix} />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Trending Sessions */}
         <section>
@@ -136,6 +167,7 @@ export default function GoDJ() {
           </div>
         </section>
       </div>
+      <MixWizard open={showWizard} onOpenChange={setShowWizard} />
     </Layout>
   );
 }

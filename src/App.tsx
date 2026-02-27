@@ -69,6 +69,8 @@ import ArtistStore from "./pages/ArtistStore";
 import FanVault from "./pages/FanVault";
 import GoDJ from "./pages/GoDJ";
 import GoDJSession from "./pages/GoDJSession";
+import GoDJMixBuilder from "./pages/GoDJMixBuilder";
+import GoDJMixPlayback from "./pages/GoDJMixPlayback";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +90,8 @@ function RouterContent() {
         <Route path="/browse" element={<Browse />} />
         <Route path="/karaoke" element={<Karaoke />} />
         <Route path="/go-dj" element={<GoDJ />} />
+        <Route path="/go-dj/mix/:sessionId/edit" element={<GoDJMixBuilder />} />
+        <Route path="/go-dj/mix/:sessionId" element={<GoDJMixPlayback />} />
         <Route path="/go-dj/:sessionId" element={<GoDJSession />} />
         <Route path="/for-you" element={<ForYou />} />
         <Route path="/artists" element={<Artists />} />
