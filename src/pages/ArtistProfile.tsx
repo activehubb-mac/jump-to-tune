@@ -34,6 +34,10 @@ import { DJBadge } from "@/components/godj/DJBadge";
 import { CreateSessionModal } from "@/components/godj/CreateSessionModal";
 import { EditSessionModal } from "@/components/godj/EditSessionModal";
 import { useDJActivation } from "@/hooks/useDJActivation";
+import { useGoDJSessions } from "@/hooks/useGoDJSessions";
+import { useGoDJProfile, useActivateGoDJ } from "@/hooks/useGoDJProfile";
+import { MixWizard } from "@/components/godj-mix/MixWizard";
+import { MixSessionCard } from "@/components/godj-mix/MixSessionCard";
 import { Headphones } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
@@ -56,9 +60,13 @@ export default function ArtistProfile() {
   const { data: djTier } = useDJTier(id);
   const { isActivated: djActivated, isLoading: djActivationLoading, activate: djActivate } = useDJActivation();
   const [showCreateSession, setShowCreateSession] = useState(false);
+  const [showMixWizard, setShowMixWizard] = useState(false);
   const [editSession, setEditSession] = useState<DJSession | null>(null);
   const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
   const deleteSession = useDeleteDJSession();
+  const { data: mixSessions } = useGoDJSessions(id);
+  const { data: goDJProfile } = useGoDJProfile(id);
+  const activateGoDJ = useActivateGoDJ();
 
   // Fetch genres for About tab
   const { data: genres } = useQuery({
@@ -250,12 +258,15 @@ export default function ArtistProfile() {
                   <p className="text-muted-foreground max-w-md mx-auto">
                     Start curating sessions, build your listener base, and unlock paid submissions.
                   </p>
-                  <Button
+                   <Button
                     className="bg-primary text-primary-foreground"
-                    onClick={() => djActivate.mutate()}
-                    disabled={djActivate.isPending}
+                    onClick={() => {
+                      djActivate.mutate();
+                      activateGoDJ.mutate();
+                    }}
+                    disabled={djActivate.isPending || activateGoDJ.isPending}
                   >
-                    {djActivate.isPending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Activating...</> : "Activate Go DJ"}
+                    {(djActivate.isPending || activateGoDJ.isPending) ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Activating...</> : "Activate Go DJ"}
                   </Button>
                 </div>
               )}
@@ -283,12 +294,19 @@ export default function ArtistProfile() {
                         <Badge variant="outline" className="text-xs">
                           {(djSessions?.filter(s => s.status === 'active' || s.status === 'scheduled').length || 0)}/{djTier.max_slots} slots
                         </Badge>
-                        <Button
+                         <Button
                           size="sm"
                           onClick={() => setShowCreateSession(true)}
                           disabled={(djSessions?.filter(s => s.status === 'active' || s.status === 'scheduled').length || 0) >= djTier.max_slots}
                         >
                           <Plus className="w-4 h-4 mr-1" /> New Session
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setShowMixWizard(true)}
+                        >
+                          <Plus className="w-4 h-4 mr-1" /> New Session Mix
                         </Button>
                       </>
                     )}
@@ -354,7 +372,26 @@ export default function ArtistProfile() {
                         </div>
                       </div>
                     )}
-                    {!active.length && !scheduled.length && !archived.length && (djActivated || !isOwnProfile) && (
+
+                    {/* Mix Sessions (new system) */}
+                    {mixSessions && mixSessions.length > 0 && (
+                      <div>
+                        <h4 className="text-lg font-semibold text-foreground mb-3">Session Mixes</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {mixSessions.map((ms) => (
+                            <MixSessionCard
+                              key={ms.id}
+                              session={ms}
+                              djName={artist.display_name || "DJ"}
+                              djAvatar={artist.avatar_url}
+                              isOwner={isOwnProfile}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {!active.length && !scheduled.length && !archived.length && (!mixSessions || mixSessions.length === 0) && (djActivated || !isOwnProfile) && (
                       <div className="glass-card p-12 text-center">
                         <Disc3 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
                         <p className="text-muted-foreground">No Go DJ sessions yet</p>
@@ -373,6 +410,11 @@ export default function ArtistProfile() {
                 activeCount={djSessions?.filter(s => s.status === 'active' || s.status === 'scheduled').length || 0}
                 maxSlots={djTier.max_slots}
               />
+            )}
+
+            {/* Mix Wizard Modal */}
+            {isOwnProfile && (
+              <MixWizard open={showMixWizard} onOpenChange={setShowMixWizard} />
             )}
 
             {/* Edit Session Modal */}
