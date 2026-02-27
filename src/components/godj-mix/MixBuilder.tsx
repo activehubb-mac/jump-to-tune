@@ -247,7 +247,7 @@ export function MixBuilder({ session }: MixBuilderProps) {
           {segments.length === 0 ? (
             <div className="border border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
               <Music className="w-8 h-8 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Add tracks and voice clips to build your mix</p>
+              <p className="text-sm">Search for tracks on the left, or record a voice drop to get started</p>
             </div>
           ) : (
             <div className="space-y-2">
