@@ -111,7 +111,8 @@ export function VoiceRecorder({
         durationSec: timer,
         label: clipLabel || "Voice Clip",
       });
-      toast({ title: "Voice clip saved!" });
+      toast({ title: "Voice clip saved & added to timeline!" });
+      onClipSaved?.(result.id);
       setRecordedBlob(null);
       setRecordedUrl(null);
       setTimer(0);
