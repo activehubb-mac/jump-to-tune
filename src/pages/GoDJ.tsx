@@ -14,6 +14,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
 export default function GoDJ() {
+  const { user } = useAuth();
+  const { data: djProfile } = useGoDJProfile(user?.id);
+  const { data: publishedMixes, isLoading: mixesLoading } = usePublishedGoDJSessions(12);
+  const [showWizard, setShowWizard] = useState(false);
   const { data: activeSessions, isLoading: activeLoading } = useDJSessionsByStatus("active", 12);
   const { data: scheduledSessions, isLoading: scheduledLoading } = useDJSessionsByStatus("scheduled", 8);
 
