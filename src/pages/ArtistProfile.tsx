@@ -65,6 +65,8 @@ export default function ArtistProfile() {
   const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
   const deleteSession = useDeleteDJSession();
   const { data: mixSessions } = useGoDJSessions(id);
+  const deleteMixSession = useDeleteGoDJSession();
+  const [deleteMixSessionId, setDeleteMixSessionId] = useState<string | null>(null);
   const { data: goDJProfile } = useGoDJProfile(id);
   const activateGoDJ = useActivateGoDJ();
 
