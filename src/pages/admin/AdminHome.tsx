@@ -85,9 +85,10 @@ export default function AdminHome() {
               </Select>
             </div>
             <div>
-              <Label className="text-sm">Max Items: {settings.new_releases_limit}</Label>
+              <Label className="text-sm">Max Items: {newReleasesLimit}</Label>
               <Slider
-                value={[settings.new_releases_limit]}
+                value={[newReleasesLimit]}
+                onValueChange={(v) => setNewReleasesLimit(v[0])}
                 onValueCommit={(v) => handleUpdate("new_releases_limit", v[0])}
                 min={3} max={12} step={1}
                 className="mt-2"
