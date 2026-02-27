@@ -9,6 +9,7 @@ interface VoiceRecorderProps {
   sessionId: string;
   maxClipSeconds?: number;
   maxTotalSeconds?: number;
+  onClipSaved?: (clipId: string) => void;
 }
 
 export function VoiceRecorder({
