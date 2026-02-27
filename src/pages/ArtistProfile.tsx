@@ -258,12 +258,15 @@ export default function ArtistProfile() {
                   <p className="text-muted-foreground max-w-md mx-auto">
                     Start curating sessions, build your listener base, and unlock paid submissions.
                   </p>
-                  <Button
+                   <Button
                     className="bg-primary text-primary-foreground"
-                    onClick={() => djActivate.mutate()}
-                    disabled={djActivate.isPending}
+                    onClick={() => {
+                      djActivate.mutate();
+                      activateGoDJ.mutate();
+                    }}
+                    disabled={djActivate.isPending || activateGoDJ.isPending}
                   >
-                    {djActivate.isPending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Activating...</> : "Activate Go DJ"}
+                    {(djActivate.isPending || activateGoDJ.isPending) ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Activating...</> : "Activate Go DJ"}
                   </Button>
                 </div>
               )}
