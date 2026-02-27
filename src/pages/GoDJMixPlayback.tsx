@@ -11,8 +11,9 @@ import { useGoDJListenerCount, useRecordListen } from "@/hooks/useGoDJListens";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Play, Pause, Disc3, Headphones, Flame, Star, Rocket, Loader2, ArrowLeft } from "lucide-react";
+import { Play, Pause, Disc3, Headphones, Flame, Star, Rocket, Loader2, ArrowLeft, Mic } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { DuckingEngine } from "@/lib/duckingEngine";
 
 export default function GoDJMixPlayback() {
   const { sessionId } = useParams();
@@ -30,8 +31,13 @@ export default function GoDJMixPlayback() {
   const [currentSegIndex, setCurrentSegIndex] = useState(-1);
   const [progress, setProgress] = useState(0);
   const [hasRecordedListen, setHasRecordedListen] = useState(false);
+  const [isVoiceOverlayActive, setIsVoiceOverlayActive] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const voiceAudioRef = useRef<HTMLAudioElement | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const engineRef = useRef<DuckingEngine | null>(null);
+
+  const isPro = session?.mode === "pro";
 
   // Fetch DJ profile
   const { data: djProfile } = useQuery({
@@ -54,7 +60,6 @@ export default function GoDJMixPlayback() {
       const { data: profiles } = aids.length ? await supabase.from("profiles").select("id, display_name").in("id", aids) : { data: [] };
       const nameMap: Record<string, string> = {};
       profiles?.forEach((p: any) => { nameMap[p.id] = p.display_name || "Unknown"; });
-
       const map: Record<string, any> = {};
       tracks?.forEach((t: any) => { map[t.id] = { ...t, artist_name: nameMap[t.artist_id] || "Unknown" }; });
       return map;
@@ -68,10 +73,26 @@ export default function GoDJMixPlayback() {
     return map;
   }, [voiceClips]);
 
-  // Calculate chapter timestamps
+  // Playable segments: in pro mode, exclude voice overlays from sequential list
+  const playableSegments = useMemo(() => {
+    if (!isPro) return segments;
+    return segments.filter(
+      (s) => !(s.segment_type === "voice" && s.overlay_start_sec != null)
+    );
+  }, [segments, isPro]);
+
+  // Voice overlays (pro mode only)
+  const voiceOverlays = useMemo(() => {
+    if (!isPro) return [];
+    return segments.filter(
+      (s) => s.segment_type === "voice" && s.overlay_start_sec != null && s.voice_clip_id
+    );
+  }, [segments, isPro]);
+
+  // Calculate chapter timestamps from playable segments only
   const chapters = useMemo(() => {
     let time = 0;
-    return segments.map(seg => {
+    return playableSegments.map(seg => {
       const start = time;
       let duration = 0;
       if (seg.segment_type === "track" && seg.track_id && trackData[seg.track_id]) {
@@ -83,21 +104,47 @@ export default function GoDJMixPlayback() {
       time += duration;
       return { ...seg, startTime: start, duration };
     });
-  }, [segments, trackData, voiceClipMap]);
+  }, [playableSegments, trackData, voiceClipMap]);
 
   const totalDuration = chapters.reduce((sum, ch) => sum + ch.duration, 0);
 
+  const cleanupEngine = useCallback(() => {
+    if (engineRef.current) {
+      engineRef.current.destroy();
+      engineRef.current = null;
+    }
+    setIsVoiceOverlayActive(false);
+  }, []);
+
   const cleanupAudio = useCallback(() => {
+    cleanupEngine();
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ""; }
+    if (voiceAudioRef.current) { voiceAudioRef.current.pause(); voiceAudioRef.current.src = ""; }
     if (intervalRef.current) clearInterval(intervalRef.current);
     setIsPlaying(false);
     setCurrentSegIndex(-1);
     setProgress(0);
-  }, []);
+  }, [cleanupEngine]);
+
+  const startDuckingForSegment = useCallback(() => {
+    cleanupEngine();
+    if (!isPro || !voiceAudioRef.current || !audioRef.current || voiceOverlays.length === 0) return;
+
+    const engine = new DuckingEngine(
+      audioRef.current,
+      voiceAudioRef.current,
+      voiceOverlays,
+      voiceClipMap
+    );
+    engine.onVoiceStart = () => setIsVoiceOverlayActive(true);
+    engine.onVoiceEnd = () => setIsVoiceOverlayActive(false);
+    engine.start();
+    engineRef.current = engine;
+  }, [isPro, voiceOverlays, voiceClipMap, cleanupEngine]);
 
   const playSegment = useCallback((index: number) => {
-    if (index >= segments.length) { cleanupAudio(); return; }
-    const seg = segments[index];
+    if (index >= playableSegments.length) { cleanupAudio(); return; }
+    const seg = playableSegments[index];
     setCurrentSegIndex(index);
 
     let audioUrl: string | undefined;
@@ -114,10 +161,18 @@ export default function GoDJMixPlayback() {
 
     if (!audioUrl) { playSegment(index + 1); return; }
 
+    cleanupEngine();
     const audio = audioRef.current!;
+    audio.volume = 1.0;
     audio.src = audioUrl;
     audio.currentTime = startTime;
-    const onCanPlay = () => { audio.play().catch(() => {}); audio.removeEventListener("canplay", onCanPlay); };
+    const onCanPlay = () => {
+      audio.play().catch(() => {});
+      audio.removeEventListener("canplay", onCanPlay);
+      if (seg.segment_type === "track") {
+        startDuckingForSegment();
+      }
+    };
     audio.addEventListener("canplay", onCanPlay);
 
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -136,7 +191,7 @@ export default function GoDJMixPlayback() {
       recordListen.mutate(sessionId);
       setHasRecordedListen(true);
     }
-  }, [segments, trackData, voiceClipMap, chapters, totalDuration, cleanupAudio, hasRecordedListen, sessionId, recordListen]);
+  }, [playableSegments, trackData, voiceClipMap, chapters, totalDuration, cleanupAudio, cleanupEngine, startDuckingForSegment, hasRecordedListen, sessionId, recordListen]);
 
   const handlePlayPause = () => {
     if (isPlaying) { audioRef.current?.pause(); setIsPlaying(false); }
@@ -145,6 +200,15 @@ export default function GoDJMixPlayback() {
   };
 
   const handleSeekToChapter = (index: number) => {
+    // Reset ducking triggers based on seek position
+    if (engineRef.current && isPro) {
+      const chapter = chapters[index];
+      if (chapter) {
+        engineRef.current.markTriggeredBefore(chapter.startTime);
+      } else {
+        engineRef.current.resetTriggers();
+      }
+    }
     playSegment(index);
     setIsPlaying(true);
   };
@@ -187,7 +251,10 @@ export default function GoDJMixPlayback() {
             </div>
             <div className="flex-1 space-y-3">
               <div>
-                <Badge className="mb-2 bg-primary/20 text-primary text-xs">Go DJ Mix</Badge>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge className="bg-primary/20 text-primary text-xs">Go DJ Mix</Badge>
+                  {isPro && <Badge variant="outline" className="text-xs border-primary/40 text-primary">Pro Mode</Badge>}
+                </div>
                 <h1 className="text-2xl font-bold text-foreground">{session.title}</h1>
                 {session.description && <p className="text-sm text-muted-foreground mt-1">{session.description}</p>}
               </div>
@@ -200,10 +267,15 @@ export default function GoDJMixPlayback() {
               </div>
 
               <div className="flex items-center gap-3">
-                <Button onClick={handlePlayPause} className="gap-2" disabled={segments.length === 0}>
+                <Button onClick={handlePlayPause} className="gap-2" disabled={playableSegments.length === 0}>
                   {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                   {isPlaying ? "Pause" : "Play Mix"}
                 </Button>
+                {isVoiceOverlayActive && (
+                  <Badge variant="secondary" className="gap-1 text-xs animate-pulse">
+                    <Mic className="w-3 h-3" /> DJ Talking
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -281,6 +353,36 @@ export default function GoDJMixPlayback() {
               </button>
             );
           })}
+
+          {/* Pro mode voice overlays listed separately */}
+          {isPro && voiceOverlays.length > 0 && (
+            <>
+              <h3 className="text-sm font-semibold text-foreground mt-4">Voice Overlays</h3>
+              {voiceOverlays.map((ov) => {
+                const clip = ov.voice_clip_id ? voiceClipMap[ov.voice_clip_id] : null;
+                return (
+                  <div
+                    key={ov.id}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/20"
+                  >
+                    <span className="text-xs font-mono text-muted-foreground w-10 shrink-0">
+                      @{formatTime(ov.overlay_start_sec ?? 0)}
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Mic className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{clip?.label || "Voice Drop"}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        Overlay {ov.ducking_enabled ? `• Auto-duck` : "• No duck"}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="text-xs">overlay</Badge>
+                  </div>
+                );
+              })}
+            </>
+          )}
         </div>
 
         <audio
@@ -290,6 +392,7 @@ export default function GoDJMixPlayback() {
           onPause={() => { if (audioRef.current && !audioRef.current.ended) setIsPlaying(false); }}
           className="hidden"
         />
+        <audio ref={voiceAudioRef} className="hidden" />
       </div>
     </Layout>
   );
