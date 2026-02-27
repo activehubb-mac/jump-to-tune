@@ -462,6 +462,36 @@ export default function ArtistProfile() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+
+            {/* Delete Confirmation (mix sessions) */}
+            <AlertDialog open={!!deleteMixSessionId} onOpenChange={(v) => { if (!v) setDeleteMixSessionId(null); }}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this mix session?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete the session and all its segments. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={async () => {
+                      if (!deleteMixSessionId) return;
+                      try {
+                        await deleteMixSession.mutateAsync(deleteMixSessionId);
+                        toast.success("Mix session deleted");
+                      } catch {
+                        toast.error("Failed to delete mix session");
+                      }
+                      setDeleteMixSessionId(null);
+                    }}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </TabsContent>
 
           {/* Music Tab */}
