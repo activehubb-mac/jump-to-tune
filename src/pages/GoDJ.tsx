@@ -1,10 +1,17 @@
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useDJSessionsByStatus } from "@/hooks/useDJSessions";
 import { SessionCard } from "@/components/godj/SessionCard";
 import { LeaderboardTable } from "@/components/godj/LeaderboardTable";
-import { Disc3, Flame, Rocket, Clock, Trophy, Sparkles } from "lucide-react";
+import { MixSessionCard } from "@/components/godj-mix/MixSessionCard";
+import { MixWizard } from "@/components/godj-mix/MixWizard";
+import { useGoDJProfile } from "@/hooks/useGoDJProfile";
+import { usePublishedGoDJSessions } from "@/hooks/useGoDJSessions";
+import { useAuth } from "@/contexts/AuthContext";
+import { Disc3, Flame, Rocket, Clock, Trophy, Sparkles, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 export default function GoDJ() {
   const { data: activeSessions, isLoading: activeLoading } = useDJSessionsByStatus("active", 12);
