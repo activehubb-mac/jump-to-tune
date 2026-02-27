@@ -80,7 +80,27 @@ export default function GoDJ() {
           <p className="text-muted-foreground max-w-xl mx-auto">
             Explore playlists curated by rising DJs. Listen, react, and support the curators shaping the sound.
           </p>
+          {djProfile?.is_enabled && (
+            <Button onClick={() => setShowWizard(true)} className="gap-2 mt-2">
+              <Plus className="w-4 h-4" /> Start a Go DJ Session
+            </Button>
+          )}
         </div>
+
+        {/* Published Mixes */}
+        {publishedMixes && publishedMixes.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <h2 className="text-2xl font-bold text-foreground">DJ Mixes</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {publishedMixes.map((mix) => (
+                <MixSessionCard key={mix.id} session={mix} />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Trending Sessions */}
         <section>
