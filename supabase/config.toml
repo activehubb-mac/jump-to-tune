@@ -110,3 +110,6 @@ verify_jwt = false
 
 [functions.background-jobs]
 verify_jwt = false
+
+[functions.guest-download]
+verify_jwt = false
