@@ -281,6 +281,33 @@ serve(async (req) => {
             } else {
               logStep("Store order created", { orderId: order.id, status: orderStatus, editionNumber, isSoldOut });
 
+              // Create store_downloads record for digital products
+              if (product?.digital_file_url) {
+                const downloadToken = crypto.randomUUID();
+                const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
+
+                const { error: dlError } = await supabaseClient
+                  .from("store_downloads")
+                  .insert({
+                    order_id: order.id,
+                    product_id: productId,
+                    artist_id: artistId,
+                    user_id: buyerId || null,
+                    buyer_email: buyerEmail || "",
+                    download_token: downloadToken,
+                    download_url: product.digital_file_url,
+                    license_url: product.license_pdf_url || null,
+                    expires_at: expiresAt,
+                    max_downloads: 10,
+                  });
+
+                if (dlError) {
+                  logStep("Error creating download record", { error: dlError });
+                } else {
+                  logStep("Download record created", { token: downloadToken.slice(0, 8) + "..." });
+                }
+              }
+
               // Create earnings record
               await supabaseClient.from("artist_earnings").insert({
                 artist_id: artistId,
