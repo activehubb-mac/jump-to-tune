@@ -1826,16 +1826,77 @@ export type Database = {
         }
         Relationships: []
       }
+      store_downloads: {
+        Row: {
+          artist_id: string
+          buyer_email: string
+          created_at: string
+          download_count: number
+          download_token: string
+          download_url: string
+          expires_at: string | null
+          id: string
+          last_download_at: string | null
+          license_url: string | null
+          max_downloads: number
+          order_id: string
+          product_id: string
+          user_id: string | null
+        }
+        Insert: {
+          artist_id: string
+          buyer_email: string
+          created_at?: string
+          download_count?: number
+          download_token?: string
+          download_url: string
+          expires_at?: string | null
+          id?: string
+          last_download_at?: string | null
+          license_url?: string | null
+          max_downloads?: number
+          order_id: string
+          product_id: string
+          user_id?: string | null
+        }
+        Update: {
+          artist_id?: string
+          buyer_email?: string
+          created_at?: string
+          download_count?: number
+          download_token?: string
+          download_url?: string
+          expires_at?: string | null
+          id?: string
+          last_download_at?: string | null
+          license_url?: string | null
+          max_downloads?: number
+          order_id?: string
+          product_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_downloads_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "store_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_orders: {
         Row: {
           amount_cents: number
           artist_id: string
+          artist_payout_cents: number | null
           buyer_email: string | null
-          buyer_id: string
+          buyer_id: string | null
           buyer_name: string | null
           created_at: string
           download_count: number | null
           edition_number: number | null
+          fulfillment_status: string
           id: string
           max_downloads: number | null
           platform_fee_cents: number
@@ -1848,12 +1909,14 @@ export type Database = {
         Insert: {
           amount_cents: number
           artist_id: string
+          artist_payout_cents?: number | null
           buyer_email?: string | null
-          buyer_id: string
+          buyer_id?: string | null
           buyer_name?: string | null
           created_at?: string
           download_count?: number | null
           edition_number?: number | null
+          fulfillment_status?: string
           id?: string
           max_downloads?: number | null
           platform_fee_cents: number
@@ -1866,12 +1929,14 @@ export type Database = {
         Update: {
           amount_cents?: number
           artist_id?: string
+          artist_payout_cents?: number | null
           buyer_email?: string | null
-          buyer_id?: string
+          buyer_id?: string | null
           buyer_name?: string | null
           created_at?: string
           download_count?: number | null
           edition_number?: number | null
+          fulfillment_status?: string
           id?: string
           max_downloads?: number | null
           platform_fee_cents?: number
@@ -1895,8 +1960,11 @@ export type Database = {
         Row: {
           artist_id: string
           audio_url: string | null
+          checkout_type: string
           created_at: string
+          currency: string
           description: string | null
+          digital_file_url: string | null
           id: string
           image_url: string | null
           inventory_limit: number | null
@@ -1905,12 +1973,15 @@ export type Database = {
           is_early_release: boolean
           is_exclusive: boolean
           is_featured: boolean | null
+          license_pdf_url: string | null
           max_per_account: number | null
           parent_product_id: string | null
           price_cents: number
           scheduled_release_at: string | null
           shipping_price_cents: number | null
           status: string
+          stripe_price_id: string | null
+          stripe_product_id: string | null
           title: string
           type: string
           updated_at: string
@@ -1921,8 +1992,11 @@ export type Database = {
         Insert: {
           artist_id: string
           audio_url?: string | null
+          checkout_type?: string
           created_at?: string
+          currency?: string
           description?: string | null
+          digital_file_url?: string | null
           id?: string
           image_url?: string | null
           inventory_limit?: number | null
@@ -1931,12 +2005,15 @@ export type Database = {
           is_early_release?: boolean
           is_exclusive?: boolean
           is_featured?: boolean | null
+          license_pdf_url?: string | null
           max_per_account?: number | null
           parent_product_id?: string | null
           price_cents: number
           scheduled_release_at?: string | null
           shipping_price_cents?: number | null
           status?: string
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
           title: string
           type: string
           updated_at?: string
@@ -1947,8 +2024,11 @@ export type Database = {
         Update: {
           artist_id?: string
           audio_url?: string | null
+          checkout_type?: string
           created_at?: string
+          currency?: string
           description?: string | null
+          digital_file_url?: string | null
           id?: string
           image_url?: string | null
           inventory_limit?: number | null
@@ -1957,12 +2037,15 @@ export type Database = {
           is_early_release?: boolean
           is_exclusive?: boolean
           is_featured?: boolean | null
+          license_pdf_url?: string | null
           max_per_account?: number | null
           parent_product_id?: string | null
           price_cents?: number
           scheduled_release_at?: string | null
           shipping_price_cents?: number | null
           status?: string
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
           title?: string
           type?: string
           updated_at?: string
