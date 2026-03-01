@@ -24,6 +24,13 @@ export interface StoreProduct {
   scheduled_release_at: string | null;
   parent_product_id: string | null;
   status: string;
+  // New guest checkout fields
+  checkout_type: string;
+  digital_file_url: string | null;
+  license_pdf_url: string | null;
+  currency: string;
+  stripe_price_id: string | null;
+  stripe_product_id: string | null;
 }
 
 interface CreateProductData {
@@ -40,6 +47,9 @@ interface CreateProductData {
   max_per_account?: number | null;
   scheduled_release_at?: string | null;
   parent_product_id?: string | null;
+  checkout_type?: string;
+  digital_file_url?: string | null;
+  license_pdf_url?: string | null;
 }
 
 export function useStoreProducts(artistId?: string, typeFilter?: string) {
@@ -71,6 +81,10 @@ export function useStoreProducts(artistId?: string, typeFilter?: string) {
     mutationFn: async (product: CreateProductData) => {
       const insertData: Record<string, unknown> = { ...product, artist_id: user!.id };
       if (product.variants) insertData.variants = product.variants as unknown;
+      // Auto-set checkout_type for subscriptions
+      if (product.type === "subscription") {
+        insertData.checkout_type = "account_required";
+      }
       const { data, error } = await supabase
         .from("store_products")
         .insert(insertData as any)

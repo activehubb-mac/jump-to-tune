@@ -10,18 +10,20 @@ export function useStoreCheckout() {
   const { user } = useAuth();
 
   const checkout = async (productId: string, quantity = 1) => {
-    if (!user) {
-      showFeedback({ type: "warning", title: "Sign In Required", message: "Please sign in to purchase." });
-      return;
-    }
-
     setIsLoading(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) throw new Error("Not authenticated");
+      const headers: Record<string, string> = { ...getMobileHeaders() };
+
+      // Add auth header if logged in
+      if (user) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData.session) {
+          headers.Authorization = `Bearer ${sessionData.session.access_token}`;
+        }
+      }
 
       const { data, error } = await supabase.functions.invoke("create-store-checkout", {
-        headers: { Authorization: `Bearer ${sessionData.session.access_token}`, ...getMobileHeaders() },
+        headers,
         body: { productId, quantity },
       });
 
@@ -29,7 +31,7 @@ export function useStoreCheckout() {
       if (data?.url) {
         await openPaymentUrl(data.url);
       } else {
-        throw new Error("No checkout URL received");
+        throw new Error(data?.error || "No checkout URL received");
       }
     } catch (err) {
       showFeedback({
