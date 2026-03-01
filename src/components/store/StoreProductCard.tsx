@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Music, Package, Gift, Star, CheckCircle, Ticket, Sparkles } from "lucide-react";
+import { ShoppingCart, Music, Package, Gift, Star, CheckCircle, Ticket, Sparkles, Disc3, FileArchive } from "lucide-react";
 import type { StoreProduct } from "@/hooks/useStoreProducts";
 import { WaitlistButton } from "./WaitlistButton";
 import { ScheduledReleaseBadge } from "./ScheduledReleaseBadge";
@@ -9,23 +9,40 @@ const typeIcons: Record<string, React.ReactNode> = {
   digital_track: <Music className="w-3 h-3" />,
   digital_bundle: <Gift className="w-3 h-3" />,
   merch: <Package className="w-3 h-3" />,
+  physical_merch: <Package className="w-3 h-3" />,
   superfan: <Star className="w-3 h-3" />,
   ticket: <Ticket className="w-3 h-3" />,
   limited_drop: <Sparkles className="w-3 h-3" />,
+  beat: <Disc3 className="w-3 h-3" />,
+  digital_product: <FileArchive className="w-3 h-3" />,
 };
 
 interface Props {
   product: StoreProduct;
   owned?: boolean;
   onBuy: (productId: string) => void;
+  onGuestBuy?: (product: StoreProduct) => void;
   isCheckingOut?: boolean;
   artistName?: string;
+  isLoggedIn?: boolean;
 }
 
-export function StoreProductCard({ product, owned, onBuy, isCheckingOut, artistName }: Props) {
+export function StoreProductCard({ product, owned, onBuy, onGuestBuy, isCheckingOut, artistName, isLoggedIn }: Props) {
   const remaining = product.inventory_limit ? product.inventory_limit - product.inventory_sold : null;
   const isSoldOut = remaining !== null && remaining <= 0;
   const isScheduled = product.scheduled_release_at && new Date(product.scheduled_release_at).getTime() > Date.now();
+  const checkoutType = (product as any).checkout_type || "guest_allowed";
+
+  const handleBuy = () => {
+    if (checkoutType === "guest_allowed" && !isLoggedIn && onGuestBuy) {
+      onGuestBuy(product);
+    } else if (checkoutType === "account_required" && !isLoggedIn) {
+      // Redirect to auth - handled by parent
+      window.location.href = `/auth?redirect=${encodeURIComponent(window.location.pathname)}`;
+    } else {
+      onBuy(product.id);
+    }
+  };
 
   return (
     <div className="glass-card p-4 group hover:bg-primary/5 transition-all duration-300">
@@ -92,7 +109,7 @@ export function StoreProductCard({ product, owned, onBuy, isCheckingOut, artistN
           <Button
             size="sm"
             className="gradient-accent"
-            onClick={() => onBuy(product.id)}
+            onClick={handleBuy}
             disabled={isCheckingOut}
           >
             <ShoppingCart className="w-3 h-3 mr-1" />

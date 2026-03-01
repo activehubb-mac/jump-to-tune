@@ -198,11 +198,14 @@ serve(async (req) => {
         if (metadata.type === "store" && session.mode === "payment") {
           const productId = metadata.product_id;
           const artistId = metadata.artist_id;
-          const buyerId = metadata.buyer_id;
+          const buyerId = metadata.buyer_id || null; // null for guest purchases
           const productType = metadata.product_type;
+          const isGuest = metadata.is_guest === "true";
+          const buyerEmail = metadata.buyer_email || session.customer_details?.email || null;
+          const buyerName = metadata.buyer_name || session.customer_details?.name || null;
 
-          if (productId && artistId && buyerId) {
-            logStep("Processing store purchase", { productId, artistId, buyerId, productType });
+          if (productId && artistId) {
+            logStep("Processing store purchase", { productId, artistId, buyerId, productType, isGuest });
 
             // ── ATOMIC INVENTORY DECREMENT ────────────────────────────────
             const { data: inventoryResult, error: inventoryError } = await supabaseClient.rpc(
@@ -230,10 +233,10 @@ serve(async (req) => {
             const editionNumber = inventoryResult.edition_number || null;
             const isSoldOut = inventoryResult.is_sold_out || false;
 
-            // Get product price for earnings calculation
+            // Get product details for earnings calculation and download URL
             const { data: product } = await supabaseClient
               .from("store_products")
-              .select("price_cents, title")
+              .select("price_cents, title, digital_file_url, license_pdf_url, type")
               .eq("id", productId)
               .single();
 
@@ -242,7 +245,9 @@ serve(async (req) => {
             const artistPayoutCents = amountCents - platformFeeCents;
 
             // Determine order status based on product type
-            const orderStatus = productType === "merch" ? "pending" : "completed";
+            const isMerchType = productType === "merch" || productType === "physical_merch";
+            const orderStatus = isMerchType ? "pending" : "completed";
+            const fulfillmentStatus = isMerchType ? "none" : (product?.digital_file_url ? "delivered" : "none");
 
             // Get shipping address from Stripe session
             let shippingAddress = null;
@@ -250,20 +255,22 @@ serve(async (req) => {
               shippingAddress = session.shipping_details.address;
             }
 
-            // Create order
+            // Create order (buyer_id can be null for guests)
             const { data: order, error: orderError } = await supabaseClient
               .from("store_orders")
               .insert({
                 product_id: productId,
-                buyer_id: buyerId,
+                buyer_id: buyerId || null,
                 artist_id: artistId,
                 stripe_payment_intent_id: session.payment_intent as string,
                 amount_cents: amountCents,
                 platform_fee_cents: platformFeeCents,
+                artist_payout_cents: artistPayoutCents,
                 status: orderStatus,
+                fulfillment_status: fulfillmentStatus,
                 shipping_address: shippingAddress,
-                buyer_name: session.customer_details?.name || null,
-                buyer_email: session.customer_details?.email || null,
+                buyer_name: buyerName,
+                buyer_email: buyerEmail,
                 edition_number: editionNumber,
               })
               .select()
@@ -273,6 +280,33 @@ serve(async (req) => {
               logStep("Error creating store order", { error: orderError });
             } else {
               logStep("Store order created", { orderId: order.id, status: orderStatus, editionNumber, isSoldOut });
+
+              // Create store_downloads record for digital products
+              if (product?.digital_file_url) {
+                const downloadToken = crypto.randomUUID();
+                const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
+
+                const { error: dlError } = await supabaseClient
+                  .from("store_downloads")
+                  .insert({
+                    order_id: order.id,
+                    product_id: productId,
+                    artist_id: artistId,
+                    user_id: buyerId || null,
+                    buyer_email: buyerEmail || "",
+                    download_token: downloadToken,
+                    download_url: product.digital_file_url,
+                    license_url: product.license_pdf_url || null,
+                    expires_at: expiresAt,
+                    max_downloads: 10,
+                  });
+
+                if (dlError) {
+                  logStep("Error creating download record", { error: dlError });
+                } else {
+                  logStep("Download record created", { token: downloadToken.slice(0, 8) + "..." });
+                }
+              }
 
               // Create earnings record
               await supabaseClient.from("artist_earnings").insert({

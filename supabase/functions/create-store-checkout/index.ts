@@ -27,15 +27,20 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    // Auth is OPTIONAL for guest checkout
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError || !userData.user) throw new Error("Not authenticated");
-    const user = userData.user;
-    logStep("User authenticated", { userId: user.id });
+    let user: { id: string; email?: string } | null = null;
 
-    const { productId, quantity = 1 } = await req.json();
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+      if (!userError && userData.user) {
+        user = { id: userData.user.id, email: userData.user.email };
+        logStep("User authenticated", { userId: user.id });
+      }
+    }
+
+    const { productId, quantity = 1, buyerEmail, buyerName } = await req.json();
     if (!productId) throw new Error("Missing productId");
 
     // Get product
@@ -47,6 +52,18 @@ serve(async (req) => {
 
     if (prodError || !product) throw new Error("Product not found");
     if (!product.is_active) throw new Error("Product is not active");
+
+    // Check checkout_type
+    const checkoutType = product.checkout_type || "guest_allowed";
+    if (checkoutType === "account_required" && !user) {
+      throw new Error("Account required to purchase this product. Please sign in.");
+    }
+
+    // For guest checkout, email is required
+    const effectiveEmail = user?.email || buyerEmail;
+    if (!user && !buyerEmail) {
+      throw new Error("Email is required for guest checkout");
+    }
 
     // Check scheduled release
     if (product.scheduled_release_at && new Date(product.scheduled_release_at) > new Date()) {
@@ -60,22 +77,28 @@ serve(async (req) => {
       }
     }
 
-    // Check max per account
+    // Check max per account (by user_id or email)
     if (product.max_per_account !== null) {
-      const { count, error: countError } = await supabaseClient
+      let countQuery = supabaseClient
         .from("store_orders")
         .select("*", { count: "exact", head: true })
         .eq("product_id", productId)
-        .eq("buyer_id", user.id)
         .in("status", ["completed", "pending"]);
 
+      if (user) {
+        countQuery = countQuery.eq("buyer_id", user.id);
+      } else {
+        countQuery = countQuery.eq("buyer_email", buyerEmail);
+      }
+
+      const { count, error: countError } = await countQuery;
       if (countError) throw new Error("Failed to check purchase limit");
       if ((count ?? 0) >= product.max_per_account) {
         throw new Error(`You can only purchase this product ${product.max_per_account} time(s)`);
       }
     }
 
-    logStep("Product validated", { title: product.title, type: product.type });
+    logStep("Product validated", { title: product.title, type: product.type, checkoutType });
 
     // Get artist's Stripe Connect account
     const { data: artistProfile } = await supabaseClient
@@ -92,11 +115,13 @@ serve(async (req) => {
       apiVersion: "2025-11-17.clover",
     });
 
-    // Check for existing customer
-    const customers = await stripe.customers.list({ email: user.email!, limit: 1 });
+    // Check for existing customer (by email)
     let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
+    if (effectiveEmail) {
+      const customers = await stripe.customers.list({ email: effectiveEmail, limit: 1 });
+      if (customers.data.length > 0) {
+        customerId = customers.data[0].id;
+      }
     }
 
     const applicationFeeAmount = Math.ceil(product.price_cents * quantity * 0.15);
@@ -105,16 +130,16 @@ serve(async (req) => {
     const successBaseUrl = isMobileApp ? "jumtunes:/" : origin;
     const cancelBaseUrl = isMobileApp ? "jumtunes:/" : origin;
 
-    const isMerch = product.type === "merch";
+    const isMerch = product.type === "merch" || product.type === "physical_merch";
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
-      customer_email: customerId ? undefined : user.email!,
+      customer_email: customerId ? undefined : effectiveEmail,
       mode: "payment",
       line_items: [
         {
           price_data: {
-            currency: "usd",
+            currency: product.currency?.toLowerCase() || "usd",
             unit_amount: product.price_cents,
             product_data: {
               name: product.title,
@@ -134,16 +159,22 @@ serve(async (req) => {
           type: "store",
           product_id: productId,
           artist_id: product.artist_id,
-          buyer_id: user.id,
+          buyer_id: user?.id || "",
+          buyer_email: effectiveEmail || "",
+          buyer_name: buyerName || "",
           product_type: product.type,
+          is_guest: user ? "false" : "true",
         },
       },
       metadata: {
         type: "store",
         product_id: productId,
         artist_id: product.artist_id,
-        buyer_id: user.id,
+        buyer_id: user?.id || "",
+        buyer_email: effectiveEmail || "",
+        buyer_name: buyerName || "",
         product_type: product.type,
+        is_guest: user ? "false" : "true",
       },
       success_url: `${successBaseUrl}/artist/${product.artist_id}?store_success=true`,
       cancel_url: `${cancelBaseUrl}/artist/${product.artist_id}?store_canceled=true`,
@@ -157,7 +188,7 @@ serve(async (req) => {
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
-    logStep("Checkout session created", { sessionId: session.id });
+    logStep("Checkout session created", { sessionId: session.id, isGuest: !user });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { Loader2, Store, Star } from "lucide-react";
 import { useStoreProducts } from "@/hooks/useStoreProducts";
 import { useStoreCheckout } from "@/hooks/useStoreCheckout";
 import { StoreProductCard } from "./StoreProductCard";
+import { GuestCheckoutModal } from "./GuestCheckoutModal";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import type { StoreProduct } from "@/hooks/useStoreProducts";
 
 interface Props {
   artistId: string;
@@ -17,8 +20,9 @@ export function ArtistStoreTab({ artistId, artistName }: Props) {
   const { products, isLoading } = useStoreProducts(artistId);
   const { checkout, isLoading: isCheckingOut } = useStoreCheckout();
   const { user } = useAuth();
+  const [guestProduct, setGuestProduct] = useState<StoreProduct | null>(null);
 
-  // Check which products buyer owns
+  // Check which products buyer owns (only for logged-in users)
   const { data: ownedProductIds } = useQuery({
     queryKey: ["owned-store-products", artistId, user?.id],
     queryFn: async () => {
@@ -39,8 +43,10 @@ export function ArtistStoreTab({ artistId, artistName }: Props) {
 
   const activeProducts = products.filter((p) => p.is_active);
   const digitalTracks = activeProducts.filter((p) => p.type === "digital_track" || p.type === "digital_bundle");
-  const limitedEditions = activeProducts.filter((p) => p.inventory_limit && p.inventory_limit > 0);
-  const merch = activeProducts.filter((p) => p.type === "merch");
+  const beats = activeProducts.filter((p) => p.type === "beat");
+  const digitalProducts = activeProducts.filter((p) => p.type === "digital_product");
+  const limitedEditions = activeProducts.filter((p) => p.inventory_limit && p.inventory_limit > 0 && !["beat", "digital_product"].includes(p.type));
+  const merch = activeProducts.filter((p) => p.type === "merch" || p.type === "physical_merch");
   const tickets = activeProducts.filter((p) => p.type === "ticket");
   const limitedDrops = activeProducts.filter((p) => p.type === "limited_drop");
 
@@ -65,8 +71,10 @@ export function ArtistStoreTab({ artistId, artistName }: Props) {
               product={product}
               owned={ownedProductIds?.has(product.id)}
               onBuy={checkout}
+              onGuestBuy={(p) => setGuestProduct(p)}
               isCheckingOut={isCheckingOut}
               artistName={artistName}
+              isLoggedIn={!!user}
             />
           ))}
         </div>
@@ -84,6 +92,8 @@ export function ArtistStoreTab({ artistId, artistName }: Props) {
       </div>
 
       {renderSection("Digital Drops", digitalTracks)}
+      {renderSection("Beats", beats)}
+      {renderSection("Digital Products", digitalProducts)}
       {renderSection("Limited Editions", limitedEditions)}
       {renderSection("Limited Drops", limitedDrops)}
       {renderSection("Merch", merch)}
@@ -98,6 +108,13 @@ export function ArtistStoreTab({ artistId, artistName }: Props) {
           <Link to={`/artist/${artistId}/superfan`}>Explore Superfan Room</Link>
         </Button>
       </div>
+
+      {/* Guest Checkout Modal */}
+      <GuestCheckoutModal
+        open={!!guestProduct}
+        onOpenChange={(open) => !open && setGuestProduct(null)}
+        product={guestProduct}
+      />
     </div>
   );
 }
