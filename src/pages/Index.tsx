@@ -24,21 +24,21 @@ import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { useFeaturedArtists, useFeaturedLabels, useFeaturedTracks } from "@/hooks/useFeaturedContent";
 const features = [{
-  icon: Heart,
-  title: "Direct Fan Support",
-  description: "Every download represents a real supporter — not just a stream count."
+  icon: Sparkles,
+  title: "AI Release Packaging",
+  description: "Upload your AI track — we generate cover art, descriptions, genre tags, and a full release page."
 }, {
   icon: Disc3,
-  title: "Exclusive Releases",
-  description: "Drop early versions, remixes, bonus tracks, or limited editions before streaming."
+  title: "Artist Branding",
+  description: "Build a real artist identity with AI-generated avatars, bios, and a consistent visual style."
 }, {
   icon: Users,
-  title: "Own Your Relationship",
-  description: "Know who supports you. Build community beyond algorithms."
+  title: "Superfan Monetization",
+  description: "Sell beats, merch, exclusive drops, and build direct fan relationships with built-in commerce."
 }, {
   icon: Zap,
-  title: "Streaming-Friendly Model",
-  description: "JumTunes complements streaming platforms — it doesn't replace them."
+  title: "Prompt Ecosystem",
+  description: "Publish, remix, and sell the prompts behind your tracks. Version chains create discovery networks."
 }];
 
 // Featured Artists Section Component - Banner style with carousel
