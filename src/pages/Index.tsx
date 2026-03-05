@@ -624,30 +624,30 @@ export default function Index() {
   // Determine hero content based on auth state and role
   const getHeroContent = () => {
     if (!user) {
-      // Not logged in - show motivating marketing
+      // Not logged in - show AI platform marketing
       return {
         badge: {
-          text: "Built for the Superfans Behind the Streams",
-          icon: TrendingUp
+          text: "The AI Music Release Platform",
+          icon: Sparkles
         },
         heading: <>
-            <span className="text-foreground">Where Superfans</span>
+            <span className="text-foreground">Where AI Music</span>
             <br />
-            <span className="text-gradient">Go Deeper.</span>
+            <span className="text-gradient">Becomes Real Artists.</span>
           </>,
-        subheading: "Streaming helps artists get discovered. JumTunes helps artists build direct relationships, exclusive drops, and real fan support.",
-        supportingLine: "This is your VIP room — the place where your biggest supporters show up first.",
+        subheading: "Generate your songs anywhere. Come to JumTunes to package releases, build your artist brand, monetize fans, and launch your music career.",
+        supportingLine: "AI-powered release builder • Cover art generation • Prompt marketplace • Fan monetization",
         ctas: <>
             <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 text-lg px-8" asChild>
               <Link to="/auth?mode=signup">
                 <Rocket className="w-5 h-5 mr-2" />
-                Launch Your VIP Drop
+                Start Creating
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="border-glass-border hover:bg-glass hover:border-primary/50 transition-all duration-300 text-lg px-8" asChild>
               <Link to="/browse">
                 <Music className="w-5 h-5 mr-2" />
-                Explore Exclusive Releases
+                Explore AI Releases
               </Link>
             </Button>
           </>
