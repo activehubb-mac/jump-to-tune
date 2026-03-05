@@ -79,7 +79,7 @@ export function Footer({ className = "" }: FooterProps) {
         </div>
 
         <div className="mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>© 2025 JumTunes. All rights reserved.</p>
+          <p>© 2026 JumTunes. All rights reserved.</p>
         </div>
       </div>
     </footer>
