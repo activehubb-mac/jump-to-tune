@@ -113,3 +113,6 @@ verify_jwt = false
 
 [functions.guest-download]
 verify_jwt = false
+
+[functions.ai-release-builder]
+verify_jwt = false

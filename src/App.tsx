@@ -71,6 +71,7 @@ import GoDJ from "./pages/GoDJ";
 import GoDJSession from "./pages/GoDJSession";
 import GoDJMixBuilder from "./pages/GoDJMixBuilder";
 import GoDJMixPlayback from "./pages/GoDJMixPlayback";
+import AIReleaseBuilder from "./pages/AIReleaseBuilder";
 
 const queryClient = new QueryClient();
 
@@ -115,6 +116,7 @@ function RouterContent() {
         <Route path="/label/payouts" element={<LabelPayouts />} />
         <Route path="/label/roster" element={<LabelRoster />} />
         <Route path="/upload" element={<Upload />} />
+        <Route path="/ai-release" element={<AIReleaseBuilder />} />
         <Route path="/upload/album" element={<AlbumUpload />} />
         <Route path="/album/:id" element={<AlbumDetail />} />
         <Route path="/library/liked" element={<LikedSongsDetail />} />
