@@ -71,6 +71,7 @@ import GoDJ from "./pages/GoDJ";
 import GoDJSession from "./pages/GoDJSession";
 import GoDJMixBuilder from "./pages/GoDJMixBuilder";
 import GoDJMixPlayback from "./pages/GoDJMixPlayback";
+import AIReleaseBuilder from "./pages/AIReleaseBuilder";
 
 const queryClient = new QueryClient();
 
