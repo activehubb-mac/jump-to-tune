@@ -1056,7 +1056,7 @@ export default function Index() {
                 </div>
                 <h3 className="text-2xl font-bold mb-3 text-foreground">For Labels</h3>
                 <p className="text-muted-foreground mb-6">
-                  Manage your artist roster and release music on their behalf.
+                  Manage AI artist rosters, coordinate releases, and scale your label operations.
                 </p>
                 <Button variant="outline" className="hover:bg-accent/10" asChild>
                   <Link to="/auth?mode=signup&role=label">Join as Label</Link>
