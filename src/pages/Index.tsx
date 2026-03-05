@@ -742,19 +742,19 @@ export default function Index() {
     // Fallback
     return {
       badge: {
-        text: "Welcome to JumTunes",
-        icon: Music
+        text: "The AI Music Release Platform",
+        icon: Sparkles
       },
       heading: <>
-          <span className="text-foreground">Where Music</span>
+          <span className="text-foreground">Where AI Music</span>
           <br />
-          <span className="text-gradient">Meets Ownership.</span>
+          <span className="text-gradient">Becomes Real Artists.</span>
         </>,
-      subheading: "Discover exclusive tracks, support your favorite artists, and build a music collection that's truly yours.",
+      subheading: "Package your AI-generated tracks into professional releases with cover art, branding, and fan monetization.",
       ctas: <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 text-lg px-8" asChild>
           <Link to="/browse">
             <Music className="w-5 h-5 mr-2" />
-            Browse Music
+            Browse AI Releases
           </Link>
         </Button>
     };
