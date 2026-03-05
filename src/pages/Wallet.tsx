@@ -36,6 +36,49 @@ export default function WalletPage() {
   const { showFeedback } = useFeedbackSafe();
   const [purchasingPack, setPurchasingPack] = useState<number | null>(null);
 
+  const handlePurchasePack = async (pack: typeof AI_CREDIT_PACKS[0]) => {
+    setPurchasingPack(pack.credits);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        showFeedback({ type: "error", title: "Auth Required", message: "Please sign in." });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("purchase-credits", {
+        body: { amount_cents: pack.price },
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`,
+          ...getMobileHeaders(),
+        },
+      });
+
+      if (error) {
+        let msg = "Purchase failed.";
+        try {
+          if (error.context?.body) {
+            const body = JSON.parse(error.context.body);
+            if (body.error) msg = body.error;
+          }
+        } catch {}
+        showFeedback({ type: "error", title: "Error", message: msg });
+        return;
+      }
+
+      if (data?.url) {
+        await openExternalUrl(data.url);
+      }
+    } catch (err) {
+      showFeedback({ type: "error", title: "Error", message: err instanceof Error ? err.message : "Failed" });
+    } finally {
+      setPurchasingPack(null);
+    }
+  };
+
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([refetchCredits(), refetchWallet()]);
+  }, [refetchCredits, refetchWallet]);
+
   if (!user) {
     return (
       <Layout>
