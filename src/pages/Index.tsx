@@ -971,12 +971,12 @@ export default function Index() {
       {!user && <section className="py-10 md:py-14">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4">
-                <span className="text-foreground">Why Artists Use </span>
+             <h2 className="text-3xl md:text-5xl font-bold mb-4">
+                <span className="text-foreground">Why Creators Choose </span>
                 <span className="text-gradient">JumTunes</span>
               </h2>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Built to complement streaming — not compete with it.
+                Generate music anywhere. Release it like a real artist here.
               </p>
             </div>
 
