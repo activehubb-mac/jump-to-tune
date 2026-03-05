@@ -20,7 +20,7 @@ export function Footer({ className = "" }: FooterProps) {
           {/* Brand */}
           <div className="space-y-4">
             <p className="text-muted-foreground text-sm">
-              The future of music ownership. Collect, trade, and support your favorite artists.
+              The AI Music Release Platform. Where AI music becomes real artists.
             </p>
             <div className="flex gap-4">
               <button onClick={handleSocialClick("https://twitter.com/jumtunes")} className="text-muted-foreground hover:text-accent transition-colors">
@@ -79,7 +79,7 @@ export function Footer({ className = "" }: FooterProps) {
         </div>
 
         <div className="mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>© 2025 JumTunes. All rights reserved.</p>
+          <p>© 2026 JumTunes. All rights reserved.</p>
         </div>
       </div>
     </footer>

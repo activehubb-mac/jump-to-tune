@@ -24,21 +24,21 @@ import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import { useFeaturedArtists, useFeaturedLabels, useFeaturedTracks } from "@/hooks/useFeaturedContent";
 const features = [{
-  icon: Heart,
-  title: "Direct Fan Support",
-  description: "Every download represents a real supporter — not just a stream count."
+  icon: Sparkles,
+  title: "AI Release Packaging",
+  description: "Upload your AI track — we generate cover art, descriptions, genre tags, and a full release page."
 }, {
   icon: Disc3,
-  title: "Exclusive Releases",
-  description: "Drop early versions, remixes, bonus tracks, or limited editions before streaming."
+  title: "Artist Branding",
+  description: "Build a real artist identity with AI-generated avatars, bios, and a consistent visual style."
 }, {
   icon: Users,
-  title: "Own Your Relationship",
-  description: "Know who supports you. Build community beyond algorithms."
+  title: "Superfan Monetization",
+  description: "Sell beats, merch, exclusive drops, and build direct fan relationships with built-in commerce."
 }, {
   icon: Zap,
-  title: "Streaming-Friendly Model",
-  description: "JumTunes complements streaming platforms — it doesn't replace them."
+  title: "Prompt Ecosystem",
+  description: "Publish, remix, and sell the prompts behind your tracks. Version chains create discovery networks."
 }];
 
 // Featured Artists Section Component - Banner style with carousel
@@ -624,30 +624,30 @@ export default function Index() {
   // Determine hero content based on auth state and role
   const getHeroContent = () => {
     if (!user) {
-      // Not logged in - show motivating marketing
+      // Not logged in - show AI platform marketing
       return {
         badge: {
-          text: "Built for the Superfans Behind the Streams",
-          icon: TrendingUp
+          text: "The AI Music Release Platform",
+          icon: Sparkles
         },
         heading: <>
-            <span className="text-foreground">Where Superfans</span>
+            <span className="text-foreground">Where AI Music</span>
             <br />
-            <span className="text-gradient">Go Deeper.</span>
+            <span className="text-gradient">Becomes Real Artists.</span>
           </>,
-        subheading: "Streaming helps artists get discovered. JumTunes helps artists build direct relationships, exclusive drops, and real fan support.",
-        supportingLine: "This is your VIP room — the place where your biggest supporters show up first.",
+        subheading: "Generate your songs anywhere. Come to JumTunes to package releases, build your artist brand, monetize fans, and launch your music career.",
+        supportingLine: "AI-powered release builder • Cover art generation • Prompt marketplace • Fan monetization",
         ctas: <>
             <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 text-lg px-8" asChild>
               <Link to="/auth?mode=signup">
                 <Rocket className="w-5 h-5 mr-2" />
-                Launch Your VIP Drop
+                Start Creating
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="border-glass-border hover:bg-glass hover:border-primary/50 transition-all duration-300 text-lg px-8" asChild>
               <Link to="/browse">
                 <Music className="w-5 h-5 mr-2" />
-                Explore Exclusive Releases
+                Explore AI Releases
               </Link>
             </Button>
           </>
@@ -742,19 +742,19 @@ export default function Index() {
     // Fallback
     return {
       badge: {
-        text: "Welcome to JumTunes",
-        icon: Music
+        text: "The AI Music Release Platform",
+        icon: Sparkles
       },
       heading: <>
-          <span className="text-foreground">Where Music</span>
+          <span className="text-foreground">Where AI Music</span>
           <br />
-          <span className="text-gradient">Meets Ownership.</span>
+          <span className="text-gradient">Becomes Real Artists.</span>
         </>,
-      subheading: "Discover exclusive tracks, support your favorite artists, and build a music collection that's truly yours.",
+      subheading: "Package your AI-generated tracks into professional releases with cover art, branding, and fan monetization.",
       ctas: <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 text-lg px-8" asChild>
           <Link to="/browse">
             <Music className="w-5 h-5 mr-2" />
-            Browse Music
+            Browse AI Releases
           </Link>
         </Button>
     };
@@ -971,12 +971,12 @@ export default function Index() {
       {!user && <section className="py-10 md:py-14">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4">
-                <span className="text-foreground">Why Artists Use </span>
+             <h2 className="text-3xl md:text-5xl font-bold mb-4">
+                <span className="text-foreground">Why Creators Choose </span>
                 <span className="text-gradient">JumTunes</span>
               </h2>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Built to complement streaming — not compete with it.
+                Generate music anywhere. Release it like a real artist here.
               </p>
             </div>
 
@@ -999,13 +999,13 @@ export default function Index() {
       {!user && <section className="py-10 md:py-14">
           <div className="container mx-auto px-4">
             <div className="glass-card-bordered p-8 md:p-12 text-center max-w-3xl mx-auto">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-8">
-                The VIP Room Inside the Streaming Club.
+             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-8">
+                Where AI Music Becomes Real Artists.
               </h2>
               <div className="space-y-4 text-lg text-muted-foreground">
-                <p>Streaming is discovery.<br /><span className="text-foreground font-medium">JumTunes is connection.</span></p>
-                <p>Streaming is reach.<br /><span className="text-foreground font-medium">JumTunes is loyalty.</span></p>
-                <p>Streaming is exposure.<br /><span className="text-foreground font-medium">JumTunes is ownership.</span></p>
+                <p>AI generates the song.<br /><span className="text-foreground font-medium">JumTunes builds the artist.</span></p>
+                <p>AI creates the sound.<br /><span className="text-foreground font-medium">JumTunes packages the release.</span></p>
+                <p>AI writes the music.<br /><span className="text-foreground font-medium">JumTunes monetizes the fanbase.</span></p>
               </div>
             </div>
           </div>
@@ -1015,8 +1015,8 @@ export default function Index() {
       {!user && <section className="py-10 md:py-14 bg-card/20">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">
-                Turn listeners into super fans.
+             <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">
+                Turn AI tracks into real careers.
               </h2>
             </div>
 
@@ -1028,7 +1028,7 @@ export default function Index() {
                 </div>
                 <h3 className="text-2xl font-bold mb-3 text-foreground">For Fans</h3>
                 <p className="text-muted-foreground mb-6">
-                  Discover, collect, and own exclusive music from artists you love.
+                  Discover AI-crafted music, collect exclusive releases, and support creators you love.
                 </p>
                 <Button variant="outline" className="hover:bg-secondary/10" asChild>
                   <Link to="/auth?mode=signup&role=fan">Join as Fan</Link>
@@ -1040,9 +1040,9 @@ export default function Index() {
                 <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                   <Music className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3 text-foreground">For Artists</h3>
+                <h3 className="text-2xl font-bold mb-3 text-foreground">For Creators</h3>
                 <p className="text-muted-foreground mb-6">
-                  Upload your music, connect with fans, and earn directly from your art.
+                  Package AI tracks into professional releases with cover art, branding, and a store.
                 </p>
                 <Button className="gradient-accent" asChild>
                   <Link to="/auth?mode=signup&role=artist">Join as Artist</Link>
@@ -1056,7 +1056,7 @@ export default function Index() {
                 </div>
                 <h3 className="text-2xl font-bold mb-3 text-foreground">For Labels</h3>
                 <p className="text-muted-foreground mb-6">
-                  Manage your artist roster and release music on their behalf.
+                  Manage AI artist rosters, coordinate releases, and scale your label operations.
                 </p>
                 <Button variant="outline" className="hover:bg-accent/10" asChild>
                   <Link to="/auth?mode=signup&role=label">Join as Label</Link>
@@ -1065,10 +1065,10 @@ export default function Index() {
             </div>
 
             <div className="text-center mt-12">
-              <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 text-lg px-8" asChild>
+             <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all duration-300 text-lg px-8" asChild>
                 <Link to="/auth?mode=signup">
                   <Rocket className="w-5 h-5 mr-2" />
-                  Start Your Exclusive Drop
+                  Launch Your AI Release
                 </Link>
               </Button>
             </div>
