@@ -1040,9 +1040,9 @@ export default function Index() {
                 <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                   <Music className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3 text-foreground">For Artists</h3>
+                <h3 className="text-2xl font-bold mb-3 text-foreground">For Creators</h3>
                 <p className="text-muted-foreground mb-6">
-                  Upload your music, connect with fans, and earn directly from your art.
+                  Package AI tracks into professional releases with cover art, branding, and a store.
                 </p>
                 <Button className="gradient-accent" asChild>
                   <Link to="/auth?mode=signup&role=artist">Join as Artist</Link>
