@@ -65,6 +65,63 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_credit_costs: {
+        Row: {
+          action_key: string
+          credit_cost: number
+          description: string | null
+          id: string
+          is_active: boolean
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          action_key: string
+          credit_cost: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          updated_at?: string
+        }
+        Update: {
+          action_key?: string
+          credit_cost?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_credit_usage: {
+        Row: {
+          action: string
+          created_at: string
+          credits_used: number
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          credits_used: number
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          credits_used?: number
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_feature_flags: {
         Row: {
           created_at: string
@@ -448,6 +505,7 @@ export type Database = {
       }
       credit_wallets: {
         Row: {
+          ai_credits: number
           balance_cents: number
           created_at: string
           id: string
@@ -455,6 +513,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_credits?: number
           balance_cents?: number
           created_at?: string
           id?: string
@@ -462,6 +521,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_credits?: number
           balance_cents?: number
           created_at?: string
           id?: string
@@ -2638,6 +2698,10 @@ export type Database = {
       }
     }
     Functions: {
+      add_ai_credits: {
+        Args: { p_credits: number; p_user_id: string }
+        Returns: Json
+      }
       add_credits_atomic: {
         Args: { p_amount_cents: number; p_user_id: string }
         Returns: Json
@@ -2654,6 +2718,10 @@ export type Database = {
       cleanup_rate_limits: { Args: never; Returns: undefined }
       decrement_inventory_atomic: {
         Args: { p_product_id: string; p_quantity?: number }
+        Returns: Json
+      }
+      deduct_ai_credits: {
+        Args: { p_credits: number; p_user_id: string }
         Returns: Json
       }
       deduct_credits_atomic: {
