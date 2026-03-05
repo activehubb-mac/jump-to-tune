@@ -1015,8 +1015,8 @@ export default function Index() {
       {!user && <section className="py-10 md:py-14 bg-card/20">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">
-                Turn listeners into super fans.
+             <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">
+                Turn AI tracks into real careers.
               </h2>
             </div>
 
