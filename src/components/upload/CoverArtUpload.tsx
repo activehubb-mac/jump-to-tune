@@ -13,7 +13,7 @@ interface CoverArtUploadProps {
   onGenerateAI?: () => void;
 }
 
-export const CoverArtUpload = ({ value, onChange, uploadProgress, disabled }: CoverArtUploadProps) => {
+export const CoverArtUpload = ({ value, onChange, uploadProgress, disabled, onGenerateAI }: CoverArtUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
