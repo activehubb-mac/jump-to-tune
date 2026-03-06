@@ -287,6 +287,9 @@ export default function AdminReports() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Sing Mode Moderation */}
+      <AdminSingModeTab />
     </div>
   );
 }
