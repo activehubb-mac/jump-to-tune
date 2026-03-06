@@ -162,7 +162,7 @@ export function Navbar() {
                   <SubscriptionCountdownChip />
 
                   {/* Credit Balance Chip */}
-                  <CreditBalanceChip onClick={() => setShowTopupModal(true)} />
+                  <CreditBalanceChip onClick={() => navigate("/wallet")} />
 
                   {/* Notifications Bell */}
                   <DropdownMenu>
