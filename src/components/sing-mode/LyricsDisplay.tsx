@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { parseLRC, type LRCLine } from "@/lib/lrcParser";
+import { parseLRC, getCurrentLineIndex, type LyricLine } from "@/lib/lrcParser";
 import { cn } from "@/lib/utils";
 
 interface LyricsDisplayProps {
@@ -10,29 +10,24 @@ interface LyricsDisplayProps {
 
 export function LyricsDisplay({ lyrics, currentTime, className }: LyricsDisplayProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [parsedLines, setParsedLines] = useState<LRCLine[]>([]);
+  const [parsedLines, setParsedLines] = useState<LyricLine[]>([]);
   const [isLRC, setIsLRC] = useState(false);
 
   useEffect(() => {
-    const lines = parseLRC(lyrics);
-    if (lines.length > 0 && lines[0].time !== undefined) {
+    const result = parseLRC(lyrics);
+    if (result.lines.length > 0) {
       setIsLRC(true);
-      setParsedLines(lines);
+      setParsedLines(result.lines);
     } else {
       setIsLRC(false);
-      // Split plain text into lines
       setParsedLines(
-        lyrics.split("\n").map((text, i) => ({ time: i * 4, text }))
+        lyrics.split("\n").filter(l => l.trim()).map((text, i) => ({ time: i * 4, text }))
       );
     }
   }, [lyrics]);
 
-  // Find active line index
-  const activeIndex = isLRC
-    ? parsedLines.findLastIndex((line) => currentTime >= (line.time ?? 0))
-    : -1;
+  const activeIndex = isLRC ? getCurrentLineIndex(parsedLines, currentTime) : -1;
 
-  // Auto-scroll to active line
   useEffect(() => {
     if (activeIndex >= 0 && containerRef.current) {
       const activeEl = containerRef.current.children[activeIndex] as HTMLElement;
