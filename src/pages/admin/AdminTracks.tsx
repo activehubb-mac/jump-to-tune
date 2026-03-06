@@ -97,6 +97,7 @@ export default function AdminTracks() {
       toast.success('Sing Mode updated');
     },
     onError: () => toast.error('Failed to update Sing Mode'),
+  });
 
   // Delete track
   const deleteMutation = useMutation({
