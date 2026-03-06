@@ -330,6 +330,7 @@ export default function Upload() {
                 onChange={setCoverFile}
                 uploadProgress={uploadProgress.cover}
                 disabled={isUploading}
+                onGenerateAI={() => navigate('/ai-cover-art')}
               />
             </div>
 
