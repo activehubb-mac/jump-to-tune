@@ -134,3 +134,6 @@ verify_jwt = false
 
 [functions.ai-business-engine]
 verify_jwt = false
+
+[functions.migrate-legacy-subscriptions]
+verify_jwt = false
