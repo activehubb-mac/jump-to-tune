@@ -559,6 +559,8 @@ export default function Upload() {
               onLyricsChange={setLyrics}
               disabled={isUploading}
               onPreview={audioFile && karaokeEnabled && lyrics.trim() ? () => setShowKaraokePreview(true) : undefined}
+              singModeEnabled={singModeEnabled}
+              onSingModeChange={setSingModeEnabled}
             />
 
             {/* Karaoke Preview Modal */}
