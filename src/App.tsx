@@ -78,6 +78,7 @@ import AIIdentityBuilder from "./pages/AIIdentityBuilder";
 import AIPlaylistBuilder from "./pages/AIPlaylistBuilder";
 import AIVideoGenerator from "./pages/AIVideoGenerator";
 import AIViralGenerator from "./pages/AIViralGenerator";
+import SingMode from "./pages/SingMode";
 
 const queryClient = new QueryClient();
 
