@@ -1500,6 +1500,39 @@ export type Database = {
         }
         Relationships: []
       }
+      migration_logs: {
+        Row: {
+          credits_added: number
+          id: string
+          migration_date: string
+          notes: string | null
+          old_subscription_tier: string | null
+          old_wallet_amount: number
+          stripe_subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          credits_added?: number
+          id?: string
+          migration_date?: string
+          notes?: string | null
+          old_subscription_tier?: string | null
+          old_wallet_amount?: number
+          stripe_subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          credits_added?: number
+          id?: string
+          migration_date?: string
+          notes?: string | null
+          old_subscription_tier?: string | null
+          old_wallet_amount?: number
+          stripe_subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string | null
@@ -2273,7 +2306,9 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
+          founding_user: boolean
           id: string
+          legacy_subscription_ended: boolean
           status: Database["public"]["Enums"]["subscription_status"]
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -2286,7 +2321,9 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          founding_user?: boolean
           id?: string
+          legacy_subscription_ended?: boolean
           status?: Database["public"]["Enums"]["subscription_status"]
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -2299,7 +2336,9 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          founding_user?: boolean
           id?: string
+          legacy_subscription_ended?: boolean
           status?: Database["public"]["Enums"]["subscription_status"]
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
