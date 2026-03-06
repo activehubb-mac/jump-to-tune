@@ -201,6 +201,7 @@ export const useTrackUpload = (): UseTrackUploadReturn => {
             track_id: track.id,
             instrumental_url: instrumentalUrl,
             lyrics: karaokeData.lyrics || null,
+            sing_mode_enabled: karaokeData.singModeEnabled || false,
           });
 
         if (karaokeError) {

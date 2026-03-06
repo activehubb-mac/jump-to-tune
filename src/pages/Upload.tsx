@@ -235,6 +235,7 @@ export default function Upload() {
         enabled: karaokeEnabled,
         instrumentalFile,
         lyrics,
+        singModeEnabled,
       },
       {
         writers: credits.writers,
