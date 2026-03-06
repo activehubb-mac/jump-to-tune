@@ -2158,6 +2158,50 @@ export type Database = {
         }
         Relationships: []
       }
+      sing_mode_videos: {
+        Row: {
+          caption_text: string | null
+          created_at: string
+          id: string
+          is_featured: boolean
+          is_moderated: boolean
+          status: string
+          track_id: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          caption_text?: string | null
+          created_at?: string
+          id?: string
+          is_featured?: boolean
+          is_moderated?: boolean
+          status?: string
+          track_id: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          caption_text?: string | null
+          created_at?: string
+          id?: string
+          is_featured?: boolean
+          is_moderated?: boolean
+          status?: string
+          track_id?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sing_mode_videos_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_downloads: {
         Row: {
           artist_id: string
@@ -2641,6 +2685,7 @@ export type Database = {
           id: string
           instrumental_url: string
           lyrics: string | null
+          sing_mode_enabled: boolean
           track_id: string
         }
         Insert: {
@@ -2648,6 +2693,7 @@ export type Database = {
           id?: string
           instrumental_url: string
           lyrics?: string | null
+          sing_mode_enabled?: boolean
           track_id: string
         }
         Update: {
@@ -2655,6 +2701,7 @@ export type Database = {
           id?: string
           instrumental_url?: string
           lyrics?: string | null
+          sing_mode_enabled?: boolean
           track_id?: string
         }
         Relationships: [
