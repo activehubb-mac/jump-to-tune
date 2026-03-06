@@ -70,6 +70,7 @@ serve(async (req) => {
       total_credits_converted: 0,
       total_wallet_usd_converted: 0,
       skipped_already_migrated: 0,
+      skipped_fans: 0,
       errors: [] as string[],
       details: [] as Array<{
         user_id: string;
