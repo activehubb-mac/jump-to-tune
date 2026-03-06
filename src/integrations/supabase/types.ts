@@ -185,6 +185,100 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_viral_assets: {
+        Row: {
+          asset_type: string
+          caption_text: string | null
+          created_at: string
+          duration_seconds: number
+          file_url: string | null
+          hashtag_set: string[] | null
+          hook_text: string | null
+          id: string
+          status: string
+          style: string
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          asset_type?: string
+          caption_text?: string | null
+          created_at?: string
+          duration_seconds?: number
+          file_url?: string | null
+          hashtag_set?: string[] | null
+          hook_text?: string | null
+          id?: string
+          status?: string
+          style?: string
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          asset_type?: string
+          caption_text?: string | null
+          created_at?: string
+          duration_seconds?: number
+          file_url?: string | null
+          hashtag_set?: string[] | null
+          hook_text?: string | null
+          id?: string
+          status?: string
+          style?: string
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_viral_assets_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_viral_generation_logs: {
+        Row: {
+          created_at: string
+          credit_cost: number
+          duration_seconds: number
+          generation_type: string
+          id: string
+          style: string | null
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credit_cost: number
+          duration_seconds: number
+          generation_type: string
+          id?: string
+          style?: string | null
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credit_cost?: number
+          duration_seconds?: number
+          generation_type?: string
+          id?: string
+          style?: string | null
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_viral_generation_logs_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       albums: {
         Row: {
           artist_id: string

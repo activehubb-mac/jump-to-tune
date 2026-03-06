@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Disc3, Play, Pause, Volume2, VolumeX, Users, Mic2, Shield, Download } from "lucide-react";
+import { Disc3, Play, Pause, Volume2, VolumeX, Users, Mic2, Shield, Download, Rocket } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { Slider } from "@/components/ui/slider";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -433,6 +433,21 @@ export function TrackDetailModal({
             size="lg"
             className="w-full gradient-accent neon-glow-subtle"
           />
+
+          {/* Viral Content Generator CTA (for track owner) */}
+          {user?.id === track.artist?.id && (
+            <Button
+              variant="outline"
+              className="w-full border-primary/30 hover:bg-primary/10"
+              onClick={() => {
+                onOpenChange(false);
+                window.location.href = `/ai-viral?track=${track.id}`;
+              }}
+            >
+              <Rocket className="h-4 w-4 mr-2 text-primary" />
+              Generate Viral Content
+            </Button>
+          )}
 
           {/* Audio Player */}
           <div className="w-full space-y-3 glass-card p-4 rounded-xl">
