@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Loader2, Search, Trash2, Eye, EyeOff, Music, AlertTriangle 
+  Loader2, Search, Trash2, Eye, EyeOff, Music, AlertTriangle, Mic, MicOff 
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -50,6 +50,20 @@ export default function AdminTracks() {
     },
   });
 
+  // Fetch sing mode status for all tracks
+  const { data: karaokeData = [] } = useQuery({
+    queryKey: ['admin-track-karaoke'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('track_karaoke')
+        .select('track_id, sing_mode_enabled');
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const singModeMap = new Map(karaokeData.map(k => [k.track_id, k.sing_mode_enabled]));
+
   // Toggle draft status (hide/show)
   const toggleDraftMutation = useMutation({
     mutationFn: async ({ trackId, isDraft }: { trackId: string; isDraft: boolean }) => {
@@ -67,6 +81,22 @@ export default function AdminTracks() {
       toast.error('Failed to update track');
       console.error(error);
     },
+  });
+
+  // Toggle sing mode
+  const toggleSingModeMutation = useMutation({
+    mutationFn: async ({ trackId, enabled }: { trackId: string; enabled: boolean }) => {
+      const { error } = await supabase
+        .from('track_karaoke')
+        .update({ sing_mode_enabled: enabled })
+        .eq('track_id', trackId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-track-karaoke'] });
+      toast.success('Sing Mode updated');
+    },
+    onError: () => toast.error('Failed to update Sing Mode'),
   });
 
   // Delete track
@@ -166,6 +196,25 @@ export default function AdminTracks() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 ml-auto">
+                  {/* Toggle Sing Mode */}
+                  {singModeMap.has(track.id) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      title={singModeMap.get(track.id) ? 'Disable Sing Mode' : 'Enable Sing Mode'}
+                      onClick={() => toggleSingModeMutation.mutate({
+                        trackId: track.id,
+                        enabled: !singModeMap.get(track.id),
+                      })}
+                    >
+                      {singModeMap.get(track.id) ? (
+                        <Mic className="w-3.5 h-3.5 text-primary" />
+                      ) : (
+                        <MicOff className="w-3.5 h-3.5 text-muted-foreground" />
+                      )}
+                    </Button>
+                  )}
                   {/* Toggle Visibility */}
                   <Button
                     variant="outline"
