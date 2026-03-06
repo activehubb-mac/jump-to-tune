@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAdminReports, Report, ReportStatus } from '@/hooks/useReports';
+import { AdminSingModeTab } from '@/components/admin/AdminSingModeTab';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -286,6 +287,9 @@ export default function AdminReports() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Sing Mode Moderation */}
+      <AdminSingModeTab />
     </div>
   );
 }

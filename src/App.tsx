@@ -78,6 +78,7 @@ import AIIdentityBuilder from "./pages/AIIdentityBuilder";
 import AIPlaylistBuilder from "./pages/AIPlaylistBuilder";
 import AIVideoGenerator from "./pages/AIVideoGenerator";
 import AIViralGenerator from "./pages/AIViralGenerator";
+import SingMode from "./pages/SingMode";
 
 const queryClient = new QueryClient();
 
@@ -96,6 +97,7 @@ function RouterContent() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/browse" element={<Browse />} />
         <Route path="/karaoke" element={<Karaoke />} />
+        <Route path="/sing/:trackId" element={<SingMode />} />
         <Route path="/go-dj" element={<GoDJ />} />
         <Route path="/go-dj/mix/:sessionId/edit" element={<GoDJMixBuilder />} />
         <Route path="/go-dj/mix/:sessionId" element={<GoDJMixPlayback />} />

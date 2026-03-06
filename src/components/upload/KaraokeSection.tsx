@@ -19,6 +19,8 @@ interface KaraokeSectionProps {
   onLyricsChange: (lyrics: string) => void;
   disabled?: boolean;
   onPreview?: () => void;
+  singModeEnabled?: boolean;
+  onSingModeChange?: (enabled: boolean) => void;
 }
 
 export const KaraokeSection = ({
@@ -30,6 +32,8 @@ export const KaraokeSection = ({
   onLyricsChange,
   disabled,
   onPreview,
+  singModeEnabled = false,
+  onSingModeChange,
 }: KaraokeSectionProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -322,6 +326,33 @@ export const KaraokeSection = ({
               </div>
             </div>
           </div>
+
+          {/* Sing Mode Toggle */}
+          {onSingModeChange && (
+            <div className="pt-4 border-t border-glass-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                    <Mic className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <Label htmlFor="sing-mode-toggle" className="text-foreground font-medium">
+                      Enable Sing Mode
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Let fans record sing-along videos with your track
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="sing-mode-toggle"
+                  checked={singModeEnabled}
+                  onCheckedChange={onSingModeChange}
+                  disabled={disabled}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

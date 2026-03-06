@@ -75,6 +75,7 @@ export default function Upload() {
   const [instrumentalFile, setInstrumentalFile] = useState<File | null>(null);
   const [lyrics, setLyrics] = useState("");
   const [showKaraokePreview, setShowKaraokePreview] = useState(false);
+  const [singModeEnabled, setSingModeEnabled] = useState(false);
 
   // New fields
   const [moods, setMoods] = useState<string[]>([]);
@@ -234,6 +235,7 @@ export default function Upload() {
         enabled: karaokeEnabled,
         instrumentalFile,
         lyrics,
+        singModeEnabled,
       },
       {
         writers: credits.writers,
@@ -558,6 +560,8 @@ export default function Upload() {
               onLyricsChange={setLyrics}
               disabled={isUploading}
               onPreview={audioFile && karaokeEnabled && lyrics.trim() ? () => setShowKaraokePreview(true) : undefined}
+              singModeEnabled={singModeEnabled}
+              onSingModeChange={setSingModeEnabled}
             />
 
             {/* Karaoke Preview Modal */}
