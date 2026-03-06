@@ -59,6 +59,8 @@ import AdminReports from "./pages/admin/AdminReports";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminHome from "./pages/admin/AdminHome";
 import AdminStores from "./pages/admin/AdminStores";
+import AdminCredits from "./pages/admin/AdminCredits";
+import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import HelpCenter from "./pages/HelpCenter";
