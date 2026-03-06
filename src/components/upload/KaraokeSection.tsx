@@ -32,6 +32,8 @@ export const KaraokeSection = ({
   onLyricsChange,
   disabled,
   onPreview,
+  singModeEnabled = false,
+  onSingModeChange,
 }: KaraokeSectionProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
