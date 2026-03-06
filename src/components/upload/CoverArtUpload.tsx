@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Image, Upload, X } from 'lucide-react';
+import { Image, Upload, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { isValidImageFile, formatFileSize } from '@/lib/audioUtils';
