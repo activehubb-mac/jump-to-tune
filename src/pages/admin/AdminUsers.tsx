@@ -39,6 +39,8 @@ type UserWithRole = {
 
 export default function AdminUsers() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [creditUserId, setCreditUserId] = useState<string | null>(null);
+  const [creditAmount, setCreditAmount] = useState('');
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
 
