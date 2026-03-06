@@ -403,10 +403,53 @@ export default function AdminUsers() {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+
+                    {/* AI Credits Button */}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => setCreditUserId(creditUserId === user.id ? null : user.id)}
+                    >
+                      <Zap className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
                 </div>
+
+                {/* Credit Management Inline Panel */}
+                {creditUserId === user.id && (
+                  <div className="mt-2 pt-2 border-t border-border flex items-center gap-2 flex-wrap">
+                    <Input
+                      type="number"
+                      placeholder="Credits"
+                      value={creditAmount}
+                      onChange={(e) => setCreditAmount(e.target.value)}
+                      className="w-24 h-7 text-xs"
+                      min={1}
+                    />
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      disabled={!creditAmount || parseInt(creditAmount) <= 0 || addCreditsMutation.isPending}
+                      onClick={() => addCreditsMutation.mutate({ userId: user.id, credits: parseInt(creditAmount) })}
+                    >
+                      <Plus className="w-3 h-3" /> Add
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-7 text-xs gap-1"
+                      disabled={!creditAmount || parseInt(creditAmount) <= 0 || deductCreditsMutation.isPending}
+                      onClick={() => deductCreditsMutation.mutate({ userId: user.id, credits: parseInt(creditAmount) })}
+                    >
+                      <Minus className="w-3 h-3" /> Remove
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
+
+
 
             {filteredUsers?.length === 0 && (
               <p className="text-center text-muted-foreground py-8 text-sm">
