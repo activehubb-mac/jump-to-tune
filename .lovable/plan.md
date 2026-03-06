@@ -1,24 +1,28 @@
 
-# Make Recent Updates Available for Mobile
 
-The recent changes (hiding track/follower counts from artist cards, hiding price/collectors from track cards) were applied to the homepage and browse pages, but several other pages still display this data on cards. These pages are used on both desktop and mobile.
+# Remove Legacy USD Credit System
 
-## Changes Required
+## Problem
+The old USD wallet top-up modal (`QuickTopupModal`) is still active and accessible from the navbar's credit chip. It shows dollar amounts ($5/$10/$25/$50/$100) with a 1% processing fee — this is the legacy system. The platform has moved to AI credit packs.
 
-### 1. `src/pages/Artists.tsx` -- Remove tracks/fans from artist cards
+## Changes
 
-**Featured Artists section (lines 149-152):** Remove the stats row showing "X tracks" and "X fans"
+### 1. Replace QuickTopupModal with redirect to Wallet page
+In `src/components/layout/Navbar.tsx`:
+- Remove `QuickTopupModal` import and rendering
+- Change the `CreditBalanceChip` `onClick` to navigate to `/wallet` instead of opening the old modal
 
-**All Artists grid (lines 183-187):** Remove "X tracks" text and "X fans" text below each artist name
+### 2. Rewrite QuickTopupModal as AI Credit Pack selector
+Replace the entire `QuickTopupModal` content with the 3 AI credit packs (100/$10, 500/$40, 2000/$120) using the same purchase flow from `Wallet.tsx`. Remove dollar-based amounts, custom amounts, and the 1% fee breakdown.
 
-### 2. `src/pages/FanDashboard.tsx` -- Remove stats from followed artist cards
+### 3. Update InsufficientCreditsModal
+Replace the USD-based "quick add" amounts with AI credit pack options and redirect to `/wallet` for purchasing, removing the old `purchaseCredits(amountCents)` flow.
 
-**Line 277:** Change `{artist.trackCount} tracks . {artist.followerCount} followers` to just `"Artist"` label
+### 4. Update CreditBalanceChip display
+It already shows AI credits from `useAICredits` — no change needed there.
 
-### 3. Cleanup: Remove unused imports/data
+## Summary
+- 3 files modified: `Navbar.tsx`, `QuickTopupModal.tsx`, `InsufficientCreditsModal.tsx`
+- Remove all USD wallet top-up flows from quick-access modals
+- Replace with AI credit pack purchasing or navigation to `/wallet`
 
-- In `Artists.tsx`: Remove `useFollowerCounts` import and hook call since follower counts are no longer displayed on cards
-- Remove `formatCompactNumber` import if no longer used
-- Remove the `followers` variable assignments in the map callbacks
-
-These are all the remaining places where track/follower counts appear on artist cards and price/editions appear on track cards outside of profile/detail views. The changes ensure consistency across desktop and mobile.
