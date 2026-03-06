@@ -14,20 +14,29 @@ const logStep = (step: string, details?: any) => {
 
 // Map Stripe price IDs to tiers (reverse of SUBSCRIPTION_PRICES)
 const PRICE_TO_TIER: Record<string, "fan" | "artist" | "label"> = {
-  "price_1T7sAyEKeZaBsSwj3L6Izcpg": "fan",
-  "price_1T7sDgEKeZaBsSwjoHlPVKQL": "artist",
-  "price_1T7sFHEKeZaBsSwjLEDZiC7L": "label",
+  "price_1T7sAyEKeZaBsSwj3L6Izcpg": "fan",    // Creator $10/mo
+  "price_1T7smDEKeZaBsSwjVd5hBpyq": "artist",  // Creator Pro $25/mo
+  "price_1T7sFHEKeZaBsSwjLEDZiC7L": "label",   // Label/Studio $79/mo
   // Legacy price IDs (keep for existing subscribers)
   "price_1SpXymEKeZaBsSwjs3UezAPu": "fan",
   "price_1SpXyyEKeZaBsSwj0fe2MazX": "artist",
   "price_1SpXz9EKeZaBsSwjgEhsxsHg": "label",
+  "price_1T7sDgEKeZaBsSwjoHlPVKQL": "artist",  // old artist price
 };
 
 // AI credits per tier for monthly refresh
 const TIER_CREDITS: Record<string, number> = {
-  fan: 150,
-  artist: 500,
+  fan: 300,
+  artist: 800,
   label: 2000,
+};
+
+// Product ID → AI credits mapping for credit packs & starter pack
+const PRODUCT_AI_CREDITS: Record<string, number> = {
+  "prod_U64QH9DtMPUYNi": 100,   // 100 AI Credits pack
+  "prod_U64Scf2yEj3f3R": 500,   // 500 AI Credits pack
+  "prod_U64VwSdypd7g5x": 2000,  // 2000 AI Credits pack
+  "prod_U64XcXRpHSD7Qz": 500,   // AI Artist Starter Pack (500 credits)
 };
 
 serve(async (req) => {

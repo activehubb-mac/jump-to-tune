@@ -16,14 +16,14 @@ import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { openExternalUrl, getMobileHeaders } from "@/lib/platformBrowser";
 
 const AI_CREDIT_PACKS = [
-  { credits: 100, price: 1000, label: "100 credits", priceLabel: "$10" },
-  { credits: 500, price: 4000, label: "500 credits", priceLabel: "$40", popular: true },
-  { credits: 2000, price: 12000, label: "2,000 credits", priceLabel: "$120", best: true },
+  { credits: 100, price: 1000, label: "100 credits", priceLabel: "$10", productId: "prod_U64QH9DtMPUYNi" },
+  { credits: 500, price: 4000, label: "500 credits", priceLabel: "$40", popular: true, productId: "prod_U64Scf2yEj3f3R" },
+  { credits: 2000, price: 9800, label: "2,000 credits", priceLabel: "$98", best: true, productId: "prod_U64VwSdypd7g5x" },
 ];
 
 const STARTER_PACK = {
-  credits: 1000, price: 4900, label: "Starter Pack", priceLabel: "$49",
-  includes: ["1,000 AI credits", "AI Artist Identity Builder", "5 cover art generations"],
+  credits: 500, price: 4900, label: "AI Artist Starter Pack", priceLabel: "$49", productId: "prod_U64XcXRpHSD7Qz",
+  includes: ["500 AI credits", "Full AI Release Builder workflow", "AI cover art + avatar + video"],
 };
 
 export default function WalletPage() {
