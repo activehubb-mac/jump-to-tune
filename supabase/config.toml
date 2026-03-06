@@ -137,3 +137,6 @@ verify_jwt = false
 
 [functions.migrate-legacy-subscriptions]
 verify_jwt = false
+
+[functions.ai-fan-discovery]
+verify_jwt = false

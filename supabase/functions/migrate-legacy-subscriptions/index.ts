@@ -312,7 +312,8 @@ serve(async (req) => {
       cancelled: results.total_subscriptions_cancelled,
       migrated: results.total_users_migrated,
       credits: results.total_credits_converted,
-      skipped: results.skipped_already_migrated,
+      skipped_already_migrated: results.skipped_already_migrated,
+      skipped_fans: results.skipped_fans,
       errors: results.errors.length,
     });
 
