@@ -10,6 +10,7 @@ interface CoverArtUploadProps {
   onChange: (file: File | null) => void;
   uploadProgress?: number;
   disabled?: boolean;
+  onGenerateAI?: () => void;
 }
 
 export const CoverArtUpload = ({ value, onChange, uploadProgress, disabled }: CoverArtUploadProps) => {
