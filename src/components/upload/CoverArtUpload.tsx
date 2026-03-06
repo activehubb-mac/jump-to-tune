@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Image, Upload, X } from 'lucide-react';
+import { Image, Upload, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { isValidImageFile, formatFileSize } from '@/lib/audioUtils';
@@ -10,9 +10,10 @@ interface CoverArtUploadProps {
   onChange: (file: File | null) => void;
   uploadProgress?: number;
   disabled?: boolean;
+  onGenerateAI?: () => void;
 }
 
-export const CoverArtUpload = ({ value, onChange, uploadProgress, disabled }: CoverArtUploadProps) => {
+export const CoverArtUpload = ({ value, onChange, uploadProgress, disabled, onGenerateAI }: CoverArtUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -128,14 +129,27 @@ export const CoverArtUpload = ({ value, onChange, uploadProgress, disabled }: Co
         </div>
         <p className="text-foreground font-medium mb-1">Drop your cover art here</p>
         <p className="text-sm text-muted-foreground">PNG, JPG up to 10MB (1:1 ratio recommended)</p>
-        <Button 
-          type="button" 
-          variant="outline" 
-          className="mt-4 border-glass-border"
-          disabled={disabled}
-        >
-          Choose Image
-        </Button>
+        <div className="flex gap-3 mt-4">
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="border-glass-border"
+            disabled={disabled}
+          >
+            Choose Image
+          </Button>
+          {onGenerateAI && (
+            <Button
+              type="button"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+              disabled={disabled}
+              onClick={(e) => { e.stopPropagation(); onGenerateAI(); }}
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Generate with AI
+            </Button>
+          )}
+        </div>
       </div>
       
       {error && (
