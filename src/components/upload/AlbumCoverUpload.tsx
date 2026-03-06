@@ -136,14 +136,27 @@ export const AlbumCoverUpload = ({ value, onChange, uploadProgress, disabled, on
         <p className="text-xs text-muted-foreground mt-1">
           This single cover will be used for all tracks
         </p>
-        <Button 
-          type="button" 
-          variant="outline" 
-          className="mt-4 border-glass-border"
-          disabled={disabled}
-        >
-          Choose Image
-        </Button>
+        <div className="flex gap-3 mt-4">
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="border-glass-border"
+            disabled={disabled}
+          >
+            Choose Image
+          </Button>
+          {onGenerateAI && (
+            <Button
+              type="button"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+              disabled={disabled}
+              onClick={(e) => { e.stopPropagation(); onGenerateAI(); }}
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Generate with AI
+            </Button>
+          )}
+        </div>
       </div>
       
       {error && (
