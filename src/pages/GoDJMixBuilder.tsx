@@ -6,6 +6,7 @@ import { useGoDJSessionDetail, usePublishGoDJSession, useUpdateGoDJSession } fro
 import { useGoDJSegments } from "@/hooks/useGoDJSegments";
 import { useAuth } from "@/contexts/AuthContext";
 import { MixBuilder } from "@/components/godj-mix/MixBuilder";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, Disc3, Loader2, Save, Upload } from "lucide-react";
 

@@ -131,3 +131,6 @@ verify_jwt = false
 
 [functions.ai-launch-card]
 verify_jwt = false
+
+[functions.ai-business-engine]
+verify_jwt = false

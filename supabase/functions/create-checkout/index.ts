@@ -7,11 +7,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Subscription price IDs by tier
+// Subscription price IDs by tier (Creator / Creator Pro / Label-Studio)
 const SUBSCRIPTION_PRICES = {
-  fan: "price_1SpXymEKeZaBsSwjs3UezAPu",
-  artist: "price_1SpXyyEKeZaBsSwj0fe2MazX",
-  label: "price_1SpXz9EKeZaBsSwjgEhsxsHg",
+  fan: "price_1T7sAyEKeZaBsSwj3L6Izcpg",
+  artist: "price_1T7sDgEKeZaBsSwjoHlPVKQL",
+  label: "price_1T7sFHEKeZaBsSwjLEDZiC7L",
 };
 
 const logStep = (step: string, details?: any) => {
