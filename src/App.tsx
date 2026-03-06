@@ -77,6 +77,7 @@ import CoverArtGenerator from "./pages/CoverArtGenerator";
 import AIIdentityBuilder from "./pages/AIIdentityBuilder";
 import AIPlaylistBuilder from "./pages/AIPlaylistBuilder";
 import AIVideoGenerator from "./pages/AIVideoGenerator";
+import AIViralGenerator from "./pages/AIViralGenerator";
 
 const queryClient = new QueryClient();
 
