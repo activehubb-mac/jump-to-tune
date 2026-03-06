@@ -19,6 +19,8 @@ interface KaraokeSectionProps {
   onLyricsChange: (lyrics: string) => void;
   disabled?: boolean;
   onPreview?: () => void;
+  singModeEnabled?: boolean;
+  onSingModeChange?: (enabled: boolean) => void;
 }
 
 export const KaraokeSection = ({
