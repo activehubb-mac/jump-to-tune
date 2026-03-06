@@ -9,6 +9,7 @@ import { RecentlyViewedSection } from "@/components/browse/RecentlyViewedSection
 import { HeroCarousel } from "@/components/browse/HeroCarousel";
 import { AlbumCard } from "@/components/browse/AlbumCard";
 import { BrowseFilterBar } from "@/components/browse/BrowseFilterBar";
+import { AIDiscoveryBar } from "@/components/browse/AIDiscoveryBar";
 import { SearchResultsView } from "@/components/browse/SearchResultsView";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { Link } from "react-router-dom";
