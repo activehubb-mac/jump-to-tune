@@ -54,10 +54,12 @@ export default function GoDJMixBuilder() {
         p_credits: 5,
       });
 
-      if (deductError || !deductResult?.success) {
+      const result = deductResult as { success: boolean; current_credits?: number; new_credits?: number } | null;
+
+      if (deductError || !result?.success) {
         toast({
           title: "Insufficient AI Credits",
-          description: `You need 5 credits to publish a mix. You have ${deductResult?.current_credits ?? 0}.`,
+          description: `You need 5 credits to publish a mix. You have ${result?.current_credits ?? 0}.`,
           variant: "destructive",
         });
         return;
