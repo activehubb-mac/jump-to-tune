@@ -40,7 +40,7 @@ const CREDIT_PACKS = [
   {
     productId: "prod_U64VwSdypd7g5x",
     credits: 2000,
-    price: "$120",
+    price: "$98",
     label: "2,000 Credits",
     icon: Rocket,
     description: "For power users & teams",

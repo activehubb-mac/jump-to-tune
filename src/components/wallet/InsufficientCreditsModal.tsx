@@ -27,7 +27,7 @@ interface InsufficientCreditsModalProps {
 const CREDIT_PACKS = [
   { productId: "prod_U64QH9DtMPUYNi", credits: 100, price: "$10", label: "100 Credits", icon: Zap },
   { productId: "prod_U64Scf2yEj3f3R", credits: 500, price: "$40", label: "500 Credits", icon: Sparkles, popular: true },
-  { productId: "prod_U64VwSdypd7g5x", credits: 2000, price: "$120", label: "2,000 Credits", icon: Rocket },
+  { productId: "prod_U64VwSdypd7g5x", credits: 2000, price: "$98", label: "2,000 Credits", icon: Rocket },
 ];
 
 export function InsufficientCreditsModal({
