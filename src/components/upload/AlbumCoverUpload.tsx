@@ -13,7 +13,7 @@ interface AlbumCoverUploadProps {
   onGenerateAI?: () => void;
 }
 
-export const AlbumCoverUpload = ({ value, onChange, uploadProgress, disabled }: AlbumCoverUploadProps) => {
+export const AlbumCoverUpload = ({ value, onChange, uploadProgress, disabled, onGenerateAI }: AlbumCoverUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
