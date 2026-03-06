@@ -22,7 +22,7 @@ import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutD
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { CreditBalanceChip } from "@/components/wallet/CreditBalanceChip";
 import { SubscriptionCountdownChip } from "@/components/subscription/SubscriptionCountdownChip";
-import { QuickTopupModal } from "@/components/wallet/QuickTopupModal";
+
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
