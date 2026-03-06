@@ -75,6 +75,7 @@ export default function Upload() {
   const [instrumentalFile, setInstrumentalFile] = useState<File | null>(null);
   const [lyrics, setLyrics] = useState("");
   const [showKaraokePreview, setShowKaraokePreview] = useState(false);
+  const [singModeEnabled, setSingModeEnabled] = useState(false);
 
   // New fields
   const [moods, setMoods] = useState<string[]>([]);
