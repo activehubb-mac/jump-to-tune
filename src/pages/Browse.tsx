@@ -349,6 +349,9 @@ export default function Browse() {
           <p className="text-muted-foreground">Discover and collect exclusive tracks from talented artists</p>
         </div>
 
+        {/* AI Discovery Bar — free for all users */}
+        <AIDiscoveryBar />
+
         {/* Recently Viewed Section */}
         <RecentlyViewedSection
           onTrackClick={(viewedTrack) => {
