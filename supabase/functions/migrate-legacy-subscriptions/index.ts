@@ -161,6 +161,23 @@ serve(async (req) => {
         continue;
       }
 
+      // ═══════════════════════════════════════════════════════════════
+      // FAN SAFEGUARD: Skip users with fan role — fans are free users
+      // and must never be affected by the creator migration.
+      // ═══════════════════════════════════════════════════════════════
+      const { data: userRole } = await supabaseClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .neq("role", "admin")
+        .maybeSingle();
+
+      if (userRole?.role === "fan") {
+        results.skipped_fans = (results.skipped_fans || 0) + 1;
+        logStep("SKIPPED fan account — no migration applied", { userId, email: customerEmail });
+        continue;
+      }
+
       // Check if already migrated
       const { data: existingLog } = await supabaseClient
         .from("migration_logs")
