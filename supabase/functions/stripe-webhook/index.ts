@@ -14,9 +14,20 @@ const logStep = (step: string, details?: any) => {
 
 // Map Stripe price IDs to tiers (reverse of SUBSCRIPTION_PRICES)
 const PRICE_TO_TIER: Record<string, "fan" | "artist" | "label"> = {
+  "price_1T7sAyEKeZaBsSwj3L6Izcpg": "fan",
+  "price_1T7sDgEKeZaBsSwjoHlPVKQL": "artist",
+  "price_1T7sFHEKeZaBsSwjLEDZiC7L": "label",
+  // Legacy price IDs (keep for existing subscribers)
   "price_1SpXymEKeZaBsSwjs3UezAPu": "fan",
   "price_1SpXyyEKeZaBsSwj0fe2MazX": "artist",
   "price_1SpXz9EKeZaBsSwjgEhsxsHg": "label",
+};
+
+// AI credits per tier for monthly refresh
+const TIER_CREDITS: Record<string, number> = {
+  fan: 150,
+  artist: 500,
+  label: 2000,
 };
 
 serve(async (req) => {
