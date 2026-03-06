@@ -146,6 +146,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_video_queue: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          credits_used: number
+          duration_seconds: number
+          id: string
+          prompt: string
+          result_url: string | null
+          status: string
+          style: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          credits_used?: number
+          duration_seconds?: number
+          id?: string
+          prompt: string
+          result_url?: string | null
+          status?: string
+          style?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          credits_used?: number
+          duration_seconds?: number
+          id?: string
+          prompt?: string
+          result_url?: string | null
+          status?: string
+          style?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       albums: {
         Row: {
           artist_id: string
@@ -1735,6 +1774,112 @@ export type Database = {
         }
         Relationships: []
       }
+      promotion_purchases: {
+        Row: {
+          amount_cents: number
+          artist_id: string
+          content_id: string
+          content_type: string
+          created_at: string
+          ends_at: string
+          id: string
+          platform_fee_cents: number
+          slot_id: string
+          starts_at: string
+          status: string
+          stripe_payment_intent_id: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          artist_id: string
+          content_id: string
+          content_type?: string
+          created_at?: string
+          ends_at: string
+          id?: string
+          platform_fee_cents?: number
+          slot_id: string
+          starts_at?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          artist_id?: string
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          ends_at?: string
+          id?: string
+          platform_fee_cents?: number
+          slot_id?: string
+          starts_at?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotion_purchases_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_purchases_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_purchases_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "promotion_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promotion_slots: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_days: number
+          id: string
+          is_active: boolean
+          max_concurrent: number
+          placement_location: string
+          price_cents: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_days?: number
+          id?: string
+          is_active?: boolean
+          max_concurrent?: number
+          placement_location: string
+          price_cents?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_days?: number
+          id?: string
+          is_active?: boolean
+          max_concurrent?: number
+          placement_location?: string
+          price_cents?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       purchases: {
         Row: {
           edition_number: number
@@ -2384,6 +2529,54 @@ export type Database = {
             foreignKeyName: "track_karaoke_track_id_fkey"
             columns: ["track_id"]
             isOneToOne: true
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      track_prompts: {
+        Row: {
+          artist_id: string
+          created_at: string
+          id: string
+          is_published: boolean
+          prompt_text: string
+          remix_of: string | null
+          track_id: string
+          version: number
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          prompt_text: string
+          remix_of?: string | null
+          track_id: string
+          version?: number
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          prompt_text?: string
+          remix_of?: string | null
+          track_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "track_prompts_remix_of_fkey"
+            columns: ["remix_of"]
+            isOneToOne: false
+            referencedRelation: "track_prompts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "track_prompts_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
             referencedRelation: "tracks"
             referencedColumns: ["id"]
           },
