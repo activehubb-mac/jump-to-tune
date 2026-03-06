@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Loader2, Search, CheckCircle, XCircle, User, 
-  ShieldCheck, Music, Building2, Shield, ShieldOff, CreditCard
+  ShieldCheck, Music, Building2, Shield, ShieldOff, CreditCard, Zap, Plus, Minus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
