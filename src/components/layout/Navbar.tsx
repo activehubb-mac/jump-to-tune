@@ -44,7 +44,7 @@ const navLinks = [
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [showTopupModal, setShowTopupModal] = useState(false);
+  
   const [isMobileNotificationsOpen, setIsMobileNotificationsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
