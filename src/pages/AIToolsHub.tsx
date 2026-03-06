@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
-import { Sparkles, Image, User, ListMusic, Video, Music, Zap, Lock } from "lucide-react";
+import { Sparkles, Image, User, ListMusic, Video, Music, Zap, Lock, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const AI_TOOLS = [
@@ -13,6 +13,7 @@ const AI_TOOLS = [
   { title: "AI Identity Builder", desc: "Generate your unique artist name, avatar, bio, and visual theme", icon: User, credits: 5, href: "/ai-identity", roles: ["artist", "label"] },
   { title: "AI Playlist Builder", desc: "Describe a mood and AI creates a curated playlist", icon: ListMusic, credits: 3, href: "/ai-playlist", roles: ["artist", "label", "fan"] },
   { title: "AI Video Generator", desc: "Generate short music videos and social visualizers", icon: Video, credits: "20-100", href: "/ai-video", roles: ["artist", "label"] },
+  { title: "AI Viral Generator", desc: "Turn songs into TikTok, IG Reels & YouTube Shorts promo clips", icon: Rocket, credits: "20-100", href: "/ai-viral", roles: ["artist", "label"] },
 ];
 
 export default function AIToolsHub() {
