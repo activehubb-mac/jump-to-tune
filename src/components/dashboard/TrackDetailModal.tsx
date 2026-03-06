@@ -434,6 +434,21 @@ export function TrackDetailModal({
             className="w-full gradient-accent neon-glow-subtle"
           />
 
+          {/* Viral Content Generator CTA (for track owner) */}
+          {user?.id === track.artist?.id && (
+            <Button
+              variant="outline"
+              className="w-full border-primary/30 hover:bg-primary/10"
+              onClick={() => {
+                onOpenChange(false);
+                window.location.href = `/ai-viral?track=${track.id}`;
+              }}
+            >
+              <Rocket className="h-4 w-4 mr-2 text-primary" />
+              Generate Viral Content
+            </Button>
+          )}
+
           {/* Audio Player */}
           <div className="w-full space-y-3 glass-card p-4 rounded-xl">
             {/* Progress Bar */}
