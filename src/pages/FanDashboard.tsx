@@ -371,12 +371,6 @@ export default function FanDashboard() {
             </Link>
           </Button>
           <Button asChild variant="outline" className="border-glass-border shrink-0 text-xs sm:text-sm">
-            <Link to="/for-you">
-              <Heart className="w-4 h-4 mr-1 sm:mr-2" />
-              For You
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="border-glass-border shrink-0 text-xs sm:text-sm">
             <Link to="/browse">
               <Music className="w-4 h-4 mr-1 sm:mr-2" />
               Browse

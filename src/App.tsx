@@ -99,7 +99,7 @@ function RouterContent() {
         <Route path="/go-dj/mix/:sessionId/edit" element={<GoDJMixBuilder />} />
         <Route path="/go-dj/mix/:sessionId" element={<GoDJMixPlayback />} />
         <Route path="/go-dj/:sessionId" element={<GoDJSession />} />
-        <Route path="/for-you" element={<ForYou />} />
+        
         <Route path="/artists" element={<Artists />} />
         <Route path="/labels" element={<Labels />} />
         <Route path="/artist/:id" element={<ArtistProfile />} />

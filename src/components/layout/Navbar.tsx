@@ -34,7 +34,7 @@ const navLinks = [
   { href: "/browse", label: "Browse", icon: Search },
   { href: "/ai-tools", label: "AI Tools", icon: Sparkles },
   { href: "/go-dj", label: "Go DJ", icon: Disc3 },
-  { href: "/for-you", label: "For You", icon: Sparkles, authRequired: true },
+  
   { href: "/karaoke", label: "Sing-Along", icon: Mic2 },
   { href: "/artists", label: "Artists", icon: User },
   { href: "/labels", label: "Labels", icon: Building2 },
