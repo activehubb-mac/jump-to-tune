@@ -33,7 +33,7 @@ export default function WalletPage() {
   const { showFeedback } = useFeedbackSafe();
   const [purchasingPack, setPurchasingPack] = useState<number | null>(null);
 
-  const handlePurchasePack = useCallback(async (pack: { credits: number; price: number; label: string; priceLabel: string }) => {
+  const handlePurchasePack = useCallback(async (pack: { credits: number; price: number; label: string; priceLabel: string; productId?: string }) => {
     setPurchasingPack(pack.credits);
     try {
       const { data: session } = await supabase.auth.getSession();
@@ -41,8 +41,11 @@ export default function WalletPage() {
         showFeedback({ type: "error", title: "Auth Required", message: "Please sign in." });
         return;
       }
+      const body = pack.productId
+        ? { product_id: pack.productId }
+        : { amount_cents: pack.price };
       const { data, error } = await supabase.functions.invoke("purchase-credits", {
-        body: { amount_cents: pack.price },
+        body,
         headers: { Authorization: `Bearer ${session.session.access_token}`, ...getMobileHeaders() },
       });
       if (error) {
