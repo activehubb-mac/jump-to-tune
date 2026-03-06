@@ -128,6 +128,7 @@ function RouterContent() {
         <Route path="/ai-identity" element={<AIIdentityBuilder />} />
         <Route path="/ai-playlist" element={<AIPlaylistBuilder />} />
         <Route path="/ai-video" element={<AIVideoGenerator />} />
+        <Route path="/ai-viral" element={<AIViralGenerator />} />
         <Route path="/upload/album" element={<AlbumUpload />} />
         <Route path="/album/:id" element={<AlbumDetail />} />
         <Route path="/library/liked" element={<LikedSongsDetail />} />
