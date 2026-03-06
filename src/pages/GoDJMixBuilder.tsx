@@ -47,8 +47,31 @@ export default function GoDJMixBuilder() {
     }
 
     try {
+      // Deduct 5 AI credits for publishing a mix
+      const { data: deductResult, error: deductError } = await supabase.rpc("deduct_ai_credits", {
+        p_user_id: user!.id,
+        p_credits: 5,
+      });
+
+      if (deductError || !deductResult?.success) {
+        toast({
+          title: "Insufficient AI Credits",
+          description: `You need 5 credits to publish a mix. You have ${deductResult?.current_credits ?? 0}.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Record usage
+      await supabase.from("ai_credit_usage").insert({
+        user_id: user!.id,
+        action: "dj_mix_publish",
+        credits_used: 5,
+        metadata: { session_id: sessionId },
+      });
+
       await publishSession.mutateAsync(sessionId);
-      toast({ title: "Mix Published!", description: "Your mix is now live" });
+      toast({ title: "Mix Published!", description: "Your mix is now live (5 credits used)" });
       navigate(`/go-dj/mix/${sessionId}`);
     } catch (err: any) {
       toast({ title: "Publish failed", description: err.message, variant: "destructive" });
