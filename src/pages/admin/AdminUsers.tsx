@@ -145,7 +145,44 @@ export default function AdminUsers() {
     },
   });
 
-  const filteredUsers = users?.filter(user => 
+  // Add AI credits mutation
+  const addCreditsMutation = useMutation({
+    mutationFn: async ({ userId, credits }: { userId: string; credits: number }) => {
+      const { data, error } = await supabase.rpc('add_ai_credits', { p_user_id: userId, p_credits: credits });
+      if (error) throw error;
+      if (!data?.success) throw new Error('Failed to add credits');
+      return data;
+    },
+    onSuccess: (data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success(`Added ${vars.credits} AI credits (new balance: ${data.new_credits})`);
+      setCreditUserId(null);
+      setCreditAmount('');
+    },
+    onError: (error) => {
+      toast.error('Failed: ' + (error instanceof Error ? error.message : 'Unknown'));
+    },
+  });
+
+  const deductCreditsMutation = useMutation({
+    mutationFn: async ({ userId, credits }: { userId: string; credits: number }) => {
+      const { data, error } = await supabase.rpc('deduct_ai_credits', { p_user_id: userId, p_credits: credits });
+      if (error) throw error;
+      if (!data?.success) throw new Error(`Insufficient credits. Current: ${data?.current_credits}`);
+      return data;
+    },
+    onSuccess: (data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success(`Removed ${vars.credits} AI credits (new balance: ${data.new_credits})`);
+      setCreditUserId(null);
+      setCreditAmount('');
+    },
+    onError: (error) => {
+      toast.error('Failed: ' + (error instanceof Error ? error.message : 'Unknown'));
+    },
+  });
+
+  const filteredUsers = users?.filter(user =>
     user.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
