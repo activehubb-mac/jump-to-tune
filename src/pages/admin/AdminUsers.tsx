@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Loader2, Search, CheckCircle, XCircle, User, 
-  ShieldCheck, Music, Building2, Shield, ShieldOff, CreditCard
+  ShieldCheck, Music, Building2, Shield, ShieldOff, CreditCard, Zap, Plus, Minus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -39,6 +39,8 @@ type UserWithRole = {
 
 export default function AdminUsers() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [creditUserId, setCreditUserId] = useState<string | null>(null);
+  const [creditAmount, setCreditAmount] = useState('');
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
 
@@ -143,7 +145,46 @@ export default function AdminUsers() {
     },
   });
 
-  const filteredUsers = users?.filter(user => 
+  // Add AI credits mutation
+  const addCreditsMutation = useMutation({
+    mutationFn: async ({ userId, credits }: { userId: string; credits: number }) => {
+      const { data, error } = await supabase.rpc('add_ai_credits', { p_user_id: userId, p_credits: credits });
+      if (error) throw error;
+      const result = data as Record<string, unknown>;
+      if (!result?.success) throw new Error('Failed to add credits');
+      return result;
+    },
+    onSuccess: (data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success(`Added ${vars.credits} AI credits (new balance: ${data.new_credits})`);
+      setCreditUserId(null);
+      setCreditAmount('');
+    },
+    onError: (error) => {
+      toast.error('Failed: ' + (error instanceof Error ? error.message : 'Unknown'));
+    },
+  });
+
+  const deductCreditsMutation = useMutation({
+    mutationFn: async ({ userId, credits }: { userId: string; credits: number }) => {
+      const { data, error } = await supabase.rpc('deduct_ai_credits', { p_user_id: userId, p_credits: credits });
+      if (error) throw error;
+      const result = data as Record<string, unknown>;
+      if (!result?.success) throw new Error(`Insufficient credits. Current: ${result?.current_credits}`);
+      return result;
+    },
+    onSuccess: (data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success(`Removed ${vars.credits} AI credits (new balance: ${data.new_credits})`);
+      setCreditUserId(null);
+      setCreditAmount('');
+    },
+    onError: (error) => {
+      toast.error('Failed: ' + (error instanceof Error ? error.message : 'Unknown'));
+    },
+  });
+
+  const filteredUsers = users?.filter(user =>
     user.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -362,10 +403,53 @@ export default function AdminUsers() {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+
+                    {/* AI Credits Button */}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => setCreditUserId(creditUserId === user.id ? null : user.id)}
+                    >
+                      <Zap className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
                 </div>
+
+                {/* Credit Management Inline Panel */}
+                {creditUserId === user.id && (
+                  <div className="mt-2 pt-2 border-t border-border flex items-center gap-2 flex-wrap">
+                    <Input
+                      type="number"
+                      placeholder="Credits"
+                      value={creditAmount}
+                      onChange={(e) => setCreditAmount(e.target.value)}
+                      className="w-24 h-7 text-xs"
+                      min={1}
+                    />
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      disabled={!creditAmount || parseInt(creditAmount) <= 0 || addCreditsMutation.isPending}
+                      onClick={() => addCreditsMutation.mutate({ userId: user.id, credits: parseInt(creditAmount) })}
+                    >
+                      <Plus className="w-3 h-3" /> Add
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-7 text-xs gap-1"
+                      disabled={!creditAmount || parseInt(creditAmount) <= 0 || deductCreditsMutation.isPending}
+                      onClick={() => deductCreditsMutation.mutate({ userId: user.id, credits: parseInt(creditAmount) })}
+                    >
+                      <Minus className="w-3 h-3" /> Remove
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
+
+
 
             {filteredUsers?.length === 0 && (
               <p className="text-center text-muted-foreground py-8 text-sm">

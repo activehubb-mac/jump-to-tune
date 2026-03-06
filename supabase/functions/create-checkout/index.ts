@@ -9,9 +9,9 @@ const corsHeaders = {
 
 // Subscription price IDs by tier (Creator / Creator Pro / Label-Studio)
 const SUBSCRIPTION_PRICES = {
-  fan: "price_1T7sAyEKeZaBsSwj3L6Izcpg",
-  artist: "price_1T7sDgEKeZaBsSwjoHlPVKQL",
-  label: "price_1T7sFHEKeZaBsSwjLEDZiC7L",
+  fan: "price_1T7sAyEKeZaBsSwj3L6Izcpg",       // Creator $10/mo
+  artist: "price_1T7smDEKeZaBsSwjVd5hBpyq",     // Creator Pro $25/mo
+  label: "price_1T7sFHEKeZaBsSwjLEDZiC7L",      // Label/Studio $79/mo
 };
 
 const logStep = (step: string, details?: any) => {

@@ -14,20 +14,29 @@ const logStep = (step: string, details?: any) => {
 
 // Map Stripe price IDs to tiers (reverse of SUBSCRIPTION_PRICES)
 const PRICE_TO_TIER: Record<string, "fan" | "artist" | "label"> = {
-  "price_1T7sAyEKeZaBsSwj3L6Izcpg": "fan",
-  "price_1T7sDgEKeZaBsSwjoHlPVKQL": "artist",
-  "price_1T7sFHEKeZaBsSwjLEDZiC7L": "label",
+  "price_1T7sAyEKeZaBsSwj3L6Izcpg": "fan",    // Creator $10/mo
+  "price_1T7smDEKeZaBsSwjVd5hBpyq": "artist",  // Creator Pro $25/mo
+  "price_1T7sFHEKeZaBsSwjLEDZiC7L": "label",   // Label/Studio $79/mo
   // Legacy price IDs (keep for existing subscribers)
   "price_1SpXymEKeZaBsSwjs3UezAPu": "fan",
   "price_1SpXyyEKeZaBsSwj0fe2MazX": "artist",
   "price_1SpXz9EKeZaBsSwjgEhsxsHg": "label",
+  "price_1T7sDgEKeZaBsSwjoHlPVKQL": "artist",  // old artist price
 };
 
 // AI credits per tier for monthly refresh
 const TIER_CREDITS: Record<string, number> = {
-  fan: 150,
-  artist: 500,
+  fan: 300,
+  artist: 800,
   label: 2000,
+};
+
+// Product ID → AI credits mapping for credit packs & starter pack
+const PRODUCT_AI_CREDITS: Record<string, number> = {
+  "prod_U64QH9DtMPUYNi": 100,   // 100 AI Credits pack
+  "prod_U64Scf2yEj3f3R": 500,   // 500 AI Credits pack
+  "prod_U64VwSdypd7g5x": 2000,  // 2000 AI Credits pack
+  "prod_U64XcXRpHSD7Qz": 500,   // AI Artist Starter Pack (500 credits)
 };
 
 serve(async (req) => {
@@ -571,14 +580,54 @@ serve(async (req) => {
             }
           }
         } else if (session.mode === "payment") {
-          // Check if this is a credit purchase
+          // ── AI CREDIT PACK HANDLER ──────────────────────────────────────
+          if (metadata.type === "ai_credit_pack") {
+            const userId = metadata.user_id;
+            const aiCredits = parseInt(metadata.ai_credits || "0", 10);
+            const productId = metadata.product_id || "custom";
+
+            if (userId && aiCredits > 0) {
+              logStep("Processing AI credit pack purchase", { userId, aiCredits, productId });
+
+              const { data: addResult, error: addError } = await supabaseClient.rpc(
+                "add_ai_credits",
+                { p_user_id: userId, p_credits: aiCredits }
+              );
+
+              if (addError) {
+                logStep("Error adding AI credits", { error: addError.message });
+              } else {
+                logStep("AI credits added", { userId, credits: aiCredits, newBalance: addResult?.new_credits });
+
+                // Record in ai_credit_usage
+                await supabaseClient.from("ai_credit_usage").insert({
+                  user_id: userId,
+                  action: "credit_pack_purchase",
+                  credits_used: -aiCredits, // negative = added
+                  metadata: { product_id: productId, stripe_session_id: session.id },
+                });
+
+                // Notify user
+                await supabaseClient.from("notifications").insert({
+                  user_id: userId,
+                  type: "credits_purchased",
+                  title: "AI Credits Added! 🎉",
+                  message: `${aiCredits} AI credits have been added to your wallet.`,
+                  metadata: { credits: aiCredits, product_id: productId },
+                });
+              }
+            }
+            break;
+          }
+
+          // Check if this is a legacy credit purchase (USD wallet)
           if (metadata.type === "credit_purchase") {
             const userId = metadata.user_id;
             const creditsCents = parseInt(metadata.credits_cents || "0", 10);
             const feeCents = parseInt(metadata.fee_cents || "0", 10);
 
             if (userId && creditsCents > 0) {
-              logStep("Processing credit purchase", { userId, creditsCents, feeCents });
+              logStep("Processing legacy credit purchase", { userId, creditsCents, feeCents });
 
               const { data: addResult, error: addError } = await supabaseClient.rpc(
                 'add_credits_atomic',
@@ -588,10 +637,7 @@ serve(async (req) => {
               if (addError || !addResult?.success) {
                 logStep("Error adding credits atomically", { error: addError?.message || "Unknown" });
               } else {
-                const previousBalance = addResult.previous_balance;
-                const newBalance = addResult.new_balance;
-                
-                logStep("Credits added atomically", { previousBalance, added: creditsCents, newBalance });
+                logStep("Credits added atomically", { added: creditsCents, newBalance: addResult.new_balance });
 
                 await supabaseClient.from("credit_transactions").insert({
                   user_id: userId,
@@ -601,35 +647,6 @@ serve(async (req) => {
                   stripe_payment_intent_id: session.payment_intent as string,
                   description: `Added $${(creditsCents / 100).toFixed(2)} credits`,
                 });
-                logStep("Credit transaction recorded");
-
-                await supabaseClient.from("notifications").insert({
-                  user_id: userId,
-                  type: "credit_purchase",
-                  title: "Credits Added!",
-                  message: `$${(creditsCents / 100).toFixed(2)} credits have been added to your wallet.`,
-                  metadata: { amount_cents: creditsCents, fee_cents: feeCents, new_balance: newBalance },
-                });
-                logStep("Credit purchase notification created");
-
-                try {
-                  fetch(
-                    `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-credit-email`,
-                    {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-                      },
-                      body: JSON.stringify({ userId, amountCents: creditsCents, feeCents, newBalanceCents: newBalance }),
-                    }
-                  ).then(res => {
-                    if (!res.ok) logStep("Credit email failed", { status: res.status });
-                    else logStep("Credit email sent");
-                  }).catch(err => logStep("Credit email error", { error: err.message }));
-                } catch (emailError) {
-                  logStep("Credit email error (non-blocking)", { error: emailError instanceof Error ? emailError.message : "Unknown" });
-                }
               }
             }
           } else {

@@ -51,7 +51,7 @@ const SUBSCRIPTION_TIERS = [
     name: "Creator",
     price: "$10",
     priceValue: 10,
-    features: ["150 AI credits / month", "Upload unlimited tracks", "AI cover art & release builder", "Artist dashboard & analytics"],
+    features: ["300 AI credits / month", "Upload unlimited tracks", "AI cover art generator", "AI release builder", "Artist dashboard & analytics"],
     description: "Start releasing AI music",
   },
   {
@@ -59,7 +59,7 @@ const SUBSCRIPTION_TIERS = [
     name: "Creator Pro",
     price: "$25",
     priceValue: 25,
-    features: ["500 AI credits / month", "All Creator features", "AI video generator", "Priority AI processing"],
+    features: ["800 AI credits / month", "All Creator features", "AI video generator", "AI avatar generator", "AI playlist generator", "Priority AI processing"],
     description: "For serious AI creators",
   },
   {
@@ -67,7 +67,7 @@ const SUBSCRIPTION_TIERS = [
     name: "Label / Studio",
     price: "$79",
     priceValue: 79,
-    features: ["2,000 AI credits / month", "All Pro features", "Manage up to 10 artists", "Label dashboard & roster management"],
+    features: ["2,000 AI credits / month", "All Pro features", "All AI features unlocked", "Multi-artist management (up to 10)", "Label dashboard & roster management"],
     description: "For studios & labels",
   },
 ];
