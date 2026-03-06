@@ -83,6 +83,21 @@ export default function AdminTracks() {
     },
   });
 
+  // Toggle sing mode
+  const toggleSingModeMutation = useMutation({
+    mutationFn: async ({ trackId, enabled }: { trackId: string; enabled: boolean }) => {
+      const { error } = await supabase
+        .from('track_karaoke')
+        .update({ sing_mode_enabled: enabled })
+        .eq('track_id', trackId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-track-karaoke'] });
+      toast.success('Sing Mode updated');
+    },
+    onError: () => toast.error('Failed to update Sing Mode'),
+
   // Delete track
   const deleteMutation = useMutation({
     mutationFn: async (trackId: string) => {
