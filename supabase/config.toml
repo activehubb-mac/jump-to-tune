@@ -140,3 +140,6 @@ verify_jwt = false
 
 [functions.ai-fan-discovery]
 verify_jwt = false
+
+[functions.ai-viral-generator]
+verify_jwt = false
