@@ -7,10 +7,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2, CreditCard, Wallet, Info } from "lucide-react";
-import { useWallet } from "@/hooks/useWallet";
+import { Loader2, Zap, Sparkles, Rocket } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAICredits } from "@/hooks/useAICredits";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 interface QuickTopupModalProps {
@@ -18,168 +19,124 @@ interface QuickTopupModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const PRESET_AMOUNTS = [
-  { cents: 500, label: "$5" },
-  { cents: 1000, label: "$10" },
-  { cents: 2500, label: "$25" },
-  { cents: 5000, label: "$50" },
-  { cents: 10000, label: "$100" },
+const CREDIT_PACKS = [
+  {
+    productId: "prod_U64QH9DtMPUYNi",
+    credits: 100,
+    price: "$10",
+    label: "100 Credits",
+    icon: Zap,
+    description: "Great for occasional use",
+  },
+  {
+    productId: "prod_U64Scf2yEj3f3R",
+    credits: 500,
+    price: "$40",
+    label: "500 Credits",
+    icon: Sparkles,
+    description: "Best value for creators",
+    popular: true,
+  },
+  {
+    productId: "prod_U64VwSdypd7g5x",
+    credits: 2000,
+    price: "$120",
+    label: "2,000 Credits",
+    icon: Rocket,
+    description: "For power users & teams",
+  },
 ];
 
 export function QuickTopupModal({ open, onOpenChange }: QuickTopupModalProps) {
-  const { balanceDollars, purchaseCredits, isPurchasing } = useWallet();
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(1000);
-  const [customAmount, setCustomAmount] = useState("");
-  const [isCustom, setIsCustom] = useState(false);
+  const { user } = useAuth();
+  const { aiCredits, isLoading: isLoadingBalance } = useAICredits();
+  const [purchasing, setPurchasing] = useState<string | null>(null);
 
-  const handlePresetClick = (cents: number) => {
-    setSelectedAmount(cents);
-    setIsCustom(false);
-    setCustomAmount("");
-  };
-
-  const handleCustomChange = (value: string) => {
-    setCustomAmount(value);
-    setIsCustom(true);
-    setSelectedAmount(null);
-  };
-
-  const getAmountCents = (): number => {
-    if (isCustom && customAmount) {
-      return Math.round(parseFloat(customAmount) * 100);
+  const handlePurchase = async (productId: string) => {
+    if (!user) return;
+    setPurchasing(productId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("purchase-credits", {
+        body: { product_id: productId },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (res.error) throw new Error(res.error.message);
+      const { url } = res.data;
+      if (url) window.location.href = url;
+    } catch (err: any) {
+      toast.error(err.message || "Failed to start checkout");
+    } finally {
+      setPurchasing(null);
     }
-    return selectedAmount || 0;
   };
-
-  const getFeeAndCredits = () => {
-    const amountCents = getAmountCents();
-    const feeCents = Math.ceil(amountCents * 0.01);
-    const creditsCents = amountCents - feeCents;
-    return { amountCents, feeCents, creditsCents };
-  };
-
-  const handlePurchase = async () => {
-    const { amountCents } = getFeeAndCredits();
-    if (amountCents < 500) return;
-
-    await purchaseCredits(amountCents);
-    onOpenChange(false);
-  };
-
-  const { amountCents, feeCents, creditsCents } = getFeeAndCredits();
-  const isValid = amountCents >= 500;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Wallet className="h-5 w-5 text-primary" />
-            Add Credits
+            <Zap className="h-5 w-5 text-primary" />
+            Buy AI Credits
           </DialogTitle>
           <DialogDescription>
-            Credits are used for instant purchases. Minimum purchase is $5.
+            Credits power all AI tools — cover art, videos, identity builder & more.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Current Balance */}
           <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
             <span className="text-sm text-muted-foreground">Current Balance</span>
-            <span className="font-semibold text-lg">${balanceDollars.toFixed(2)}</span>
+            <span className="font-semibold text-lg">
+              {isLoadingBalance ? "..." : `${aiCredits} credits`}
+            </span>
           </div>
 
-          {/* Preset Amounts */}
-          <div className="space-y-2">
-            <Label>Select Amount</Label>
-            <div className="grid grid-cols-5 gap-2">
-              {PRESET_AMOUNTS.map((amount) => (
-                <Button
-                  key={amount.cents}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePresetClick(amount.cents)}
+          {/* Credit Packs */}
+          <div className="space-y-3">
+            {CREDIT_PACKS.map((pack) => {
+              const Icon = pack.icon;
+              return (
+                <button
+                  key={pack.productId}
+                  onClick={() => handlePurchase(pack.productId)}
+                  disabled={!!purchasing}
                   className={cn(
-                    "border-glass-border",
-                    selectedAmount === amount.cents && !isCustom &&
-                      "border-primary bg-primary/20 text-primary"
+                    "w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left",
+                    "border-border hover:border-primary/50 hover:bg-primary/5",
+                    pack.popular && "border-primary/30 bg-primary/5",
+                    purchasing === pack.productId && "opacity-70"
                   )}
                 >
-                  {amount.label}
-                </Button>
-              ))}
-            </div>
+                  <div className={cn(
+                    "h-10 w-10 rounded-lg flex items-center justify-center shrink-0",
+                    "bg-primary/10"
+                  )}>
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-foreground">{pack.label}</span>
+                      {pack.popular && (
+                        <span className="text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full font-medium">
+                          Popular
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{pack.description}</p>
+                  </div>
+                  <div className="shrink-0">
+                    {purchasing === pack.productId ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    ) : (
+                      <span className="font-bold text-foreground">{pack.price}</span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
-
-          {/* Custom Amount */}
-          <div className="space-y-2">
-            <Label htmlFor="custom-amount">Or enter custom amount</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                $
-              </span>
-              <Input
-                id="custom-amount"
-                type="number"
-                min="5"
-                step="0.01"
-                placeholder="5.00"
-                value={customAmount}
-                onChange={(e) => handleCustomChange(e.target.value)}
-                className={cn(
-                  "pl-7",
-                  isCustom && "border-primary"
-                )}
-              />
-            </div>
-          </div>
-
-          {/* Fee Breakdown */}
-          {isValid && (
-            <div className="p-3 rounded-lg bg-muted/50 space-y-2 text-sm">
-              <div className="flex items-start gap-2 text-muted-foreground">
-                <Info className="h-4 w-4 mt-0.5 shrink-0" />
-                <span>A 1% processing fee is applied when purchasing credits.</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">You pay</span>
-                <span>${(amountCents / 100).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Processing fee (1%)</span>
-                <span>-${(feeCents / 100).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between font-semibold text-primary border-t border-border pt-2">
-                <span>Credits added</span>
-                <span>${(creditsCents / 100).toFixed(2)}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Purchase Button */}
-          <Button
-            className="w-full gradient-accent neon-glow-subtle"
-            onClick={handlePurchase}
-            disabled={!isValid || isPurchasing}
-          >
-            {isPurchasing ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <CreditCard className="h-4 w-4 mr-2" />
-                Add ${isValid ? (creditsCents / 100).toFixed(2) : "0.00"} Credits
-              </>
-            )}
-          </Button>
-
-          {!isValid && amountCents > 0 && (
-            <p className="text-sm text-destructive text-center">
-              Minimum purchase is $5.00
-            </p>
-          )}
         </div>
       </DialogContent>
     </Dialog>

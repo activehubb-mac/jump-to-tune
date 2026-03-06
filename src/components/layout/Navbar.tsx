@@ -644,7 +644,7 @@ export function Navbar() {
 
       {/* Profile Edit Modal */}
       <ProfileEditModal open={isProfileOpen} onOpenChange={setIsProfileOpen} />
-      <QuickTopupModal open={showTopupModal} onOpenChange={setShowTopupModal} />
+      
     </>
   );
 }
