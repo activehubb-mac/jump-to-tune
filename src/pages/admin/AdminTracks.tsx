@@ -180,6 +180,25 @@ export default function AdminTracks() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 ml-auto">
+                  {/* Toggle Sing Mode */}
+                  {singModeMap.has(track.id) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      title={singModeMap.get(track.id) ? 'Disable Sing Mode' : 'Enable Sing Mode'}
+                      onClick={() => toggleSingModeMutation.mutate({
+                        trackId: track.id,
+                        enabled: !singModeMap.get(track.id),
+                      })}
+                    >
+                      {singModeMap.get(track.id) ? (
+                        <Mic className="w-3.5 h-3.5 text-primary" />
+                      ) : (
+                        <MicOff className="w-3.5 h-3.5 text-muted-foreground" />
+                      )}
+                    </Button>
+                  )}
                   {/* Toggle Visibility */}
                   <Button
                     variant="outline"
