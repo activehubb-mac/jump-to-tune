@@ -52,7 +52,7 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MiB limit
         // Skip caching audio URLs with cache-busting params (Safari retry mechanism)
-        navigateFallbackDenylist: [/_nocache=/],
+        navigateFallbackDenylist: [/_nocache=/, /^\/~oauth/],
         runtimeCaching: [
           {
             // Match Supabase storage audio BUT exclude cache-busting URLs
