@@ -116,3 +116,18 @@ verify_jwt = false
 
 [functions.ai-release-builder]
 verify_jwt = false
+
+[functions.ai-cover-art]
+verify_jwt = false
+
+[functions.ai-identity-builder]
+verify_jwt = false
+
+[functions.ai-playlist-builder]
+verify_jwt = false
+
+[functions.ai-video-generator]
+verify_jwt = false
+
+[functions.ai-launch-card]
+verify_jwt = false

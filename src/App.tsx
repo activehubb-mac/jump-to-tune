@@ -121,7 +121,12 @@ function RouterContent() {
         <Route path="/label/payouts" element={<LabelPayouts />} />
         <Route path="/label/roster" element={<LabelRoster />} />
         <Route path="/upload" element={<Upload />} />
+        <Route path="/ai-tools" element={<AIToolsHub />} />
         <Route path="/ai-release" element={<AIReleaseBuilder />} />
+        <Route path="/ai-cover-art" element={<CoverArtGenerator />} />
+        <Route path="/ai-identity" element={<AIIdentityBuilder />} />
+        <Route path="/ai-playlist" element={<AIPlaylistBuilder />} />
+        <Route path="/ai-video" element={<AIVideoGenerator />} />
         <Route path="/upload/album" element={<AlbumUpload />} />
         <Route path="/album/:id" element={<AlbumDetail />} />
         <Route path="/library/liked" element={<LikedSongsDetail />} />
