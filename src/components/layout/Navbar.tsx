@@ -22,7 +22,7 @@ import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutD
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { CreditBalanceChip } from "@/components/wallet/CreditBalanceChip";
 import { SubscriptionCountdownChip } from "@/components/subscription/SubscriptionCountdownChip";
-import { QuickTopupModal } from "@/components/wallet/QuickTopupModal";
+
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -44,7 +44,7 @@ const navLinks = [
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [showTopupModal, setShowTopupModal] = useState(false);
+  
   const [isMobileNotificationsOpen, setIsMobileNotificationsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -162,7 +162,7 @@ export function Navbar() {
                   <SubscriptionCountdownChip />
 
                   {/* Credit Balance Chip */}
-                  <CreditBalanceChip onClick={() => setShowTopupModal(true)} />
+                  <CreditBalanceChip onClick={() => navigate("/wallet")} />
 
                   {/* Notifications Bell */}
                   <DropdownMenu>
@@ -644,7 +644,7 @@ export function Navbar() {
 
       {/* Profile Edit Modal */}
       <ProfileEditModal open={isProfileOpen} onOpenChange={setIsProfileOpen} />
-      <QuickTopupModal open={showTopupModal} onOpenChange={setShowTopupModal} />
+      
     </>
   );
 }
