@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Disc3, Play, Pause, Volume2, VolumeX, Users, Mic2, Shield, Download } from "lucide-react";
+import { Disc3, Play, Pause, Volume2, VolumeX, Users, Mic2, Shield, Download, Rocket } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
 import { Slider } from "@/components/ui/slider";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
