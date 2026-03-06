@@ -50,6 +50,20 @@ export default function AdminTracks() {
     },
   });
 
+  // Fetch sing mode status for all tracks
+  const { data: karaokeData = [] } = useQuery({
+    queryKey: ['admin-track-karaoke'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('track_karaoke')
+        .select('track_id, sing_mode_enabled');
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const singModeMap = new Map(karaokeData.map(k => [k.track_id, k.sing_mode_enabled]));
+
   // Toggle draft status (hide/show)
   const toggleDraftMutation = useMutation({
     mutationFn: async ({ trackId, isDraft }: { trackId: string; isDraft: boolean }) => {
