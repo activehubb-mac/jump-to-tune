@@ -1,55 +1,43 @@
 
 
-# Stripe Integration & Legacy Migration — Assessment
+# Full Cross-Device Audit for JumTunes
 
-## Already Built
+After thoroughly reviewing the codebase -- routing, auth, layout, PWA config, Capacitor setup, safe-area handling, edge functions, Stripe flows, audio player, wallet, and AI tools -- here is the status and one actionable fix.
 
-Nearly everything requested is **already implemented**:
+## What's Working Correctly
 
-| Feature | Status | Location |
-|---------|--------|----------|
-| Legacy migration with fan safeguards | Done | `migrate-legacy-subscriptions/index.ts` |
-| migration_logs table | Done | Migration `20260306074329` |
-| Fan account skip logic | Done | Checks `role = fan`, increments `skipped_fans` |
-| Wallet USD → AI credit conversion (1:10) | Done | Migration function handles `credit_wallets.balance_cents` |
-| founding_user flag | Done | Set during migration |
-| AI credit wallet (credit_wallets table) | Done | Has `ai_credits`, `balance_cents` columns |
-| AI credit deduction (atomic RPC) | Done | `deduct_ai_credits` function |
-| AI credit addition (atomic RPC) | Done | `add_ai_credits` function |
-| ai_credit_usage table | Done | Migration `20260305031156` |
-| ai_credit_costs table | Done | Configurable per-tool costs |
-| Stripe webhook: credit packs | Done | Handles `ai_credit_pack` metadata |
-| Stripe webhook: subscriptions + role sync | Done | Full tier/role management |
-| Stripe webhook: monthly credit refresh | Partial | Need to verify `invoice.paid` handler |
-| purchase-credits edge function | Done | Product-based packs with Stripe prices |
-| Admin dashboard | Done | Users, tracks, finance, reports |
-| Credit pack products mapped | Done | All 4 product IDs in webhook + purchase function |
+| Area | Status | Notes |
+|------|--------|-------|
+| **Routing** (40+ routes) | OK | All pages registered in App.tsx, 404 catch-all present |
+| **Auth flow** | OK | Sign up/in, role assignment, profile fetch, email verification |
+| **Safe-area insets** | OK | Navbar, Layout, GlobalAudioPlayer, FullscreenPlayer, Sheet, Drawer all use `env(safe-area-inset-*)` |
+| **Mobile menu** | OK | Body scroll lock, touch-manipulation, min touch targets (44px) |
+| **Capacitor deep linking** | OK | `jumtunes://` scheme handled, cache invalidation on resume |
+| **Stripe checkout (mobile)** | OK | `x-jumtunes-mobile` header detected, deep link URLs for success/cancel |
+| **Audio player** | OK | Fixed bottom bar with safe-area padding, fullscreen mode, queue |
+| **PWA manifest** | OK | Icons, theme color, standalone display, portrait orientation |
+| **Wallet & AI credits** | OK | Atomic RPC functions, credit pack purchases, consistent $98 pricing |
+| **AI tools** | OK | All 6 tools routed, credit checks, role gating |
+| **Subscription system** | OK | Trial tracking, tier management, webhook processing |
+| **Edge functions** | OK | All 31 functions registered in config.toml with `verify_jwt = false` |
+| **viewport meta** | OK | `viewport-fit=cover` for notch devices |
+| **index.html** | OK | PWA meta tags, apple-mobile-web-app-capable, status bar style |
 
-## What's Missing or Needs Attention
+## Issue Found: PWA OAuth Route Not Excluded from Service Worker
 
-### 1. `invoice.paid` handler for monthly credit refresh
-The webhook needs to handle `invoice.paid` events to refresh AI credits monthly for subscribers. Let me verify this exists.
+The `navigateFallbackDenylist` in `vite.config.ts` only excludes `/_nocache=/` but does **not** exclude `/~oauth`. Per platform requirements, OAuth redirects to `/~oauth` must always hit the network and never be cached by the service worker. This can cause auth callback failures on all devices when the PWA is installed.
 
-### 2. Requested tables already covered differently
-- **user_ai_wallet** → Already `credit_wallets` (has `ai_credits`, `balance_cents`, `user_id`)
-- **ai_credit_transactions** → Already `ai_credit_usage` (has `user_id`, `action`, `credits_used`, `metadata`, `created_at`)
+### Fix
 
-Creating duplicate tables would fragment the data. The existing schema covers all requested fields.
+In `vite.config.ts` line 55, update:
 
-### 3. Admin credit adjustment UI
-Admin can already manage users from `/admin/users`. A manual credit adjustment action may need to be added to the admin UI.
+```typescript
+navigateFallbackDenylist: [/_nocache=/, /^\/~oauth/],
+```
 
-## Plan
+This is a one-line change that prevents the service worker from intercepting OAuth redirects.
 
-### Step 1: Verify invoice.paid handler
-Check if the stripe-webhook already handles `invoice.paid` for monthly credit refresh. If not, add it.
+## Summary
 
-### Step 2: Add admin credit adjustment
-Add an admin action to manually adjust AI credits for any user from the admin users page.
-
-### Step 3: No new tables
-The existing `credit_wallets` and `ai_credit_usage` tables already serve the purpose of the requested `user_ai_wallet` and `ai_credit_transactions`. Creating duplicates would cause data fragmentation and bugs.
-
-### Summary
-The Stripe integration, legacy migration, fan protection, wallet conversion, and credit system are **already fully built**. The only gaps are verifying the monthly credit refresh webhook handler and adding admin credit adjustment capability.
+The platform is architecturally sound across web, PWA, and native (Capacitor). Safe-area insets, touch targets, scroll behavior, Stripe mobile flows, and deep linking are all properly implemented. The single fix above addresses a potential OAuth caching issue that could affect login on installed PWA instances.
 
