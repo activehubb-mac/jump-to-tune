@@ -161,6 +161,8 @@ function RouterContent() {
           <Route path="featured" element={<AdminFeatured />} />
           <Route path="finance" element={<AdminFinance />} />
           <Route path="stores" element={<AdminStores />} />
+          <Route path="credits" element={<AdminCredits />} />
+          <Route path="subscriptions" element={<AdminSubscriptions />} />
           <Route path="reports" element={<AdminReports />} />
           <Route path="analytics" element={<AdminAnalytics />} />
         </Route>

@@ -13,6 +13,8 @@ const adminNavItems = [
   { path: '/admin/tracks', label: 'Tracks', icon: Music },
   { path: '/admin/featured', label: 'Featured', icon: Star },
   { path: '/admin/stores', label: 'Stores', icon: Store },
+  { path: '/admin/credits', label: 'AI Credits', icon: Zap },
+  { path: '/admin/subscriptions', label: 'Subs', icon: CreditCard },
   { path: '/admin/finance', label: 'Finance', icon: DollarSign },
   { path: '/admin/reports', label: 'Reports', icon: Flag },
   { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
