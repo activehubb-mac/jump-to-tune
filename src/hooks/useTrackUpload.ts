@@ -21,6 +21,7 @@ export interface KaraokeData {
   enabled: boolean;
   instrumentalFile: File | null;
   lyrics: string;
+  singModeEnabled?: boolean;
 }
 
 export interface TrackCreditsData {
