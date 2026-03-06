@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Lock, Loader2, AlertCircle, Save, Rocket, UserCircle, Disc3 } from "lucide-react";
+import { Lock, Loader2, AlertCircle, Save, Rocket, UserCircle, Disc3, Sparkles } from "lucide-react";
 import {
   Select,
   SelectContent,
