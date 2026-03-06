@@ -21,7 +21,7 @@ import LabelProfile from "./pages/LabelProfile";
 import UserProfile from "./pages/UserProfile";
 import Collection from "./pages/Collection";
 import FanDashboard from "./pages/FanDashboard";
-import ForYou from "./pages/ForYou";
+
 import ArtistDashboard from "./pages/ArtistDashboard";
 import ArtistAnalytics from "./pages/ArtistAnalytics";
 import ArtistCollectors from "./pages/ArtistCollectors";
