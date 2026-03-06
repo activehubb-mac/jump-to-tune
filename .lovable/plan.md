@@ -1,16 +1,24 @@
 
+# Make Recent Updates Available for Mobile
 
-# Remove "For You" Feature
+The recent changes (hiding track/follower counts from artist cards, hiding price/collectors from track cards) were applied to the homepage and browse pages, but several other pages still display this data on cards. These pages are used on both desktop and mobile.
 
-## Changes
+## Changes Required
 
-1. **`src/components/layout/Navbar.tsx`** — Remove the `{ href: "/for-you", label: "For You", ... }` entry from the nav links array.
+### 1. `src/pages/Artists.tsx` -- Remove tracks/fans from artist cards
 
-2. **`src/App.tsx`** — Remove the `ForYou` import and the `<Route path="/for-you" ... />` route.
+**Featured Artists section (lines 149-152):** Remove the stats row showing "X tracks" and "X fans"
 
-3. **`src/pages/FanDashboard.tsx`** — Remove the "For You" button/link (around line 373-377).
+**All Artists grid (lines 183-187):** Remove "X tracks" text and "X fans" text below each artist name
 
-4. **Delete files**:
-   - `src/pages/ForYou.tsx`
-   - `src/hooks/useForYouPlaylist.ts`
+### 2. `src/pages/FanDashboard.tsx` -- Remove stats from followed artist cards
 
+**Line 277:** Change `{artist.trackCount} tracks . {artist.followerCount} followers` to just `"Artist"` label
+
+### 3. Cleanup: Remove unused imports/data
+
+- In `Artists.tsx`: Remove `useFollowerCounts` import and hook call since follower counts are no longer displayed on cards
+- Remove `formatCompactNumber` import if no longer used
+- Remove the `followers` variable assignments in the map callbacks
+
+These are all the remaining places where track/follower counts appear on artist cards and price/editions appear on track cards outside of profile/detail views. The changes ensure consistency across desktop and mobile.
