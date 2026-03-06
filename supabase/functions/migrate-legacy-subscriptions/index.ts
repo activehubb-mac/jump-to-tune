@@ -70,6 +70,7 @@ serve(async (req) => {
       total_credits_converted: 0,
       total_wallet_usd_converted: 0,
       skipped_already_migrated: 0,
+      skipped_fans: 0,
       errors: [] as string[],
       details: [] as Array<{
         user_id: string;
@@ -158,6 +159,23 @@ serve(async (req) => {
 
       if (!userId) {
         results.errors.push(`No user found for subscription ${subId} (email: ${customerEmail})`);
+        continue;
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // FAN SAFEGUARD: Skip users with fan role — fans are free users
+      // and must never be affected by the creator migration.
+      // ═══════════════════════════════════════════════════════════════
+      const { data: userRole } = await supabaseClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .neq("role", "admin")
+        .maybeSingle();
+
+      if (userRole?.role === "fan") {
+        results.skipped_fans = (results.skipped_fans || 0) + 1;
+        logStep("SKIPPED fan account — no migration applied", { userId, email: customerEmail });
         continue;
       }
 
@@ -294,7 +312,8 @@ serve(async (req) => {
       cancelled: results.total_subscriptions_cancelled,
       migrated: results.total_users_migrated,
       credits: results.total_credits_converted,
-      skipped: results.skipped_already_migrated,
+      skipped_already_migrated: results.skipped_already_migrated,
+      skipped_fans: results.skipped_fans,
       errors: results.errors.length,
     });
 

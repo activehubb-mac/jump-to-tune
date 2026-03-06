@@ -9,6 +9,7 @@ import { RecentlyViewedSection } from "@/components/browse/RecentlyViewedSection
 import { HeroCarousel } from "@/components/browse/HeroCarousel";
 import { AlbumCard } from "@/components/browse/AlbumCard";
 import { BrowseFilterBar } from "@/components/browse/BrowseFilterBar";
+import { AIDiscoveryBar } from "@/components/browse/AIDiscoveryBar";
 import { SearchResultsView } from "@/components/browse/SearchResultsView";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { Link } from "react-router-dom";
@@ -347,6 +348,9 @@ export default function Browse() {
           <h1 className="text-4xl font-bold text-foreground mb-2">Browse Music</h1>
           <p className="text-muted-foreground">Discover and collect exclusive tracks from talented artists</p>
         </div>
+
+        {/* AI Discovery Bar — free for all users */}
+        <AIDiscoveryBar />
 
         {/* Recently Viewed Section */}
         <RecentlyViewedSection
