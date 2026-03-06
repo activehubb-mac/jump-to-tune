@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Loader2, Search, Trash2, Eye, EyeOff, Music, AlertTriangle 
+  Loader2, Search, Trash2, Eye, EyeOff, Music, AlertTriangle, Mic, MicOff 
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
