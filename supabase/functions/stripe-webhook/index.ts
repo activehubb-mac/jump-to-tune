@@ -14,9 +14,20 @@ const logStep = (step: string, details?: any) => {
 
 // Map Stripe price IDs to tiers (reverse of SUBSCRIPTION_PRICES)
 const PRICE_TO_TIER: Record<string, "fan" | "artist" | "label"> = {
+  "price_1T7sAyEKeZaBsSwj3L6Izcpg": "fan",
+  "price_1T7sDgEKeZaBsSwjoHlPVKQL": "artist",
+  "price_1T7sFHEKeZaBsSwjLEDZiC7L": "label",
+  // Legacy price IDs (keep for existing subscribers)
   "price_1SpXymEKeZaBsSwjs3UezAPu": "fan",
   "price_1SpXyyEKeZaBsSwj0fe2MazX": "artist",
   "price_1SpXz9EKeZaBsSwjgEhsxsHg": "label",
+};
+
+// AI credits per tier for monthly refresh
+const TIER_CREDITS: Record<string, number> = {
+  fan: 150,
+  artist: 500,
+  label: 2000,
 };
 
 serve(async (req) => {
@@ -1300,6 +1311,64 @@ serve(async (req) => {
         });
         // Transfer events are primarily for logging/auditing
         // The actual payout tracking happens via payout.paid events
+        break;
+      }
+
+      // ── INVOICE PAID → Monthly Credit Refresh ──────────────────────────
+      case "invoice.paid": {
+        const invoice = event.data.object as Stripe.Invoice;
+        logStep("Invoice paid", { invoiceId: invoice.id, subscriptionId: invoice.subscription });
+
+        // Only process subscription invoices (not one-time payments)
+        if (invoice.subscription && invoice.billing_reason !== "subscription_create") {
+          const subscriptionId = invoice.subscription as string;
+
+          // Find user and tier from our subscriptions table
+          const { data: subRecord } = await supabaseClient
+            .from("subscriptions")
+            .select("user_id, tier")
+            .eq("stripe_subscription_id", subscriptionId)
+            .single();
+
+          if (subRecord) {
+            const creditsToAdd = TIER_CREDITS[subRecord.tier] || 0;
+
+            if (creditsToAdd > 0) {
+              const { data: addResult, error: addError } = await supabaseClient.rpc(
+                "add_ai_credits",
+                { p_user_id: subRecord.user_id, p_credits: creditsToAdd }
+              );
+
+              if (addError) {
+                logStep("Error adding monthly AI credits", { error: addError.message });
+              } else {
+                logStep("Monthly AI credits added", {
+                  userId: subRecord.user_id,
+                  tier: subRecord.tier,
+                  credits: creditsToAdd,
+                  newBalance: addResult?.new_credits,
+                });
+
+                // Record usage
+                await supabaseClient.from("ai_credit_usage").insert({
+                  user_id: subRecord.user_id,
+                  action: "monthly_refresh",
+                  credits_used: -creditsToAdd, // negative = added
+                  metadata: { tier: subRecord.tier, invoice_id: invoice.id },
+                });
+
+                // Notify user
+                await supabaseClient.from("notifications").insert({
+                  user_id: subRecord.user_id,
+                  type: "credits_refreshed",
+                  title: "Monthly Credits Refreshed!",
+                  message: `${creditsToAdd} AI credits have been added to your wallet.`,
+                  metadata: { credits: creditsToAdd, tier: subRecord.tier },
+                });
+              }
+            }
+          }
+        }
         break;
       }
 
