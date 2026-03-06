@@ -150,8 +150,9 @@ export default function AdminUsers() {
     mutationFn: async ({ userId, credits }: { userId: string; credits: number }) => {
       const { data, error } = await supabase.rpc('add_ai_credits', { p_user_id: userId, p_credits: credits });
       if (error) throw error;
-      if (!data?.success) throw new Error('Failed to add credits');
-      return data;
+      const result = data as Record<string, unknown>;
+      if (!result?.success) throw new Error('Failed to add credits');
+      return result;
     },
     onSuccess: (data, vars) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
@@ -168,8 +169,9 @@ export default function AdminUsers() {
     mutationFn: async ({ userId, credits }: { userId: string; credits: number }) => {
       const { data, error } = await supabase.rpc('deduct_ai_credits', { p_user_id: userId, p_credits: credits });
       if (error) throw error;
-      if (!data?.success) throw new Error(`Insufficient credits. Current: ${data?.current_credits}`);
-      return data;
+      const result = data as Record<string, unknown>;
+      if (!result?.success) throw new Error(`Insufficient credits. Current: ${result?.current_credits}`);
+      return result;
     },
     onSuccess: (data, vars) => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
