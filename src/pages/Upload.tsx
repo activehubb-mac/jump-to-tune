@@ -274,12 +274,20 @@ export default function Upload() {
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
             <h1 className="text-2xl sm:text-4xl font-bold text-foreground">Upload Track</h1>
-            <Button variant="outline" asChild className="border-glass-border w-full sm:w-auto">
-              <Link to="/upload/album">
-                <Disc3 className="w-4 h-4 mr-2" />
-                Upload Album/EP
-              </Link>
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" asChild className="border-glass-border flex-1 sm:flex-none">
+                <Link to="/upload/album">
+                  <Disc3 className="w-4 h-4 mr-2" />
+                  Album/EP
+                </Link>
+              </Button>
+              <Button asChild className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white flex-1 sm:flex-none">
+                <Link to="/ai-release">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  AI Release Builder
+                </Link>
+              </Button>
+            </div>
           </div>
           <p className="text-muted-foreground text-sm sm:text-base">Share your music with the world</p>
         </div>
