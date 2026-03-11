@@ -106,7 +106,7 @@ export default function GoDJSession() {
               ) : (
                 <Badge variant="secondary">Archived</Badge>
               )}
-              <Badge variant="outline" className="bg-background/80 backdrop-blur-sm text-xs">
+              <Badge variant="outline" className="bg-background text-xs">
                 {isSpotifySession ? (
                   <><Disc3 className="w-3 h-3 mr-1" />Spotify</>
                 ) : (
