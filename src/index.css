@@ -100,6 +100,14 @@
     @apply border border-border rounded-xl shadow-sm;
   }
 
+  /* Random color glow for cards */
+  .card-glow-red { box-shadow: 0 0 18px 4px hsl(0 80% 50% / 0.35), inset 0 0 8px hsl(0 80% 50% / 0.08); border-color: hsl(0 80% 50% / 0.3); }
+  .card-glow-blue { box-shadow: 0 0 18px 4px hsl(220 80% 55% / 0.35), inset 0 0 8px hsl(220 80% 55% / 0.08); border-color: hsl(220 80% 55% / 0.3); }
+  .card-glow-yellow { box-shadow: 0 0 18px 4px hsl(50 90% 55% / 0.35), inset 0 0 8px hsl(50 90% 55% / 0.08); border-color: hsl(50 90% 55% / 0.3); }
+  .card-glow-orange { box-shadow: 0 0 18px 4px hsl(25 90% 55% / 0.35), inset 0 0 8px hsl(25 90% 55% / 0.08); border-color: hsl(25 90% 55% / 0.3); }
+  .card-glow-white { box-shadow: 0 0 18px 4px hsl(0 0% 90% / 0.25), inset 0 0 8px hsl(0 0% 90% / 0.06); border-color: hsl(0 0% 90% / 0.2); }
+  .card-glow-black { box-shadow: 0 0 18px 4px hsl(0 0% 15% / 0.5), inset 0 0 8px hsl(0 0% 0% / 0.2); border-color: hsl(0 0% 20% / 0.4); }
+
   /* Energy card — rotating border + shimmer on hover */
   .energy-card {
     position: relative;
