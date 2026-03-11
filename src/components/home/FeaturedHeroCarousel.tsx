@@ -160,7 +160,7 @@ export function FeaturedHeroCarousel() {
           {/* Small Cover Art */}
           <div 
             key={currentTrack.id + "-cover"}
-            className="relative flex-shrink-0 w-20 h-20 md:w-28 md:h-28 rounded-xl overflow-hidden shadow-2xl ring-2 ring-border animate-scale-in"
+            className="relative flex-shrink-0 w-16 h-16 md:w-28 md:h-28 rounded-xl overflow-hidden shadow-2xl ring-2 ring-border animate-scale-in"
           >
             {currentTrack.cover_art_url ? (
               <img
