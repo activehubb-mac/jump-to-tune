@@ -91,7 +91,7 @@ export function ParticleBackground() {
       size: window.innerWidth < 768 ? 48 + Math.random() * 24 : 72 + Math.random() * 32,
       duration: 18 + Math.random() * 14,
       delay: i * 2.5,
-      opacity: 0.15 + Math.random() * 0.10,
+      opacity: 0.25 + Math.random() * 0.12,
     }));
   }, []);
 
