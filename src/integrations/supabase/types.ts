@@ -2685,24 +2685,33 @@ export type Database = {
           id: string
           instrumental_url: string
           lyrics: string | null
+          replicate_prediction_id: string | null
           sing_mode_enabled: boolean
+          stem_separation_status: string | null
           track_id: string
+          vocals_url: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           instrumental_url: string
           lyrics?: string | null
+          replicate_prediction_id?: string | null
           sing_mode_enabled?: boolean
+          stem_separation_status?: string | null
           track_id: string
+          vocals_url?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           instrumental_url?: string
           lyrics?: string | null
+          replicate_prediction_id?: string | null
           sing_mode_enabled?: boolean
+          stem_separation_status?: string | null
           track_id?: string
+          vocals_url?: string | null
         }
         Relationships: [
           {
