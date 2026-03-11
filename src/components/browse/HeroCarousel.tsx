@@ -22,7 +22,17 @@ export function HeroCarousel() {
   const { data: trendingTracks, isLoading: tracksLoading } = useTrendingTracks(8);
   const { data: recommendedArtists, isLoading: artistsLoading } = useRecommendedArtists(6);
   const { playTrack, currentTrack, isPlaying } = useAudioPlayer();
+  const [api, setApi] = useState<CarouselApi>();
+  const isPaused = useRef(false);
 
+  // Auto-scroll every 5 seconds
+  useEffect(() => {
+    if (!api) return;
+    const timer = setInterval(() => {
+      if (!isPaused.current) api.scrollNext();
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [api]);
   const isLoading = tracksLoading || artistsLoading;
 
   // Combine featured items: trending tracks and recommended artists
