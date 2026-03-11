@@ -77,7 +77,7 @@ function FanCard({ card }: { card: typeof placeholderCards[0] }) {
           <img
             src={imageUrl}
             alt={card.title}
-            className="absolute inset-0 w-full h-full object-cover rounded-lg"
+            className="absolute inset-0 w-full h-full object-cover rounded-lg animate-card-drift"
             loading="lazy"
           />
         ) : (

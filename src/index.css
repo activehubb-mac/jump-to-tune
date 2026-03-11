@@ -187,11 +187,63 @@
     }
   }
 
+  /* Card drift — Ken Burns style */
+  .animate-card-drift {
+    animation: card-drift 20s infinite alternate ease-in-out;
+  }
+
+  @keyframes card-drift {
+    0% { transform: scale(1) translate(0, 0); }
+    100% { transform: scale(1.08) translate(-1%, -1%); }
+  }
+
+  /* Equalizer bars */
+  .animate-equalizer {
+    animation: equalizer-bar 0.8s infinite ease-in-out alternate;
+  }
+
+  @keyframes equalizer-bar {
+    0% { transform: scaleY(0.3); }
+    100% { transform: scaleY(1); }
+  }
+
+  /* Pulse ring */
+  .animate-pulse-ring {
+    animation: pulse-ring 2s infinite ease-out;
+  }
+
+  @keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
+
+  /* Gradient sweep */
+  .animate-gradient-sweep {
+    background: linear-gradient(
+      135deg,
+      transparent 0%,
+      hsl(var(--primary) / 0.08) 30%,
+      transparent 60%
+    );
+    background-size: 300% 300%;
+    animation: gradient-sweep 6s infinite ease-in-out;
+  }
+
+  @keyframes gradient-sweep {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
+  }
+
   /* Respect reduced motion preference */
   @media (prefers-reduced-motion: reduce) {
-    .particle-animate {
+    .particle-animate,
+    .animate-card-drift,
+    .animate-equalizer,
+    .animate-pulse-ring,
+    .animate-gradient-sweep {
       animation: none;
-      opacity: 0.3;
     }
+    .particle-animate { opacity: 0.3; }
   }
 }
