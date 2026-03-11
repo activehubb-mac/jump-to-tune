@@ -1,24 +1,18 @@
 
-# Make Recent Updates Available for Mobile
 
-The recent changes (hiding track/follower counts from artist cards, hiding price/collectors from track cards) were applied to the homepage and browse pages, but several other pages still display this data on cards. These pages are used on both desktop and mobile.
+## Problem
 
-## Changes Required
+Both `ParticleBackground.tsx` and `PromotedAvatars.tsx` import `useAudioPlayer` from the AudioPlayerContext. Even though neither component actually uses any values from it (the `animationPlayState` logic was never completed), the import alone subscribes them to context updates. The AudioPlayerContext updates `currentTime` roughly 4 times per second during playback, causing rapid re-renders of these heavy components — making the 5 performer videos and all floating elements thrash and stutter.
 
-### 1. `src/pages/Artists.tsx` -- Remove tracks/fans from artist cards
+## Fix
 
-**Featured Artists section (lines 149-152):** Remove the stats row showing "X tracks" and "X fans"
+**Remove the unused `useAudioPlayer` import from both files.** That's it — one line deleted from each file. This stops the re-render storm entirely.
 
-**All Artists grid (lines 183-187):** Remove "X tracks" text and "X fans" text below each artist name
+### Files to modify
 
-### 2. `src/pages/FanDashboard.tsx` -- Remove stats from followed artist cards
+1. **`src/components/effects/ParticleBackground.tsx`** — Delete line 4 (`import { useAudioPlayer } from "@/contexts/AudioPlayerContext";`)
 
-**Line 277:** Change `{artist.trackCount} tracks . {artist.followerCount} followers` to just `"Artist"` label
+2. **`src/components/effects/PromotedAvatars.tsx`** — Delete line 4 (`import { useAudioPlayer } from "@/contexts/AudioPlayerContext";`)
 
-### 3. Cleanup: Remove unused imports/data
+No other changes needed. The components don't reference any audio state — the import is purely vestigial from the earlier cancelled edit.
 
-- In `Artists.tsx`: Remove `useFollowerCounts` import and hook call since follower counts are no longer displayed on cards
-- Remove `formatCompactNumber` import if no longer used
-- Remove the `followers` variable assignments in the map callbacks
-
-These are all the remaining places where track/follower counts appear on artist cards and price/editions appear on track cards outside of profile/detail views. The changes ensure consistency across desktop and mobile.
