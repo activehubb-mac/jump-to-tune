@@ -291,6 +291,9 @@ export default function AdminReports() {
 
       {/* Sing Mode Moderation */}
       <AdminSingModeTab />
+
+      {/* JumTunes Stage Moderation */}
+      <AdminStageTab />
     </div>
   );
 }
