@@ -154,7 +154,7 @@ export function FeaturedHeroCarousel() {
       </div>
 
       {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-end px-4 py-6 md:p-8">
+      <div className="absolute inset-0 flex flex-col justify-end px-3 py-4 md:p-8">
         {/* Track Info */}
         <div className="flex items-end gap-4 md:gap-6">
           {/* Small Cover Art */}
