@@ -45,13 +45,12 @@ function getAnimationStyle(promo: AvatarPromotion, index: number, positionSeed: 
   };
 }
 
-function PromotedAvatar({ promo, index, positionSeed }: { promo: AvatarPromotion; index: number; positionSeed: number }) {
+function PromotedAvatar({ promo, positionSeed }: { promo: AvatarPromotion; positionSeed: number }) {
   const navigate = useNavigate();
   const { playTrack } = useAudioPlayer();
-  const style = getAnimationStyle(promo, index, positionSeed);
+  const style = randomPosition(positionSeed);
 
   const handleClick = () => {
-    // If has a linked track, play it
     if (promo.track_id && promo.track) {
       playTrack({
         id: promo.track_id,
@@ -64,7 +63,6 @@ function PromotedAvatar({ promo, index, positionSeed }: { promo: AvatarPromotion
         },
       });
     }
-    // Navigate to artist profile
     navigate(`/artist/${promo.artist_id}`);
   };
 
@@ -73,18 +71,16 @@ function PromotedAvatar({ promo, index, positionSeed }: { promo: AvatarPromotion
       onClick={handleClick}
       className={cn(
         "fixed z-[1] pointer-events-auto cursor-pointer group",
-        "transition-transform duration-300 hover:scale-110"
+        "transition-all duration-700"
       )}
       style={{
         ...style,
         willChange: "transform, opacity",
+        animation: "promo-fade-cycle 10s ease-in-out forwards",
       }}
       title={`${promo.artist?.display_name || "Artist"} — Click to view`}
     >
-      {/* Glow */}
       <div className="absolute inset-0 rounded-full bg-primary/15 blur-2xl scale-[2] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-
-      {/* Avatar */}
       <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-primary/30 shadow-[0_0_25px_hsl(var(--primary)/0.2)] group-hover:border-primary/60 group-hover:shadow-[0_0_40px_hsl(var(--primary)/0.35)] transition-all duration-300">
         {promo.artist?.avatar_url ? (
           <img
@@ -98,8 +94,6 @@ function PromotedAvatar({ promo, index, positionSeed }: { promo: AvatarPromotion
           </div>
         )}
       </div>
-
-      {/* Name label on hover */}
       <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
         <span className="text-[10px] font-semibold text-foreground bg-card/90 border border-border px-2 py-0.5 rounded-full shadow-lg">
           {promo.artist?.display_name}
@@ -114,31 +108,37 @@ export function PromotedAvatars() {
   const currentZone = routeToZone(location.pathname);
   const { data: promotions } = useActiveAvatarPromotions(currentZone);
 
-  // Randomize positions — reshuffle every 20 seconds
-  const [positionSeed, setPositionSeed] = useState(() => Math.floor(Math.random() * 1000));
+  // Cycle: 5s visible, 5s hidden = 10s total
+  const [cycle, setCycle] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => {
-      setPositionSeed(Math.floor(Math.random() * 1000));
-    }, 20000);
+      setCycle((c) => c + 1);
+    }, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  // Only show max 3, filter by zone
   const visible = useMemo(() => {
     if (!promotions) return [];
-    // Shuffle order based on seed
-    const filtered = promotions
-      .filter((p) => p.exposure_zone === "global" || p.exposure_zone === currentZone);
-    const shuffled = [...filtered].sort(() => (positionSeed % 3) - 1);
-    return shuffled.slice(0, 3);
-  }, [promotions, currentZone, positionSeed]);
+    const filtered = promotions.filter(
+      (p) => p.exposure_zone === "global" || p.exposure_zone === currentZone
+    );
+    // Shuffle deterministically based on cycle
+    const shuffled = [...filtered].sort(
+      (a, b) => ((a.id.charCodeAt(0) + cycle) % 7) - ((b.id.charCodeAt(0) + cycle) % 7)
+    );
+    return shuffled.slice(0, 5);
+  }, [promotions, currentZone, cycle]);
 
   if (visible.length === 0) return null;
 
   return (
     <div className="fixed inset-0 z-[1] pointer-events-none hidden md:block" aria-hidden="true">
       {visible.map((promo, i) => (
-        <PromotedAvatar key={`${promo.id}-${positionSeed}`} promo={promo} index={i} positionSeed={positionSeed} />
+        <PromotedAvatar
+          key={`${promo.id}-${cycle}`}
+          promo={promo}
+          positionSeed={cycle * 13 + i * 7 + promo.id.charCodeAt(0)}
+        />
       ))}
     </div>
   );
