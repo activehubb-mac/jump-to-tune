@@ -133,7 +133,7 @@ export function FeaturedHeroCarousel() {
 
   return (
     <div
-      className="relative w-full aspect-[4/3] md:aspect-video rounded-2xl overflow-hidden group border border-border shadow-lg"
+      className="relative w-full aspect-[16/10] md:aspect-video rounded-2xl overflow-hidden group border border-border shadow-lg"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -154,13 +154,13 @@ export function FeaturedHeroCarousel() {
       </div>
 
       {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-end px-4 py-6 md:p-8">
+      <div className="absolute inset-0 flex flex-col justify-end px-3 py-4 md:p-8">
         {/* Track Info */}
         <div className="flex items-end gap-4 md:gap-6">
           {/* Small Cover Art */}
           <div 
             key={currentTrack.id + "-cover"}
-            className="relative flex-shrink-0 w-20 h-20 md:w-28 md:h-28 rounded-xl overflow-hidden shadow-2xl ring-2 ring-border animate-scale-in"
+            className="relative flex-shrink-0 w-16 h-16 md:w-28 md:h-28 rounded-xl overflow-hidden shadow-2xl ring-2 ring-border animate-scale-in"
           >
             {currentTrack.cover_art_url ? (
               <img
@@ -200,7 +200,7 @@ export function FeaturedHeroCarousel() {
             </div>
             <h3 
               key={currentTrack.id + "-title"}
-              className="text-xl md:text-3xl font-bold text-white truncate mb-1 animate-fade-in"
+              className="text-lg md:text-3xl font-bold text-white truncate mb-1 animate-fade-in"
               style={{ textShadow: '0 2px 8px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.5)' }}
             >
               {currentTrack.title}

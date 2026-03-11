@@ -74,9 +74,9 @@ function FeaturedArtistsSection() {
   const currentArtist = featuredArtists[currentIndex];
   const showCarouselControls = featuredArtists.length > 1;
   
-  return <section className="py-10 md:py-14">
+  return <section className="py-6 md:py-14">
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden glass-card-bordered p-6 md:p-10">
+        <div className="relative overflow-hidden glass-card-bordered p-4 md:p-10">
           {/* Background decorative elements */}
           <div className="absolute top-0 left-0 w-72 h-72 bg-muted/30 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
           <div className="absolute bottom-0 right-0 w-64 h-64 bg-muted/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
@@ -92,7 +92,7 @@ function FeaturedArtistsSection() {
           </div>
           
           {/* Header */}
-          <div className="relative z-10 flex items-center justify-between mb-6">
+          <div className="relative z-10 flex items-center justify-between mb-4 md:mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center border border-accent/40">
                 <Star className="w-5 h-5 text-accent" />
@@ -106,10 +106,10 @@ function FeaturedArtistsSection() {
           
           {/* Artist Content */}
           <div className="relative z-10">
-            <Link to={`/artist/${currentArtist.content_id}`} className="flex flex-col md:flex-row items-center gap-6 md:gap-10 group">
+            <Link to={`/artist/${currentArtist.content_id}`} className="flex flex-col md:flex-row items-center gap-4 md:gap-10 group">
               {/* Artist Avatar */}
               <div className="shrink-0 relative">
-                <div className="w-28 h-28 md:w-36 md:h-36 rounded-full bg-muted/50 overflow-hidden border-4 border-accent/30 shadow-lg shadow-accent/20 group-hover:scale-105 group-hover:border-accent/60 transition-all duration-300">
+                <div className="w-20 h-20 md:w-36 md:h-36 rounded-full bg-muted/50 overflow-hidden border-4 border-accent/30 shadow-lg shadow-accent/20 group-hover:scale-105 group-hover:border-accent/60 transition-all duration-300">
                   {currentArtist.profile?.avatar_url ? <img src={currentArtist.profile.avatar_url} alt={currentArtist.profile.display_name || "Artist"} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-muted">
                       <Users className="w-12 h-12 text-muted-foreground" />
                     </div>}
@@ -125,7 +125,7 @@ function FeaturedArtistsSection() {
                   <Star className="w-3 h-3" />
                   Featured Artist
                 </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-accent transition-colors">
+                <h3 className="text-xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-accent transition-colors">
                   {currentArtist.profile?.display_name || "Unknown Artist"}
                 </h3>
                 {currentArtist.profile?.bio && <p className="text-muted-foreground max-w-xl line-clamp-2 mb-4">
@@ -238,9 +238,9 @@ function FeaturedLabelsSection() {
   const currentLabel = featuredLabels[currentIndex];
   const showCarouselControls = featuredLabels.length > 1;
   const currentStats = labelStats[currentLabel.content_id];
-  return <section className="py-10 md:py-14">
+  return <section className="py-6 md:py-14">
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden glass-card-bordered p-6 md:p-10">
+        <div className="relative overflow-hidden glass-card-bordered p-4 md:p-10">
           {/* Background decorative elements */}
           <div className="absolute top-0 left-0 w-72 h-72 bg-muted/30 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
           <div className="absolute bottom-0 right-0 w-64 h-64 bg-muted/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
@@ -256,7 +256,7 @@ function FeaturedLabelsSection() {
           </div>
           
           {/* Header */}
-          <div className="relative z-10 flex items-center justify-between mb-6">
+          <div className="relative z-10 flex items-center justify-between mb-4 md:mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center border border-secondary/40">
                 <Crown className="w-5 h-5 text-secondary" />
@@ -273,10 +273,10 @@ function FeaturedLabelsSection() {
           
           {/* Label Content */}
           <div className="relative z-10">
-            <Link to={`/label/${currentLabel.content_id}`} className="flex flex-col md:flex-row items-center gap-6 md:gap-10 group">
+            <Link to={`/label/${currentLabel.content_id}`} className="flex flex-col md:flex-row items-center gap-4 md:gap-10 group">
               {/* Label Avatar */}
               <div className="shrink-0 relative">
-                <div className="w-28 h-28 md:w-36 md:h-36 rounded-2xl bg-muted/50 overflow-hidden border-4 border-secondary/30 shadow-lg shadow-secondary/20 group-hover:scale-105 group-hover:border-secondary/60 transition-all duration-300">
+                <div className="w-20 h-20 md:w-36 md:h-36 rounded-2xl bg-muted/50 overflow-hidden border-4 border-secondary/30 shadow-lg shadow-secondary/20 group-hover:scale-105 group-hover:border-secondary/60 transition-all duration-300">
                   {currentLabel.profile?.avatar_url ? <img src={currentLabel.profile.avatar_url} alt={currentLabel.profile.display_name || "Label"} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-muted">
                       <Building2 className="w-12 h-12 text-muted-foreground" />
                     </div>}
@@ -292,15 +292,15 @@ function FeaturedLabelsSection() {
                   <Crown className="w-3 h-3" />
                   Featured Label
                 </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-secondary transition-colors">
+                <h3 className="text-xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-secondary transition-colors">
                   {currentLabel.profile?.display_name || "Unknown Label"}
                 </h3>
                 {currentLabel.profile?.bio && <p className="text-muted-foreground max-w-xl line-clamp-2 mb-4">
                     {currentLabel.profile.bio}
                   </p>}
                 
-                {/* Stats */}
-                <div className="flex items-center justify-center md:justify-start gap-6 mb-4">
+                {/* Stats - hidden on mobile */}
+                <div className="hidden md:flex items-center justify-center md:justify-start gap-6 mb-4">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                       <Music className="w-4 h-4 text-primary" />
@@ -403,9 +403,9 @@ function FeaturedTracksSection() {
   const currentTrack = featuredTracks[currentIndex];
   const showCarouselControls = featuredTracks.length > 1;
   
-  return <section className="py-10 md:py-14">
+  return <section className="py-6 md:py-14">
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-md p-6 md:p-10">
+        <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-md p-4 md:p-10">
           {/* Background decorative elements */}
           <div className="absolute top-0 left-0 w-72 h-72 bg-muted/30 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
           <div className="absolute bottom-0 right-0 w-64 h-64 bg-muted/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
@@ -421,7 +421,7 @@ function FeaturedTracksSection() {
           </div>
           
           {/* Header */}
-          <div className="relative z-10 flex items-center justify-between mb-6">
+          <div className="relative z-10 flex items-center justify-between mb-4 md:mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/40">
                 <Music className="w-5 h-5 text-primary" />
@@ -438,10 +438,10 @@ function FeaturedTracksSection() {
           
           {/* Track Content */}
           <div className="relative z-10">
-            <Link to={`/browse`} className="flex flex-col md:flex-row items-center gap-6 md:gap-10 group">
+            <Link to={`/browse`} className="flex flex-col md:flex-row items-center gap-4 md:gap-10 group">
               {/* Track Cover */}
               <div className="shrink-0 relative">
-                <div className="w-32 h-32 md:w-40 md:h-40 rounded-xl bg-muted/50 overflow-hidden border-4 border-primary/30 shadow-lg shadow-primary/20 group-hover:scale-105 group-hover:border-primary/60 transition-all duration-300">
+                <div className="w-24 h-24 md:w-40 md:h-40 rounded-xl bg-muted/50 overflow-hidden border-4 border-primary/30 shadow-lg shadow-primary/20 group-hover:scale-105 group-hover:border-primary/60 transition-all duration-300">
                   {currentTrack.track?.cover_art_url ? <img src={currentTrack.track.cover_art_url} alt={currentTrack.track.title || "Track"} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-muted">
                       <Disc3 className="w-12 h-12 text-muted-foreground" />
                     </div>}
@@ -460,7 +460,7 @@ function FeaturedTracksSection() {
                   <Star className="w-3 h-3" />
                   Featured Track
                 </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                <h3 className="text-xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
                   {currentTrack.track?.title || "Unknown Track"}
                 </h3>
                 <p className="text-muted-foreground mb-4">
@@ -830,11 +830,11 @@ export default function Index() {
 
 
       {/* Discover Section - Only show for authenticated users */}
-      {user && (adminSettings?.discover_artists_enabled !== false) && ((recommendedArtists && recommendedArtists.length > 0) || (pinnedDiscoverArtists && pinnedDiscoverArtists.length > 0)) && <section className="py-10 md:py-14 bg-card/20">
+      {user && (adminSettings?.discover_artists_enabled !== false) && ((recommendedArtists && recommendedArtists.length > 0) || (pinnedDiscoverArtists && pinnedDiscoverArtists.length > 0)) && <section className="py-6 md:py-14 bg-card/20">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
                   <Sparkles className="w-5 h-5 text-accent" />
                   Discover Artists
                 </h2>
@@ -994,13 +994,13 @@ export default function Index() {
         </section>}
 
       {/* Brand Statement Section - Only show for guests */}
-      {!user && <section className="py-10 md:py-14">
+      {!user && <section className="py-6 md:py-14">
           <div className="container mx-auto px-4">
-            <div className="glass-card-bordered p-8 md:p-12 text-center max-w-3xl mx-auto">
-             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-8">
+            <div className="glass-card-bordered p-5 md:p-12 text-center max-w-3xl mx-auto">
+             <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-8">
                 Where AI Music Becomes Real Artists.
               </h2>
-              <div className="space-y-4 text-lg text-muted-foreground">
+              <div className="space-y-4 text-base md:text-lg text-muted-foreground">
                 <p>AI generates the song.<br /><span className="text-foreground font-medium">JumTunes builds the artist.</span></p>
                 <p>AI creates the sound.<br /><span className="text-foreground font-medium">JumTunes packages the release.</span></p>
                 <p>AI writes the music.<br /><span className="text-foreground font-medium">JumTunes monetizes the fanbase.</span></p>
@@ -1010,21 +1010,21 @@ export default function Index() {
         </section>}
 
       {/* Role CTA Section - Only show for guests */}
-      {!user && <section className="py-10 md:py-14 bg-card/20">
+      {!user && <section className="py-6 md:py-14 bg-card/20">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-             <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">
+             <h2 className="text-2xl md:text-5xl font-bold mb-4 text-foreground">
                 Turn AI tracks into real careers.
               </h2>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
               {/* Fan Card */}
-              <div className="glass-card-bordered p-8 text-center group hover:bg-secondary/10 transition-all duration-300">
-                <div className="w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                  <Headphones className="w-8 h-8 text-secondary" />
+              <div className="glass-card-bordered p-5 md:p-8 text-center group hover:bg-secondary/10 transition-all duration-300">
+                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-secondary/20 flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+                  <Headphones className="w-6 h-6 md:w-8 md:h-8 text-secondary" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3 text-foreground">For Fans</h3>
+                <h3 className="text-xl md:text-2xl font-bold mb-3 text-foreground">For Fans</h3>
                 <p className="text-muted-foreground mb-6">
                   Discover AI-crafted music, collect exclusive releases, and support creators you love.
                 </p>
@@ -1034,11 +1034,11 @@ export default function Index() {
               </div>
 
               {/* Artist Card */}
-              <div className="glass-card-bordered p-8 text-center group hover:bg-primary/10 transition-all duration-300">
-                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                  <Music className="w-8 h-8 text-primary" />
+              <div className="glass-card-bordered p-5 md:p-8 text-center group hover:bg-primary/10 transition-all duration-300">
+                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+                  <Music className="w-6 h-6 md:w-8 md:h-8 text-primary" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3 text-foreground">For Creators</h3>
+                <h3 className="text-xl md:text-2xl font-bold mb-3 text-foreground">For Creators</h3>
                 <p className="text-muted-foreground mb-6">
                   Package AI tracks into professional releases with cover art, branding, and a store.
                 </p>
@@ -1048,11 +1048,11 @@ export default function Index() {
               </div>
 
               {/* Label Card */}
-              <div className="glass-card-bordered p-8 text-center group hover:bg-accent/10 transition-all duration-300">
-                <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                  <Building2 className="w-8 h-8 text-accent" />
+              <div className="glass-card-bordered p-5 md:p-8 text-center group hover:bg-accent/10 transition-all duration-300">
+                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+                  <Building2 className="w-6 h-6 md:w-8 md:h-8 text-accent" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3 text-foreground">For Labels</h3>
+                <h3 className="text-xl md:text-2xl font-bold mb-3 text-foreground">For Labels</h3>
                 <p className="text-muted-foreground mb-6">
                   Manage AI artist rosters, coordinate releases, and scale your label operations.
                 </p>
