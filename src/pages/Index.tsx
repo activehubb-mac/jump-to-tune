@@ -403,9 +403,9 @@ function FeaturedTracksSection() {
   const currentTrack = featuredTracks[currentIndex];
   const showCarouselControls = featuredTracks.length > 1;
   
-  return <section className="py-10 md:py-14">
+  return <section className="py-6 md:py-14">
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-md p-6 md:p-10">
+        <div className="relative overflow-hidden rounded-2xl bg-card border border-border shadow-md p-4 md:p-10">
           {/* Background decorative elements */}
           <div className="absolute top-0 left-0 w-72 h-72 bg-muted/30 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
           <div className="absolute bottom-0 right-0 w-64 h-64 bg-muted/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
@@ -421,7 +421,7 @@ function FeaturedTracksSection() {
           </div>
           
           {/* Header */}
-          <div className="relative z-10 flex items-center justify-between mb-6">
+          <div className="relative z-10 flex items-center justify-between mb-4 md:mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/40">
                 <Music className="w-5 h-5 text-primary" />
@@ -438,10 +438,10 @@ function FeaturedTracksSection() {
           
           {/* Track Content */}
           <div className="relative z-10">
-            <Link to={`/browse`} className="flex flex-col md:flex-row items-center gap-6 md:gap-10 group">
+            <Link to={`/browse`} className="flex flex-col md:flex-row items-center gap-4 md:gap-10 group">
               {/* Track Cover */}
               <div className="shrink-0 relative">
-                <div className="w-32 h-32 md:w-40 md:h-40 rounded-xl bg-muted/50 overflow-hidden border-4 border-primary/30 shadow-lg shadow-primary/20 group-hover:scale-105 group-hover:border-primary/60 transition-all duration-300">
+                <div className="w-24 h-24 md:w-40 md:h-40 rounded-xl bg-muted/50 overflow-hidden border-4 border-primary/30 shadow-lg shadow-primary/20 group-hover:scale-105 group-hover:border-primary/60 transition-all duration-300">
                   {currentTrack.track?.cover_art_url ? <img src={currentTrack.track.cover_art_url} alt={currentTrack.track.title || "Track"} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-muted">
                       <Disc3 className="w-12 h-12 text-muted-foreground" />
                     </div>}
@@ -460,7 +460,7 @@ function FeaturedTracksSection() {
                   <Star className="w-3 h-3" />
                   Featured Track
                 </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                <h3 className="text-xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
                   {currentTrack.track?.title || "Unknown Track"}
                 </h3>
                 <p className="text-muted-foreground mb-4">
