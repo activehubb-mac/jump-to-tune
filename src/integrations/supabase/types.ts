@@ -601,6 +601,73 @@ export type Database = {
           },
         ]
       }
+      avatar_promotions: {
+        Row: {
+          animation_type: string
+          artist_id: string
+          created_at: string
+          created_by: string
+          ends_at: string | null
+          exposure_zone: string
+          id: string
+          is_active: boolean
+          promotion_type: string
+          starts_at: string | null
+          track_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          animation_type?: string
+          artist_id: string
+          created_at?: string
+          created_by: string
+          ends_at?: string | null
+          exposure_zone?: string
+          id?: string
+          is_active?: boolean
+          promotion_type?: string
+          starts_at?: string | null
+          track_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          animation_type?: string
+          artist_id?: string
+          created_at?: string
+          created_by?: string
+          ends_at?: string | null
+          exposure_zone?: string
+          id?: string
+          is_active?: boolean
+          promotion_type?: string
+          starts_at?: string | null
+          track_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avatar_promotions_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avatar_promotions_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avatar_promotions_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       badge_settings: {
         Row: {
           id: string
