@@ -186,6 +186,7 @@ export function GlobalAudioPlayer() {
   const { createPlaylist } = usePlaylists();
   const { showFeedback } = useFeedbackSafe();
   const [showQueue, setShowQueue] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumFeatureName, setPremiumFeatureName] = useState("");
   const [showAddToPlaylist, setShowAddToPlaylist] = useState(false);
