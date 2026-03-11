@@ -232,6 +232,7 @@ export default function Browse() {
       {playlistTrackId && (
         <AddToPlaylistModal
           trackId={playlistTrackId}
+          trackTitle={playlistTrackTitle}
           open={!!playlistTrackId}
           onOpenChange={(open) => !open && setPlaylistTrackId(null)}
         />
