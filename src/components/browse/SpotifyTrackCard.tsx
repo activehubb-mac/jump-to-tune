@@ -42,7 +42,7 @@ export function SpotifyTrackCard({
 }: SpotifyTrackCardProps) {
   return (
     <div
-      className="group relative rounded-md bg-card/50 hover:bg-card p-3 transition-all duration-300 cursor-pointer"
+      className="group relative rounded-md bg-card/50 hover:bg-card p-3 transition-all duration-300 cursor-pointer track-card-3d"
       onClick={onClick}
     >
       {/* Cover Art */}

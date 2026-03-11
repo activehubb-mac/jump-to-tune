@@ -126,7 +126,7 @@ export function AlbumCard({ album }: AlbumCardProps) {
 
       <Link 
         to={`/album/${album.id}`}
-        className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300 block"
+        className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300 block track-card-3d"
       >
         {/* Album Art */}
         <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">

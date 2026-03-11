@@ -152,7 +152,7 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
         />
         <div
           ref={ref}
-          className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300"
+          className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300 track-card-3d"
           onClick={onClick}
         >
           {/* Album Art */}

@@ -235,6 +235,22 @@
     100% { background-position: 0% 0%; }
   }
 
+  /* 3D Pop-out hover for track cards */
+  .track-card-3d {
+    transform-style: preserve-3d;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.4s ease;
+    will-change: transform;
+  }
+
+  .track-card-3d:hover {
+    transform: perspective(800px) scale(1.08) translateY(-12px) rotateX(2deg);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5),
+                0 0 40px hsl(var(--primary) / 0.25),
+                inset 0 1px 0 hsl(var(--primary) / 0.15);
+    z-index: 20;
+  }
+
   /* Respect reduced motion preference */
   @media (prefers-reduced-motion: reduce) {
     .particle-animate,
@@ -245,5 +261,8 @@
       animation: none;
     }
     .particle-animate { opacity: 0.3; }
+    .track-card-3d:hover {
+      transform: none;
+    }
   }
 }
