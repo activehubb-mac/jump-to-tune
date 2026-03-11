@@ -436,6 +436,11 @@ export default function AdminFeatured() {
           </TabsContent>
         ))}
       </Tabs>
+
+      {/* Avatar Promotions Section */}
+      <div className="border-t border-border pt-6 mt-6">
+        <AdminAvatarPromotions />
+      </div>
     </div>
   );
 }
