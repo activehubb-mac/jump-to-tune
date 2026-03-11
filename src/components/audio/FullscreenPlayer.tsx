@@ -456,7 +456,21 @@ export function FullscreenPlayer({
                   </Button>
                 )}
 
-                {isOwned && (
+                {hasKaraoke && lyrics && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-10 w-10",
+                      showLyrics ? "text-[#B8A675] bg-[#B8A675]/10" : "text-white/60 hover:text-white hover:bg-white/10"
+                    )}
+                    onClick={toggleShowLyrics}
+                    title={showLyrics ? "Hide lyrics" : "Show lyrics"}
+                  >
+                    <Type className="h-5 w-5" />
+                  </Button>
+                )}
+
                   <Button
                     variant="ghost"
                     size="icon"
