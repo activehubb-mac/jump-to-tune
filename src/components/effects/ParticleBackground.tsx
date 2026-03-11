@@ -27,11 +27,11 @@ interface NebulaOrb {
 }
 
 const CHARACTERS = [
-  "/images/character-robot.png",
-  "/images/character-singer-male.png",
-  "/images/character-singer-female1.png",
-  "/images/character-singer-female2.png",
-  "/images/character-dj.png",
+  "/videos/performer-1.mp4",
+  "/videos/performer-2.mp4",
+  "/videos/performer-3.mp4",
+  "/videos/performer-4.mp4",
+  "/videos/performer-5.mp4",
 ];
 
 // Characters assigned per page group
