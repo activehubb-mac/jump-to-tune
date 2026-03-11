@@ -385,7 +385,7 @@ export const AlbumTrackRow = ({ track, onUpdate, onRemove, disabled, excludeArti
                         onChange={(e) => handleLyricsChange(e.target.value)}
                         placeholder="[Verse 1]&#10;Add your lyrics here...&#10;&#10;[Chorus]&#10;..."
                         rows={6}
-                        className="bg-background/50 border-glass-border focus:border-accent resize-none font-mono text-sm"
+                        className="bg-background border-glass-border focus:border-accent resize-none font-mono text-sm"
                         disabled={disabled}
                       />
                     </TabsContent>
