@@ -1,23 +1,24 @@
 
+# Make Recent Updates Available for Mobile
 
-## Plan: Replace 5 Static Character Images with Animated Video Performers
+The recent changes (hiding track/follower counts from artist cards, hiding price/collectors from track cards) were applied to the homepage and browse pages, but several other pages still display this data on cards. These pages are used on both desktop and mobile.
 
-### What's changing
-Replace the 5 PNG character images (`character-robot.png`, `character-singer-male.png`, etc.) in the floating background with the 5 uploaded performer videos, creating a more dynamic, realistic background effect.
+## Changes Required
 
-### Steps
+### 1. `src/pages/Artists.tsx` -- Remove tracks/fans from artist cards
 
-1. **Copy the 5 uploaded videos** to `public/videos/` with clear names:
-   - `performer-1.mp4`, `performer-2.mp4`, `performer-3.mp4`, `performer-4.mp4`, `performer-5.mp4`
+**Featured Artists section (lines 149-152):** Remove the stats row showing "X tracks" and "X fans"
 
-2. **Update `src/components/effects/ParticleBackground.tsx`**:
-   - Change the `CHARACTERS` array to reference the new video paths
-   - Replace the `<img>` tags in the floating characters section with `<video>` tags using `autoPlay`, `loop`, `muted`, `playsInline` attributes
-   - Keep the same orbit animation, sizing, and opacity logic
-   - Add `object-contain` styling and remove poster/controls for seamless background playback
-   - Since the videos have plain black backgrounds, they'll blend naturally with the dark cosmic theme
+**All Artists grid (lines 183-187):** Remove "X tracks" text and "X fans" text below each artist name
 
-### Files modified
-- `src/components/effects/ParticleBackground.tsx`
-- 5 new files copied to `public/videos/`
+### 2. `src/pages/FanDashboard.tsx` -- Remove stats from followed artist cards
 
+**Line 277:** Change `{artist.trackCount} tracks . {artist.followerCount} followers` to just `"Artist"` label
+
+### 3. Cleanup: Remove unused imports/data
+
+- In `Artists.tsx`: Remove `useFollowerCounts` import and hook call since follower counts are no longer displayed on cards
+- Remove `formatCompactNumber` import if no longer used
+- Remove the `followers` variable assignments in the map callbacks
+
+These are all the remaining places where track/follower counts appear on artist cards and price/editions appear on track cards outside of profile/detail views. The changes ensure consistency across desktop and mobile.
