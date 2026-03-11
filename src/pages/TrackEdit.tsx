@@ -22,6 +22,8 @@ import MoodTagsInput from "@/components/upload/MoodTagsInput";
 import CreditsSection, { TrackCredits } from "@/components/upload/CreditsSection";
 import FeatureArtistsSelector from "@/components/upload/FeatureArtistsSelector";
 import ExplicitToggle from "@/components/upload/ExplicitToggle";
+import { KaraokeSection } from "@/components/upload/KaraokeSection";
+import { useKaraokeData } from "@/hooks/useKaraokeData";
 
 import { MAIN_GENRES, getSubGenres, hasSubGenres, parseGenreValue, combineGenreValue } from "@/lib/genres";
 
