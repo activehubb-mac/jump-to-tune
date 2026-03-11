@@ -481,26 +481,12 @@
     75% { transform: translateY(-20px) scale(1.03); opacity: 0.9; }
   }
 
-  @keyframes promo-avatar-walk {
-    0% { transform: translateX(-5vw) translateY(0); opacity: 0; }
-    10% { opacity: 0.8; }
-    50% { transform: translateX(3vw) translateY(-10px); opacity: 0.85; }
-    90% { opacity: 0.8; }
-    100% { transform: translateX(8vw) translateY(0); opacity: 0; }
-  }
-
-  @keyframes promo-avatar-dance {
-    0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
-    20% { transform: translateY(-10px) rotate(3deg) scale(1.05); }
-    40% { transform: translateY(-5px) rotate(-3deg) scale(0.98); }
-    60% { transform: translateY(-12px) rotate(2deg) scale(1.03); }
-    80% { transform: translateY(-3px) rotate(-2deg) scale(1.01); }
-  }
-
-  @keyframes promo-avatar-dj {
-    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.75; }
-    30% { transform: translateY(-8px) rotate(-5deg); opacity: 0.9; }
-    60% { transform: translateY(-4px) rotate(5deg); opacity: 0.85; }
+  @keyframes promo-fade-cycle {
+    0% { opacity: 0; transform: scale(0.8); }
+    10% { opacity: 1; transform: scale(1); }
+    45% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0; transform: scale(0.8); }
+    100% { opacity: 0; transform: scale(0.8); }
   }
 
   /* Respect reduced motion preference */
