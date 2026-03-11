@@ -254,13 +254,89 @@
     z-index: 20;
   }
 
+  /* Nebula background drift */
+  @keyframes nebula-drift {
+    0% { background-position: 0% 0%; }
+    25% { background-position: 50% 30%; }
+    50% { background-position: 100% 50%; }
+    75% { background-position: 30% 80%; }
+    100% { background-position: 0% 100%; }
+  }
+
+  /* Shooting star streak */
+  @keyframes shooting-star {
+    0% {
+      transform: translateX(0) translateY(0) rotate(-35deg);
+      opacity: 0;
+    }
+    5% { opacity: 1; }
+    30% { opacity: 0.6; }
+    100% {
+      transform: translateX(300px) translateY(200px) rotate(-35deg);
+      opacity: 0;
+    }
+  }
+
+  .shooting-star-animate {
+    animation: shooting-star linear infinite;
+    will-change: transform, opacity;
+  }
+
+  /* Nebula orb drift */
+  @keyframes orb-drift {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+      opacity: 0.12;
+    }
+    33% {
+      transform: translate(30px, -40px) scale(1.1);
+      opacity: 0.18;
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.95);
+      opacity: 0.1;
+    }
+  }
+
+  .nebula-orb {
+    will-change: transform, opacity;
+    animation: orb-drift ease-in-out infinite;
+  }
+
+  /* Horizon light line */
+  @keyframes horizon-pulse {
+    0%, 100% { opacity: 0.15; transform: scaleX(0.8); }
+    50% { opacity: 0.35; transform: scaleX(1); }
+  }
+
+  .horizon-line {
+    animation: horizon-pulse 8s ease-in-out infinite;
+    will-change: opacity, transform;
+  }
+
+  /* Star twinkle */
+  @keyframes star-twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(1) rotate(0deg); }
+    50% { opacity: 0.9; transform: scale(1.3) rotate(45deg); }
+  }
+
+  .star-twinkle {
+    animation: star-twinkle ease-in-out infinite;
+    will-change: transform, opacity;
+  }
+
   /* Respect reduced motion preference */
   @media (prefers-reduced-motion: reduce) {
+    body { animation: none; }
     .particle-animate,
     .animate-card-drift,
     .animate-equalizer,
     .animate-pulse-ring,
-    .animate-gradient-sweep {
+    .animate-gradient-sweep,
+    .shooting-star-animate,
+    .nebula-orb,
+    .horizon-line,
+    .star-twinkle {
       animation: none;
     }
     .particle-animate { opacity: 0.3; }
