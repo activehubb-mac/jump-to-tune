@@ -56,10 +56,11 @@ export function InstantPurchaseModal({
     }
 
     if (result?.success) {
-      setPurchaseSuccess(true);
       setEditionNumber(result.edition_number);
       refetchWallet();
       onPurchaseComplete?.();
+      // Auto-close modal so the purchased track plays immediately
+      onOpenChange(false);
     }
   };
 
