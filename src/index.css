@@ -368,9 +368,12 @@
     .shooting-star-animate,
     .nebula-orb,
     .horizon-line,
-    .star-twinkle {
-      animation: none;
-    }
+     .star-twinkle,
+     .robot-float,
+     .robot-rotate,
+     .robot-glow-pulse {
+       animation: none;
+     }
     .particle-animate { opacity: 0.3; }
     .track-card-3d:hover {
       transform: none;
