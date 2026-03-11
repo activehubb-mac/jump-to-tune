@@ -322,8 +322,8 @@ export default function Index() {
             <section className="py-16 md:py-24 bg-card/20">
               <div className="container mx-auto px-4">
                 <div className="glass-card-bordered p-8 md:p-16 text-center max-w-3xl mx-auto relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px]" />
-                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/10 rounded-full blur-[100px]" />
+                  <img src={featureCta} alt="" className="absolute inset-0 w-full h-full object-cover opacity-15" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/50" />
                   <div className="relative z-10">
                     <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-6">
                       The Future of Music<br /><span className="text-gradient">Is Interactive.</span>
