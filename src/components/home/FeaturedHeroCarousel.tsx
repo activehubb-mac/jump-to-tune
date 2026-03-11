@@ -133,7 +133,7 @@ export function FeaturedHeroCarousel() {
 
   return (
     <div
-      className="relative w-full aspect-[4/3] md:aspect-video rounded-2xl overflow-hidden group border border-border shadow-lg"
+      className="relative w-full aspect-[16/10] md:aspect-video rounded-2xl overflow-hidden group border border-border shadow-lg"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
