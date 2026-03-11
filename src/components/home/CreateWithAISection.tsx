@@ -88,7 +88,7 @@ function AIToolCard({ tool }: { tool: typeof aiTools[0] }) {
                 className="w-full h-full object-cover opacity-50 group-hover:opacity-65 transition-opacity duration-500"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent" />
             </>
           ) : (
             <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50", tool.fallbackGradient)} />
