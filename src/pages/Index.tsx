@@ -994,13 +994,13 @@ export default function Index() {
         </section>}
 
       {/* Brand Statement Section - Only show for guests */}
-      {!user && <section className="py-10 md:py-14">
+      {!user && <section className="py-6 md:py-14">
           <div className="container mx-auto px-4">
-            <div className="glass-card-bordered p-8 md:p-12 text-center max-w-3xl mx-auto">
-             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-8">
+            <div className="glass-card-bordered p-5 md:p-12 text-center max-w-3xl mx-auto">
+             <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-8">
                 Where AI Music Becomes Real Artists.
               </h2>
-              <div className="space-y-4 text-lg text-muted-foreground">
+              <div className="space-y-4 text-base md:text-lg text-muted-foreground">
                 <p>AI generates the song.<br /><span className="text-foreground font-medium">JumTunes builds the artist.</span></p>
                 <p>AI creates the sound.<br /><span className="text-foreground font-medium">JumTunes packages the release.</span></p>
                 <p>AI writes the music.<br /><span className="text-foreground font-medium">JumTunes monetizes the fanbase.</span></p>
