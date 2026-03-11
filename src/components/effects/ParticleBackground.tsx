@@ -35,8 +35,6 @@ export function ParticleBackground() {
   const { data: featuredArtists } = useFeaturedArtists("artists_page");
 
   const isGoDJ = location.pathname.startsWith("/go-dj");
-  const isBrowse = location.pathname.startsWith("/browse");
-  const pageCharacters = isBrowse ? BROWSE_CHARACTERS : HOME_CHARACTERS;
 
   const particles = useMemo(() => {
     const count = window.innerWidth < 768 ? 25 : 50;
