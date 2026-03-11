@@ -297,6 +297,8 @@ export default function TrackEdit() {
             sing_mode_enabled: singModeEnabled,
             duet_mode_enabled: duetModeEnabled,
             dance_mode_enabled: danceModeEnabled,
+            rap_mode_enabled: rapModeEnabled,
+            ai_avatar_mode_enabled: aiAvatarModeEnabled,
           })
           .eq("track_id", id);
       }
