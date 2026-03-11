@@ -302,8 +302,8 @@ export default function Index() {
                     const Icon = feature.icon;
                     return (
                       <div key={i} className="glass-card-bordered p-6 group hover:bg-primary/10 transition-all duration-300 relative overflow-hidden">
-                        <img src={feature.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-15 group-hover:opacity-25 transition-opacity duration-500 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+                        <img src={feature.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-45 group-hover:opacity-60 transition-opacity duration-500 group-hover:scale-105" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/40 to-transparent" />
                         <div className="relative z-10">
                           <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             <Icon className="w-6 h-6 text-primary-foreground" />
