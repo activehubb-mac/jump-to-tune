@@ -268,7 +268,7 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
                     e.stopPropagation();
                     onDelete?.(track.id);
                   }}
-                  className="p-2 rounded-full bg-destructive/80 backdrop-blur-sm hover:bg-destructive transition-colors"
+                  className="p-2 rounded-full bg-destructive hover:bg-destructive/90 transition-colors"
                   title="Delete track"
                 >
                   <Trash2 className="w-4 h-4 text-destructive-foreground" />

@@ -287,7 +287,7 @@ export const AlbumTrackRow = ({ track, onUpdate, onRemove, disabled, excludeArti
                   <Label className="text-sm font-medium text-foreground">Instrumental Version</Label>
                   
                   {track.instrumentalFile ? (
-                    <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg border border-glass-border">
+                    <div className="flex items-center gap-3 p-3 bg-background rounded-lg border border-glass-border">
                       <Music className="w-5 h-5 text-accent flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">
@@ -385,7 +385,7 @@ export const AlbumTrackRow = ({ track, onUpdate, onRemove, disabled, excludeArti
                         onChange={(e) => handleLyricsChange(e.target.value)}
                         placeholder="[Verse 1]&#10;Add your lyrics here...&#10;&#10;[Chorus]&#10;..."
                         rows={6}
-                        className="bg-background/50 border-glass-border focus:border-accent resize-none font-mono text-sm"
+                        className="bg-background border-glass-border focus:border-accent resize-none font-mono text-sm"
                         disabled={disabled}
                       />
                     </TabsContent>
@@ -408,7 +408,7 @@ export const AlbumTrackRow = ({ track, onUpdate, onRemove, disabled, excludeArti
                         onChange={(e) => handleLyricsChange(e.target.value)}
                         placeholder="[00:00.00]Start of your lyrics..."
                         rows={6}
-                        className="bg-background/50 border-glass-border focus:border-accent resize-none font-mono text-sm"
+                        className="bg-background border-glass-border focus:border-accent resize-none font-mono text-sm"
                         disabled={disabled}
                       />
                     </TabsContent>

@@ -14,7 +14,7 @@ export function Footer({ className = "" }: FooterProps) {
   };
 
   return (
-    <footer className={cn("bg-card/30 backdrop-blur-sm", className)}>
+    <footer className={cn("bg-card", className)}>
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           {/* Brand */}

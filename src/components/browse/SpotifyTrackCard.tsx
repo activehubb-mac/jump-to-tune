@@ -115,7 +115,7 @@ export function SpotifyTrackCard({
         {/* Karaoke Button - Bottom Left */}
         {hasKaraoke && onKaraoke && (
           <button
-            className="absolute bottom-2 left-2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 text-accent hover:text-primary bg-black/40 backdrop-blur-sm"
+            className="absolute bottom-2 left-2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 text-accent hover:text-primary bg-card"
             onClick={(e) => {
               e.stopPropagation();
               onKaraoke();

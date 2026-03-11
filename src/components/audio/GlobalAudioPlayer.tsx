@@ -614,7 +614,7 @@ export function GlobalAudioPlayer() {
 
       {/* Player Bar */}
       <div 
-        className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-glass-border/30 backdrop-blur-xl animate-in slide-in-from-bottom duration-300 cursor-pointer"
+        className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-glass-border/30 animate-in slide-in-from-bottom duration-300 cursor-pointer"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         onClick={() => { setShowQueue(false); setShowFullscreen(true); }}
       >

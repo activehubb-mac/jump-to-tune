@@ -322,7 +322,7 @@ export default function ArtistProfile() {
                         <Button
                           size="icon"
                           variant="secondary"
-                          className="h-7 w-7 bg-background/80 backdrop-blur-sm"
+                          className="h-7 w-7 bg-background"
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditSession(s); }}
                         >
                           <Pencil className="w-3.5 h-3.5" />
