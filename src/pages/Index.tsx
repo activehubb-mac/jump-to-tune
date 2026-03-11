@@ -249,7 +249,7 @@ export default function Index() {
             <div className="max-w-3xl mx-auto text-center">
               <div className="glass-card-bordered p-8 md:p-12 relative overflow-hidden">
                 {/* Background image */}
-                <img src={featureGalaxyCta} alt="" className="absolute inset-0 w-full h-full object-cover opacity-45" />
+                <img src={featureGalaxyCta} alt="" className="absolute inset-0 w-full h-full object-cover opacity-45 animate-card-drift" />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/40 to-transparent" />
                 
                 <div className="relative z-10">
