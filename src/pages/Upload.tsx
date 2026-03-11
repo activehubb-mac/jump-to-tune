@@ -262,7 +262,12 @@ export default function Upload() {
           ? `Your track has been saved as a draft.${recordingMsg}`
           : `Your track is now live and visible to fans!${recordingMsg}`,
       });
-      navigate(role === "artist" ? "/artist/dashboard" : "/label/dashboard");
+      // Offer Autopilot for published tracks
+      if (!isDraft && result.trackId) {
+        setShowAutopilotOffer(result.trackId);
+      } else {
+        navigate(role === "artist" ? "/artist/dashboard" : "/label/dashboard");
+      }
     } else {
       showFeedback({
         type: "error",
