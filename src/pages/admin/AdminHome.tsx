@@ -373,28 +373,26 @@ export default function AdminHome() {
                       </Button>
                     </div>
                   </div>
-                  {bg.is_active && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                      <div>
-                        <Label className="text-sm">Playback Rate: {bg.playback_rate}x</Label>
-                        <Slider
-                          value={[bg.playback_rate]}
-                          onValueCommit={(v) => updateBgField(bg.id, "playback_rate", v[0])}
-                          min={0.5} max={1} step={0.1}
-                          className="mt-2"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-sm">Overlay Opacity: {bg.overlay_opacity}%</Label>
-                        <Slider
-                          value={[bg.overlay_opacity]}
-                          onValueCommit={(v) => updateBgField(bg.id, "overlay_opacity", v[0])}
-                          min={30} max={80} step={5}
-                          className="mt-2"
-                        />
-                      </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div>
+                      <Label className="text-sm">Playback Rate: {bg.playback_rate}x</Label>
+                      <Slider
+                        defaultValue={[bg.playback_rate]}
+                        onValueCommit={(v) => updateBgField(bg.id, "playback_rate", v[0])}
+                        min={0.5} max={1} step={0.1}
+                        className="mt-2"
+                      />
                     </div>
-                  )}
+                    <div>
+                      <Label className="text-sm">Overlay Opacity: {bg.overlay_opacity}%</Label>
+                      <Slider
+                        defaultValue={[bg.overlay_opacity]}
+                        onValueCommit={(v) => updateBgField(bg.id, "overlay_opacity", v[0])}
+                        min={30} max={80} step={5}
+                        className="mt-2"
+                      />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
