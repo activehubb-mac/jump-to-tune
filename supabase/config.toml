@@ -155,3 +155,6 @@ verify_jwt = false
 
 [functions.jumbot-chat]
 verify_jwt = false
+
+[functions.artist-autopilot]
+verify_jwt = false

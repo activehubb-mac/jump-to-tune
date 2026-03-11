@@ -17,6 +17,7 @@ Upload & Release:
 - Cover art can be AI-generated (10 credits) at /ai-cover-art
 - AI Release Builder (/ai-release) auto-generates title, description, cover art, metadata (60 credits)
 - Music videos can be generated at /ai-video (20-100 credits by duration)
+- Artist Autopilot (/autopilot) builds a FULL release package in one click for 150 credits — generates cover art, artist avatar, lyric visuals, karaoke-ready version, and promo captions automatically. After track upload, suggest Autopilot to artists.
 
 AI Credits:
 - New users get 15 free credits + 30-day trial

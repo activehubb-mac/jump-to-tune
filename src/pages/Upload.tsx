@@ -93,6 +93,9 @@ export default function Upload() {
   
   // Sub-genre state
   const [subGenre, setSubGenre] = useState("");
+  
+  // Autopilot offer
+  const [showAutopilotOffer, setShowAutopilotOffer] = useState<string | null>(null);
 
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadFormSchema),
@@ -259,7 +262,12 @@ export default function Upload() {
           ? `Your track has been saved as a draft.${recordingMsg}`
           : `Your track is now live and visible to fans!${recordingMsg}`,
       });
-      navigate(role === "artist" ? "/artist/dashboard" : "/label/dashboard");
+      // Offer Autopilot for published tracks
+      if (!isDraft && result.trackId) {
+        setShowAutopilotOffer(result.trackId);
+      } else {
+        navigate(role === "artist" ? "/artist/dashboard" : "/label/dashboard");
+      }
     } else {
       showFeedback({
         type: "error",
@@ -615,6 +623,43 @@ export default function Upload() {
             </div>
           </form>
         </Form>
+
+        {/* Autopilot Offer Modal */}
+        {showAutopilotOffer && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+            <div className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <h2 className="text-lg font-bold text-foreground">Build Full Release?</h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                JumBot can auto-generate cover art, avatar, lyric visuals, karaoke, and promo captions for your new track.
+              </p>
+              <p className="text-sm font-medium text-primary">Cost: 150 AI Credits (bundle)</p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowAutopilotOffer(null);
+                    navigate(role === "artist" ? "/artist/dashboard" : "/label/dashboard");
+                  }}
+                >
+                  Skip
+                </Button>
+                <Button
+                  className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                  onClick={() => navigate(`/autopilot?trackId=${showAutopilotOffer}`)}
+                >
+                  <Rocket className="w-4 h-4 mr-2" />
+                  Launch Autopilot
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
