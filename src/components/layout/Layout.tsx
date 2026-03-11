@@ -5,6 +5,7 @@ import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
 import { ParticleBackground } from "@/components/effects/ParticleBackground";
 import { GlobalSubscriptionCheck } from "@/components/subscription/GlobalSubscriptionCheck";
+import { JumBot } from "@/components/jumbot/JumBot";
 import { cn } from "@/lib/utils";
 
 interface LayoutProps {
@@ -42,6 +43,9 @@ export function Layout({
         </main>
         {showFooter && <Footer />}
       </div>
+
+      {/* JumBot floating assistant */}
+      <JumBot />
     </div>
   );
 }
