@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { useFeaturedArtists } from "@/hooks/useFeaturedContent";
 
 type ParticleShape = "dot" | "ring" | "line" | "glow" | "star" | "streak";
@@ -25,17 +26,6 @@ interface NebulaOrb {
   color: "primary" | "accent";
 }
 
-interface FloatingCharacter {
-  id: number;
-  src: string;
-  left: string;
-  top: string;
-  size: number;
-  duration: number;
-  delay: number;
-  opacity: number;
-}
-
 const CHARACTERS = [
   "/images/character-robot.png",
   "/images/character-singer-male.png",
@@ -44,10 +34,18 @@ const CHARACTERS = [
   "/images/character-dj.png",
 ];
 
+// Characters assigned per page group
+const HOME_CHARACTERS = [CHARACTERS[0], CHARACTERS[3]]; // robot, singer-female2
+const BROWSE_CHARACTERS = [CHARACTERS[1], CHARACTERS[2], CHARACTERS[4]]; // singer-male, singer-female1, dj
+
 const INSTRUMENTS = ["🎸", "🎹", "🎤", "🎧", "🎵", "🎶", "🎷", "🥁", "🎺", "🎻"];
 
 export function ParticleBackground() {
+  const location = useLocation();
   const { data: featuredArtists } = useFeaturedArtists("artists_page");
+
+  const isBrowse = location.pathname.startsWith("/browse");
+  const pageCharacters = isBrowse ? BROWSE_CHARACTERS : HOME_CHARACTERS;
 
   const particles = useMemo(() => {
     const count = window.innerWidth < 768 ? 25 : 50;
@@ -82,20 +80,22 @@ export function ParticleBackground() {
     { id: 2, left: "45%", top: "75%", size: 60, duration: 30, color: "primary" },
   ], []);
 
-  const floatingCharacters = useMemo<FloatingCharacter[]>(() => {
-    return CHARACTERS.map((src, i) => ({
-      id: i,
+  // Characters orbit: they drift across, leave, and re-enter
+  const floatingCharacters = useMemo(() => {
+    return pageCharacters.map((src, i) => ({
+      id: `char-${i}`,
       src,
-      left: `${8 + (i * 18) + Math.random() * 8}%`,
-      top: `${10 + Math.random() * 70}%`,
-      size: window.innerWidth < 768 ? 64 + Math.random() * 32 : 96 + Math.random() * 40,
-      duration: 18 + Math.random() * 14,
-      delay: i * 2.5,
-      opacity: 0.45 + Math.random() * 0.15,
+      size: window.innerWidth < 768 ? 44 + Math.random() * 20 : 64 + Math.random() * 28,
+      duration: 28 + Math.random() * 18,
+      delay: i * 6,
+      opacity: 0.35 + Math.random() * 0.15,
+      // orbit params — start position for the CSS animation
+      startX: 20 + i * 35,
+      startY: 20 + (i % 2) * 50,
     }));
-  }, []);
+  }, [pageCharacters]);
 
-  // Featured artist avatars as floating particles
+  // Featured artist avatars as floating particles — slightly bigger
   const featuredAvatars = useMemo(() => {
     if (!featuredArtists || featuredArtists.length === 0) return [];
     return featuredArtists
@@ -107,10 +107,10 @@ export function ParticleBackground() {
         name: fa.profile!.display_name || "",
         left: `${5 + Math.random() * 85}%`,
         top: `${5 + Math.random() * 85}%`,
-        size: window.innerWidth < 768 ? 32 + Math.random() * 16 : 44 + Math.random() * 20,
+        size: window.innerWidth < 768 ? 40 + Math.random() * 20 : 56 + Math.random() * 24,
         duration: 20 + Math.random() * 15,
         delay: i * 3,
-        opacity: 0.12 + Math.random() * 0.08,
+        opacity: 0.15 + Math.random() * 0.10,
       }));
   }, [featuredArtists]);
 
@@ -246,21 +246,26 @@ export function ParticleBackground() {
         }}
       />
 
-      {/* Floating characters - more visible & bigger */}
+      {/* Floating characters — orbit across screen */}
       {floatingCharacters.map((char) => (
         <div
-          key={`char-${char.id}`}
-          className="absolute particle-animate"
+          key={char.id}
+          className="absolute character-orbit"
           style={{
-            left: char.left,
-            top: char.top,
             width: char.size,
             height: char.size,
             animationDuration: `${char.duration}s`,
             animationDelay: `${char.delay}s`,
             opacity: char.opacity,
-            filter: "blur(0.3px) grayscale(0.3)",
-          }}
+            filter: "grayscale(0.25)",
+            // Use custom properties for unique orbit paths
+            "--orbit-x1": `${char.startX}vw`,
+            "--orbit-y1": `${char.startY}vh`,
+            "--orbit-x2": `${110 + Math.random() * 20}vw`,
+            "--orbit-y2": `${30 + Math.random() * 40}vh`,
+            "--orbit-x3": `${-15 - Math.random() * 10}vw`,
+            "--orbit-y3": `${20 + Math.random() * 60}vh`,
+          } as React.CSSProperties}
         >
           <img
             src={char.src}
