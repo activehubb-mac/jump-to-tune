@@ -140,7 +140,7 @@ export default function GoDJ() {
               ))}
             </div>
           ) : (
-            <div className="glass-card p-12 text-center">
+            <div className="p-12 text-center bg-transparent border border-border/20 rounded-xl">
               <Disc3 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
               <p className="text-muted-foreground">No active sessions yet</p>
               <p className="text-xs text-muted-foreground mt-1">Be the first to start a Go DJ session!</p>
