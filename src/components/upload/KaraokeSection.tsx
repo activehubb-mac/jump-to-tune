@@ -38,12 +38,29 @@ export const KaraokeSection = ({
   onPreview,
   singModeEnabled = false,
   onSingModeChange,
+  trackId,
+  audioUrl,
 }: KaraokeSectionProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lyricsTab, setLyricsTab] = useState<'plain' | 'lrc'>('plain');
   const inputRef = useRef<HTMLInputElement>(null);
   const lrcInputRef = useRef<HTMLInputElement>(null);
+  const { transcribe, isTranscribing } = useWhisperTranscribe();
+
+  const handleAutoGenerate = async () => {
+    if (!trackId || !audioUrl) return;
+    try {
+      const lrc = await transcribe(trackId, audioUrl);
+      if (lrc) {
+        onLyricsChange(lrc);
+        setLyricsTab('lrc');
+        toast.success('Lyrics generated successfully!');
+      }
+    } catch (err) {
+      toast.error('Failed to generate lyrics. Please try again.');
+    }
+  };
 
   const processFile = useCallback((file: File) => {
     setError(null);
