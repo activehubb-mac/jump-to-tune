@@ -74,9 +74,9 @@ function FeaturedArtistsSection() {
   const currentArtist = featuredArtists[currentIndex];
   const showCarouselControls = featuredArtists.length > 1;
   
-  return <section className="py-10 md:py-14">
+  return <section className="py-6 md:py-14">
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden glass-card-bordered p-6 md:p-10">
+        <div className="relative overflow-hidden glass-card-bordered p-4 md:p-10">
           {/* Background decorative elements */}
           <div className="absolute top-0 left-0 w-72 h-72 bg-muted/30 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
           <div className="absolute bottom-0 right-0 w-64 h-64 bg-muted/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
@@ -92,7 +92,7 @@ function FeaturedArtistsSection() {
           </div>
           
           {/* Header */}
-          <div className="relative z-10 flex items-center justify-between mb-6">
+          <div className="relative z-10 flex items-center justify-between mb-4 md:mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center border border-accent/40">
                 <Star className="w-5 h-5 text-accent" />
@@ -106,10 +106,10 @@ function FeaturedArtistsSection() {
           
           {/* Artist Content */}
           <div className="relative z-10">
-            <Link to={`/artist/${currentArtist.content_id}`} className="flex flex-col md:flex-row items-center gap-6 md:gap-10 group">
+            <Link to={`/artist/${currentArtist.content_id}`} className="flex flex-col md:flex-row items-center gap-4 md:gap-10 group">
               {/* Artist Avatar */}
               <div className="shrink-0 relative">
-                <div className="w-28 h-28 md:w-36 md:h-36 rounded-full bg-muted/50 overflow-hidden border-4 border-accent/30 shadow-lg shadow-accent/20 group-hover:scale-105 group-hover:border-accent/60 transition-all duration-300">
+                <div className="w-20 h-20 md:w-36 md:h-36 rounded-full bg-muted/50 overflow-hidden border-4 border-accent/30 shadow-lg shadow-accent/20 group-hover:scale-105 group-hover:border-accent/60 transition-all duration-300">
                   {currentArtist.profile?.avatar_url ? <img src={currentArtist.profile.avatar_url} alt={currentArtist.profile.display_name || "Artist"} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-muted">
                       <Users className="w-12 h-12 text-muted-foreground" />
                     </div>}
@@ -125,7 +125,7 @@ function FeaturedArtistsSection() {
                   <Star className="w-3 h-3" />
                   Featured Artist
                 </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-accent transition-colors">
+                <h3 className="text-xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-accent transition-colors">
                   {currentArtist.profile?.display_name || "Unknown Artist"}
                 </h3>
                 {currentArtist.profile?.bio && <p className="text-muted-foreground max-w-xl line-clamp-2 mb-4">
