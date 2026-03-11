@@ -294,19 +294,23 @@ export default function Index() {
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {[
-                    { icon: Sparkles, title: "AI Creation Suite", description: "Remix, generate covers, create lyrics, and produce videos with AI tools." },
-                    { icon: Mic2, title: "Interactive Karaoke", description: "Sing along with AI-separated instrumentals and synchronized lyrics." },
-                    { icon: Disc3, title: "Music Galaxy", description: "Explore music visually as connected nodes in an interactive galaxy view." },
-                    { icon: Users, title: "Fan Community", description: "Share covers, duets, remixes, and compete in community challenges." },
+                    { icon: Sparkles, title: "AI Creation Suite", description: "Remix, generate covers, create lyrics, and produce videos with AI tools.", image: featureAiCreation },
+                    { icon: Mic2, title: "Interactive Karaoke", description: "Sing along with AI-separated instrumentals and synchronized lyrics.", image: featureKaraoke },
+                    { icon: Disc3, title: "Music Galaxy", description: "Explore music visually as connected nodes in an interactive galaxy view.", image: featureGalaxy },
+                    { icon: Users, title: "Fan Community", description: "Share covers, duets, remixes, and compete in community challenges.", image: featureCommunity },
                   ].map((feature, i) => {
                     const Icon = feature.icon;
                     return (
-                      <div key={i} className="glass-card-bordered p-6 group hover:bg-primary/10 transition-all duration-300">
-                        <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                          <Icon className="w-6 h-6 text-primary-foreground" />
+                      <div key={i} className="glass-card-bordered p-6 group hover:bg-primary/10 transition-all duration-300 relative overflow-hidden">
+                        <img src={feature.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-15 group-hover:opacity-25 transition-opacity duration-500 group-hover:scale-105" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+                        <div className="relative z-10">
+                          <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <Icon className="w-6 h-6 text-primary-foreground" />
+                          </div>
+                          <h3 className="text-xl font-semibold mb-2 text-foreground">{feature.title}</h3>
+                          <p className="text-muted-foreground">{feature.description}</p>
                         </div>
-                        <h3 className="text-xl font-semibold mb-2 text-foreground">{feature.title}</h3>
-                        <p className="text-muted-foreground">{feature.description}</p>
                       </div>
                     );
                   })}
