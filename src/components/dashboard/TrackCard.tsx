@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useCardGlow } from "@/hooks/useCardGlow";
 import { Link } from "react-router-dom";
 import { Disc3, Edit, Trash2, Play, Pause, ListPlus, Lock, Mic2, CheckCircle, Eye, FolderPlus } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
