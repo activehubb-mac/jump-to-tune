@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useCardGlow } from "@/hooks/useCardGlow";
 import { Link } from "react-router-dom";
 import { Disc3, Edit, Trash2, Play, Pause, ListPlus, Lock, Mic2, CheckCircle, Eye, FolderPlus } from "lucide-react";
 import { formatPrice, formatEditions } from "@/lib/formatters";
@@ -63,6 +64,7 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
     ref
   ) {
     const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
+    const glowClass = useCardGlow(track.id);
     const { canUseFeature } = useFeatureGate();
     const { isOwned } = usePurchases();
     const { createPlaylist } = usePlaylists();
@@ -152,7 +154,7 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
         />
         <div
           ref={ref}
-          className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300 track-card-3d"
+          className={`glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300 track-card-3d border ${glowClass}`}
           onClick={onClick}
         >
           {/* Album Art */}

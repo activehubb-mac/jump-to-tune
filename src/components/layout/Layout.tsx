@@ -6,6 +6,7 @@ import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
 import { ParticleBackground } from "@/components/effects/ParticleBackground";
 import { PromotedAvatars } from "@/components/effects/PromotedAvatars";
+import { FeaturedArtistSlideshow } from "@/components/effects/FeaturedArtistSlideshow";
 import { GlobalSubscriptionCheck } from "@/components/subscription/GlobalSubscriptionCheck";
 import { JumBot } from "@/components/jumbot/JumBot";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ export function Layout({
     <div className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full">
       <GlobalSubscriptionCheck />
       {!isAdmin && <ParticleBackground />}
+      {!isAdmin && <FeaturedArtistSlideshow />}
       {!isAdmin && <PromotedAvatars />}
       
       <Navbar />
@@ -36,7 +38,7 @@ export function Layout({
         style={{
           paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))',
           zIndex: 2,
-          backgroundColor: isAdmin ? 'hsl(0 0% 0%)' : 'hsl(0 0% 5% / 0.45)',
+          backgroundColor: isAdmin ? 'hsl(0 0% 0%)' : 'transparent',
         }}
       >
         <EmailVerificationBanner />

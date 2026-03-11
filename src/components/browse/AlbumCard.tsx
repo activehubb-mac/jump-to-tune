@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCardGlow } from "@/hooks/useCardGlow";
 import { Link } from "react-router-dom";
 import { Disc3, Play, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ interface AlbumCardProps {
 
 export function AlbumCard({ album }: AlbumCardProps) {
   const { playTrack, addToQueue, clearQueue } = useAudioPlayer();
+  const glowClass = useCardGlow(album.id);
   const { canUseFeature, isSubscriptionExpired } = useFeatureGate();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showExpiredModal, setShowExpiredModal] = useState(false);
@@ -126,7 +128,7 @@ export function AlbumCard({ album }: AlbumCardProps) {
 
       <Link 
         to={`/album/${album.id}`}
-        className="glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300 block track-card-3d"
+        className={`glass-card p-4 group cursor-pointer hover:bg-primary/10 transition-all duration-300 block track-card-3d border ${glowClass}`}
       >
         {/* Album Art */}
         <div className="aspect-square rounded-lg bg-muted/50 mb-4 relative overflow-hidden">
