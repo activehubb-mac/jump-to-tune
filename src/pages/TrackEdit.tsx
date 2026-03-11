@@ -67,6 +67,13 @@ export default function TrackEdit() {
   const availableSubGenres = getSubGenres(genre);
   const showSubGenreDropdown = hasSubGenres(genre);
 
+  // Karaoke state
+  const [karaokeEnabled, setKaraokeEnabled] = useState(false);
+  const [karaokeInstrumentalFile, setKaraokeInstrumentalFile] = useState<File | null>(null);
+  const [karaokeLyrics, setKaraokeLyrics] = useState("");
+  const [singModeEnabled, setSingModeEnabled] = useState(false);
+  const { data: karaokeData } = useKaraokeData(id);
+
   // Fetch track data
   const { data: track, isLoading: trackLoading } = useQuery({
     queryKey: ["track", id],
