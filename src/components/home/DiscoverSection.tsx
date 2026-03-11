@@ -7,7 +7,6 @@ import { useTrendingTracks } from "@/hooks/useTrendingTracks";
 import { useNewReleases } from "@/hooks/useNewReleases";
 import { useRecommendedArtists } from "@/hooks/useRecommendedArtists";
 import { cn } from "@/lib/utils";
-import { FloatingCard } from "@/components/effects/FloatingCard";
 
 function HorizontalTrackRow({
   title,
@@ -62,10 +61,8 @@ function HorizontalTrackRow({
           {tracks?.map((track) => {
             const isCurrent = currentTrack?.id === track.id && isPlaying;
             return (
-              <FloatingCard
+              <div
                 key={track.id}
-                depth="sm"
-                glowColor="hsl(var(--primary) / 0.12)"
                 className="flex-shrink-0 w-40 md:w-44 group cursor-pointer"
                 onClick={() => playTrack({
                   id: track.id,
@@ -75,7 +72,7 @@ function HorizontalTrackRow({
                   artist: { id: track.artist_id, display_name: track.artist_name },
                 })}
               >
-                <div className="aspect-square rounded-xl bg-muted/50 mb-3 overflow-hidden relative">
+                <div className="aspect-square rounded-xl bg-muted/50 mb-3 overflow-hidden relative group-hover:scale-[1.02] transition-transform">
                   {track.cover_art_url ? (
                     <img src={track.cover_art_url} alt={track.title} className="w-full h-full object-cover" />
                   ) : (
@@ -91,8 +88,6 @@ function HorizontalTrackRow({
                       <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
                     </div>
                   </div>
-                  {/* Glow ring on hover */}
-                  <div className="absolute inset-0 rounded-xl ring-0 group-hover:ring-1 ring-primary/30 transition-all pointer-events-none" />
                 </div>
                 <h4 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                   {track.title}
@@ -100,7 +95,7 @@ function HorizontalTrackRow({
                 <p className="text-xs text-muted-foreground truncate">
                   {track.artist_name || "Unknown Artist"}
                 </p>
-              </FloatingCard>
+              </div>
             );
           })}
         </div>
@@ -115,8 +110,9 @@ export function DiscoverSection() {
   const { data: risingArtists, isLoading: artistsLoading } = useRecommendedArtists(12);
 
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-16 md:py-24 bg-card/20">
       <div className="container mx-auto px-4">
+        {/* Section Header */}
         <div className="flex items-center justify-between mb-10">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground">Discover</h2>
@@ -127,8 +123,23 @@ export function DiscoverSection() {
           </Button>
         </div>
 
-        <HorizontalTrackRow title="Trending Tracks" icon={TrendingUp} iconColor="text-accent" tracks={trending} isLoading={trendingLoading} />
-        <HorizontalTrackRow title="New Releases" icon={Clock} iconColor="text-primary" tracks={newReleases} isLoading={newLoading} />
+        {/* Trending Tracks */}
+        <HorizontalTrackRow
+          title="Trending Tracks"
+          icon={TrendingUp}
+          iconColor="text-accent"
+          tracks={trending}
+          isLoading={trendingLoading}
+        />
+
+        {/* New Releases */}
+        <HorizontalTrackRow
+          title="New Releases"
+          icon={Clock}
+          iconColor="text-primary"
+          tracks={newReleases}
+          isLoading={newLoading}
+        />
 
         {/* Rising Artists */}
         <div className="mb-8">
@@ -146,8 +157,12 @@ export function DiscoverSection() {
           ) : (
             <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
               {risingArtists?.map((artist) => (
-                <Link key={artist.id} to={`/artist/${artist.id}`} className="flex-shrink-0 w-32 md:w-36 text-center group">
-                  <div className="w-24 h-24 md:w-28 md:h-28 mx-auto rounded-full bg-muted/50 overflow-hidden mb-3 group-hover:scale-105 transition-transform border-2 border-border group-hover:border-primary/50 group-hover:shadow-[0_0_20px_hsl(var(--primary)/0.15)]">
+                <Link
+                  key={artist.id}
+                  to={`/artist/${artist.id}`}
+                  className="flex-shrink-0 w-32 md:w-36 text-center group"
+                >
+                  <div className="w-24 h-24 md:w-28 md:h-28 mx-auto rounded-full bg-muted/50 overflow-hidden mb-3 group-hover:scale-105 transition-transform border-2 border-border group-hover:border-primary/50">
                     {artist.avatar_url ? (
                       <img src={artist.avatar_url} alt={artist.display_name || ""} className="w-full h-full object-cover" />
                     ) : (
@@ -159,13 +174,16 @@ export function DiscoverSection() {
                   <h4 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                     {artist.display_name || "Unknown"}
                   </h4>
-                  <p className="text-xs text-muted-foreground">{artist.trackCount} tracks</p>
+                  <p className="text-xs text-muted-foreground">
+                    {artist.trackCount} tracks
+                  </p>
                 </Link>
               ))}
             </div>
           )}
         </div>
 
+        {/* Mobile Browse Button */}
         <div className="text-center md:hidden mt-4">
           <Button variant="outline" asChild>
             <Link to="/browse">Browse All</Link>

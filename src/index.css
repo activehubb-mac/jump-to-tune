@@ -187,28 +187,6 @@
     }
   }
 
-  /* Holographic panel effects */
-  .holographic-panel {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--card) / 0.6) 0%,
-      hsl(var(--card) / 0.3) 50%,
-      hsl(var(--card) / 0.5) 100%
-    );
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-  }
-
-  .holographic-scanline {
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      hsl(var(--primary) / 0.02) 2px,
-      hsl(var(--primary) / 0.02) 4px
-    );
-  }
-
   /* Respect reduced motion preference */
   @media (prefers-reduced-motion: reduce) {
     .particle-animate {
