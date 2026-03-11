@@ -93,6 +93,9 @@ export default function Upload() {
   
   // Sub-genre state
   const [subGenre, setSubGenre] = useState("");
+  
+  // Autopilot offer
+  const [showAutopilotOffer, setShowAutopilotOffer] = useState<string | null>(null);
 
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadFormSchema),
