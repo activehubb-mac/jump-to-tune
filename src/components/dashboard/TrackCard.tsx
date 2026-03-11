@@ -64,6 +64,7 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
     ref
   ) {
     const { playTrack, addToQueue, currentTrack, isPlaying } = useAudioPlayer();
+    const glowClass = useCardGlow(track.id);
     const { canUseFeature } = useFeatureGate();
     const { isOwned } = usePurchases();
     const { createPlaylist } = usePlaylists();

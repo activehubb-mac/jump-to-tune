@@ -30,6 +30,7 @@ interface AlbumCardProps {
 
 export function AlbumCard({ album }: AlbumCardProps) {
   const { playTrack, addToQueue, clearQueue } = useAudioPlayer();
+  const glowClass = useCardGlow(album.id);
   const { canUseFeature, isSubscriptionExpired } = useFeatureGate();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showExpiredModal, setShowExpiredModal] = useState(false);
