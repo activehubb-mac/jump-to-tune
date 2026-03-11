@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Mic2, Music, Wand2, FileText, Palette, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCardArtwork } from "@/hooks/useCardArtwork";
 
 const aiTools = [
   {
@@ -12,8 +11,7 @@ const aiTools = [
     gradient: "from-primary/20 to-accent/20",
     glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--primary)/0.3)]",
     fallbackGradient: "from-primary/30 via-accent/10 to-background",
-    artworkId: "ai-karaoke",
-    artworkPrompt: "Futuristic holographic karaoke stage, glowing AI waveforms floating in air, dark premium aesthetic with gold and cyan accents, no text, cinematic",
+    videoSrc: "/videos/ai-karaoke.mp4",
   },
   {
     title: "Sing With Artist",
@@ -23,8 +21,7 @@ const aiTools = [
     gradient: "from-accent/20 to-secondary/20",
     glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.3)]",
     fallbackGradient: "from-accent/30 via-secondary/10 to-background",
-    artworkId: "ai-sing-with-artist",
-    artworkPrompt: "Two silhouettes singing together on a futuristic stage, holographic sound waves connecting them, purple and blue neon glow, dark background, no text",
+    videoSrc: "/videos/ai-sing-with-artist.mp4",
   },
   {
     title: "AI Remix",
@@ -34,8 +31,7 @@ const aiTools = [
     gradient: "from-secondary/20 to-primary/20",
     glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--secondary)/0.3)]",
     fallbackGradient: "from-secondary/30 via-primary/10 to-background",
-    artworkId: "ai-remix",
-    artworkPrompt: "Abstract sound wave visualization splitting into stems, neon circuits and digital particles, dark background with electric blue and magenta, music production aesthetic, no text",
+    videoSrc: "/videos/ai-remix.mp4",
   },
   {
     title: "AI Lyrics Generator",
@@ -45,8 +41,7 @@ const aiTools = [
     gradient: "from-primary/20 to-secondary/20",
     glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--primary)/0.3)]",
     fallbackGradient: "from-primary/30 via-muted/20 to-background",
-    artworkId: "ai-lyrics",
-    artworkPrompt: "Glowing words and poetry floating in dark space, typewriter with holographic text emerging, warm amber and white light, creative writing aesthetic, no text on image",
+    videoSrc: "/videos/ai-lyrics.mp4",
   },
   {
     title: "AI Cover Art",
@@ -56,66 +51,54 @@ const aiTools = [
     gradient: "from-accent/20 to-primary/20",
     glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.3)]",
     fallbackGradient: "from-accent/30 via-primary/10 to-background",
-    artworkId: "ai-cover-art",
-    artworkPrompt: "AI painting canvas floating in space, colorful paint splashes forming album artwork, digital brush strokes with neon glow, dark studio background, no text",
+    videoSrc: "/videos/ai-cover-art.mp4",
   },
 ];
 
 function AIToolCard({ tool }: { tool: typeof aiTools[0] }) {
-  const { data: imageUrl, isError, ref } = useCardArtwork({
-    cardId: tool.artworkId,
-    prompt: tool.artworkPrompt,
-  });
-
   const Icon = tool.icon;
 
   return (
-    <div ref={ref}>
-      <Link
-        to={tool.href}
-        className={cn(
-          "group relative glass-card-bordered p-8 transition-all duration-500 hover:scale-[1.02] overflow-hidden block",
-          tool.glowColor
-        )}
-      >
-        {/* AI-generated or fallback background */}
-        <div className="absolute inset-0 z-0">
-          {imageUrl ? (
-            <>
-              <img
-                src={imageUrl}
-                alt=""
-                className="w-full h-full object-cover opacity-50 group-hover:opacity-65 transition-opacity duration-500 animate-card-drift"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent" />
-            </>
-          ) : (
-            <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50", tool.fallbackGradient)} />
-          )}
+    <Link
+      to={tool.href}
+      className={cn(
+        "group relative glass-card-bordered p-8 transition-all duration-500 hover:scale-[1.02] overflow-hidden block",
+        tool.glowColor
+      )}
+    >
+      {/* Video background */}
+      <div className="absolute inset-0 z-0">
+        <video
+          src={tool.videoSrc}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity duration-500"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent" />
+      </div>
+
+      {/* Gradient hover background */}
+      <div className={cn(
+        "absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-[1]",
+        tool.gradient
+      )} />
+
+      <div className="relative z-10">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+          <Icon className="w-8 h-8 text-primary" />
         </div>
+        <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+          {tool.title}
+        </h3>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {tool.description}
+        </p>
+      </div>
 
-        {/* Gradient hover background */}
-        <div className={cn(
-          "absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-[1]",
-          tool.gradient
-        )} />
-
-        <div className="relative z-10">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <Icon className="w-8 h-8 text-primary" />
-          </div>
-          <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
-            {tool.title}
-          </h3>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            {tool.description}
-          </p>
-        </div>
-
-        <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary/50 group-hover:bg-primary group-hover:animate-pulse transition-colors z-10" />
-      </Link>
-    </div>
+      <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary/50 group-hover:bg-primary group-hover:animate-pulse transition-colors z-10" />
+    </Link>
   );
 }
 
