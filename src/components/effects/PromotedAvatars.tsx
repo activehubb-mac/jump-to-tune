@@ -45,10 +45,10 @@ function getAnimationStyle(promo: AvatarPromotion, index: number, positionSeed: 
   };
 }
 
-function PromotedAvatar({ promo, index }: { promo: AvatarPromotion; index: number }) {
+function PromotedAvatar({ promo, index, positionSeed }: { promo: AvatarPromotion; index: number; positionSeed: number }) {
   const navigate = useNavigate();
   const { playTrack } = useAudioPlayer();
-  const style = getAnimationStyle(promo, index);
+  const style = getAnimationStyle(promo, index, positionSeed);
 
   const handleClick = () => {
     // If has a linked track, play it
