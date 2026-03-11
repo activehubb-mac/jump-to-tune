@@ -114,20 +114,31 @@ export function PromotedAvatars() {
   const currentZone = routeToZone(location.pathname);
   const { data: promotions } = useActiveAvatarPromotions(currentZone);
 
+  // Randomize positions — reshuffle every 20 seconds
+  const [positionSeed, setPositionSeed] = useState(() => Math.floor(Math.random() * 1000));
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPositionSeed(Math.floor(Math.random() * 1000));
+    }, 20000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Only show max 3, filter by zone
   const visible = useMemo(() => {
     if (!promotions) return [];
-    return promotions
-      .filter((p) => p.exposure_zone === "global" || p.exposure_zone === currentZone)
-      .slice(0, 3);
-  }, [promotions, currentZone]);
+    // Shuffle order based on seed
+    const filtered = promotions
+      .filter((p) => p.exposure_zone === "global" || p.exposure_zone === currentZone);
+    const shuffled = [...filtered].sort(() => (positionSeed % 3) - 1);
+    return shuffled.slice(0, 3);
+  }, [promotions, currentZone, positionSeed]);
 
   if (visible.length === 0) return null;
 
   return (
     <div className="fixed inset-0 z-[1] pointer-events-none hidden md:block" aria-hidden="true">
       {visible.map((promo, i) => (
-        <PromotedAvatar key={promo.id} promo={promo} index={i} />
+        <PromotedAvatar key={`${promo.id}-${positionSeed}`} promo={promo} index={i} positionSeed={positionSeed} />
       ))}
     </div>
   );
