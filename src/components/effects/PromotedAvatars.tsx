@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useActiveAvatarPromotions, type AvatarPromotion } from "@/hooks/useAvatarPromotions";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -9,11 +9,24 @@ function routeToZone(pathname: string): string {
   if (pathname === "/" || pathname === "/index") return "home";
   if (pathname === "/browse") return "discovery";
   if (pathname.startsWith("/trending")) return "trending";
-  return "global"; // fallback — only global promos show on other pages
+  return "global";
+}
+
+/** Generate a random position avoiding the center content area */
+function randomPosition(seed: number) {
+  // Pick a side: left gutter or right gutter (avoid center 20-80%)
+  const side = seed % 2 === 0 ? "left" : "right";
+  const horizontal = Math.floor(2 + (seed * 7 + 13) % 12); // 2-13%
+  const vertical = Math.floor(10 + (seed * 11 + 7) % 70);  // 10-79%
+
+  return {
+    [side]: `${horizontal}%`,
+    top: `${vertical}%`,
+  } as React.CSSProperties;
 }
 
 /** Animation class per animation_type + promotion_type combo */
-function getAnimationStyle(promo: AvatarPromotion, index: number) {
+function getAnimationStyle(promo: AvatarPromotion, index: number, positionSeed: number) {
   const baseDelay = index * 2;
   const duration = promo.animation_type === "walk" ? 18 : promo.animation_type === "dance" ? 3 : 12;
 
@@ -26,15 +39,9 @@ function getAnimationStyle(promo: AvatarPromotion, index: number) {
           ? "promo-avatar-dj"
           : "promo-avatar-perform";
 
-  const positions = [
-    { bottom: "15%", left: "5%" },
-    { bottom: "25%", right: "4%" },
-    { bottom: "40%", left: "8%" },
-  ];
-
   return {
     animation: `${animationName} ${duration}s ease-in-out ${baseDelay}s infinite`,
-    ...positions[index % 3],
+    ...randomPosition(positionSeed + index),
   };
 }
 
