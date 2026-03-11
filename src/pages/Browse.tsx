@@ -318,7 +318,7 @@ export default function Browse() {
                     <HorizontalSectionItem key={item.id}>
                       <Link
                         to={`/album/${item.content_id}`}
-                        className="block group rounded-md bg-card/50 hover:bg-card p-3 transition-all duration-300"
+                        className="block group rounded-md bg-card hover:bg-muted p-3 transition-all duration-300"
                       >
                         <div className="aspect-square rounded-md overflow-hidden mb-3 shadow-lg">
                           {item.album?.cover_art_url ? (
