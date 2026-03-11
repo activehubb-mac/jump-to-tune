@@ -552,6 +552,19 @@ export default function TrackEdit() {
             audioUrl={track?.audio_url}
           />
 
+          {/* JumTunes Stage Controls */}
+          <StageControls
+            stageEnabled={stageEnabled}
+            onStageEnabledChange={setStageEnabled}
+            singModeEnabled={singModeEnabled}
+            onSingModeChange={setSingModeEnabled}
+            duetModeEnabled={duetModeEnabled}
+            onDuetModeChange={setDuetModeEnabled}
+            danceModeEnabled={danceModeEnabled}
+            onDanceModeChange={setDanceModeEnabled}
+            hasKaraoke={karaokeEnabled || !!karaokeData}
+          />
+
           {/* Pricing */}
           <div className="glass-card p-4 sm:p-6 space-y-4">
             <h2 className="text-lg font-semibold text-foreground">Pricing & Access</h2>
