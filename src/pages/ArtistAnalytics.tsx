@@ -247,7 +247,44 @@ export default function ArtistAnalytics() {
                   </p>
                 </div>
               </div>
-            </div>
+             </div>
+
+            {/* Karaoke Analytics */}
+            {karaokeStats && karaokeStats.totalKaraokeTracks > 0 && (
+              <div className="glass-card p-6 mt-8">
+                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                  <Mic className="w-5 h-5 text-accent" />
+                  Karaoke & Sing Mode
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-4 rounded-lg bg-muted/20">
+                    <p className="text-muted-foreground text-sm mb-2">Karaoke Tracks</p>
+                    <p className="text-2xl font-bold text-foreground">{karaokeStats.totalKaraokeTracks}</p>
+                  </div>
+                  <div className="text-center p-4 rounded-lg bg-accent/10">
+                    <div className="flex items-center justify-center gap-1 mb-2">
+                      <Video className="w-4 h-4 text-accent" />
+                      <p className="text-muted-foreground text-sm">Fan Videos</p>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{karaokeStats.totalVideos}</p>
+                  </div>
+                  <div className="text-center p-4 rounded-lg bg-primary/10">
+                    <p className="text-muted-foreground text-sm mb-2">Most Popular</p>
+                    <p className="text-sm font-bold text-foreground truncate">
+                      {karaokeStats.mostPopularTrack?.title ?? '—'}
+                    </p>
+                    {karaokeStats.mostPopularTrack && (
+                      <p className="text-xs text-muted-foreground">{karaokeStats.mostPopularTrack.count} videos</p>
+                    )}
+                  </div>
+                  <div className="text-center p-4 rounded-lg bg-muted/20">
+                    <p className="text-muted-foreground text-sm mb-2">Processing</p>
+                    <p className="text-2xl font-bold text-foreground">{karaokeStats.separationsPending}</p>
+                    <p className="text-xs text-muted-foreground">stems generating</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
