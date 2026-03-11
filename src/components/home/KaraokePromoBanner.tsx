@@ -13,9 +13,9 @@ export function KaraokePromoBanner() {
             <img
               src={karaokeBg}
               alt=""
-              className="w-full h-full object-cover opacity-50 animate-card-drift"
+              className="w-full h-full object-cover opacity-70 animate-card-drift"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/60 to-background/40" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/40 to-background/20" />
           </div>
 
           {/* Gradient sweep overlay */}
