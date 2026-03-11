@@ -830,11 +830,11 @@ export default function Index() {
 
 
       {/* Discover Section - Only show for authenticated users */}
-      {user && (adminSettings?.discover_artists_enabled !== false) && ((recommendedArtists && recommendedArtists.length > 0) || (pinnedDiscoverArtists && pinnedDiscoverArtists.length > 0)) && <section className="py-10 md:py-14 bg-card/20">
+      {user && (adminSettings?.discover_artists_enabled !== false) && ((recommendedArtists && recommendedArtists.length > 0) || (pinnedDiscoverArtists && pinnedDiscoverArtists.length > 0)) && <section className="py-6 md:py-14 bg-card/20">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-3xl font-bold text-foreground flex items-center gap-3">
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
                   <Sparkles className="w-5 h-5 text-accent" />
                   Discover Artists
                 </h2>
