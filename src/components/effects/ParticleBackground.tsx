@@ -27,17 +27,6 @@ interface NebulaOrb {
   color: "primary" | "accent";
 }
 
-const CHARACTERS = [
-  "/videos/performer-1.mp4",
-  "/videos/performer-2.mp4",
-  "/videos/performer-3.mp4",
-  "/videos/performer-4.mp4",
-  "/videos/performer-5.mp4",
-];
-
-// Characters assigned per page group
-const HOME_CHARACTERS = [CHARACTERS[0], CHARACTERS[3]]; // robot, singer-female2
-const BROWSE_CHARACTERS = [CHARACTERS[1], CHARACTERS[2], CHARACTERS[4]]; // singer-male, singer-female1, dj
 
 const INSTRUMENTS = ["🎸", "🎹", "🎤", "🎧", "🎵", "🎶", "🎷", "🥁", "🎺", "🎻"];
 
