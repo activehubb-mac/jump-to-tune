@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +9,7 @@ interface HorizontalSectionProps {
   children: React.ReactNode;
   className?: string;
   showAll?: string;
+  autoScrollInterval?: number;
 }
 
 export function HorizontalSection({
@@ -17,10 +18,12 @@ export function HorizontalSection({
   icon,
   children,
   className,
+  autoScrollInterval = 5000,
 }: HorizontalSectionProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const isPaused = useRef(false);
 
   const checkScroll = () => {
     const el = scrollRef.current;
@@ -28,6 +31,20 @@ export function HorizontalSection({
     setCanScrollLeft(el.scrollLeft > 4);
     setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
   };
+
+  const scrollToNext = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || isPaused.current) return;
+    const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 4;
+    if (atEnd) {
+      el.scrollTo({ left: 0, behavior: "smooth" });
+    } else {
+      // Scroll by one card width
+      const firstChild = el.firstElementChild as HTMLElement | null;
+      const cardWidth = firstChild ? firstChild.offsetWidth + 16 : 300;
+      el.scrollBy({ left: cardWidth, behavior: "smooth" });
+    }
+  }, []);
 
   useEffect(() => {
     checkScroll();
@@ -40,6 +57,13 @@ export function HorizontalSection({
     };
   }, [children]);
 
+  // Auto-scroll timer
+  useEffect(() => {
+    if (!autoScrollInterval) return;
+    const timer = setInterval(scrollToNext, autoScrollInterval);
+    return () => clearInterval(timer);
+  }, [autoScrollInterval, scrollToNext]);
+
   const scroll = (dir: "left" | "right") => {
     scrollRef.current?.scrollBy({
       left: dir === "left" ? -400 : 400,
@@ -48,7 +72,11 @@ export function HorizontalSection({
   };
 
   return (
-    <section className={cn("mb-10", className)}>
+    <section
+      className={cn("mb-10", className)}
+      onPointerEnter={() => (isPaused.current = true)}
+      onPointerLeave={() => (isPaused.current = false)}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-4 px-1">
         <div>
