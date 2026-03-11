@@ -28,6 +28,7 @@ export function Layout({
     <div className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full">
       <GlobalSubscriptionCheck />
       {!isAdmin && <ParticleBackground />}
+      {!isAdmin && <FeaturedArtistSlideshow />}
       {!isAdmin && <PromotedAvatars />}
       
       <Navbar />
