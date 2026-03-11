@@ -5,7 +5,7 @@ import { Footer } from "./Footer";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
 import { ParticleBackground } from "@/components/effects/ParticleBackground";
-import { PromotedAvatars } from "@/components/effects/PromotedAvatars";
+
 import { FeaturedArtistSlideshow } from "@/components/effects/FeaturedArtistSlideshow";
 import { GlobalSubscriptionCheck } from "@/components/subscription/GlobalSubscriptionCheck";
 import { JumBot } from "@/components/jumbot/JumBot";
