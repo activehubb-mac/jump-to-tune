@@ -37,7 +37,7 @@ export function SessionCard({ session, artistName, artistAvatar, listenerCount, 
           {/* Status badge */}
           <div className="absolute top-2 left-2 flex gap-1.5">
             {isScheduled ? (
-              <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm text-xs">
+              <Badge variant="secondary" className="bg-background text-xs">
                 ⏳ Upcoming
               </Badge>
             ) : session.status === "active" ? (
