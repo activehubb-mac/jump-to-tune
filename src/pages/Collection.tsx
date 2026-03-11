@@ -617,10 +617,10 @@ export default function Collection() {
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="container mx-auto px-4 py-6 sm:py-8 max-w-4xl">
           {/* Header */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               {/* User Avatar */}
-              <div className="w-8 h-8 rounded-full bg-muted/50 overflow-hidden flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-muted/50 overflow-hidden flex-shrink-0 ring-2 ring-primary/20">
                 {profile?.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
@@ -629,22 +629,20 @@ export default function Collection() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-primary/20">
-                    <User className="w-4 h-4 text-primary" />
+                    <User className="w-5 h-5 text-primary" />
                   </div>
                 )}
               </div>
               <h1 className="text-2xl font-bold text-foreground">Your Library</h1>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowCreatePlaylist(true)}
-              >
-                <Plus className="w-6 h-6" />
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-full border-border/50 text-foreground hover:bg-primary/10 hover:border-primary/50 transition-all"
+              onClick={() => setShowCreatePlaylist(true)}
+            >
+              <Plus className="w-5 h-5" />
+            </Button>
           </div>
 
           {/* Recently Played Carousel */}

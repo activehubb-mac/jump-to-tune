@@ -120,7 +120,7 @@ export function PromotedAvatars() {
   if (visible.length === 0) return null;
 
   return (
-    <div className="fixed inset-0 z-[1] pointer-events-none hidden md:block" aria-hidden="true">
+    <div className="fixed inset-0 bottom-24 z-[1] pointer-events-none hidden md:block" aria-hidden="true">
       {visible.map((promo, i) => (
         <PromotedAvatar
           key={`${promo.id}-${cycle}`}
