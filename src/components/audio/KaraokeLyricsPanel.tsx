@@ -109,7 +109,7 @@ export function KaraokeLyricsPanel({
     <div 
       className={cn(
         "fixed bottom-20 md:bottom-16 left-4 right-4 md:left-auto md:right-20 z-50 w-auto md:w-96",
-        "glass-card border border-glass-border/30 backdrop-blur-xl rounded-lg overflow-hidden",
+        "glass-card border border-glass-border/30 rounded-lg overflow-hidden",
         "animate-in slide-in-from-bottom duration-200",
         !isExpanded && "h-auto"
       )}
