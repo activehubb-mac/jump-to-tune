@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform, Clock, FolderPlus, ChevronDown, ChevronUp } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform, Clock, FolderPlus, ChevronDown, ChevronUp, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
