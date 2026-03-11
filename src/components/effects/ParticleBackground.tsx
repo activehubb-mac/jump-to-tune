@@ -107,11 +107,11 @@ export function ParticleBackground() {
         name: fa.profile!.display_name || "",
         left: `${5 + Math.random() * 85}%`,
         top: `${5 + Math.random() * 85}%`,
-        size: window.innerWidth < 768 ? 72 + Math.random() * 32 : 110 + Math.random() * 50,
-        duration: 20 + Math.random() * 15,
-        delay: i * 3,
-        opacity: 0.55 + Math.random() * 0.2,
-      }));
+          size: window.innerWidth < 768 ? 90 + Math.random() * 40 : 130 + Math.random() * 60,
+          duration: 20 + Math.random() * 15,
+          delay: i * 3,
+          opacity: 0.8 + Math.random() * 0.15,
+        }));
   }, [featuredArtists]);
 
   const floatingInstruments = useMemo(() => {
@@ -294,8 +294,8 @@ export function ParticleBackground() {
           <div
             className="w-full h-full rounded-full overflow-hidden"
             style={{
-              border: "2px solid hsl(var(--primary) / 0.45)",
-              boxShadow: "0 0 20px hsl(var(--primary) / 0.25)",
+              border: "3px solid hsl(var(--primary) / 0.6)",
+              boxShadow: "0 0 30px hsl(var(--primary) / 0.4)",
             }}
           >
             <img
