@@ -47,22 +47,10 @@ function getAnimationStyle(promo: AvatarPromotion, index: number, positionSeed: 
 
 function PromotedAvatar({ promo, positionSeed }: { promo: AvatarPromotion; positionSeed: number }) {
   const navigate = useNavigate();
-  const { playTrack } = useAudioPlayer();
   const style = randomPosition(positionSeed);
 
   const handleClick = () => {
-    if (promo.track_id && promo.track) {
-      playTrack({
-        id: promo.track_id,
-        title: promo.track.title,
-        audio_url: "",
-        cover_art_url: promo.track.cover_art_url || null,
-        artist: {
-          id: promo.artist_id,
-          display_name: promo.artist?.display_name || "Unknown",
-        },
-      });
-    }
+    // Navigate to artist profile only — no audio player interaction
     navigate(`/artist/${promo.artist_id}`);
   };
 
