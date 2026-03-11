@@ -74,11 +74,14 @@
     @apply text-foreground;
     font-family: 'Inter', system-ui, sans-serif;
     background-color: hsl(var(--background));
-    background-image: url('/images/music-pattern-bg.jpg');
-    background-size: 400px auto;
-    background-position: top center;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, hsl(var(--primary) / 0.10) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, hsl(var(--accent) / 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, hsl(var(--primary) / 0.06) 0%, transparent 40%),
+      radial-gradient(ellipse at 70% 60%, hsl(var(--accent) / 0.05) 0%, transparent 45%);
+    background-size: 200% 200%;
     background-attachment: fixed;
-    background-repeat: repeat;
+    animation: nebula-drift 30s infinite alternate ease-in-out;
     min-height: 100vh;
   }
 }
