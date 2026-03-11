@@ -16,6 +16,7 @@ const placeholderCards = [
     title: "Dark Drill Cover",
     creator: "BeatMaster_X",
     category: "Karaoke",
+    fallbackGradient: "from-primary/40 via-accent/20 to-muted/30",
     artworkId: "fan-dark-drill",
     artworkPrompt: "Dark moody recording studio, purple neon glow, microphone silhouette, cinematic atmosphere, portrait orientation, no text",
   },
@@ -23,6 +24,7 @@ const placeholderCards = [
     title: "Chill R&B Remix",
     creator: "VibeQueen",
     category: "Remix",
+    fallbackGradient: "from-accent/40 via-secondary/20 to-muted/30",
     artworkId: "fan-chill-rnb",
     artworkPrompt: "Warm amber sunset skyline, vinyl record floating in air, smooth R&B aesthetic, dark moody atmosphere, portrait orientation, no text",
   },
@@ -30,6 +32,7 @@ const placeholderCards = [
     title: "Acoustic Duet",
     creator: "SoulSinger",
     category: "Duet",
+    fallbackGradient: "from-secondary/40 via-primary/20 to-muted/30",
     artworkId: "fan-acoustic-duet",
     artworkPrompt: "Two acoustic guitars side by side in warm candlelight, intimate wooden stage, golden bokeh, portrait orientation, no text",
   },
@@ -37,6 +40,7 @@ const placeholderCards = [
     title: "Trap Challenge",
     creator: "808Wizard",
     category: "Challenge",
+    fallbackGradient: "from-destructive/30 via-primary/20 to-muted/30",
     artworkId: "fan-trap-challenge",
     artworkPrompt: "Futuristic neon trap music scene, 808 bass visualizer, electric blue and red lights, dark urban aesthetic, portrait orientation, no text",
   },
@@ -44,6 +48,7 @@ const placeholderCards = [
     title: "Lo-Fi Flip",
     creator: "ChillProducer",
     category: "Remix",
+    fallbackGradient: "from-muted/50 via-accent/20 to-secondary/20",
     artworkId: "fan-lofi-flip",
     artworkPrompt: "Cozy lo-fi bedroom studio at night, rain on window, warm desk lamp glow, cassette tape and headphones, portrait orientation, no text",
   },
@@ -51,19 +56,20 @@ const placeholderCards = [
     title: "Vocal Cover",
     creator: "NightOwl",
     category: "Karaoke",
+    fallbackGradient: "from-primary/30 via-secondary/20 to-accent/20",
     artworkId: "fan-vocal-cover",
     artworkPrompt: "Singer silhouette on stage with dramatic spotlight beam, dark concert venue, smoke and purple haze, portrait orientation, no text",
   },
 ];
 
 function FanCard({ card }: { card: typeof placeholderCards[0] }) {
-  const { data: imageUrl, isLoading } = useCardArtwork({
+  const { data: imageUrl, isLoading, isError, ref } = useCardArtwork({
     cardId: card.artworkId,
     prompt: card.artworkPrompt,
   });
 
   return (
-    <div className="glass-card-bordered p-3 group cursor-pointer hover:bg-primary/10 transition-all duration-300">
+    <div ref={ref} className="glass-card-bordered p-3 group cursor-pointer hover:bg-primary/10 transition-all duration-300">
       <div className="aspect-[3/4] rounded-lg bg-muted/50 mb-3 relative overflow-hidden">
         {isLoading ? (
           <Skeleton className="absolute inset-0 rounded-lg" />
@@ -75,7 +81,7 @@ function FanCard({ card }: { card: typeof placeholderCards[0] }) {
             loading="lazy"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className={`absolute inset-0 bg-gradient-to-b ${card.fallbackGradient} rounded-lg flex items-center justify-center`}>
             <Play className="w-10 h-10 text-muted-foreground/30" />
           </div>
         )}
