@@ -222,38 +222,6 @@ export function ParticleBackground() {
         }}
       />
 
-      {/* Floating characters — orbit across screen */}
-      {floatingCharacters.map((char) => (
-        <div
-          key={char.id}
-          className="absolute character-orbit"
-          style={{
-            width: char.size,
-            height: char.size,
-            animationDuration: `${char.duration}s`,
-            animationDelay: `${char.delay}s`,
-            opacity: char.opacity,
-            filter: "grayscale(0.25)",
-            // Use custom properties for unique orbit paths
-            "--orbit-x1": `${char.startX}vw`,
-            "--orbit-y1": `${char.startY}vh`,
-            "--orbit-x2": `${110 + Math.random() * 20}vw`,
-            "--orbit-y2": `${30 + Math.random() * 40}vh`,
-            "--orbit-x3": `${-15 - Math.random() * 10}vw`,
-            "--orbit-y3": `${20 + Math.random() * 60}vh`,
-          } as React.CSSProperties}
-        >
-          <video
-            src={char.src}
-            autoPlay
-            loop
-            muted
-            playsInline
-            style={{ background: '#000' }}
-            className="w-full h-full object-contain"
-          />
-        </div>
-      ))}
 
       {/* Featured artist avatars floating as circular particles */}
       {featuredAvatars.map((avatar) => (
