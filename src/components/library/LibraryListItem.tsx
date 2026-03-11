@@ -109,7 +109,7 @@ export function LibraryListItem({
   const content = (
     <div
       className={cn(
-        "flex items-center gap-3 p-3 rounded-lg transition-all duration-200",
+        "flex items-center gap-3 p-3 rounded-lg transition-all duration-200 max-w-3xl",
         "hover:bg-muted/30 active:scale-[0.98]",
         "touch-manipulation select-none cursor-pointer",
         isCurrentlyPlaying && "bg-primary/10"
