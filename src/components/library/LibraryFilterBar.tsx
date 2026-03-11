@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, X, SlidersHorizontal } from "lucide-react";
+import { Search, X, ListMusic } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,8 +22,8 @@ interface LibraryFilterBarProps {
   };
 }
 
-const filters: { value: LibraryFilter; label: string }[] = [
-  { value: "playlists", label: "Playlists" },
+const filters: { value: LibraryFilter; label: string; icon?: React.ReactNode }[] = [
+  { value: "playlists", label: "Playlists", icon: <ListMusic className="w-3.5 h-3.5" /> },
   { value: "albums", label: "Albums" },
   { value: "artists", label: "Artists" },
   { value: "owned", label: "Downloaded" },
@@ -65,7 +65,7 @@ export function LibraryFilterBar({
             placeholder="Search your library..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            className="pl-10 pr-10 bg-muted/30 border-none focus:ring-1 focus:ring-primary/50"
+            className="pl-10 pr-10 bg-muted/30 border border-border/50 focus:ring-1 focus:ring-primary/50 h-10"
             autoFocus
           />
           {localSearch && (
@@ -84,21 +84,6 @@ export function LibraryFilterBar({
 
       {/* Filter Row */}
       <div className="flex items-center gap-2">
-        {/* Filter/Sort Icon */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "h-8 w-8 rounded-full flex-shrink-0",
-            activeFilter !== "all" 
-              ? "bg-primary text-primary-foreground" 
-              : "bg-muted/40 text-muted-foreground hover:text-foreground"
-          )}
-          onClick={() => onFilterChange(activeFilter === "all" ? "playlists" : "all")}
-        >
-          <SlidersHorizontal className="w-4 h-4" />
-        </Button>
-
         {/* Filter Chips */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide ios-scroll flex-1">
           {filters.map((filter) => {
@@ -109,13 +94,14 @@ export function LibraryFilterBar({
                 key={filter.value}
                 onClick={() => onFilterChange(isActive ? "all" : filter.value)}
                 className={cn(
-                  "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200",
-                  "touch-manipulation select-none",
+                  "flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200",
+                  "touch-manipulation select-none border",
                   isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted/40 text-foreground hover:bg-muted/60"
+                    ? "bg-primary text-primary-foreground border-primary shadow-[0_0_12px_hsl(var(--primary)/0.3)]"
+                    : "bg-muted/30 text-foreground border-border/40 hover:bg-muted/50 hover:border-border/60"
                 )}
               >
+                {filter.icon}
                 {filter.label}
               </button>
             );
@@ -124,14 +110,18 @@ export function LibraryFilterBar({
 
         {/* Search Toggle */}
         <Button
-          variant="ghost"
+          variant={isSearchOpen ? "default" : "outline"}
           size="icon"
-          className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-foreground"
+          className={cn(
+            "h-9 w-9 flex-shrink-0 rounded-full transition-all",
+            isSearchOpen
+              ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.3)]"
+              : "border-border/40 text-foreground hover:bg-muted/50"
+          )}
           onClick={() => setIsSearchOpen(!isSearchOpen)}
         >
           <Search className="w-4 h-4" />
         </Button>
-
       </div>
     </div>
   );

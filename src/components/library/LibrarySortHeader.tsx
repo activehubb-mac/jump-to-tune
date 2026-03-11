@@ -40,7 +40,6 @@ export function LibrarySortHeader({
   const [showExpiredModal, setShowExpiredModal] = useState(false);
 
   const handleSortChange = (value: SortOption) => {
-    // Check if sorting is a premium feature
     if (!canUseFeature("sorting")) {
       if (isSubscriptionExpired()) {
         setShowExpiredModal(true);
@@ -56,7 +55,6 @@ export function LibrarySortHeader({
 
   return (
     <>
-      {/* Premium Modals */}
       <PremiumFeatureModal
         open={showPremiumModal}
         onOpenChange={setShowPremiumModal}
@@ -103,18 +101,34 @@ export function LibrarySortHeader({
         </DropdownMenu>
 
         {/* View Mode Toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-          onClick={() => onViewModeChange(viewMode === "list" ? "grid" : "list")}
-        >
-          {viewMode === "list" ? (
-            <Grid3X3 className="w-4 h-4" />
-          ) : (
+        <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-0.5 border border-border/30">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-7 w-7 rounded-md transition-all",
+              viewMode === "list"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+            onClick={() => onViewModeChange("list")}
+          >
             <List className="w-4 h-4" />
-          )}
-        </Button>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-7 w-7 rounded-md transition-all",
+              viewMode === "grid"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+            onClick={() => onViewModeChange("grid")}
+          >
+            <Grid3X3 className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </>
   );
