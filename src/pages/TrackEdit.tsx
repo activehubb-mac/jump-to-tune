@@ -530,6 +530,20 @@ export default function TrackEdit() {
           {/* Credits Section */}
           <CreditsSection credits={credits} onChange={setCredits} />
 
+          {/* Karaoke Section */}
+          <KaraokeSection
+            enabled={karaokeEnabled}
+            onEnabledChange={setKaraokeEnabled}
+            instrumentalFile={karaokeInstrumentalFile}
+            onInstrumentalChange={setKaraokeInstrumentalFile}
+            lyrics={karaokeLyrics}
+            onLyricsChange={setKaraokeLyrics}
+            singModeEnabled={singModeEnabled}
+            onSingModeChange={setSingModeEnabled}
+            trackId={id}
+            audioUrl={track?.audio_url}
+          />
+
           {/* Pricing */}
           <div className="glass-card p-4 sm:p-6 space-y-4">
             <h2 className="text-lg font-semibold text-foreground">Pricing & Access</h2>
