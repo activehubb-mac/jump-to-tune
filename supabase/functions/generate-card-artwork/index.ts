@@ -81,7 +81,7 @@ serve(async (req) => {
 
     // Extract base64 data after the prefix
     const base64Data = base64Url.replace(/^data:image\/\w+;base64,/, "");
-    const imageBytes = decode(base64Data);
+    const imageBytes = base64ToUint8Array(base64Data);
 
     // Upload to storage
     const { error: uploadError } = await supabase.storage.from("covers").upload(storagePath, imageBytes, {
