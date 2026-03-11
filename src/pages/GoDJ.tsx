@@ -72,15 +72,18 @@ export default function GoDJ() {
       {/* Full-size background video for Go DJ page */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <video
-          src="/videos/godj-bg.mov"
+          src={bg?.videoUrl || "/videos/godj-bg.mov"}
           autoPlay
           loop
           muted
           playsInline
           className="w-full h-full object-cover"
-          ref={(el) => { if (el) el.playbackRate = 0.8; }}
+          ref={(el) => { if (el) el.playbackRate = bg?.playbackRate ?? 0.8; }}
         />
-        <div className="absolute inset-0 bg-background/60" />
+        <div
+          className="absolute inset-0 bg-background"
+          style={{ opacity: (bg?.overlayOpacity ?? 60) / 100 }}
+        />
       </div>
       <div className="container mx-auto px-4 py-8 space-y-12 relative z-10">
         {/* Hero */}
