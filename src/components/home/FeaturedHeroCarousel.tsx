@@ -200,7 +200,7 @@ export function FeaturedHeroCarousel() {
             </div>
             <h3 
               key={currentTrack.id + "-title"}
-              className="text-xl md:text-3xl font-bold text-white truncate mb-1 animate-fade-in"
+              className="text-lg md:text-3xl font-bold text-white truncate mb-1 animate-fade-in"
               style={{ textShadow: '0 2px 8px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.5)' }}
             >
               {currentTrack.title}
