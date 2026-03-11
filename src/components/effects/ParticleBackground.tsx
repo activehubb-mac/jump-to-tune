@@ -273,6 +273,7 @@ export function ParticleBackground() {
             loop
             muted
             playsInline
+            style={{ mixBlendMode: 'screen' }}
             className="w-full h-full object-contain"
           />
         </div>
