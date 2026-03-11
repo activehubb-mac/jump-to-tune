@@ -115,7 +115,7 @@ export function KaraokeLyricsPanel({
       )}
     >
       {/* Header */}
-      <div className="p-3 flex items-center justify-between border-b border-glass-border/30 bg-background/50">
+      <div className="p-3 flex items-center justify-between border-b border-glass-border/30 bg-background">
         <div className="flex items-center gap-2 min-w-0">
           <div className={cn(
             "w-6 h-6 rounded-full flex items-center justify-center",
