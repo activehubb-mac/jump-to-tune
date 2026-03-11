@@ -163,6 +163,14 @@ export default function TrackEdit() {
     }
   }, [track]);
 
+  // Populate karaoke data when loaded
+  useEffect(() => {
+    if (karaokeData) {
+      setKaraokeEnabled(true);
+      setKaraokeLyrics(karaokeData.lyrics || "");
+    }
+  }, [karaokeData]);
+
   // Populate credits when loaded
   useEffect(() => {
     if (trackCredits) {
