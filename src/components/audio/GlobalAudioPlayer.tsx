@@ -17,6 +17,7 @@ import { useKaraokeData, getInstrumentalUrl } from "@/hooks/useKaraokeData";
 import { Link } from "react-router-dom";
 import { DownloadButton } from "@/components/download/DownloadButton";
 import { usePurchases } from "@/hooks/usePurchases";
+import { useLikes } from "@/hooks/useLikes";
 import { usePlaylists } from "@/hooks/usePlaylists";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { AddToPlaylistModal } from "@/components/playlist/AddToPlaylistModal";
