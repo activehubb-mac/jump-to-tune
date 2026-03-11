@@ -76,6 +76,8 @@ export function HorizontalSection({
       className={cn("mb-10", className)}
       onPointerEnter={() => (isPaused.current = true)}
       onPointerLeave={() => (isPaused.current = false)}
+      onTouchStart={() => (isPaused.current = true)}
+      onTouchEnd={() => { setTimeout(() => (isPaused.current = false), 3000); }}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4 px-1">
