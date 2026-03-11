@@ -90,7 +90,7 @@ export default function GoDJ() {
           <h1 className="text-4xl md:text-5xl font-bold text-foreground">
             Discover Curated Sessions
           </h1>
-          <p className="text-muted-foreground max-w-xl mx-auto">
+          <p className="text-foreground/80 max-w-xl mx-auto">
             Explore playlists curated by rising DJs. Listen, react, and support the curators shaping the sound.
           </p>
           {djProfile?.is_enabled && (
@@ -142,8 +142,8 @@ export default function GoDJ() {
           ) : (
             <div className="p-12 text-center bg-transparent border border-border/20 rounded-xl">
               <Disc3 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-muted-foreground">No active sessions yet</p>
-              <p className="text-xs text-muted-foreground mt-1">Be the first to start a Go DJ session!</p>
+              <p className="text-foreground/70">No active sessions yet</p>
+              <p className="text-sm text-foreground/50 mt-1">Be the first to start a Go DJ session!</p>
             </div>
           )}
         </section>
