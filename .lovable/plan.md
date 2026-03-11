@@ -1,54 +1,24 @@
 
+# Make Recent Updates Available for Mobile
 
-## Add Realistic Energy Effects to Cards
+The recent changes (hiding track/follower counts from artist cards, hiding price/collectors from track cards) were applied to the homepage and browse pages, but several other pages still display this data on cards. These pages are used on both desktop and mobile.
 
-### What We're Building
-A living, breathing energy effect on all cards — subtle animated border glow that pulses like electrical current flowing around the card edges, plus a faint inner energy shimmer. This gives cards a "powered on" feeling without being distracting.
+## Changes Required
 
-### Approach
+### 1. `src/pages/Artists.tsx` -- Remove tracks/fans from artist cards
 
-**1. CSS Keyframes & Utility Classes** (`src/index.css`)
+**Featured Artists section (lines 149-152):** Remove the stats row showing "X tracks" and "X fans"
 
-Add three new effects:
+**All Artists grid (lines 183-187):** Remove "X tracks" text and "X fans" text below each artist name
 
-- **`energy-border`**: An animated gradient border that rotates around the card using a `conic-gradient` behind the card (pseudo-element technique). Creates a realistic energy flow along card edges — gold to copper cycling.
-- **`energy-shimmer`**: A subtle light sweep that moves across the card surface periodically, like a reflection of energy passing through.
-- **`energy-pulse`**: A faint outer glow that breathes in and out, simulating radiated energy.
+### 2. `src/pages/FanDashboard.tsx` -- Remove stats from followed artist cards
 
-**2. Apply to Card Base Classes** (`src/index.css`)
+**Line 277:** Change `{artist.trackCount} tracks . {artist.followerCount} followers` to just `"Artist"` label
 
-Update `.glass-card` and `.glass-card-bordered` to include the energy pulse glow and shimmer by default, keeping it subtle (low opacity).
+### 3. Cleanup: Remove unused imports/data
 
-**3. Update Card Component** (`src/components/ui/card.tsx`)
+- In `Artists.tsx`: Remove `useFollowerCounts` import and hook call since follower counts are no longer displayed on cards
+- Remove `formatCompactNumber` import if no longer used
+- Remove the `followers` variable assignments in the map callbacks
 
-No structural changes needed — effects flow through the existing CSS utility classes.
-
-**4. Enhanced Track/Store Cards**
-
-Update `SpotifyTrackCard`, `StoreProductCard`, and `TrackCard` to use the energy border effect on hover for a more dramatic "selected/active" feel.
-
-### Technical Detail
-
-The rotating border effect uses a `@property` registered CSS custom property for the angle, animated via `@keyframes`. The shimmer uses a moving linear-gradient overlay. Both respect `prefers-reduced-motion`.
-
-```text
-Card anatomy:
-┌─────────────────────────┐
-│ ░░ energy-border ░░░░░░ │  ← rotating conic-gradient border (hover)
-│ ┌─────────────────────┐ │
-│ │  shimmer sweep →→→  │ │  ← periodic light sweep across surface
-│ │                     │ │
-│ │   card content      │ │
-│ │                     │ │
-│ └─────────────────────┘ │
-│ ╰── energy-pulse glow ──╯│  ← breathing outer shadow
-└─────────────────────────┘
-```
-
-### Files to Edit
-- `src/index.css` — Add energy keyframes, shimmer, and pulse classes
-- `src/components/browse/SpotifyTrackCard.tsx` — Add energy classes
-- `src/components/store/StoreProductCard.tsx` — Add energy classes  
-- `src/components/dashboard/TrackCard.tsx` — Add energy classes
-- `src/components/artist/AnnouncementCard.tsx` — Add energy classes
-
+These are all the remaining places where track/follower counts appear on artist cards and price/editions appear on track cards outside of profile/detail views. The changes ensure consistency across desktop and mobile.
