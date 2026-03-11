@@ -73,6 +73,9 @@ export default function TrackEdit() {
   const [karaokeInstrumentalFile, setKaraokeInstrumentalFile] = useState<File | null>(null);
   const [karaokeLyrics, setKaraokeLyrics] = useState("");
   const [singModeEnabled, setSingModeEnabled] = useState(false);
+  const [stageEnabled, setStageEnabled] = useState(false);
+  const [duetModeEnabled, setDuetModeEnabled] = useState(false);
+  const [danceModeEnabled, setDanceModeEnabled] = useState(false);
   const { data: karaokeData } = useKaraokeData(id);
 
   // Fetch track data
