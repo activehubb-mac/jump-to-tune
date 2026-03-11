@@ -1,30 +1,24 @@
 
+# Make Recent Updates Available for Mobile
 
-## Analysis
+The recent changes (hiding track/follower counts from artist cards, hiding price/collectors from track cards) were applied to the homepage and browse pages, but several other pages still display this data on cards. These pages are used on both desktop and mobile.
 
-The background floating elements (performer videos, promoted avatars, instrument emojis, particles) use continuous CSS animations — they don't actually react to audio. However, their constant bouncing and drifting creates the visual impression of "dancing to music" when a track is playing.
+## Changes Required
 
-The fix is to pause all background animations when audio is actively playing, so the background becomes static/calm during playback.
+### 1. `src/pages/Artists.tsx` -- Remove tracks/fans from artist cards
 
-## Plan
+**Featured Artists section (lines 149-152):** Remove the stats row showing "X tracks" and "X fans"
 
-### 1. Pass playback state to ParticleBackground and PromotedAvatars
+**All Artists grid (lines 183-187):** Remove "X tracks" text and "X fans" text below each artist name
 
-In `src/components/layout/Layout.tsx`, read `isPlaying` from `useAudioPlayer()` and pass it down (or consume it directly in the effect components).
+### 2. `src/pages/FanDashboard.tsx` -- Remove stats from followed artist cards
 
-### 2. Pause animations in ParticleBackground when playing
+**Line 277:** Change `{artist.trackCount} tracks . {artist.followerCount} followers` to just `"Artist"` label
 
-In `src/components/effects/ParticleBackground.tsx`:
-- Import `useAudioPlayer` and read `isPlaying`
-- Add a CSS class or inline style `animationPlayState: isPlaying ? 'paused' : 'running'` to the root container div, which will cascade to all animated children (particles, characters, instruments, nebula orbs, featured avatars)
+### 3. Cleanup: Remove unused imports/data
 
-### 3. Pause animations in PromotedAvatars when playing
+- In `Artists.tsx`: Remove `useFollowerCounts` import and hook call since follower counts are no longer displayed on cards
+- Remove `formatCompactNumber` import if no longer used
+- Remove the `followers` variable assignments in the map callbacks
 
-In `src/components/effects/PromotedAvatars.tsx`:
-- Import `useAudioPlayer` and read `isPlaying`
-- Apply `animationPlayState: 'paused'` to the container when audio is playing, stopping the fade-cycle and drift animations
-
-### Files to modify
-- `src/components/effects/ParticleBackground.tsx` — add `useAudioPlayer`, apply paused state to wrapper
-- `src/components/effects/PromotedAvatars.tsx` — add `useAudioPlayer`, apply paused state to wrapper
-
+These are all the remaining places where track/follower counts appear on artist cards and price/editions appear on track cards outside of profile/detail views. The changes ensure consistency across desktop and mobile.
