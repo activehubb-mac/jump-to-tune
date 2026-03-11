@@ -52,6 +52,8 @@ interface FullscreenPlayerProps {
   canShuffle: boolean;
   canRepeat: boolean;
   isOwned: boolean;
+  isTrackLiked: boolean;
+  onToggleLike: () => void;
   togglePlayPause: () => void;
   resumePlayback: () => void;
   seek: (time: number) => void;

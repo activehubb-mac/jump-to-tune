@@ -1158,6 +1158,8 @@ export function GlobalAudioPlayer() {
         canShuffle={canShuffle}
         canRepeat={canRepeat}
         isOwned={isOwned(currentTrack.id)}
+        isTrackLiked={isLiked(currentTrack.id)}
+        onToggleLike={() => toggleLike(currentTrack.id)}
         togglePlayPause={needsUserGesture ? resumePlayback : togglePlayPause}
         resumePlayback={resumePlayback}
         seek={seek}
