@@ -81,6 +81,7 @@ import AIPlaylistBuilder from "./pages/AIPlaylistBuilder";
 import AIVideoGenerator from "./pages/AIVideoGenerator";
 import AIViralGenerator from "./pages/AIViralGenerator";
 import SingMode from "./pages/SingMode";
+import StagePage from "./pages/Stage";
 
 const queryClient = new QueryClient();
 
