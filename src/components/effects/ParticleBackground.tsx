@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useFeaturedArtists } from "@/hooks/useFeaturedContent";
 
 type ParticleShape = "dot" | "ring" | "line" | "glow" | "star" | "streak";
 
@@ -46,6 +47,8 @@ const CHARACTERS = [
 const INSTRUMENTS = ["🎸", "🎹", "🎤", "🎧", "🎵", "🎶", "🎷", "🥁", "🎺", "🎻"];
 
 export function ParticleBackground() {
+  const { data: featuredArtists } = useFeaturedArtists("artists_page");
+
   const particles = useMemo(() => {
     const count = window.innerWidth < 768 ? 25 : 50;
     const items: Particle[] = [];
@@ -83,14 +86,33 @@ export function ParticleBackground() {
     return CHARACTERS.map((src, i) => ({
       id: i,
       src,
-      left: `${10 + (i * 18) + Math.random() * 10}%`,
-      top: `${15 + Math.random() * 65}%`,
-      size: window.innerWidth < 768 ? 28 + Math.random() * 16 : 40 + Math.random() * 24,
+      left: `${8 + (i * 18) + Math.random() * 8}%`,
+      top: `${10 + Math.random() * 70}%`,
+      size: window.innerWidth < 768 ? 48 + Math.random() * 24 : 72 + Math.random() * 32,
       duration: 18 + Math.random() * 14,
       delay: i * 2.5,
-      opacity: 0.06 + Math.random() * 0.06,
+      opacity: 0.15 + Math.random() * 0.10,
     }));
   }, []);
+
+  // Featured artist avatars as floating particles
+  const featuredAvatars = useMemo(() => {
+    if (!featuredArtists || featuredArtists.length === 0) return [];
+    return featuredArtists
+      .filter((fa) => fa.profile?.avatar_url)
+      .slice(0, 8)
+      .map((fa, i) => ({
+        id: `fa-${fa.id}`,
+        src: fa.profile!.avatar_url!,
+        name: fa.profile!.display_name || "",
+        left: `${5 + Math.random() * 85}%`,
+        top: `${5 + Math.random() * 85}%`,
+        size: window.innerWidth < 768 ? 32 + Math.random() * 16 : 44 + Math.random() * 20,
+        duration: 20 + Math.random() * 15,
+        delay: i * 3,
+        opacity: 0.12 + Math.random() * 0.08,
+      }));
+  }, [featuredArtists]);
 
   const floatingInstruments = useMemo(() => {
     const count = window.innerWidth < 768 ? 8 : 14;
@@ -224,7 +246,7 @@ export function ParticleBackground() {
         }}
       />
 
-      {/* Floating characters - deep in background, very small & faint */}
+      {/* Floating characters - more visible & bigger */}
       {floatingCharacters.map((char) => (
         <div
           key={`char-${char.id}`}
@@ -237,16 +259,47 @@ export function ParticleBackground() {
             animationDuration: `${char.duration}s`,
             animationDelay: `${char.delay}s`,
             opacity: char.opacity,
-            filter: "blur(0.5px) grayscale(0.4)",
+            filter: "blur(0.3px) grayscale(0.3)",
           }}
         >
           <img
             src={char.src}
             alt=""
             className="w-full h-full object-contain"
-            style={{ opacity: 0.9 }}
             loading="lazy"
           />
+        </div>
+      ))}
+
+      {/* Featured artist avatars floating as circular particles */}
+      {featuredAvatars.map((avatar) => (
+        <div
+          key={avatar.id}
+          className="absolute particle-animate"
+          style={{
+            left: avatar.left,
+            top: avatar.top,
+            width: avatar.size,
+            height: avatar.size,
+            animationDuration: `${avatar.duration}s`,
+            animationDelay: `${avatar.delay}s`,
+            opacity: avatar.opacity,
+          }}
+        >
+          <div
+            className="w-full h-full rounded-full overflow-hidden"
+            style={{
+              border: "1.5px solid hsl(var(--primary) / 0.3)",
+              boxShadow: "0 0 12px hsl(var(--primary) / 0.15)",
+            }}
+          >
+            <img
+              src={avatar.src}
+              alt=""
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
         </div>
       ))}
 
