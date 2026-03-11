@@ -30,8 +30,8 @@ export function Layout({
       
       {/* Main content wrapper with proper spacing for fixed navbar */}
       <div 
-        className="flex-1 flex flex-col"
-        style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))' }}
+        className="flex-1 flex flex-col relative bg-background"
+        style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))', zIndex: 2 }}
       >
         <EmailVerificationBanner />
         <main className={cn(
