@@ -184,6 +184,7 @@ export function GlobalAudioPlayer() {
 
   const { canUseFeature } = useFeatureGate();
   const { isOwned } = usePurchases();
+  const { isLiked, toggleLike } = useLikes();
   const { createPlaylist } = usePlaylists();
   const { showFeedback } = useFeedbackSafe();
   const [showQueue, setShowQueue] = useState(false);
