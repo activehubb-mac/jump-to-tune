@@ -3080,10 +3080,9 @@ export type Database = {
       }
     }
     Functions: {
-      add_ai_credits: {
-        Args: { p_credits: number; p_user_id: string }
-        Returns: Json
-      }
+      add_ai_credits:
+        | { Args: { p_credits: number; p_user_id: string }; Returns: Json }
+        | { Args: { p_credits: number; p_user_id: string }; Returns: Json }
       add_credits_atomic: {
         Args: { p_amount_cents: number; p_user_id: string }
         Returns: Json
@@ -3102,10 +3101,9 @@ export type Database = {
         Args: { p_product_id: string; p_quantity?: number }
         Returns: Json
       }
-      deduct_ai_credits: {
-        Args: { p_credits: number; p_user_id: string }
-        Returns: Json
-      }
+      deduct_ai_credits:
+        | { Args: { p_credits: number; p_user_id: string }; Returns: Json }
+        | { Args: { p_credits: number; p_user_id: string }; Returns: Json }
       deduct_credits_atomic: {
         Args: { p_amount_cents: number; p_user_id: string }
         Returns: Json
