@@ -2799,12 +2799,14 @@ export type Database = {
       }
       track_karaoke: {
         Row: {
+          ai_avatar_mode_enabled: boolean
           created_at: string
           dance_mode_enabled: boolean
           duet_mode_enabled: boolean
           id: string
           instrumental_url: string
           lyrics: string | null
+          rap_mode_enabled: boolean
           replicate_prediction_id: string | null
           sing_mode_enabled: boolean
           stage_enabled: boolean
@@ -2813,12 +2815,14 @@ export type Database = {
           vocals_url: string | null
         }
         Insert: {
+          ai_avatar_mode_enabled?: boolean
           created_at?: string
           dance_mode_enabled?: boolean
           duet_mode_enabled?: boolean
           id?: string
           instrumental_url: string
           lyrics?: string | null
+          rap_mode_enabled?: boolean
           replicate_prediction_id?: string | null
           sing_mode_enabled?: boolean
           stage_enabled?: boolean
@@ -2827,12 +2831,14 @@ export type Database = {
           vocals_url?: string | null
         }
         Update: {
+          ai_avatar_mode_enabled?: boolean
           created_at?: string
           dance_mode_enabled?: boolean
           duet_mode_enabled?: boolean
           id?: string
           instrumental_url?: string
           lyrics?: string | null
+          rap_mode_enabled?: boolean
           replicate_prediction_id?: string | null
           sing_mode_enabled?: boolean
           stage_enabled?: boolean
