@@ -4,7 +4,7 @@ import { Footer } from "./Footer";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
 import { ParticleBackground } from "@/components/effects/ParticleBackground";
-import { RobotPerformer } from "@/components/effects/RobotPerformer";
+import { CharacterPerformer } from "@/components/effects/CharacterPerformer";
 import { GlobalSubscriptionCheck } from "@/components/subscription/GlobalSubscriptionCheck";
 import { cn } from "@/lib/utils";
 
