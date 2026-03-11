@@ -101,6 +101,7 @@ function RouterContent() {
         <Route path="/browse" element={<Browse />} />
         <Route path="/karaoke" element={<Karaoke />} />
         <Route path="/sing/:trackId" element={<SingMode />} />
+        <Route path="/stage/:trackId" element={<StagePage />} />
         <Route path="/go-dj" element={<GoDJ />} />
         <Route path="/go-dj/mix/:sessionId/edit" element={<GoDJMixBuilder />} />
         <Route path="/go-dj/mix/:sessionId" element={<GoDJMixPlayback />} />
