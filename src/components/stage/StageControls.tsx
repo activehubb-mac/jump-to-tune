@@ -1,6 +1,6 @@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Mic2, Users, Music, Sparkles } from "lucide-react";
+import { Mic2, Users, Music, Sparkles, MessageSquare, Bot } from "lucide-react";
 
 interface StageControlsProps {
   stageEnabled: boolean;
@@ -11,6 +11,10 @@ interface StageControlsProps {
   onDuetModeChange: (v: boolean) => void;
   danceModeEnabled: boolean;
   onDanceModeChange: (v: boolean) => void;
+  rapModeEnabled: boolean;
+  onRapModeChange: (v: boolean) => void;
+  aiAvatarModeEnabled: boolean;
+  onAiAvatarModeChange: (v: boolean) => void;
   hasKaraoke: boolean;
 }
 
@@ -19,6 +23,8 @@ export function StageControls({
   singModeEnabled, onSingModeChange,
   duetModeEnabled, onDuetModeChange,
   danceModeEnabled, onDanceModeChange,
+  rapModeEnabled, onRapModeChange,
+  aiAvatarModeEnabled, onAiAvatarModeChange,
   hasKaraoke,
 }: StageControlsProps) {
   return (
@@ -54,6 +60,15 @@ export function StageControls({
             <Switch checked={singModeEnabled} onCheckedChange={onSingModeChange} disabled={!hasKaraoke} />
           </div>
 
+          {/* Rap Mode */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-primary" />
+              <Label className="text-sm">Rap Mode</Label>
+            </div>
+            <Switch checked={rapModeEnabled} onCheckedChange={onRapModeChange} />
+          </div>
+
           {/* Duet Mode */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -70,6 +85,18 @@ export function StageControls({
               <Label className="text-sm">Dance Mode</Label>
             </div>
             <Switch checked={danceModeEnabled} onCheckedChange={onDanceModeChange} />
+          </div>
+
+          {/* AI Avatar Mode */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bot className="w-4 h-4 text-primary" />
+              <div>
+                <Label className="text-sm">AI Avatar Mode</Label>
+                <p className="text-xs text-muted-foreground">Fans generate AI avatar performances (40 credits)</p>
+              </div>
+            </div>
+            <Switch checked={aiAvatarModeEnabled} onCheckedChange={onAiAvatarModeChange} />
           </div>
         </div>
       )}

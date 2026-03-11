@@ -76,6 +76,8 @@ export default function TrackEdit() {
   const [stageEnabled, setStageEnabled] = useState(false);
   const [duetModeEnabled, setDuetModeEnabled] = useState(false);
   const [danceModeEnabled, setDanceModeEnabled] = useState(false);
+  const [rapModeEnabled, setRapModeEnabled] = useState(false);
+  const [aiAvatarModeEnabled, setAiAvatarModeEnabled] = useState(false);
   const { data: karaokeData } = useKaraokeData(id);
 
   // Fetch track data
@@ -176,6 +178,8 @@ export default function TrackEdit() {
       setDuetModeEnabled((karaokeData as any).duet_mode_enabled || false);
       setDanceModeEnabled((karaokeData as any).dance_mode_enabled || false);
       setSingModeEnabled((karaokeData as any).sing_mode_enabled || false);
+      setRapModeEnabled((karaokeData as any).rap_mode_enabled || false);
+      setAiAvatarModeEnabled((karaokeData as any).ai_avatar_mode_enabled || false);
     }
   }, [karaokeData]);
 
@@ -293,6 +297,8 @@ export default function TrackEdit() {
             sing_mode_enabled: singModeEnabled,
             duet_mode_enabled: duetModeEnabled,
             dance_mode_enabled: danceModeEnabled,
+            rap_mode_enabled: rapModeEnabled,
+            ai_avatar_mode_enabled: aiAvatarModeEnabled,
           })
           .eq("track_id", id);
       }
@@ -575,6 +581,10 @@ export default function TrackEdit() {
             onDuetModeChange={setDuetModeEnabled}
             danceModeEnabled={danceModeEnabled}
             onDanceModeChange={setDanceModeEnabled}
+            rapModeEnabled={rapModeEnabled}
+            onRapModeChange={setRapModeEnabled}
+            aiAvatarModeEnabled={aiAvatarModeEnabled}
+            onAiAvatarModeChange={setAiAvatarModeEnabled}
             hasKaraoke={karaokeEnabled || !!karaokeData}
           />
 

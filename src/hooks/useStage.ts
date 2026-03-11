@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-export type StageMode = "sing" | "duet" | "dance";
+export type StageMode = "sing" | "duet" | "dance" | "rap" | "ai_avatar";
 
 export interface StageTrack {
   track_id: string;
@@ -12,6 +12,8 @@ export interface StageTrack {
   sing_mode_enabled: boolean;
   duet_mode_enabled: boolean;
   dance_mode_enabled: boolean;
+  rap_mode_enabled: boolean;
+  ai_avatar_mode_enabled: boolean;
 }
 
 export interface StageVideo {
@@ -37,7 +39,7 @@ export function useStageTrack(trackId: string | undefined) {
       if (!trackId) return null;
       const { data, error } = await supabase
         .from("track_karaoke")
-        .select("track_id, instrumental_url, lyrics, stage_enabled, sing_mode_enabled, duet_mode_enabled, dance_mode_enabled")
+        .select("track_id, instrumental_url, lyrics, stage_enabled, sing_mode_enabled, duet_mode_enabled, dance_mode_enabled, rap_mode_enabled, ai_avatar_mode_enabled")
         .eq("track_id", trackId)
         .eq("stage_enabled", true)
         .maybeSingle();
@@ -53,8 +55,10 @@ export function getAvailableModes(track: StageTrack | null | undefined): StageMo
   if (!track) return [];
   const modes: StageMode[] = [];
   if (track.sing_mode_enabled && (track.instrumental_url || track.lyrics)) modes.push("sing");
+  if (track.rap_mode_enabled) modes.push("rap");
   if (track.duet_mode_enabled) modes.push("duet");
   if (track.dance_mode_enabled) modes.push("dance");
+  if (track.ai_avatar_mode_enabled) modes.push("ai_avatar");
   return modes;
 }
 
