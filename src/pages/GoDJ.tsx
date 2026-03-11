@@ -76,9 +76,7 @@ export default function GoDJ() {
           muted
           playsInline
           className="w-full h-full object-cover"
-          style={{ playbackRate: 0.8 }}
           ref={(el) => { if (el) el.playbackRate = 0.8; }}
-        />
         />
         <div className="absolute inset-0 bg-background/60" />
       </div>
