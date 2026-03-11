@@ -95,6 +95,8 @@ export function FullscreenPlayer({
   canShuffle,
   canRepeat,
   isOwned,
+  isTrackLiked,
+  onToggleLike,
   togglePlayPause,
   resumePlayback,
   seek,
