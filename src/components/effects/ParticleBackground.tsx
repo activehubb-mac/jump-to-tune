@@ -44,6 +44,7 @@ export function ParticleBackground() {
   const location = useLocation();
   const { data: featuredArtists } = useFeaturedArtists("artists_page");
 
+  const isGoDJ = location.pathname.startsWith("/go-dj");
   const isBrowse = location.pathname.startsWith("/browse");
   const pageCharacters = isBrowse ? BROWSE_CHARACTERS : HOME_CHARACTERS;
 
@@ -190,7 +191,7 @@ export function ParticleBackground() {
   const prefersReducedMotion = typeof window !== "undefined"
     && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  if (prefersReducedMotion) return null;
+  if (prefersReducedMotion || isGoDJ) return null;
 
   return (
     <div
