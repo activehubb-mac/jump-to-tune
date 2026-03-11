@@ -411,8 +411,15 @@
     .shooting-star-animate,
     .nebula-orb,
     .horizon-line,
-    .star-twinkle {
+    .star-twinkle,
+    .glass-card,
+    .glass-card-bordered {
       animation: none;
+    }
+    .energy-card::before,
+    .energy-card::after {
+      animation: none;
+      opacity: 0;
     }
     .particle-animate { opacity: 0.3; }
     .track-card-3d:hover {
