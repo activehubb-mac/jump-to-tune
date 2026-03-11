@@ -178,6 +178,8 @@ export default function TrackEdit() {
       setDuetModeEnabled((karaokeData as any).duet_mode_enabled || false);
       setDanceModeEnabled((karaokeData as any).dance_mode_enabled || false);
       setSingModeEnabled((karaokeData as any).sing_mode_enabled || false);
+      setRapModeEnabled((karaokeData as any).rap_mode_enabled || false);
+      setAiAvatarModeEnabled((karaokeData as any).ai_avatar_mode_enabled || false);
     }
   }, [karaokeData]);
 
