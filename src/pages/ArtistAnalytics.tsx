@@ -9,13 +9,16 @@ import {
   Calendar,
   Loader2,
   Lock,
-  AlertCircle
+  AlertCircle,
+  Mic,
+  Video
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useArtistStats } from "@/hooks/useArtistStats";
 import { useArtistTracks } from "@/hooks/useTracks";
 import { formatPrice, formatEarnings } from "@/lib/formatters";
+import { useKaraokeAnalytics } from "@/hooks/useKaraokeAnalytics";
 
 export default function ArtistAnalytics() {
   const { user, role, isLoading } = useAuth();
