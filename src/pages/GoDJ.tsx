@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 
 export default function GoDJ() {
   const { user } = useAuth();
+  const { data: bg } = useGoDJBackground();
   const { data: djProfile } = useGoDJProfile(user?.id);
   const { data: publishedMixes, isLoading: mixesLoading } = usePublishedGoDJSessions(12);
   const [showWizard, setShowWizard] = useState(false);
