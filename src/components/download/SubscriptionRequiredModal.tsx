@@ -71,14 +71,14 @@ export function SubscriptionRequiredModal({
             Subscription Required
           </DialogTitle>
           <DialogDescription>
-            Subscribe to unlock downloads and streaming. Start with a 3-month free trial!
+            Subscribe to unlock downloads and streaming. Start with a 30-day free trial!
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="flex items-center justify-center gap-2 bg-primary/10 rounded-lg p-3">
             <Sparkles className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-primary">3 Months FREE Trial</span>
+            <span className="font-semibold text-primary">30-Day FREE Trial</span>
           </div>
 
           <div className="space-y-3">

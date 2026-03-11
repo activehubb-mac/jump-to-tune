@@ -559,7 +559,7 @@ export default function Subscription() {
                         <span className="text-3xl font-bold text-foreground">{tierInfo.price}</span>
                         <span className="text-muted-foreground">/month</span>
                         {!hasActiveSubscription && (
-                          <p className="text-xs text-primary mt-1">Free for 3 months</p>
+                          <p className="text-xs text-primary mt-1">Free for 30 days</p>
                         )}
                       </div>
 

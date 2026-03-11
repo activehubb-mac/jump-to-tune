@@ -69,10 +69,10 @@ export function PremiumFeatureModal({
           <div className="glass-card p-4 mb-6">
             <div className="flex items-center gap-2 mb-2">
               <Check className="h-4 w-4 text-green-500" />
-              <span className="text-sm font-medium text-foreground">3-Month Free Trial</span>
+              <span className="text-sm font-medium text-foreground">30-Day Free Trial</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Try all premium features free for 3 months. Cancel anytime.
+              Try all premium features free for 30 days. Cancel anytime.
             </p>
           </div>
 
