@@ -27,17 +27,6 @@ interface NebulaOrb {
   color: "primary" | "accent";
 }
 
-const CHARACTERS = [
-  "/videos/performer-1.mp4",
-  "/videos/performer-2.mp4",
-  "/videos/performer-3.mp4",
-  "/videos/performer-4.mp4",
-  "/videos/performer-5.mp4",
-];
-
-// Characters assigned per page group
-const HOME_CHARACTERS = [CHARACTERS[0], CHARACTERS[3]]; // robot, singer-female2
-const BROWSE_CHARACTERS = [CHARACTERS[1], CHARACTERS[2], CHARACTERS[4]]; // singer-male, singer-female1, dj
 
 const INSTRUMENTS = ["🎸", "🎹", "🎤", "🎧", "🎵", "🎶", "🎷", "🥁", "🎺", "🎻"];
 
@@ -46,8 +35,6 @@ export function ParticleBackground() {
   const { data: featuredArtists } = useFeaturedArtists("artists_page");
 
   const isGoDJ = location.pathname.startsWith("/go-dj");
-  const isBrowse = location.pathname.startsWith("/browse");
-  const pageCharacters = isBrowse ? BROWSE_CHARACTERS : HOME_CHARACTERS;
 
   const particles = useMemo(() => {
     const count = window.innerWidth < 768 ? 25 : 50;
@@ -83,19 +70,6 @@ export function ParticleBackground() {
   ], []);
 
   // Characters orbit: they drift across, leave, and re-enter
-  const floatingCharacters = useMemo(() => {
-    return pageCharacters.map((src, i) => ({
-      id: `char-${i}`,
-      src,
-      size: window.innerWidth < 768 ? 44 + Math.random() * 20 : 64 + Math.random() * 28,
-      duration: 55 + Math.random() * 25,
-      delay: i * 6,
-      opacity: 0.35 + Math.random() * 0.15,
-      // orbit params — start position for the CSS animation
-      startX: 20 + i * 35,
-      startY: 20 + (i % 2) * 50,
-    }));
-  }, [pageCharacters]);
 
   // Featured artist avatars as floating particles — slightly bigger
   const featuredAvatars = useMemo(() => {
@@ -248,38 +222,6 @@ export function ParticleBackground() {
         }}
       />
 
-      {/* Floating characters — orbit across screen */}
-      {floatingCharacters.map((char) => (
-        <div
-          key={char.id}
-          className="absolute character-orbit"
-          style={{
-            width: char.size,
-            height: char.size,
-            animationDuration: `${char.duration}s`,
-            animationDelay: `${char.delay}s`,
-            opacity: char.opacity,
-            filter: "grayscale(0.25)",
-            // Use custom properties for unique orbit paths
-            "--orbit-x1": `${char.startX}vw`,
-            "--orbit-y1": `${char.startY}vh`,
-            "--orbit-x2": `${110 + Math.random() * 20}vw`,
-            "--orbit-y2": `${30 + Math.random() * 40}vh`,
-            "--orbit-x3": `${-15 - Math.random() * 10}vw`,
-            "--orbit-y3": `${20 + Math.random() * 60}vh`,
-          } as React.CSSProperties}
-        >
-          <video
-            src={char.src}
-            autoPlay
-            loop
-            muted
-            playsInline
-            style={{ background: '#000' }}
-            className="w-full h-full object-contain"
-          />
-        </div>
-      ))}
 
       {/* Featured artist avatars floating as circular particles */}
       {featuredAvatars.map((avatar) => (
