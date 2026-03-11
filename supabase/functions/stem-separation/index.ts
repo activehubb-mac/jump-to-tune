@@ -6,6 +6,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const STEM_SEPARATION_CREDIT_COST = 1.5;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -67,6 +69,35 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Deduct AI credits before processing
+    const { data: deductResult, error: deductError } = await admin.rpc("deduct_ai_credits", {
+      p_user_id: user.id,
+      p_credits: STEM_SEPARATION_CREDIT_COST,
+    });
+
+    if (deductError || !deductResult?.success) {
+      const currentCredits = deductResult?.current_credits ?? 0;
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Insufficient AI credits. You need ${STEM_SEPARATION_CREDIT_COST} credits but have ${currentCredits}.`,
+          code: "INSUFFICIENT_CREDITS",
+        }),
+        {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Log credit usage
+    await admin.from("ai_credit_usage").insert({
+      user_id: user.id,
+      action: "stem_separation",
+      credits_used: STEM_SEPARATION_CREDIT_COST,
+      metadata: { track_id },
+    });
+
     // Update status to processing
     await admin
       .from("track_karaoke")
@@ -92,6 +123,8 @@ Deno.serve(async (req) => {
     if (!predictionRes.ok) {
       const errText = await predictionRes.text();
       console.error("Replicate API error:", errText);
+      // Refund credits on failure
+      await admin.rpc("add_ai_credits", { p_user_id: user.id, p_credits: STEM_SEPARATION_CREDIT_COST });
       await admin
         .from("track_karaoke")
         .update({ stem_separation_status: "failed" })
@@ -125,6 +158,8 @@ Deno.serve(async (req) => {
 
     if (result.status !== "succeeded") {
       console.error("Stem separation failed/timed out:", result);
+      // Refund credits on failure
+      await admin.rpc("add_ai_credits", { p_user_id: user.id, p_credits: STEM_SEPARATION_CREDIT_COST });
       await admin
         .from("track_karaoke")
         .update({ stem_separation_status: "failed" })
@@ -135,30 +170,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Demucs output is an object with stem names as keys
+    // Demucs output
     const output = result.output;
     const vocalsUrl = output?.vocals;
     const otherUrl = output?.other;
     const drumsUrl = output?.drums;
     const bassUrl = output?.bass;
 
-    // Build instrumental by downloading vocals-removed version
-    // Demucs separates into: vocals, drums, bass, other
-    // "no_vocals" = drums + bass + other — but the model may provide it directly
-    // We'll use the "other" stem URL or combine. For simplicity, let's store individual stems.
-    // The instrumental is everything except vocals, but Demucs doesn't output a single instrumental.
-    // We'll download and upload the "other" stem as a basic instrumental for now,
-    // but ideally we need drums+bass+other combined. Let's check if output has "accompaniment".
-
-    // Demucs htdemucs model outputs: vocals, drums, bass, other
-    // For karaoke, we want everything except vocals. We'll upload all stems
-    // and use drums+bass+other as "instrumental" by storing them.
-    // For MVP: use the full output minus vocals approach.
-    // The model version we're using may output differently — let's handle both cases.
-
-    let instrumentalStemUrl = otherUrl; // fallback
+    let instrumentalStemUrl = otherUrl;
     if (!instrumentalStemUrl && typeof output === "string") {
-      // Some versions return a single URL
       instrumentalStemUrl = output;
     }
 
@@ -178,8 +198,6 @@ Deno.serve(async (req) => {
           console.error(`Upload ${stemName} error:`, uploadErr);
           return null;
         }
-        // instrumentals bucket is private, we'll generate signed URLs when needed
-        // But for track_karaoke.instrumental_url we store the path for signed URL generation
         const { data } = admin.storage.from("instrumentals").getPublicUrl(path);
         return data.publicUrl;
       } catch (e) {
@@ -188,7 +206,7 @@ Deno.serve(async (req) => {
       }
     };
 
-    // Upload vocals and instrumental (other) stems
+    // Upload vocals and instrumental stems
     let uploadedVocalsUrl: string | null = null;
     let uploadedInstrumentalUrl: string | null = null;
 
@@ -196,16 +214,10 @@ Deno.serve(async (req) => {
       uploadedVocalsUrl = await uploadStem(vocalsUrl, "vocals");
     }
 
-    // For instrumental, prefer combining drums+bass+other if available
-    // For MVP, upload "other" as the instrumental stem
-    // In practice, the Demucs model we use separates into 4 stems
-    // A proper instrumental would need mixing, so we upload "other" for now
-    // and also store bass/drums URLs if needed later
     if (otherUrl) {
       uploadedInstrumentalUrl = await uploadStem(otherUrl, "instrumental");
     }
 
-    // If we got bass and drums, upload those too for potential future use
     if (bassUrl) await uploadStem(bassUrl, "bass");
     if (drumsUrl) await uploadStem(drumsUrl, "drums");
 
