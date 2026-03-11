@@ -88,10 +88,10 @@ export function ParticleBackground() {
       src,
       left: `${8 + (i * 18) + Math.random() * 8}%`,
       top: `${10 + Math.random() * 70}%`,
-      size: window.innerWidth < 768 ? 48 + Math.random() * 24 : 72 + Math.random() * 32,
+      size: window.innerWidth < 768 ? 64 + Math.random() * 32 : 96 + Math.random() * 40,
       duration: 18 + Math.random() * 14,
       delay: i * 2.5,
-      opacity: 0.25 + Math.random() * 0.12,
+      opacity: 0.45 + Math.random() * 0.15,
     }));
   }, []);
 
