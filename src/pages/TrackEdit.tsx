@@ -172,6 +172,10 @@ export default function TrackEdit() {
     if (karaokeData) {
       setKaraokeEnabled(true);
       setKaraokeLyrics(karaokeData.lyrics || "");
+      setStageEnabled((karaokeData as any).stage_enabled || false);
+      setDuetModeEnabled((karaokeData as any).duet_mode_enabled || false);
+      setDanceModeEnabled((karaokeData as any).dance_mode_enabled || false);
+      setSingModeEnabled((karaokeData as any).sing_mode_enabled || false);
     }
   }, [karaokeData]);
 
