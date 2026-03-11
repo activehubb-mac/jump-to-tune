@@ -87,7 +87,7 @@ export function FullscreenPlayer({
   isKaraokeMode,
   karaokeReady,
   showLyrics,
-  hasNext,
+  lyrics,
   hasPrevious,
   canShuffle,
   canRepeat,
