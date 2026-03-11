@@ -414,9 +414,12 @@
     .nebula-orb,
     .horizon-line,
      .star-twinkle,
-     .robot-float,
-     .robot-rotate,
-     .robot-glow-pulse {
+     .char-headbob,
+     .char-sway,
+     .char-lean,
+     .char-bounce,
+     .char-rock,
+     .performer-glow-pulse {
        animation: none;
      }
     .particle-animate { opacity: 0.3; }
