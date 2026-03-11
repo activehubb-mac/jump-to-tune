@@ -70,19 +70,6 @@ export function ParticleBackground() {
   ], []);
 
   // Characters orbit: they drift across, leave, and re-enter
-  const floatingCharacters = useMemo(() => {
-    return pageCharacters.map((src, i) => ({
-      id: `char-${i}`,
-      src,
-      size: window.innerWidth < 768 ? 44 + Math.random() * 20 : 64 + Math.random() * 28,
-      duration: 55 + Math.random() * 25,
-      delay: i * 6,
-      opacity: 0.35 + Math.random() * 0.15,
-      // orbit params — start position for the CSS animation
-      startX: 20 + i * 35,
-      startY: 20 + (i % 2) * 50,
-    }));
-  }, [pageCharacters]);
 
   // Featured artist avatars as floating particles — slightly bigger
   const featuredAvatars = useMemo(() => {
