@@ -31,11 +31,10 @@ import { formatDistanceToNow } from "date-fns";
 
 const navLinks = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/browse", label: "Browse", icon: Search },
-  { href: "/ai-tools", label: "AI Tools", icon: Sparkles },
+  { href: "/browse", label: "Discover", icon: Search },
+  { href: "/ai-tools", label: "Create", icon: Sparkles },
+  { href: "/karaoke", label: "Fan Zone", icon: Mic2 },
   { href: "/go-dj", label: "Go DJ", icon: Disc3 },
-  
-  { href: "/karaoke", label: "Sing-Along", icon: Mic2 },
   { href: "/artists", label: "Artists", icon: User },
   { href: "/labels", label: "Labels", icon: Building2 },
   { href: "/library", label: "Library", icon: Library, authRequired: true },
