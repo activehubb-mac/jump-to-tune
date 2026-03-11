@@ -290,6 +290,32 @@ export const useTrackUpload = (): UseTrackUploadReturn => {
         recordingId = regResult.recordingId || undefined;
       }
 
+      // Trigger stem separation if karaoke enabled but no instrumental uploaded
+      if (track && karaokeData.enabled && !karaokeData.instrumentalFile) {
+        try {
+          const session = (await supabase.auth.getSession()).data.session;
+          if (session) {
+            // Set initial status to pending
+            await supabase
+              .from('track_karaoke')
+              .update({ stem_separation_status: 'pending' })
+              .eq('track_id', track.id);
+
+            // Fire and forget — the edge function handles the async processing
+            fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stem-separation`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({ track_id: track.id, audio_url: audioUrl }),
+            }).catch((err) => console.error('Stem separation trigger failed:', err));
+          }
+        } catch (stemErr) {
+          console.error('Failed to trigger stem separation:', stemErr);
+        }
+      }
+
       return { success: true, trackId: track?.id, recordingId };
     } catch (error) {
       console.error('Track upload error:', error);

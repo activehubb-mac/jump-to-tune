@@ -203,29 +203,39 @@ export const KaraokeSection = ({
                 </Button>
               </div>
             ) : (
-              <div
-                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={handleDrop}
-                className={cn(
-                  "border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer",
-                  isDragging ? "border-accent bg-accent/5" : "border-glass-border hover:border-accent/50",
-                  error && "border-destructive/50",
-                  disabled && "opacity-50 cursor-not-allowed"
-                )}
-                onClick={() => !disabled && inputRef.current?.click()}
-              >
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept="audio/mpeg,audio/wav,audio/flac"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  disabled={disabled}
-                />
-                <Music className="w-8 h-8 text-accent mx-auto mb-2" />
-                <p className="text-sm text-foreground font-medium">Drop instrumental file here</p>
-                <p className="text-xs text-muted-foreground mt-1">MP3, WAV, FLAC up to 50MB</p>
+              <div className="space-y-3">
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleDrop}
+                  className={cn(
+                    "border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer",
+                    isDragging ? "border-accent bg-accent/5" : "border-glass-border hover:border-accent/50",
+                    error && "border-destructive/50",
+                    disabled && "opacity-50 cursor-not-allowed"
+                  )}
+                  onClick={() => !disabled && inputRef.current?.click()}
+                >
+                  <input
+                    ref={inputRef}
+                    type="file"
+                    accept="audio/mpeg,audio/wav,audio/flac"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    disabled={disabled}
+                  />
+                  <Music className="w-8 h-8 text-accent mx-auto mb-2" />
+                  <p className="text-sm text-foreground font-medium">Drop instrumental file here</p>
+                  <p className="text-xs text-muted-foreground mt-1">MP3, WAV, FLAC up to 50MB</p>
+                </div>
+                <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
+                    <p className="text-xs text-muted-foreground">
+                      <span className="text-primary font-medium">No instrumental?</span> We'll automatically generate one using AI stem separation after upload.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
             
