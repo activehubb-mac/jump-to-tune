@@ -24,6 +24,27 @@ interface NebulaOrb {
   color: "primary" | "accent";
 }
 
+interface FloatingCharacter {
+  id: number;
+  src: string;
+  left: string;
+  top: string;
+  size: number;
+  duration: number;
+  delay: number;
+  opacity: number;
+}
+
+const CHARACTERS = [
+  "/images/character-robot.png",
+  "/images/character-singer-male.png",
+  "/images/character-singer-female1.png",
+  "/images/character-singer-female2.png",
+  "/images/character-dj.png",
+];
+
+const INSTRUMENTS = ["🎸", "🎹", "🎤", "🎧", "🎵", "🎶", "🎷", "🥁", "🎺", "🎻"];
+
 export function ParticleBackground() {
   const particles = useMemo(() => {
     const count = window.innerWidth < 768 ? 25 : 50;
@@ -57,6 +78,34 @@ export function ParticleBackground() {
     { id: 1, left: "70%", top: "60%", size: 100, duration: 35, color: "accent" },
     { id: 2, left: "45%", top: "75%", size: 60, duration: 30, color: "primary" },
   ], []);
+
+  const floatingCharacters = useMemo<FloatingCharacter[]>(() => {
+    return CHARACTERS.map((src, i) => ({
+      id: i,
+      src,
+      left: `${10 + (i * 18) + Math.random() * 10}%`,
+      top: `${15 + Math.random() * 65}%`,
+      size: window.innerWidth < 768 ? 28 + Math.random() * 16 : 40 + Math.random() * 24,
+      duration: 18 + Math.random() * 14,
+      delay: i * 2.5,
+      opacity: 0.06 + Math.random() * 0.06,
+    }));
+  }, []);
+
+  const floatingInstruments = useMemo(() => {
+    const count = window.innerWidth < 768 ? 8 : 14;
+    return Array.from({ length: count }, (_, i) => ({
+      id: i,
+      emoji: INSTRUMENTS[i % INSTRUMENTS.length],
+      left: `${Math.random() * 95}%`,
+      top: `${Math.random() * 90}%`,
+      size: 12 + Math.random() * 10,
+      duration: 12 + Math.random() * 16,
+      delay: Math.random() * 10,
+      opacity: 0.08 + Math.random() * 0.08,
+      rotation: Math.random() * 360,
+    }));
+  }, []);
 
   const getParticleStyles = (particle: Particle): React.CSSProperties => {
     const baseStyles: React.CSSProperties = {
@@ -174,6 +223,52 @@ export function ParticleBackground() {
           zIndex: 1,
         }}
       />
+
+      {/* Floating characters - deep in background, very small & faint */}
+      {floatingCharacters.map((char) => (
+        <div
+          key={`char-${char.id}`}
+          className="absolute particle-animate"
+          style={{
+            left: char.left,
+            top: char.top,
+            width: char.size,
+            height: char.size,
+            animationDuration: `${char.duration}s`,
+            animationDelay: `${char.delay}s`,
+            opacity: char.opacity,
+            filter: "blur(0.5px) grayscale(0.4)",
+          }}
+        >
+          <img
+            src={char.src}
+            alt=""
+            className="w-full h-full object-contain"
+            style={{ opacity: 0.9 }}
+            loading="lazy"
+          />
+        </div>
+      ))}
+
+      {/* Floating music instruments */}
+      {floatingInstruments.map((inst) => (
+        <div
+          key={`inst-${inst.id}`}
+          className="absolute particle-animate select-none"
+          style={{
+            left: inst.left,
+            top: inst.top,
+            fontSize: inst.size,
+            animationDuration: `${inst.duration}s`,
+            animationDelay: `${inst.delay}s`,
+            opacity: inst.opacity,
+            transform: `rotate(${inst.rotation}deg)`,
+            filter: "blur(0.3px)",
+          }}
+        >
+          {inst.emoji}
+        </div>
+      ))}
 
       {/* Particles */}
       {particles.map((particle) => (
