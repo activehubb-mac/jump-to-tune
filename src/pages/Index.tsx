@@ -828,8 +828,6 @@ export default function Index() {
       {/* Featured Labels Section */}
       <FeaturedLabelsSection />
 
-      {/* Spotify Embed Section */}
-      {adminSettings?.spotify_embed_uri && <SpotifyEmbedSection uri={adminSettings.spotify_embed_uri} />}
 
       {/* Discover Section - Only show for authenticated users */}
       {user && (adminSettings?.discover_artists_enabled !== false) && ((recommendedArtists && recommendedArtists.length > 0) || (pinnedDiscoverArtists && pinnedDiscoverArtists.length > 0)) && <section className="py-10 md:py-14 bg-card/20">
