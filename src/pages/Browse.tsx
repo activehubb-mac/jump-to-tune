@@ -50,6 +50,7 @@ export default function Browse() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTrack, setSelectedTrack] = useState<any>(null);
   const [playlistTrackId, setPlaylistTrackId] = useState<string | null>(null);
+  const [playlistTrackTitle, setPlaylistTrackTitle] = useState("");
   const { playTrack, currentTrack, isPlaying } = useAudioPlayer();
   const { isLiked, toggleLike } = useLikes();
   const { canUseFeature } = useFeatureGate();
