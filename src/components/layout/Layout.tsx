@@ -38,7 +38,7 @@ export function Layout({
         style={{
           paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))',
           zIndex: 2,
-          backgroundColor: isAdmin ? 'hsl(0 0% 0%)' : 'hsl(0 0% 5% / 0.45)',
+          backgroundColor: isAdmin ? 'hsl(0 0% 0%)' : 'transparent',
         }}
       >
         <EmailVerificationBanner />
