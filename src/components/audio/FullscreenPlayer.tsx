@@ -437,6 +437,19 @@ export function FullscreenPlayer({
                 <Button
                   variant="ghost"
                   size="icon"
+                  className={cn(
+                    "h-10 w-10",
+                    isTrackLiked ? "text-red-500" : "text-white/60 hover:text-white hover:bg-white/10"
+                  )}
+                  onClick={onToggleLike}
+                  title={isTrackLiked ? "Unlike" : "Like"}
+                >
+                  <Heart className={cn("h-5 w-5", isTrackLiked && "fill-current")} />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="h-10 w-10 text-white/60 hover:text-[#B8A675] hover:bg-white/10"
                   onClick={onOpenCredits}
                   title="View credits"
