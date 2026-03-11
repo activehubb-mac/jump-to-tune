@@ -46,6 +46,7 @@ interface FullscreenPlayerProps {
   isKaraokeMode: boolean;
   karaokeReady: boolean;
   showLyrics: boolean;
+  lyrics: string | null;
   hasNext: boolean;
   hasPrevious: boolean;
   canShuffle: boolean;
