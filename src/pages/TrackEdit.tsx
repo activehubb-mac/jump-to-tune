@@ -283,6 +283,19 @@ export default function TrackEdit() {
         const { error: featuresError } = await supabase.from("track_features").insert(featuresToInsert);
         if (featuresError) console.error("Failed to save features:", featuresError);
       }
+
+      // Save stage settings to track_karaoke
+      if (karaokeData || karaokeEnabled) {
+        await supabase
+          .from("track_karaoke")
+          .update({
+            stage_enabled: stageEnabled,
+            sing_mode_enabled: singModeEnabled,
+            duet_mode_enabled: duetModeEnabled,
+            dance_mode_enabled: danceModeEnabled,
+          })
+          .eq("track_id", id);
+      }
     },
     onSuccess: () => {
       showFeedback({ type: "success", title: "Track Updated", message: "Track updated successfully!" });
