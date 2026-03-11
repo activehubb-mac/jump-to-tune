@@ -2,6 +2,12 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Music, Disc3, Users, Building2, Headphones, Zap, Shield, Upload, LayoutDashboard, Library, Sparkles, Loader2, Play, Rocket, Crown, Star, Mic2, Globe } from "lucide-react";
+import featureAiCreation from "@/assets/feature-ai-creation.jpg";
+import featureKaraoke from "@/assets/feature-karaoke.jpg";
+import featureGalaxy from "@/assets/feature-galaxy.jpg";
+import featureCommunity from "@/assets/feature-community.jpg";
+import featureGalaxyCta from "@/assets/feature-galaxy-cta.jpg";
+import featureCta from "@/assets/feature-cta.jpg";
 import { FeaturedHeroCarousel } from "@/components/home/FeaturedHeroCarousel";
 import { PWAInstallBanner } from "@/components/home/PWAInstallBanner";
 import { DiscoverSection } from "@/components/home/DiscoverSection";
@@ -242,8 +248,9 @@ export default function Index() {
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <div className="glass-card-bordered p-8 md:p-12 relative overflow-hidden">
-                {/* Decorative glow */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/10 rounded-full blur-[100px]" />
+                {/* Background image */}
+                <img src={featureGalaxyCta} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
                 
                 <div className="relative z-10">
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center mx-auto mb-6">
@@ -287,19 +294,23 @@ export default function Index() {
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {[
-                    { icon: Sparkles, title: "AI Creation Suite", description: "Remix, generate covers, create lyrics, and produce videos with AI tools." },
-                    { icon: Mic2, title: "Interactive Karaoke", description: "Sing along with AI-separated instrumentals and synchronized lyrics." },
-                    { icon: Disc3, title: "Music Galaxy", description: "Explore music visually as connected nodes in an interactive galaxy view." },
-                    { icon: Users, title: "Fan Community", description: "Share covers, duets, remixes, and compete in community challenges." },
+                    { icon: Sparkles, title: "AI Creation Suite", description: "Remix, generate covers, create lyrics, and produce videos with AI tools.", image: featureAiCreation },
+                    { icon: Mic2, title: "Interactive Karaoke", description: "Sing along with AI-separated instrumentals and synchronized lyrics.", image: featureKaraoke },
+                    { icon: Disc3, title: "Music Galaxy", description: "Explore music visually as connected nodes in an interactive galaxy view.", image: featureGalaxy },
+                    { icon: Users, title: "Fan Community", description: "Share covers, duets, remixes, and compete in community challenges.", image: featureCommunity },
                   ].map((feature, i) => {
                     const Icon = feature.icon;
                     return (
-                      <div key={i} className="glass-card-bordered p-6 group hover:bg-primary/10 transition-all duration-300">
-                        <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                          <Icon className="w-6 h-6 text-primary-foreground" />
+                      <div key={i} className="glass-card-bordered p-6 group hover:bg-primary/10 transition-all duration-300 relative overflow-hidden">
+                        <img src={feature.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-15 group-hover:opacity-25 transition-opacity duration-500 group-hover:scale-105" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+                        <div className="relative z-10">
+                          <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <Icon className="w-6 h-6 text-primary-foreground" />
+                          </div>
+                          <h3 className="text-xl font-semibold mb-2 text-foreground">{feature.title}</h3>
+                          <p className="text-muted-foreground">{feature.description}</p>
                         </div>
-                        <h3 className="text-xl font-semibold mb-2 text-foreground">{feature.title}</h3>
-                        <p className="text-muted-foreground">{feature.description}</p>
                       </div>
                     );
                   })}
@@ -311,8 +322,8 @@ export default function Index() {
             <section className="py-16 md:py-24 bg-card/20">
               <div className="container mx-auto px-4">
                 <div className="glass-card-bordered p-8 md:p-16 text-center max-w-3xl mx-auto relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px]" />
-                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/10 rounded-full blur-[100px]" />
+                  <img src={featureCta} alt="" className="absolute inset-0 w-full h-full object-cover opacity-15" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/50" />
                   <div className="relative z-10">
                     <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-6">
                       The Future of Music<br /><span className="text-gradient">Is Interactive.</span>
