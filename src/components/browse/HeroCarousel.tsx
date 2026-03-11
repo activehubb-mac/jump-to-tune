@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Disc3, Play, Pause, Users, Music, Mic2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import {
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useTrendingTracks } from "@/hooks/useTrendingTracks";
