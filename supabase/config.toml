@@ -158,3 +158,6 @@ verify_jwt = false
 
 [functions.artist-autopilot]
 verify_jwt = false
+
+[functions.ai-avatar-performance]
+verify_jwt = false
