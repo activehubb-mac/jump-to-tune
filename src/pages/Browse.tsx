@@ -151,12 +151,13 @@ export default function Browse() {
     });
   };
 
-  const handleAddToPlaylist = (trackId: string) => {
+  const handleAddToPlaylist = (trackId: string, trackTitle?: string) => {
     if (!user) {
       showFeedback({ type: "warning", title: "Sign in required", message: "Please sign in to add to playlist" });
       return;
     }
     setPlaylistTrackId(trackId);
+    setPlaylistTrackTitle(trackTitle || "");
   };
 
   const handleKaraoke = (trackId: string) => {
