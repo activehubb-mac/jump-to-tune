@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useRef, useEffect } from "react";
 import { Mic2, Music, Wand2, FileText, Palette, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -10,8 +11,8 @@ const aiTools = [
     href: "/karaoke",
     gradient: "from-primary/20 to-accent/20",
     glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--primary)/0.3)]",
-    fallbackGradient: "from-primary/30 via-accent/10 to-background",
     videoSrc: "/videos/ai-karaoke.mp4",
+    playbackRate: 0.5,
   },
   {
     title: "Sing With Artist",
@@ -20,8 +21,8 @@ const aiTools = [
     href: "/karaoke",
     gradient: "from-accent/20 to-secondary/20",
     glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.3)]",
-    fallbackGradient: "from-accent/30 via-secondary/10 to-background",
     videoSrc: "/videos/ai-sing-with-artist.mp4",
+    playbackRate: 1,
   },
   {
     title: "AI Remix",
@@ -30,8 +31,8 @@ const aiTools = [
     href: "/ai-tools",
     gradient: "from-secondary/20 to-primary/20",
     glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--secondary)/0.3)]",
-    fallbackGradient: "from-secondary/30 via-primary/10 to-background",
     videoSrc: "/videos/ai-remix.mp4",
+    playbackRate: 1,
   },
   {
     title: "AI Lyrics Generator",
@@ -40,8 +41,8 @@ const aiTools = [
     href: "/ai-release",
     gradient: "from-primary/20 to-secondary/20",
     glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--primary)/0.3)]",
-    fallbackGradient: "from-primary/30 via-muted/20 to-background",
     videoSrc: "/videos/ai-lyrics.mp4",
+    playbackRate: 0.5,
   },
   {
     title: "AI Cover Art",
@@ -50,54 +51,66 @@ const aiTools = [
     href: "/ai-cover-art",
     gradient: "from-accent/20 to-primary/20",
     glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.3)]",
-    fallbackGradient: "from-accent/30 via-primary/10 to-background",
     videoSrc: "/videos/ai-cover-art.mp4",
+    playbackRate: 1,
   },
 ];
 
 function AIToolCard({ tool }: { tool: typeof aiTools[0] }) {
   const Icon = tool.icon;
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = tool.playbackRate;
+    }
+  }, [tool.playbackRate]);
 
   return (
     <Link
       to={tool.href}
       className={cn(
-        "group relative glass-card-bordered p-8 transition-all duration-500 hover:scale-[1.02] overflow-hidden block",
+        "group relative glass-card-bordered overflow-hidden block transition-all duration-500 hover:scale-[1.02]",
         tool.glowColor
       )}
     >
-      {/* Video background */}
-      <div className="absolute inset-0 z-0">
+      {/* Video cover art on top */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden">
         <video
+          ref={videoRef}
           src={tool.videoSrc}
           autoPlay
           loop
           muted
           playsInline
-          className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity duration-500"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+        <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-primary/50 group-hover:bg-primary group-hover:animate-pulse transition-colors z-10" />
       </div>
 
-      {/* Gradient hover background */}
-      <div className={cn(
-        "absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-[1]",
-        tool.gradient
-      )} />
+      {/* Content below */}
+      <div className="relative p-5">
+        {/* Gradient hover background */}
+        <div className={cn(
+          "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500",
+          tool.gradient
+        )} />
 
-      <div className="relative z-10">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-          <Icon className="w-8 h-8 text-primary" />
+        <div className="relative z-10 flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+            <Icon className="w-5 h-5 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors">
+              {tool.title}
+            </h3>
+            <p className="text-muted-foreground text-xs leading-relaxed mt-0.5">
+              {tool.description}
+            </p>
+          </div>
         </div>
-        <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
-          {tool.title}
-        </h3>
-        <p className="text-muted-foreground text-sm leading-relaxed">
-          {tool.description}
-        </p>
       </div>
-
-      <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary/50 group-hover:bg-primary group-hover:animate-pulse transition-colors z-10" />
     </Link>
   );
 }
