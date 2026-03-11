@@ -1128,6 +1128,7 @@ export function GlobalAudioPlayer() {
         isKaraokeMode={isKaraokeMode}
         karaokeReady={karaokeReady}
         showLyrics={showLyrics}
+        lyrics={karaokeData?.lyrics || null}
         hasNext={hasNext}
         hasPrevious={hasPrevious}
         canShuffle={canShuffle}
