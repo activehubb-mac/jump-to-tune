@@ -30,7 +30,7 @@ export function Layout({
       
       <div 
         className="flex-1 flex flex-col relative"
-        style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))', zIndex: 2, backgroundColor: 'hsl(0 0% 5% / 0.65)' }}
+        style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))', zIndex: 2, backgroundColor: 'hsl(0 0% 5% / 0.45)' }}
       >
         <EmailVerificationBanner />
         <main className={cn(
