@@ -911,6 +911,28 @@ export function GlobalAudioPlayer() {
 
             {/* Karaoke, Download, Queue, Volume & Close */}
             <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              {/* Like Button */}
+              {currentTrack && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn(
+                        "h-8 w-8",
+                        isLiked(currentTrack.id) ? "text-red-500" : "text-muted-foreground hover:text-foreground"
+                      )}
+                      onClick={() => toggleLike(currentTrack.id)}
+                    >
+                      <Heart className={cn("h-4 w-4", isLiked(currentTrack.id) && "fill-current")} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>{isLiked(currentTrack.id) ? "Unlike" : "Like"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+
               {/* Karaoke/Lyrics Button - only show if track has karaoke */}
               {hasKaraoke && (
                 <>
