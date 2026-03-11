@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Energy border rotating angle */
+@property --energy-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
 /* JumTunes Design System - Silent Studio Theme
    Professional, musical, understated - like a recording studio at night
 */
