@@ -1,24 +1,27 @@
 
-# Make Recent Updates Available for Mobile
 
-The recent changes (hiding track/follower counts from artist cards, hiding price/collectors from track cards) were applied to the homepage and browse pages, but several other pages still display this data on cards. These pages are used on both desktop and mobile.
+# Update All Subscribers: 15 AI Credits + 30-Day Trial
 
-## Changes Required
+## What's Changing
+1. **Reset all existing users** to 15 AI credits and a 30-day trial starting now
+2. **Update the new-user triggers** so future signups also get 15 credits and 30-day trials (instead of 50 credits / 3-month trials)
 
-### 1. `src/pages/Artists.tsx` -- Remove tracks/fans from artist cards
+## Current State
+- 70 users on `trialing` status with various trial end dates (some April, some May 2026)
+- All wallets currently show 0 AI credits (already spent or never received)
+- New user trigger grants 50 AI credits and 3-month trial
 
-**Featured Artists section (lines 149-152):** Remove the stats row showing "X tracks" and "X fans"
+## Implementation
 
-**All Artists grid (lines 183-187):** Remove "X tracks" text and "X fans" text below each artist name
+### 1. Data update (SQL via insert tool)
+Run two UPDATE statements:
+- **Wallets**: `UPDATE credit_wallets SET ai_credits = 15` — reset all users to 15 credits
+- **Subscriptions**: `UPDATE subscriptions SET trial_ends_at = NOW() + INTERVAL '30 days', status = 'trialing', updated_at = NOW() WHERE status IN ('trialing', 'canceled')` — reset all trials to 30 days from now
 
-### 2. `src/pages/FanDashboard.tsx` -- Remove stats from followed artist cards
+### 2. Migration: Update triggers for future users
+- Change `handle_new_user_wallet()` to grant **15** AI credits instead of 50
+- Change `handle_new_user_subscription()` to use `INTERVAL '30 days'` instead of `INTERVAL '3 months'`
 
-**Line 277:** Change `{artist.trackCount} tracks . {artist.followerCount} followers` to just `"Artist"` label
+### 3. Update frontend display
+- Update the memory/docs references from "50 credits" and "3-month trial" to "15 credits" and "30-day trial" where shown in UI copy (Subscription page, case study, etc.)
 
-### 3. Cleanup: Remove unused imports/data
-
-- In `Artists.tsx`: Remove `useFollowerCounts` import and hook call since follower counts are no longer displayed on cards
-- Remove `formatCompactNumber` import if no longer used
-- Remove the `followers` variable assignments in the map callbacks
-
-These are all the remaining places where track/follower counts appear on artist cards and price/editions appear on track cards outside of profile/detail views. The changes ensure consistency across desktop and mobile.
