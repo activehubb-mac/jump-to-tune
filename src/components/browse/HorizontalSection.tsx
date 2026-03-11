@@ -18,7 +18,7 @@ export function HorizontalSection({
   icon,
   children,
   className,
-  autoScrollInterval = 5000,
+  autoScrollInterval = 0,
 }: HorizontalSectionProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
