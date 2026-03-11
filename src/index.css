@@ -325,6 +325,38 @@
     will-change: transform, opacity;
   }
 
+  /* Robot performer animations */
+  @keyframes robot-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-18px); }
+  }
+
+  .robot-float {
+    animation: robot-float 6s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  @keyframes robot-rotate {
+    0% { transform: perspective(800px) rotateY(-8deg); }
+    50% { transform: perspective(800px) rotateY(8deg); }
+    100% { transform: perspective(800px) rotateY(-8deg); }
+  }
+
+  .robot-rotate {
+    animation: robot-float 6s ease-in-out infinite, robot-rotate 20s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  @keyframes robot-glow-pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+  }
+
+  .robot-glow-pulse {
+    animation: robot-glow-pulse 4s ease-in-out infinite;
+    will-change: opacity;
+  }
+
   /* Respect reduced motion preference */
   @media (prefers-reduced-motion: reduce) {
     body { animation: none; }
