@@ -24,6 +24,7 @@ export default function ArtistAnalytics() {
   const { user, role, isLoading } = useAuth();
   const { data: stats, isLoading: statsLoading } = useArtistStats(user?.id);
   const { data: tracks, isLoading: tracksLoading } = useArtistTracks(user?.id);
+  const { data: karaokeStats } = useKaraokeAnalytics(user?.id);
 
   if (isLoading) {
     return (
