@@ -67,7 +67,19 @@ export default function GoDJ() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8 space-y-12">
+      {/* Full-size background video for Go DJ page */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        <video
+          src="/videos/godj-bg.mov"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-background/60" />
+      </div>
+      <div className="container mx-auto px-4 py-8 space-y-12 relative z-10">
         {/* Hero */}
         <div className="text-center space-y-4 py-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium">
