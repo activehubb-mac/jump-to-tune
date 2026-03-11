@@ -13,7 +13,7 @@ export function AnnouncementCard({ announcement }: Props) {
   const { reactionCounts, userReaction, toggleReaction } = useAnnouncementReactions(announcement.id);
 
   return (
-    <div className="glass-card p-5 space-y-3 energy-card">
+    <div className="glass-card p-5 space-y-3">
       {announcement.image_url && (
         <img
           src={announcement.image_url}
