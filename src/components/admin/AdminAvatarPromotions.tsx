@@ -19,23 +19,9 @@ import { useTracks } from "@/hooks/useTracks";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-const PROMOTION_TYPES = [
-  { value: "floating", label: "Floating Avatar" },
-  { value: "stage_performer", label: "Stage Performer" },
-  { value: "global_background", label: "Global Background" },
-];
-
-const ANIMATION_TYPES = [
-  { value: "perform", label: "Perform" },
-  { value: "walk", label: "Walk" },
-  { value: "dj_mix", label: "DJ Mix" },
-  { value: "dance", label: "Dance" },
-];
-
 const EXPOSURE_ZONES = [
   { value: "home", label: "Home Page" },
-  { value: "discovery", label: "Discovery" },
-  { value: "trending", label: "Trending" },
+  { value: "discovery", label: "Browse / Discovery" },
   { value: "global", label: "Global (All Pages)" },
 ];
 
@@ -50,11 +36,8 @@ export default function AdminAvatarPromotions() {
   const [searchQuery, setSearchQuery] = useState("");
   const [trackSearch, setTrackSearch] = useState("");
 
-  // Form state
   const [selectedArtistId, setSelectedArtistId] = useState("");
   const [selectedTrackId, setSelectedTrackId] = useState("");
-  const [promotionType, setPromotionType] = useState("floating");
-  const [animationType, setAnimationType] = useState("perform");
   const [exposureZone, setExposureZone] = useState("global");
 
   const { data: artists, isLoading: artistsLoading } = useArtists({ searchQuery: searchQuery || undefined });
@@ -68,15 +51,12 @@ export default function AdminAvatarPromotions() {
 
   const handleCreate = async () => {
     if (!selectedArtistId || !user) return;
-    if (activeCount >= 3 && true) {
-      // We'll allow creation but warn
-    }
     try {
       await createMutation.mutateAsync({
         artist_id: selectedArtistId,
         track_id: selectedTrackId || undefined,
-        promotion_type: promotionType,
-        animation_type: animationType,
+        promotion_type: "floating",
+        animation_type: "perform",
         exposure_zone: exposureZone,
         created_by: user.id,
       });
@@ -113,8 +93,6 @@ export default function AdminAvatarPromotions() {
   const resetForm = () => {
     setSelectedArtistId("");
     setSelectedTrackId("");
-    setPromotionType("floating");
-    setAnimationType("perform");
     setExposureZone("global");
     setSearchQuery("");
     setTrackSearch("");
@@ -122,7 +100,6 @@ export default function AdminAvatarPromotions() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -131,7 +108,7 @@ export default function AdminAvatarPromotions() {
           <div className="min-w-0">
             <h2 className="text-lg md:text-xl font-bold">Avatar Promotions</h2>
             <p className="text-xs text-muted-foreground">
-              {activeCount}/3 active · Featured artist avatars in background
+              {activeCount}/3 active · Background slideshow on Home & Browse pages
             </p>
           </div>
         </div>
@@ -146,7 +123,7 @@ export default function AdminAvatarPromotions() {
             <DialogHeader>
               <DialogTitle>New Avatar Promotion</DialogTitle>
               <DialogDescription>
-                Promote an artist's avatar in the platform background
+                Feature an artist in the background slideshow on Home & Browse pages
               </DialogDescription>
             </DialogHeader>
 
@@ -206,35 +183,15 @@ export default function AdminAvatarPromotions() {
                 </div>
               </div>
 
-              {/* Dropdowns row */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Promotion Type</Label>
-                  <Select value={promotionType} onValueChange={setPromotionType}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {PROMOTION_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Animation</Label>
-                  <Select value={animationType} onValueChange={setAnimationType}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {ANIMATION_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Exposure Zone</Label>
-                  <Select value={exposureZone} onValueChange={setExposureZone}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {EXPOSURE_ZONES.map((z) => <SelectItem key={z.value} value={z.value}>{z.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Exposure Zone */}
+              <div className="space-y-1.5">
+                <Label className="text-xs">Exposure Zone</Label>
+                <Select value={exposureZone} onValueChange={setExposureZone}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {EXPOSURE_ZONES.map((z) => <SelectItem key={z.value} value={z.value}>{z.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -260,7 +217,6 @@ export default function AdminAvatarPromotions() {
             <Card key={promo.id} className={`transition-colors ${promo.is_active ? "border-primary/30" : ""}`}>
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-3">
-                  {/* Artist avatar */}
                   <div className="w-12 h-12 rounded-full bg-muted overflow-hidden shrink-0 border-2 border-primary/20">
                     {promo.artist?.avatar_url ? (
                       <img src={promo.artist.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -275,14 +231,8 @@ export default function AdminAvatarPromotions() {
                       {promo.is_active && <Badge variant="default" className="text-[10px] px-1.5 py-0">LIVE</Badge>}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <Badge variant="secondary" className="text-[10px]">
-                        {PROMOTION_TYPES.find((t) => t.value === promo.promotion_type)?.label}
-                      </Badge>
                       <Badge variant="outline" className="text-[10px]">
-                        {ANIMATION_TYPES.find((t) => t.value === promo.animation_type)?.label}
-                      </Badge>
-                      <Badge variant="outline" className="text-[10px]">
-                        {EXPOSURE_ZONES.find((z) => z.value === promo.exposure_zone)?.label}
+                        {EXPOSURE_ZONES.find((z) => z.value === promo.exposure_zone)?.label || promo.exposure_zone}
                       </Badge>
                     </div>
                     {promo.track && (
