@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { useFeaturedArtists } from "@/hooks/useFeaturedContent";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 
 type ParticleShape = "dot" | "ring" | "line" | "glow" | "star" | "streak";
 
