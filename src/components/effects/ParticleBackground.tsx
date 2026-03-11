@@ -294,8 +294,8 @@ export function ParticleBackground() {
           <div
             className="w-full h-full rounded-full overflow-hidden"
             style={{
-              border: "2px solid hsl(var(--primary) / 0.45)",
-              boxShadow: "0 0 20px hsl(var(--primary) / 0.25)",
+              border: "3px solid hsl(var(--primary) / 0.6)",
+              boxShadow: "0 0 30px hsl(var(--primary) / 0.4)",
             }}
           >
             <img
