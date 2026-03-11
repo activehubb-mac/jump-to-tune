@@ -24,6 +24,7 @@ import FeatureArtistsSelector from "@/components/upload/FeatureArtistsSelector";
 import ExplicitToggle from "@/components/upload/ExplicitToggle";
 import { KaraokeSection } from "@/components/upload/KaraokeSection";
 import { useKaraokeData } from "@/hooks/useKaraokeData";
+import { StageControls } from "@/components/stage/StageControls";
 
 import { MAIN_GENRES, getSubGenres, hasSubGenres, parseGenreValue, combineGenreValue } from "@/lib/genres";
 
@@ -72,6 +73,9 @@ export default function TrackEdit() {
   const [karaokeInstrumentalFile, setKaraokeInstrumentalFile] = useState<File | null>(null);
   const [karaokeLyrics, setKaraokeLyrics] = useState("");
   const [singModeEnabled, setSingModeEnabled] = useState(false);
+  const [stageEnabled, setStageEnabled] = useState(false);
+  const [duetModeEnabled, setDuetModeEnabled] = useState(false);
+  const [danceModeEnabled, setDanceModeEnabled] = useState(false);
   const { data: karaokeData } = useKaraokeData(id);
 
   // Fetch track data
@@ -168,6 +172,10 @@ export default function TrackEdit() {
     if (karaokeData) {
       setKaraokeEnabled(true);
       setKaraokeLyrics(karaokeData.lyrics || "");
+      setStageEnabled((karaokeData as any).stage_enabled || false);
+      setDuetModeEnabled((karaokeData as any).duet_mode_enabled || false);
+      setDanceModeEnabled((karaokeData as any).dance_mode_enabled || false);
+      setSingModeEnabled((karaokeData as any).sing_mode_enabled || false);
     }
   }, [karaokeData]);
 
@@ -274,6 +282,19 @@ export default function TrackEdit() {
         }));
         const { error: featuresError } = await supabase.from("track_features").insert(featuresToInsert);
         if (featuresError) console.error("Failed to save features:", featuresError);
+      }
+
+      // Save stage settings to track_karaoke
+      if (karaokeData || karaokeEnabled) {
+        await supabase
+          .from("track_karaoke")
+          .update({
+            stage_enabled: stageEnabled,
+            sing_mode_enabled: singModeEnabled,
+            duet_mode_enabled: duetModeEnabled,
+            dance_mode_enabled: danceModeEnabled,
+          })
+          .eq("track_id", id);
       }
     },
     onSuccess: () => {
@@ -542,6 +563,19 @@ export default function TrackEdit() {
             onSingModeChange={setSingModeEnabled}
             trackId={id}
             audioUrl={track?.audio_url}
+          />
+
+          {/* JumTunes Stage Controls */}
+          <StageControls
+            stageEnabled={stageEnabled}
+            onStageEnabledChange={setStageEnabled}
+            singModeEnabled={singModeEnabled}
+            onSingModeChange={setSingModeEnabled}
+            duetModeEnabled={duetModeEnabled}
+            onDuetModeChange={setDuetModeEnabled}
+            danceModeEnabled={danceModeEnabled}
+            onDanceModeChange={setDanceModeEnabled}
+            hasKaraoke={karaokeEnabled || !!karaokeData}
           />
 
           {/* Pricing */}

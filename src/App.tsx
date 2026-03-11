@@ -81,6 +81,7 @@ import AIPlaylistBuilder from "./pages/AIPlaylistBuilder";
 import AIVideoGenerator from "./pages/AIVideoGenerator";
 import AIViralGenerator from "./pages/AIViralGenerator";
 import SingMode from "./pages/SingMode";
+import StagePage from "./pages/Stage";
 
 const queryClient = new QueryClient();
 
@@ -100,6 +101,7 @@ function RouterContent() {
         <Route path="/browse" element={<Browse />} />
         <Route path="/karaoke" element={<Karaoke />} />
         <Route path="/sing/:trackId" element={<SingMode />} />
+        <Route path="/stage/:trackId" element={<StagePage />} />
         <Route path="/go-dj" element={<GoDJ />} />
         <Route path="/go-dj/mix/:sessionId/edit" element={<GoDJMixBuilder />} />
         <Route path="/go-dj/mix/:sessionId" element={<GoDJMixPlayback />} />

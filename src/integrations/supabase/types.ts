@@ -2202,6 +2202,59 @@ export type Database = {
           },
         ]
       }
+      stage_videos: {
+        Row: {
+          caption_text: string | null
+          created_at: string
+          id: string
+          is_featured: boolean
+          is_moderated: boolean
+          mode: string
+          status: string
+          template: string | null
+          thumbnail_url: string | null
+          track_id: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          caption_text?: string | null
+          created_at?: string
+          id?: string
+          is_featured?: boolean
+          is_moderated?: boolean
+          mode: string
+          status?: string
+          template?: string | null
+          thumbnail_url?: string | null
+          track_id: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          caption_text?: string | null
+          created_at?: string
+          id?: string
+          is_featured?: boolean
+          is_moderated?: boolean
+          mode?: string
+          status?: string
+          template?: string | null
+          thumbnail_url?: string | null
+          track_id?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stage_videos_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_downloads: {
         Row: {
           artist_id: string
@@ -2682,33 +2735,42 @@ export type Database = {
       track_karaoke: {
         Row: {
           created_at: string
+          dance_mode_enabled: boolean
+          duet_mode_enabled: boolean
           id: string
           instrumental_url: string
           lyrics: string | null
           replicate_prediction_id: string | null
           sing_mode_enabled: boolean
+          stage_enabled: boolean
           stem_separation_status: string | null
           track_id: string
           vocals_url: string | null
         }
         Insert: {
           created_at?: string
+          dance_mode_enabled?: boolean
+          duet_mode_enabled?: boolean
           id?: string
           instrumental_url: string
           lyrics?: string | null
           replicate_prediction_id?: string | null
           sing_mode_enabled?: boolean
+          stage_enabled?: boolean
           stem_separation_status?: string | null
           track_id: string
           vocals_url?: string | null
         }
         Update: {
           created_at?: string
+          dance_mode_enabled?: boolean
+          duet_mode_enabled?: boolean
           id?: string
           instrumental_url?: string
           lyrics?: string | null
           replicate_prediction_id?: string | null
           sing_mode_enabled?: boolean
+          stage_enabled?: boolean
           stem_separation_status?: string | null
           track_id?: string
           vocals_url?: string | null
