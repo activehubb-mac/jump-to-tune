@@ -522,15 +522,19 @@
     .shooting-star-animate,
     .nebula-orb,
     .horizon-line,
-     .star-twinkle,
-     .char-headbob,
-     .char-sway,
-     .char-lean,
-     .char-bounce,
-     .char-rock,
-     .performer-glow-pulse {
-       animation: none;
-     }
+    .star-twinkle,
+    .char-container,
+    .char-upper-body,
+    .char-lower-body,
+    .char-base,
+    .char-robot-dj,
+    .char-male-singer,
+    .char-female-singer,
+    .char-braids-singer,
+    .char-blonde-dj,
+    .performer-glow-pulse {
+      animation: none;
+    }
     .particle-animate { opacity: 0.3; }
     .track-card-3d:hover {
       transform: none;
