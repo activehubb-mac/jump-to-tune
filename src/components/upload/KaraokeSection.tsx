@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Mic, Music, X, Info, FileText, Upload, Play } from 'lucide-react';
+import { Mic, Music, X, Info, FileText, Upload, Play, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -9,6 +9,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { isValidAudioFile, formatFileSize } from '@/lib/audioUtils';
 import { isValidLRC } from '@/lib/lrcParser';
 import { cn } from '@/lib/utils';
+import { useWhisperTranscribe } from '@/hooks/useWhisperTranscribe';
+import { toast } from 'sonner';
 
 interface KaraokeSectionProps {
   enabled: boolean;
@@ -21,6 +23,8 @@ interface KaraokeSectionProps {
   onPreview?: () => void;
   singModeEnabled?: boolean;
   onSingModeChange?: (enabled: boolean) => void;
+  trackId?: string;
+  audioUrl?: string;
 }
 
 export const KaraokeSection = ({
