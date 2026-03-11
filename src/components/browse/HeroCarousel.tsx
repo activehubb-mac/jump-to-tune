@@ -82,8 +82,13 @@ export function HeroCarousel() {
         <h2 className="text-xl font-bold text-foreground">Featured</h2>
       </div>
 
-      <div className="relative px-12">
+      <div
+        className="relative px-12"
+        onPointerEnter={() => (isPaused.current = true)}
+        onPointerLeave={() => (isPaused.current = false)}
+      >
         <Carousel
+          setApi={setApi}
           opts={{
             align: "start",
             loop: true,
