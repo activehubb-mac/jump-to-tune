@@ -1054,6 +1054,23 @@ export function GlobalAudioPlayer() {
                 />
               </div>
               
+              {/* Minimize */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => { setShowQueue(false); setIsMinimized(true); }}
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Minimize player</p>
+                </TooltipContent>
+              </Tooltip>
+
               <Button
                 variant="ghost"
                 size="icon"
