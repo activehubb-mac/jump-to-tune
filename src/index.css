@@ -15,13 +15,13 @@
     --safe-area-right: env(safe-area-inset-right, 0px);
 
     /* Silent Studio Theme - Warm, Musical, Professional */
-    --background: 0 0% 8%;              /* #141414 - Deep charcoal */
+    --background: 0 0% 5%;               /* #0D0D0D - Near black */
     --foreground: 40 10% 90%;           /* #E8E4DF - Warm white */
 
-    --card: 0 0% 12%;                   /* #1F1F1F - Card surface */
+    --card: 0 0% 9%;                    /* #171717 - Card surface */
     --card-foreground: 40 10% 90%;      /* #E8E4DF */
 
-    --popover: 0 0% 12%;                /* #1F1F1F */
+    --popover: 0 0% 9%;                 /* #171717 */
     --popover-foreground: 40 10% 90%;   /* #E8E4DF */
 
     /* Brand Colors - Silent Studio Palette */
@@ -31,7 +31,7 @@
     --secondary: 30 8% 40%;             /* #6B6560 - Warm Charcoal */
     --secondary-foreground: 40 10% 90%; /* Light text */
 
-    --muted: 0 0% 18%;                  /* Darker shade */
+    --muted: 0 0% 14%;                  /* Darker shade */
     --muted-foreground: 40 8% 60%;      /* #A49E96 - Muted warm gray */
 
     --accent: 25 35% 50%;               /* #AD7A5C - Muted Copper */
@@ -40,8 +40,8 @@
     --destructive: 0 65% 50%;           /* Softened red */
     --destructive-foreground: 40 10% 90%;
 
-    --border: 0 0% 20%;                 /* #333333 - Subtle border */
-    --input: 0 0% 20%;                  /* #333333 */
+    --border: 0 0% 16%;                 /* #292929 - Subtle border */
+    --input: 0 0% 16%;                  /* #292929 */
     --ring: 45 30% 55%;                 /* Soft Gold focus ring */
 
     --radius: 0.75rem;
