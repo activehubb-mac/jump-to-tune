@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useActiveAvatarPromotions, type AvatarPromotion } from "@/hooks/useAvatarPromotions";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -9,11 +9,24 @@ function routeToZone(pathname: string): string {
   if (pathname === "/" || pathname === "/index") return "home";
   if (pathname === "/browse") return "discovery";
   if (pathname.startsWith("/trending")) return "trending";
-  return "global"; // fallback — only global promos show on other pages
+  return "global";
+}
+
+/** Generate a random position avoiding the center content area */
+function randomPosition(seed: number) {
+  // Pick a side: left gutter or right gutter (avoid center 20-80%)
+  const side = seed % 2 === 0 ? "left" : "right";
+  const horizontal = Math.floor(2 + (seed * 7 + 13) % 12); // 2-13%
+  const vertical = Math.floor(10 + (seed * 11 + 7) % 70);  // 10-79%
+
+  return {
+    [side]: `${horizontal}%`,
+    top: `${vertical}%`,
+  } as React.CSSProperties;
 }
 
 /** Animation class per animation_type + promotion_type combo */
-function getAnimationStyle(promo: AvatarPromotion, index: number) {
+function getAnimationStyle(promo: AvatarPromotion, index: number, positionSeed: number) {
   const baseDelay = index * 2;
   const duration = promo.animation_type === "walk" ? 18 : promo.animation_type === "dance" ? 3 : 12;
 
@@ -26,22 +39,16 @@ function getAnimationStyle(promo: AvatarPromotion, index: number) {
           ? "promo-avatar-dj"
           : "promo-avatar-perform";
 
-  const positions = [
-    { bottom: "15%", left: "5%" },
-    { bottom: "25%", right: "4%" },
-    { bottom: "40%", left: "8%" },
-  ];
-
   return {
     animation: `${animationName} ${duration}s ease-in-out ${baseDelay}s infinite`,
-    ...positions[index % 3],
+    ...randomPosition(positionSeed + index),
   };
 }
 
-function PromotedAvatar({ promo, index }: { promo: AvatarPromotion; index: number }) {
+function PromotedAvatar({ promo, index, positionSeed }: { promo: AvatarPromotion; index: number; positionSeed: number }) {
   const navigate = useNavigate();
   const { playTrack } = useAudioPlayer();
-  const style = getAnimationStyle(promo, index);
+  const style = getAnimationStyle(promo, index, positionSeed);
 
   const handleClick = () => {
     // If has a linked track, play it
@@ -107,20 +114,31 @@ export function PromotedAvatars() {
   const currentZone = routeToZone(location.pathname);
   const { data: promotions } = useActiveAvatarPromotions(currentZone);
 
+  // Randomize positions — reshuffle every 20 seconds
+  const [positionSeed, setPositionSeed] = useState(() => Math.floor(Math.random() * 1000));
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPositionSeed(Math.floor(Math.random() * 1000));
+    }, 20000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Only show max 3, filter by zone
   const visible = useMemo(() => {
     if (!promotions) return [];
-    return promotions
-      .filter((p) => p.exposure_zone === "global" || p.exposure_zone === currentZone)
-      .slice(0, 3);
-  }, [promotions, currentZone]);
+    // Shuffle order based on seed
+    const filtered = promotions
+      .filter((p) => p.exposure_zone === "global" || p.exposure_zone === currentZone);
+    const shuffled = [...filtered].sort(() => (positionSeed % 3) - 1);
+    return shuffled.slice(0, 3);
+  }, [promotions, currentZone, positionSeed]);
 
   if (visible.length === 0) return null;
 
   return (
     <div className="fixed inset-0 z-[1] pointer-events-none hidden md:block" aria-hidden="true">
       {visible.map((promo, i) => (
-        <PromotedAvatar key={promo.id} promo={promo} index={i} />
+        <PromotedAvatar key={`${promo.id}-${positionSeed}`} promo={promo} index={i} positionSeed={positionSeed} />
       ))}
     </div>
   );
