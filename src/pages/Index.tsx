@@ -249,8 +249,8 @@ export default function Index() {
             <div className="max-w-3xl mx-auto text-center">
               <div className="glass-card-bordered p-8 md:p-12 relative overflow-hidden">
                 {/* Background image */}
-                <img src={featureGalaxyCta} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
+                <img src={featureGalaxyCta} alt="" className="absolute inset-0 w-full h-full object-cover opacity-45" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/40 to-transparent" />
                 
                 <div className="relative z-10">
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center mx-auto mb-6">
@@ -302,8 +302,8 @@ export default function Index() {
                     const Icon = feature.icon;
                     return (
                       <div key={i} className="glass-card-bordered p-6 group hover:bg-primary/10 transition-all duration-300 relative overflow-hidden">
-                        <img src={feature.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-15 group-hover:opacity-25 transition-opacity duration-500 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+                        <img src={feature.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-45 group-hover:opacity-60 transition-opacity duration-500 group-hover:scale-105" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/40 to-transparent" />
                         <div className="relative z-10">
                           <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             <Icon className="w-6 h-6 text-primary-foreground" />
@@ -322,8 +322,8 @@ export default function Index() {
             <section className="py-16 md:py-24 bg-card/20">
               <div className="container mx-auto px-4">
                 <div className="glass-card-bordered p-8 md:p-16 text-center max-w-3xl mx-auto relative overflow-hidden">
-                  <img src={featureCta} alt="" className="absolute inset-0 w-full h-full object-cover opacity-15" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/50" />
+                   <img src={featureCta} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                   <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/40 to-transparent" />
                   <div className="relative z-10">
                     <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-6">
                       The Future of Music<br /><span className="text-gradient">Is Interactive.</span>

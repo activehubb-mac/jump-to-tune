@@ -1,31 +1,24 @@
 
+# Make Recent Updates Available for Mobile
 
-# Make Card Artwork More Visible
+The recent changes (hiding track/follower counts from artist cards, hiding price/collectors from track cards) were applied to the homepage and browse pages, but several other pages still display this data on cards. These pages are used on both desktop and mobile.
 
-## Problem
-The artwork on both the **Create With AI** cards (5) and the **guest feature cards + CTA** (6 in Index.tsx) is barely visible due to very low opacity (`opacity-15` / `opacity-25`) combined with heavy dark gradient overlays.
+## Changes Required
 
-## Changes
+### 1. `src/pages/Artists.tsx` -- Remove tracks/fans from artist cards
 
-### 1. `src/components/home/CreateWithAISection.tsx`
-- Increase AI-generated image opacity from `opacity-25` → `opacity-50`, hover from `opacity-35` → `opacity-65`
-- Lighten the gradient overlay: change `from-background via-background/80 to-background/40` → `from-background/90 via-background/50 to-transparent`
+**Featured Artists section (lines 149-152):** Remove the stats row showing "X tracks" and "X fans"
 
-### 2. `src/pages/Index.tsx` — Feature cards (4 cards)
-- Increase image opacity from `opacity-15` → `opacity-45`, hover from `opacity-25` → `opacity-60`
-- Lighten overlay: `from-background via-background/70 to-background/30` → `from-background/80 via-background/40 to-transparent`
+**All Artists grid (lines 183-187):** Remove "X tracks" text and "X fans" text below each artist name
 
-### 3. `src/pages/Index.tsx` — Music Galaxy CTA card
-- Increase image opacity from `opacity-20` → `opacity-45`
-- Lighten overlay similarly
+### 2. `src/pages/FanDashboard.tsx` -- Remove stats from followed artist cards
 
-### 4. `src/pages/Index.tsx` — Bottom CTA card
-- Increase image opacity from `opacity-15` → `opacity-40`
-- Lighten overlay: `from-background via-background/80 to-background/50` → `from-background/80 via-background/40 to-transparent`
+**Line 277:** Change `{artist.trackCount} tracks . {artist.followerCount} followers` to just `"Artist"` label
 
-### Files
-| File | Change |
-|------|--------|
-| `src/components/home/CreateWithAISection.tsx` | Boost image opacity & reduce overlay |
-| `src/pages/Index.tsx` | Boost image opacity & reduce overlay on 6 cards |
+### 3. Cleanup: Remove unused imports/data
 
+- In `Artists.tsx`: Remove `useFollowerCounts` import and hook call since follower counts are no longer displayed on cards
+- Remove `formatCompactNumber` import if no longer used
+- Remove the `followers` variable assignments in the map callbacks
+
+These are all the remaining places where track/follower counts appear on artist cards and price/editions appear on track cards outside of profile/detail views. The changes ensure consistency across desktop and mobile.
