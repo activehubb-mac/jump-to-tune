@@ -3,7 +3,7 @@ import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
-import { ParticleBackground } from "@/components/effects/ParticleBackground";
+import { ImmersiveBackground } from "@/components/effects/ImmersiveBackground";
 import { GlobalSubscriptionCheck } from "@/components/subscription/GlobalSubscriptionCheck";
 import { cn } from "@/lib/utils";
 
@@ -22,8 +22,8 @@ export function Layout({
     <div className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full">
       {/* Global subscription check - shows expiry modal when needed */}
       <GlobalSubscriptionCheck />
-      {/* Light particles behind content */}
-      <ParticleBackground />
+      {/* Immersive 3D background */}
+      <ImmersiveBackground />
       
       {/* Fixed Navbar - z-50 ensures it stays above everything */}
       <Navbar />
