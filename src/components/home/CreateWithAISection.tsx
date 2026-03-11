@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Mic2, Music, Wand2, FileText, Palette, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FloatingCard } from "@/components/effects/FloatingCard";
 
 const aiTools = [
   {
@@ -8,46 +9,41 @@ const aiTools = [
     description: "Sing along with AI-powered instrumental isolation",
     icon: Mic2,
     href: "/karaoke",
-    gradient: "from-primary/20 to-accent/20",
-    glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--primary)/0.3)]",
+    accentVar: "--primary",
   },
   {
     title: "Sing With Artist",
     description: "Duet with your favorite artists using AI voice sync",
     icon: Music,
     href: "/karaoke",
-    gradient: "from-accent/20 to-secondary/20",
-    glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.3)]",
+    accentVar: "--accent",
   },
   {
     title: "AI Remix",
     description: "Transform any track with AI-powered stem separation",
     icon: Wand2,
     href: "/ai-tools",
-    gradient: "from-secondary/20 to-primary/20",
-    glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--secondary)/0.3)]",
+    accentVar: "--secondary",
   },
   {
     title: "AI Lyrics Generator",
     description: "Generate lyrics matched to any mood or genre",
     icon: FileText,
     href: "/ai-release",
-    gradient: "from-primary/20 to-secondary/20",
-    glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--primary)/0.3)]",
+    accentVar: "--primary",
   },
   {
     title: "AI Cover Art",
     description: "Create stunning album artwork with AI generation",
     icon: Palette,
     href: "/ai-cover-art",
-    gradient: "from-accent/20 to-primary/20",
-    glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.3)]",
+    accentVar: "--accent",
   },
 ];
 
 export function CreateWithAISection() {
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-16 md:py-24 relative">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
@@ -63,40 +59,56 @@ export function CreateWithAISection() {
           </p>
         </div>
 
-        {/* AI Tool Cards */}
+        {/* Holographic AI Tool Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {aiTools.map((tool) => {
             const Icon = tool.icon;
             return (
-              <Link
+              <FloatingCard
                 key={tool.title}
-                to={tool.href}
-                className={cn(
-                  "group relative glass-card-bordered p-8 transition-all duration-500 hover:scale-[1.02]",
-                  tool.glowColor
-                )}
+                glowColor={`hsl(var(${tool.accentVar}) / 0.2)`}
+                depth="lg"
+                className="group"
               >
-                {/* Gradient background */}
-                <div className={cn(
-                  "absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500",
-                  tool.gradient
-                )} />
+                <Link
+                  to={tool.href}
+                  className="block relative p-8 rounded-xl border border-border/50 overflow-hidden holographic-panel"
+                >
+                  {/* Holographic scanline effect */}
+                  <div className="absolute inset-0 holographic-scanline pointer-events-none" />
 
-                <div className="relative z-10">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <Icon className="w-8 h-8 text-primary" />
+                  {/* Gradient border glow on hover */}
+                  <div
+                    className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                    style={{
+                      background: `linear-gradient(135deg, hsl(var(${tool.accentVar}) / 0.08) 0%, transparent 50%, hsl(var(${tool.accentVar}) / 0.05) 100%)`,
+                    }}
+                  />
+
+                  <div className="relative z-10">
+                    <div
+                      className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
+                      style={{
+                        background: `linear-gradient(135deg, hsl(var(${tool.accentVar}) / 0.2) 0%, hsl(var(${tool.accentVar}) / 0.05) 100%)`,
+                        boxShadow: `0 0 20px hsl(var(${tool.accentVar}) / 0.1)`,
+                      }}
+                    >
+                      <Icon className="w-8 h-8 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                      {tool.title}
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {tool.description}
+                    </p>
                   </div>
-                  <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
-                    {tool.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {tool.description}
-                  </p>
-                </div>
 
-                {/* Subtle glow dot */}
-                <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary/50 group-hover:bg-primary group-hover:animate-pulse transition-colors" />
-              </Link>
+                  {/* Floating status dot */}
+                  <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary/50 group-hover:bg-primary group-hover:animate-pulse transition-colors">
+                    <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" style={{ animationDuration: "2s" }} />
+                  </div>
+                </Link>
+              </FloatingCard>
             );
           })}
         </div>

@@ -3,6 +3,7 @@ import { Sparkles, Send, Disc3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { FloatingCard } from "@/components/effects/FloatingCard";
 
 const examplePrompts = [
   "Play dark drill music",
@@ -29,7 +30,7 @@ export function AIDJSection() {
   };
 
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-16 md:py-24 relative">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
@@ -46,28 +47,30 @@ export function AIDJSection() {
             </p>
           </div>
 
-          {/* Prompt Input */}
-          <form onSubmit={handleSubmit} className="relative mb-8">
-            <div className="relative glass-card-bordered overflow-hidden p-1">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary ml-4 shrink-0" />
-                <Input
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="What do you want to hear?"
-                  className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-lg placeholder:text-muted-foreground/50"
-                />
-                <Button
-                  type="submit"
-                  disabled={!prompt.trim()}
-                  className="gradient-accent shrink-0 mr-1"
-                  size="lg"
-                >
-                  <Send className="w-5 h-5" />
-                </Button>
+          {/* Holographic Command Interface */}
+          <FloatingCard depth="lg" glowColor="hsl(var(--accent) / 0.15)" className="mb-8">
+            <form onSubmit={handleSubmit} className="relative">
+              <div className="relative rounded-xl border border-border/50 overflow-hidden holographic-panel p-1">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary ml-4 shrink-0" />
+                  <Input
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="What do you want to hear?"
+                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-lg placeholder:text-muted-foreground/50"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={!prompt.trim()}
+                    className="gradient-accent shrink-0 mr-1"
+                    size="lg"
+                  >
+                    <Send className="w-5 h-5" />
+                  </Button>
+                </div>
               </div>
-            </div>
-          </form>
+            </form>
+          </FloatingCard>
 
           {/* Example Prompts */}
           <div className="flex flex-wrap justify-center gap-2">
@@ -75,7 +78,7 @@ export function AIDJSection() {
               <button
                 key={p}
                 onClick={() => handlePromptClick(p)}
-                className="px-4 py-2 rounded-full glass-card-bordered text-sm text-muted-foreground hover:text-foreground hover:bg-primary/10 hover:border-primary/30 transition-all duration-300"
+                className="px-4 py-2 rounded-full glass-card-bordered text-sm text-muted-foreground hover:text-foreground hover:bg-primary/10 hover:border-primary/30 hover:shadow-[0_0_15px_hsl(var(--primary)/0.1)] transition-all duration-300"
               >
                 {p}
               </button>
