@@ -511,7 +511,7 @@ export default function Subscription() {
               <div className="glass-card p-6 text-center bg-gradient-to-r from-primary/10 to-accent/10">
                 <Sparkles className="w-8 h-8 text-primary mx-auto mb-3" />
                 <h2 className="text-2xl font-bold text-foreground mb-2">
-                  Start Your 3-Month Free Trial
+                  Start Your 30-Day Free Trial
                 </h2>
                 <p className="text-muted-foreground mb-4 max-w-md mx-auto">
                   Get unlimited streaming, downloads, and more. No payment required during trial.
@@ -559,7 +559,7 @@ export default function Subscription() {
                         <span className="text-3xl font-bold text-foreground">{tierInfo.price}</span>
                         <span className="text-muted-foreground">/month</span>
                         {!hasActiveSubscription && (
-                          <p className="text-xs text-primary mt-1">Free for 3 months</p>
+                          <p className="text-xs text-primary mt-1">Free for 30 days</p>
                         )}
                       </div>
 

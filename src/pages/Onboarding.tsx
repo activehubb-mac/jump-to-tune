@@ -418,13 +418,13 @@ export default function Onboarding() {
                   Choose Your Plan
                 </h1>
                 <p className="text-muted-foreground">
-                  Start with a 3-month free trial. Cancel anytime.
+                  Start with a 30-day free trial. Cancel anytime.
                 </p>
               </div>
 
               <div className="flex items-center justify-center gap-2 bg-primary/10 rounded-lg p-3">
                 <Sparkles className="h-5 w-5 text-primary" />
-                <span className="font-semibold text-primary">3 Months FREE Trial</span>
+                <span className="font-semibold text-primary">30-Day FREE Trial</span>
               </div>
 
               <div className="space-y-3">

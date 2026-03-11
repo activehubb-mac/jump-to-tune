@@ -78,7 +78,7 @@ serve(async (req) => {
         line_items: [{ price: priceId, quantity: 1 }],
         mode: "subscription",
         subscription_data: {
-          trial_period_days: 90, // 3 months free trial
+          trial_period_days: 30, // 30-day free trial
           metadata: {
             user_id: user.id,
             tier: tier,

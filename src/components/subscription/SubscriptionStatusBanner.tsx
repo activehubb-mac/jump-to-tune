@@ -40,7 +40,7 @@ export function SubscriptionStatusBanner({ className }: SubscriptionStatusBanner
             </div>
             <div>
               <p className="font-semibold text-foreground">No Active Subscription</p>
-              <p className="text-sm text-muted-foreground">Start your 3-month free trial today!</p>
+              <p className="text-sm text-muted-foreground">Start your 30-day free trial today!</p>
             </div>
           </div>
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90" size="sm" asChild>
