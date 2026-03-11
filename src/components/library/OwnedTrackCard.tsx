@@ -52,7 +52,7 @@ export function OwnedTrackCard({
     <div
       onClick={handlePlay}
       className={cn(
-        "glass-card p-4 group cursor-pointer transition-all duration-300",
+        "glass-card p-4 group cursor-pointer transition-all duration-300 track-card-3d",
         "hover:bg-primary/10",
         isCurrentlyPlaying && "bg-primary/5"
       )}
