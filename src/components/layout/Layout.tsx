@@ -25,6 +25,7 @@ export function Layout({
       <GlobalSubscriptionCheck />
       {/* Light particles behind content */}
       <ParticleBackground />
+      <RobotPerformer />
       
       {/* Fixed Navbar - z-50 ensures it stays above everything */}
       <Navbar />
