@@ -256,8 +256,25 @@ export const KaraokeSection = ({
                 )}
               </div>
               
-              {/* LRC Upload Button */}
+              {/* LRC Upload & Auto-Generate Buttons */}
               <div className="flex items-center gap-2">
+                {trackId && audioUrl && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAutoGenerate}
+                    disabled={disabled || isTranscribing}
+                    className="h-7 text-xs"
+                  >
+                    {isTranscribing ? (
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3 h-3 mr-1" />
+                    )}
+                    {isTranscribing ? 'Generating...' : 'Auto-Generate'}
+                  </Button>
+                )}
                 <input
                   ref={lrcInputRef}
                   type="file"
