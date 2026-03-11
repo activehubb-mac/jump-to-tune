@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform, Clock, FolderPlus } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform, Clock, FolderPlus, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -186,6 +186,7 @@ export function GlobalAudioPlayer() {
   const { createPlaylist } = usePlaylists();
   const { showFeedback } = useFeedbackSafe();
   const [showQueue, setShowQueue] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumFeatureName, setPremiumFeatureName] = useState("");
   const [showAddToPlaylist, setShowAddToPlaylist] = useState(false);
@@ -276,6 +277,59 @@ export function GlobalAudioPlayer() {
   );
 
   if (!isPlayerVisible || !currentTrack) return null;
+
+  // Minimized floating widget
+  if (isMinimized) {
+    return (
+      <div
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-card/95 backdrop-blur-lg border border-border rounded-full pl-1.5 pr-3 py-1.5 shadow-[0_4px_24px_hsl(var(--primary)/0.2)] cursor-pointer animate-in slide-in-from-bottom duration-300 hover:shadow-[0_4px_32px_hsl(var(--primary)/0.35)] transition-shadow group"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
+        {/* Cover art */}
+        <div 
+          className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-primary/30"
+          onClick={() => setIsMinimized(false)}
+        >
+          {currentTrack.cover_art_url ? (
+            <img src={currentTrack.cover_art_url} alt={currentTrack.title} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-muted flex items-center justify-center">
+              <Disc3 className="w-4 h-4 text-muted-foreground/50" />
+            </div>
+          )}
+        </div>
+
+        {/* Play/Pause */}
+        <Button
+          size="icon"
+          className="rounded-full w-8 h-8 gradient-accent neon-glow-subtle flex-shrink-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            needsUserGesture ? resumePlayback() : togglePlayPause();
+          }}
+        >
+          {isBuffering ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : isPlaying ? (
+            <Pause className="h-4 w-4" />
+          ) : (
+            <Play className="h-4 w-4 ml-0.5" />
+          )}
+        </Button>
+
+        {/* Expand */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground"
+          onClick={() => setIsMinimized(false)}
+          title="Show player"
+        >
+          <ChevronUp className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  }
 
   const handleSeek = (value: number[]) => {
     seek(value[0]);
@@ -1000,6 +1054,23 @@ export function GlobalAudioPlayer() {
                 />
               </div>
               
+              {/* Minimize */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => { setShowQueue(false); setIsMinimized(true); }}
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Minimize player</p>
+                </TooltipContent>
+              </Tooltip>
+
               <Button
                 variant="ghost"
                 size="icon"
