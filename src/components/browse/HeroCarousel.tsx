@@ -86,6 +86,8 @@ export function HeroCarousel() {
         className="relative px-12"
         onPointerEnter={() => (isPaused.current = true)}
         onPointerLeave={() => (isPaused.current = false)}
+        onTouchStart={() => (isPaused.current = true)}
+        onTouchEnd={() => { setTimeout(() => (isPaused.current = false), 3000); }}
       >
         <Carousel
           setApi={setApi}
