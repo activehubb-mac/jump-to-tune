@@ -84,7 +84,7 @@ export function MusicGalaxy({ onClose }: { onClose: () => void }) {
         cover_art_url: track.cover_art_url,
         audio_url: track.audio_url,
         artist_id: track.artist_id,
-        genre: track.genre || undefined,
+        genre: undefined,
         color: COLORS[i % COLORS.length],
         connections: [],
       };
