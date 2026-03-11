@@ -9,6 +9,7 @@ import { useGoDJProfile } from "@/hooks/useGoDJProfile";
 import { usePublishedGoDJSessions } from "@/hooks/useGoDJSessions";
 import { useAuth } from "@/contexts/AuthContext";
 import { Disc3, Flame, Rocket, Clock, Trophy, Sparkles, Plus } from "lucide-react";
+import { useGoDJBackground } from "@/hooks/useGoDJBackground";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
