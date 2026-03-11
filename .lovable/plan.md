@@ -1,47 +1,24 @@
 
+# Make Recent Updates Available for Mobile
 
-# Add Motion to Cards + Karaoke Banner Overhaul
+The recent changes (hiding track/follower counts from artist cards, hiding price/collectors from track cards) were applied to the homepage and browse pages, but several other pages still display this data on cards. These pages are used on both desktop and mobile.
 
-## 1. Subtle repeating motion on all artwork cards
+## Changes Required
 
-Add a slow Ken Burns-style animation (gentle zoom + pan) to the background images on all 11 cards. This creates a living, breathing feel without being distracting.
+### 1. `src/pages/Artists.tsx` -- Remove tracks/fans from artist cards
 
-**CSS keyframes to add in `src/index.css`**:
-- `card-drift`: slow 20s infinite alternate — scales from 1.0 to 1.08 and translates slightly, creating a subtle parallax drift effect
+**Featured Artists section (lines 149-152):** Remove the stats row showing "X tracks" and "X fans"
 
-**Files affected**:
-- `src/index.css` — add `card-drift` keyframe + `.animate-card-drift` utility
-- `src/components/home/CreateWithAISection.tsx` — apply `animate-card-drift` to the `<img>` elements
-- `src/components/home/FanZoneSection.tsx` — apply `animate-card-drift` to fan card `<img>` elements  
-- `src/pages/Index.tsx` — apply `animate-card-drift` to the 6 feature/CTA card `<img>` elements
+**All Artists grid (lines 183-187):** Remove "X tracks" text and "X fans" text below each artist name
 
-## 2. Karaoke Promo Banner — futuristic 3D motion overhaul
+### 2. `src/pages/FanDashboard.tsx` -- Remove stats from followed artist cards
 
-Transform the flat `KaraokePromoBanner` into a visually alive, futuristic section with:
+**Line 277:** Change `{artist.trackCount} tracks . {artist.followerCount} followers` to just `"Artist"` label
 
-- **Animated 3D background**: Generate a realistic 3D image (futuristic karaoke stage with holographic waveforms) and apply the same `card-drift` animation
-- **Animated sound wave bars**: CSS-only equalizer bars (5-7 bars with staggered `animation-delay`) using a simple `equalizer-bar` keyframe that scales Y
-- **Floating particle orbs**: 3-4 small glowing circles with different `animation-duration` floating animations (reuse `particle-float` from existing CSS)
-- **Pulsing ring around mic icon**: Add a repeating scale+fade ring animation behind the mic circle
-- **Gradient sweep**: A diagonal gradient that slowly moves across the card using `background-position` animation
+### 3. Cleanup: Remove unused imports/data
 
-**Files affected**:
-- `src/index.css` — add `equalizer-bar`, `pulse-ring`, `gradient-sweep` keyframes
-- `src/components/home/KaraokePromoBanner.tsx` — complete visual overhaul with animated elements + 3D background image
-- Generate 1 new asset: `src/assets/karaoke-banner-bg.jpg` — futuristic 3D karaoke stage render
+- In `Artists.tsx`: Remove `useFollowerCounts` import and hook call since follower counts are no longer displayed on cards
+- Remove `formatCompactNumber` import if no longer used
+- Remove the `followers` variable assignments in the map callbacks
 
-### Karaoke Banner structure:
-```
-[Banner Container - glass-card-bordered, overflow-hidden]
-  ├── 3D Background image (animate-card-drift, opacity-50)
-  ├── Gradient overlay (from-background/80)
-  ├── Animated gradient sweep layer
-  ├── Floating particle orbs (3-4, staggered particle-float)
-  ├── Equalizer bars (right side, 7 bars, staggered animation)
-  ├── Pulsing ring behind mic icon
-  ├── Content (badge, title, description, CTA button)
-  └── Floating music note icons (existing, keep)
-```
-
-All animations respect `prefers-reduced-motion: reduce`.
-
+These are all the remaining places where track/follower counts appear on artist cards and price/editions appear on track cards outside of profile/detail views. The changes ensure consistency across desktop and mobile.
