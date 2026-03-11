@@ -24,6 +24,7 @@ import FeatureArtistsSelector from "@/components/upload/FeatureArtistsSelector";
 import ExplicitToggle from "@/components/upload/ExplicitToggle";
 import { KaraokeSection } from "@/components/upload/KaraokeSection";
 import { useKaraokeData } from "@/hooks/useKaraokeData";
+import { StageControls } from "@/components/stage/StageControls";
 
 import { MAIN_GENRES, getSubGenres, hasSubGenres, parseGenreValue, combineGenreValue } from "@/lib/genres";
 
