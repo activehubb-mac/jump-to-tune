@@ -32,7 +32,7 @@ const aiTools = [
     gradient: "from-secondary/20 to-primary/20",
     glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--secondary)/0.3)]",
     videoSrc: "/videos/ai-remix.mp4",
-    playbackRate: 1,
+    playbackRate: 0.5,
   },
   {
     title: "AI Lyrics Generator",
