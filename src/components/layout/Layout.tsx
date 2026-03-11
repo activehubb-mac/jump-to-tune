@@ -22,8 +22,8 @@ export function Layout({
     <div className="min-h-screen flex flex-col overflow-x-hidden w-full max-w-full">
       {/* Global subscription check - shows expiry modal when needed */}
       <GlobalSubscriptionCheck />
-      {/* Light particles behind content */}
-      <ParticleBackground />
+      {/* Immersive 3D background */}
+      <ImmersiveBackground />
       
       {/* Fixed Navbar - z-50 ensures it stays above everything */}
       <Navbar />
