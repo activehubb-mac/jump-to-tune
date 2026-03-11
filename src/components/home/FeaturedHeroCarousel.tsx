@@ -240,7 +240,7 @@ export function FeaturedHeroCarousel() {
                   "w-2 h-2 rounded-full transition-all duration-300 border border-border/50",
                   idx === currentIndex
                     ? "w-8 bg-primary"
-                    : "bg-card/80 hover:bg-card"
+                    : "bg-card hover:bg-muted"
                 )}
               />
             ))}

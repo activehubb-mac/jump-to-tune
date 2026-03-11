@@ -132,7 +132,7 @@ export function PlaylistCard({
 
         {/* Special badge */}
         {isSpecial && (
-          <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-primary/80 backdrop-blur-sm text-xs font-medium text-primary-foreground flex items-center gap-1">
+          <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-primary text-xs font-medium text-primary-foreground flex items-center gap-1">
             {icon && <span className="w-3 h-3">{icon}</span>}
             Auto
           </div>

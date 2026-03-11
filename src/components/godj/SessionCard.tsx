@@ -57,7 +57,7 @@ export function SessionCard({ session, artistName, artistAvatar, listenerCount, 
           {/* Listener count */}
           {typeof listenerCount === "number" && (
             <div className="absolute bottom-2 right-2">
-              <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm text-xs gap-1">
+              <Badge variant="secondary" className="bg-background text-xs gap-1">
                 <Headphones className="w-3 h-3" />
                 {listenerCount}
               </Badge>

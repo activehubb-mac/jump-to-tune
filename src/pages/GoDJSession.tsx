@@ -114,7 +114,7 @@ export default function GoDJSession() {
                 )}
               </Badge>
               {session.gating !== "public" && (
-                <Badge variant="outline" className="bg-background/80 backdrop-blur-sm">
+                <Badge variant="outline" className="bg-background">
                   {session.gating === "followers" ? "Followers" : session.gating === "superfan" ? "Superfan" : "Limited"}
                 </Badge>
               )}

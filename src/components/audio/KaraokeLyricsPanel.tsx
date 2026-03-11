@@ -207,7 +207,7 @@ export function KaraokeLyricsPanel({
 
             {/* Footer with sync status */}
             {hasTimestamps && (
-              <div className="px-4 py-2 border-t border-glass-border/20 bg-background/30">
+              <div className="px-4 py-2 border-t border-glass-border/20 bg-background">
                 <div className="flex items-center justify-between text-xs">
                   <span className={cn(
                     "flex items-center gap-1",

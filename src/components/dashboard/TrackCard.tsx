@@ -258,7 +258,7 @@ export const TrackCard = React.forwardRef<HTMLDivElement, TrackCardProps>(
                     e.stopPropagation();
                     onEdit?.(track.id);
                   }}
-                  className="p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
+                  className="p-2 rounded-full bg-background hover:bg-muted transition-colors"
                   title="Edit track"
                 >
                   <Edit className="w-4 h-4 text-foreground" />

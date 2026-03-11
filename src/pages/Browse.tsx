@@ -416,7 +416,7 @@ function SectionSkeleton({ title }: { title: string }) {
       <div className="flex gap-3 sm:gap-4 overflow-hidden">
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex-shrink-0 w-[calc(50%-6px)] sm:w-[calc(33.33%-10px)] md:w-[calc(25%-12px)] lg:w-[calc(20%-13px)]">
-            <div className="rounded-md bg-card/50 p-3">
+            <div className="rounded-md bg-card p-3">
               <div className="aspect-square rounded-md bg-muted/50 mb-3 animate-pulse" />
               <div className="h-4 bg-muted/50 rounded animate-pulse mb-2 w-3/4" />
               <div className="h-3 bg-muted/30 rounded animate-pulse w-1/2" />
