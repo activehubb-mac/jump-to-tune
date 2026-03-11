@@ -1010,21 +1010,21 @@ export default function Index() {
         </section>}
 
       {/* Role CTA Section - Only show for guests */}
-      {!user && <section className="py-10 md:py-14 bg-card/20">
+      {!user && <section className="py-6 md:py-14 bg-card/20">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-             <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">
+             <h2 className="text-2xl md:text-5xl font-bold mb-4 text-foreground">
                 Turn AI tracks into real careers.
               </h2>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
               {/* Fan Card */}
-              <div className="glass-card-bordered p-8 text-center group hover:bg-secondary/10 transition-all duration-300">
-                <div className="w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                  <Headphones className="w-8 h-8 text-secondary" />
+              <div className="glass-card-bordered p-5 md:p-8 text-center group hover:bg-secondary/10 transition-all duration-300">
+                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-secondary/20 flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+                  <Headphones className="w-6 h-6 md:w-8 md:h-8 text-secondary" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3 text-foreground">For Fans</h3>
+                <h3 className="text-xl md:text-2xl font-bold mb-3 text-foreground">For Fans</h3>
                 <p className="text-muted-foreground mb-6">
                   Discover AI-crafted music, collect exclusive releases, and support creators you love.
                 </p>
@@ -1034,11 +1034,11 @@ export default function Index() {
               </div>
 
               {/* Artist Card */}
-              <div className="glass-card-bordered p-8 text-center group hover:bg-primary/10 transition-all duration-300">
-                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                  <Music className="w-8 h-8 text-primary" />
+              <div className="glass-card-bordered p-5 md:p-8 text-center group hover:bg-primary/10 transition-all duration-300">
+                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+                  <Music className="w-6 h-6 md:w-8 md:h-8 text-primary" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3 text-foreground">For Creators</h3>
+                <h3 className="text-xl md:text-2xl font-bold mb-3 text-foreground">For Creators</h3>
                 <p className="text-muted-foreground mb-6">
                   Package AI tracks into professional releases with cover art, branding, and a store.
                 </p>
@@ -1048,11 +1048,11 @@ export default function Index() {
               </div>
 
               {/* Label Card */}
-              <div className="glass-card-bordered p-8 text-center group hover:bg-accent/10 transition-all duration-300">
-                <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                  <Building2 className="w-8 h-8 text-accent" />
+              <div className="glass-card-bordered p-5 md:p-8 text-center group hover:bg-accent/10 transition-all duration-300">
+                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+                  <Building2 className="w-6 h-6 md:w-8 md:h-8 text-accent" />
                 </div>
-                <h3 className="text-2xl font-bold mb-3 text-foreground">For Labels</h3>
+                <h3 className="text-xl md:text-2xl font-bold mb-3 text-foreground">For Labels</h3>
                 <p className="text-muted-foreground mb-6">
                   Manage AI artist rosters, coordinate releases, and scale your label operations.
                 </p>
