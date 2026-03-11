@@ -76,6 +76,8 @@ export default function TrackEdit() {
   const [stageEnabled, setStageEnabled] = useState(false);
   const [duetModeEnabled, setDuetModeEnabled] = useState(false);
   const [danceModeEnabled, setDanceModeEnabled] = useState(false);
+  const [rapModeEnabled, setRapModeEnabled] = useState(false);
+  const [aiAvatarModeEnabled, setAiAvatarModeEnabled] = useState(false);
   const { data: karaokeData } = useKaraokeData(id);
 
   // Fetch track data
