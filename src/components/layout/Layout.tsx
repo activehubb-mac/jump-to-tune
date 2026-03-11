@@ -4,7 +4,6 @@ import { Footer } from "./Footer";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
 import { ParticleBackground } from "@/components/effects/ParticleBackground";
-import { CharacterPerformer } from "@/components/effects/CharacterPerformer";
 import { GlobalSubscriptionCheck } from "@/components/subscription/GlobalSubscriptionCheck";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +24,6 @@ export function Layout({
       <GlobalSubscriptionCheck />
       {/* Light particles behind content */}
       <ParticleBackground />
-      <CharacterPerformer />
       
       {/* Fixed Navbar - z-50 ensures it stays above everything */}
       <Navbar />
