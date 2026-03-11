@@ -84,7 +84,7 @@ export function StoreProductCard({ product, owned, onBuy, onGuestBuy, isChecking
           )}
         </div>
         {remaining !== null && remaining > 0 && (
-          <Badge className="absolute bottom-2 right-2 bg-background/80 text-foreground text-xs">
+          <Badge className="absolute bottom-2 right-2 bg-background text-foreground text-xs">
             {remaining} left
           </Badge>
         )}

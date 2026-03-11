@@ -323,7 +323,7 @@ export default function Index() {
               <div className="container mx-auto px-4">
                 <div className="glass-card-bordered p-8 md:p-16 text-center max-w-3xl mx-auto relative overflow-hidden">
                    <img src={featureCta} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40 animate-card-drift" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/40 to-transparent" />
+                   <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
                   <div className="relative z-10">
                     <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-6">
                       The Future of Music<br /><span className="text-gradient">Is Interactive.</span>
