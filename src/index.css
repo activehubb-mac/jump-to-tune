@@ -101,13 +101,11 @@
   .glass-card {
     background: hsl(var(--card));
     @apply rounded-xl shadow-sm;
-    animation: energy-pulse 4s ease-in-out infinite;
   }
 
   .glass-card-bordered {
     background: hsl(var(--card));
     @apply border border-border rounded-xl shadow-sm;
-    animation: energy-pulse 4s ease-in-out infinite;
   }
 
   /* Energy card — rotating border + shimmer on hover */

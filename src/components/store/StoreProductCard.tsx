@@ -45,7 +45,7 @@ export function StoreProductCard({ product, owned, onBuy, onGuestBuy, isChecking
   };
 
   return (
-    <div className="glass-card p-4 group hover:bg-primary/5 transition-all duration-300 energy-card">
+    <div className="glass-card p-4 group hover:bg-primary/5 transition-all duration-300">
       <div className="aspect-square rounded-lg bg-muted/50 mb-3 relative overflow-hidden">
         {product.image_url ? (
           <img src={product.image_url} alt={product.title} className="absolute inset-0 w-full h-full object-cover" />
