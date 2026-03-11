@@ -1522,6 +1522,39 @@ export type Database = {
           },
         ]
       }
+      godj_backgrounds: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          overlay_opacity: number
+          playback_rate: number
+          title: string
+          updated_at: string
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          overlay_opacity?: number
+          playback_rate?: number
+          title: string
+          updated_at?: string
+          video_url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          overlay_opacity?: number
+          playback_rate?: number
+          title?: string
+          updated_at?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
       job_queue: {
         Row: {
           attempts: number
