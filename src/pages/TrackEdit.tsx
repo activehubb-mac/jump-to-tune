@@ -581,6 +581,10 @@ export default function TrackEdit() {
             onDuetModeChange={setDuetModeEnabled}
             danceModeEnabled={danceModeEnabled}
             onDanceModeChange={setDanceModeEnabled}
+            rapModeEnabled={rapModeEnabled}
+            onRapModeChange={setRapModeEnabled}
+            aiAvatarModeEnabled={aiAvatarModeEnabled}
+            onAiAvatarModeChange={setAiAvatarModeEnabled}
             hasKaraoke={karaokeEnabled || !!karaokeData}
           />
 
