@@ -1,6 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { decode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
+
+function base64ToUint8Array(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -73,7 +81,7 @@ serve(async (req) => {
 
     // Extract base64 data after the prefix
     const base64Data = base64Url.replace(/^data:image\/\w+;base64,/, "");
-    const imageBytes = decode(base64Data);
+    const imageBytes = base64ToUint8Array(base64Data);
 
     // Upload to storage
     const { error: uploadError } = await supabase.storage.from("covers").upload(storagePath, imageBytes, {
