@@ -119,7 +119,7 @@ export function FeaturedOnCarousel({ tracks, featuredArtistName }: FeaturedOnCar
                       <Button
                         size="icon"
                         variant="outline"
-                        className="rounded-full w-10 h-10 border-white/30 bg-background/50 backdrop-blur-sm hover:bg-background/80 relative"
+                        className="rounded-full w-10 h-10 border-white/30 bg-background hover:bg-muted relative"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleAddToQueue(track);
