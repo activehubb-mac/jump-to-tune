@@ -86,7 +86,7 @@ export function ParticleBackground() {
       id: `char-${i}`,
       src,
       size: window.innerWidth < 768 ? 44 + Math.random() * 20 : 64 + Math.random() * 28,
-      duration: 28 + Math.random() * 18,
+      duration: 55 + Math.random() * 25,
       delay: i * 6,
       opacity: 0.35 + Math.random() * 0.15,
       // orbit params — start position for the CSS animation
