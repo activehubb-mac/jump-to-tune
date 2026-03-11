@@ -536,6 +536,71 @@ export type Database = {
         }
         Relationships: []
       }
+      autopilot_sessions: {
+        Row: {
+          avatar_url: string | null
+          completed_at: string | null
+          cover_art_url: string | null
+          created_at: string
+          credits_charged: number
+          id: string
+          lyric_visual_url: string | null
+          metadata: Json | null
+          progress: Json | null
+          promo_clips: Json | null
+          prompt: string | null
+          status: string
+          track_id: string
+          updated_at: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          completed_at?: string | null
+          cover_art_url?: string | null
+          created_at?: string
+          credits_charged?: number
+          id?: string
+          lyric_visual_url?: string | null
+          metadata?: Json | null
+          progress?: Json | null
+          promo_clips?: Json | null
+          prompt?: string | null
+          status?: string
+          track_id: string
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          completed_at?: string | null
+          cover_art_url?: string | null
+          created_at?: string
+          credits_charged?: number
+          id?: string
+          lyric_visual_url?: string | null
+          metadata?: Json | null
+          progress?: Json | null
+          promo_clips?: Json | null
+          prompt?: string | null
+          status?: string
+          track_id?: string
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autopilot_sessions_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       badge_settings: {
         Row: {
           id: string
