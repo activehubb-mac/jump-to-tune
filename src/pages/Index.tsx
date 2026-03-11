@@ -248,8 +248,9 @@ export default function Index() {
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <div className="glass-card-bordered p-8 md:p-12 relative overflow-hidden">
-                {/* Decorative glow */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/10 rounded-full blur-[100px]" />
+                {/* Background image */}
+                <img src={featureGalaxyCta} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
                 
                 <div className="relative z-10">
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center mx-auto mb-6">
