@@ -22,6 +22,8 @@ import MoodTagsInput from "@/components/upload/MoodTagsInput";
 import CreditsSection, { TrackCredits } from "@/components/upload/CreditsSection";
 import FeatureArtistsSelector from "@/components/upload/FeatureArtistsSelector";
 import ExplicitToggle from "@/components/upload/ExplicitToggle";
+import { KaraokeSection } from "@/components/upload/KaraokeSection";
+import { useKaraokeData } from "@/hooks/useKaraokeData";
 
 import { MAIN_GENRES, getSubGenres, hasSubGenres, parseGenreValue, combineGenreValue } from "@/lib/genres";
 
@@ -64,6 +66,13 @@ export default function TrackEdit() {
   const [subGenre, setSubGenre] = useState("");
   const availableSubGenres = getSubGenres(genre);
   const showSubGenreDropdown = hasSubGenres(genre);
+
+  // Karaoke state
+  const [karaokeEnabled, setKaraokeEnabled] = useState(false);
+  const [karaokeInstrumentalFile, setKaraokeInstrumentalFile] = useState<File | null>(null);
+  const [karaokeLyrics, setKaraokeLyrics] = useState("");
+  const [singModeEnabled, setSingModeEnabled] = useState(false);
+  const { data: karaokeData } = useKaraokeData(id);
 
   // Fetch track data
   const { data: track, isLoading: trackLoading } = useQuery({
@@ -153,6 +162,14 @@ export default function TrackEdit() {
       }));
     }
   }, [track]);
+
+  // Populate karaoke data when loaded
+  useEffect(() => {
+    if (karaokeData) {
+      setKaraokeEnabled(true);
+      setKaraokeLyrics(karaokeData.lyrics || "");
+    }
+  }, [karaokeData]);
 
   // Populate credits when loaded
   useEffect(() => {
@@ -512,6 +529,20 @@ export default function TrackEdit() {
 
           {/* Credits Section */}
           <CreditsSection credits={credits} onChange={setCredits} />
+
+          {/* Karaoke Section */}
+          <KaraokeSection
+            enabled={karaokeEnabled}
+            onEnabledChange={setKaraokeEnabled}
+            instrumentalFile={karaokeInstrumentalFile}
+            onInstrumentalChange={setKaraokeInstrumentalFile}
+            lyrics={karaokeLyrics}
+            onLyricsChange={setKaraokeLyrics}
+            singModeEnabled={singModeEnabled}
+            onSingModeChange={setSingModeEnabled}
+            trackId={id}
+            audioUrl={track?.audio_url}
+          />
 
           {/* Pricing */}
           <div className="glass-card p-4 sm:p-6 space-y-4">

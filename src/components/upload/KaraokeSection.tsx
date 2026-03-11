@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Mic, Music, X, Info, FileText, Upload, Play } from 'lucide-react';
+import { Mic, Music, X, Info, FileText, Upload, Play, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -9,6 +9,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { isValidAudioFile, formatFileSize } from '@/lib/audioUtils';
 import { isValidLRC } from '@/lib/lrcParser';
 import { cn } from '@/lib/utils';
+import { useWhisperTranscribe } from '@/hooks/useWhisperTranscribe';
+import { toast } from 'sonner';
 
 interface KaraokeSectionProps {
   enabled: boolean;
@@ -21,6 +23,8 @@ interface KaraokeSectionProps {
   onPreview?: () => void;
   singModeEnabled?: boolean;
   onSingModeChange?: (enabled: boolean) => void;
+  trackId?: string;
+  audioUrl?: string;
 }
 
 export const KaraokeSection = ({
@@ -34,12 +38,29 @@ export const KaraokeSection = ({
   onPreview,
   singModeEnabled = false,
   onSingModeChange,
+  trackId,
+  audioUrl,
 }: KaraokeSectionProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lyricsTab, setLyricsTab] = useState<'plain' | 'lrc'>('plain');
   const inputRef = useRef<HTMLInputElement>(null);
   const lrcInputRef = useRef<HTMLInputElement>(null);
+  const { transcribe, isTranscribing } = useWhisperTranscribe();
+
+  const handleAutoGenerate = async () => {
+    if (!trackId || !audioUrl) return;
+    try {
+      const lrc = await transcribe(trackId, audioUrl);
+      if (lrc) {
+        onLyricsChange(lrc);
+        setLyricsTab('lrc');
+        toast.success('Lyrics generated successfully!');
+      }
+    } catch (err) {
+      toast.error('Failed to generate lyrics. Please try again.');
+    }
+  };
 
   const processFile = useCallback((file: File) => {
     setError(null);
@@ -235,8 +256,25 @@ export const KaraokeSection = ({
                 )}
               </div>
               
-              {/* LRC Upload Button */}
+              {/* LRC Upload & Auto-Generate Buttons */}
               <div className="flex items-center gap-2">
+                {trackId && audioUrl && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAutoGenerate}
+                    disabled={disabled || isTranscribing}
+                    className="h-7 text-xs"
+                  >
+                    {isTranscribing ? (
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3 h-3 mr-1" />
+                    )}
+                    {isTranscribing ? 'Generating...' : 'Auto-Generate'}
+                  </Button>
+                )}
                 <input
                   ref={lrcInputRef}
                   type="file"
