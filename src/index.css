@@ -40,8 +40,8 @@
     --destructive: 0 65% 50%;           /* Softened red */
     --destructive-foreground: 40 10% 90%;
 
-    --border: 0 0% 20%;                 /* #333333 - Subtle border */
-    --input: 0 0% 20%;                  /* #333333 */
+    --border: 0 0% 16%;                 /* #292929 - Subtle border */
+    --input: 0 0% 16%;                  /* #292929 */
     --ring: 45 30% 55%;                 /* Soft Gold focus ring */
 
     --radius: 0.75rem;
