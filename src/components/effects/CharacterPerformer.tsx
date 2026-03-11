@@ -58,38 +58,36 @@ export function CharacterPerformer() {
 
   return (
     <div
-      className="fixed pointer-events-none hidden md:block"
-      style={{
-        zIndex: 2,
-        right: "3%",
-        bottom: "8%",
-        width: "280px",
-        height: "400px",
-      }}
+      className="fixed pointer-events-none inset-0 flex items-center justify-center"
+      style={{ zIndex: 2 }}
       aria-hidden="true"
     >
-      {/* Glow aura */}
       <div
-        className="absolute inset-0 performer-glow-pulse"
-        style={{
-          background:
-            "radial-gradient(ellipse at center, hsl(var(--primary) / 0.15) 0%, transparent 70%)",
-          filter: "blur(30px)",
-          transform: "scale(1.3)",
-        }}
-      />
+        className="relative w-[180px] h-[260px] md:w-[280px] md:h-[400px]"
+      >
+        {/* Glow aura */}
+        <div
+          className="absolute inset-0 performer-glow-pulse"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, hsl(var(--primary) / 0.15) 0%, transparent 70%)",
+            filter: "blur(30px)",
+            transform: "scale(1.3)",
+          }}
+        />
 
-      {/* Character image */}
-      <img
-        src={current.src}
-        alt=""
-        className={`absolute inset-0 w-full h-full object-contain ${current.animClass}`}
-        style={{
-          opacity: opacity * 0.2,
-          transition: "opacity 0.3s ease-in-out",
-          filter: "drop-shadow(0 0 20px hsl(var(--primary) / 0.4))",
-        }}
-      />
+        {/* Character image */}
+        <img
+          src={current.src}
+          alt=""
+          className={`absolute inset-0 w-full h-full object-contain ${current.animClass}`}
+          style={{
+            opacity: opacity * 0.2,
+            transition: "opacity 0.3s ease-in-out",
+            filter: "drop-shadow(0 0 20px hsl(var(--primary) / 0.4))",
+          }}
+        />
+      </div>
     </div>
   );
 }
