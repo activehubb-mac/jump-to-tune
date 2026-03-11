@@ -85,7 +85,7 @@ export function FeedbackModal() {
           <div
             className={cn(
               "w-16 h-16 rounded-full flex items-center justify-center",
-              "bg-muted/50 backdrop-blur-sm",
+              "bg-muted",
               config.glowClass
             )}
           >

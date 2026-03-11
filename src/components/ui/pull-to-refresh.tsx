@@ -40,7 +40,7 @@ export function PullToRefresh({
         <div
           className={cn(
             "w-10 h-10 rounded-full flex items-center justify-center",
-            "bg-primary/20 backdrop-blur-sm border border-primary/30",
+            "bg-primary/20 border border-primary/30",
             canRefresh && "bg-primary/30 border-primary/50"
           )}
         >

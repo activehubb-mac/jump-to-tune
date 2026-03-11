@@ -117,7 +117,7 @@ export function OwnedTrackCard({
 
         {/* Owned Badge */}
         <div className={cn(
-          "absolute top-2 left-2 px-2 py-1 rounded-full backdrop-blur-sm text-xs font-medium",
+          "absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-medium",
           isCurrentlyPlaying 
             ? "bg-accent text-accent-foreground" 
             : "bg-primary/90 text-primary-foreground animate-pulse"

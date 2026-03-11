@@ -143,7 +143,7 @@ export function AlbumCard({ album }: AlbumCardProps) {
           )}
           
           {/* Release Type Badge */}
-          <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-background/80 backdrop-blur-sm">
+          <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-background">
             <span className="text-xs font-medium text-primary uppercase">
               {album.release_type}
             </span>

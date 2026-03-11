@@ -319,7 +319,7 @@ export default function Index() {
             </section>
 
             {/* CTA */}
-            <section className="py-16 md:py-24 bg-card/20">
+            <section className="py-16 md:py-24 bg-card">
               <div className="container mx-auto px-4">
                 <div className="glass-card-bordered p-8 md:p-16 text-center max-w-3xl mx-auto relative overflow-hidden">
                    <img src={featureCta} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40 animate-card-drift" />
