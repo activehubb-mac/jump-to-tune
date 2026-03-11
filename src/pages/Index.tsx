@@ -238,9 +238,9 @@ function FeaturedLabelsSection() {
   const currentLabel = featuredLabels[currentIndex];
   const showCarouselControls = featuredLabels.length > 1;
   const currentStats = labelStats[currentLabel.content_id];
-  return <section className="py-10 md:py-14">
+  return <section className="py-6 md:py-14">
       <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden glass-card-bordered p-6 md:p-10">
+        <div className="relative overflow-hidden glass-card-bordered p-4 md:p-10">
           {/* Background decorative elements */}
           <div className="absolute top-0 left-0 w-72 h-72 bg-muted/30 rounded-full blur-[120px] -translate-y-1/2 -translate-x-1/2" />
           <div className="absolute bottom-0 right-0 w-64 h-64 bg-muted/20 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2" />
@@ -256,7 +256,7 @@ function FeaturedLabelsSection() {
           </div>
           
           {/* Header */}
-          <div className="relative z-10 flex items-center justify-between mb-6">
+          <div className="relative z-10 flex items-center justify-between mb-4 md:mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center border border-secondary/40">
                 <Crown className="w-5 h-5 text-secondary" />
@@ -273,10 +273,10 @@ function FeaturedLabelsSection() {
           
           {/* Label Content */}
           <div className="relative z-10">
-            <Link to={`/label/${currentLabel.content_id}`} className="flex flex-col md:flex-row items-center gap-6 md:gap-10 group">
+            <Link to={`/label/${currentLabel.content_id}`} className="flex flex-col md:flex-row items-center gap-4 md:gap-10 group">
               {/* Label Avatar */}
               <div className="shrink-0 relative">
-                <div className="w-28 h-28 md:w-36 md:h-36 rounded-2xl bg-muted/50 overflow-hidden border-4 border-secondary/30 shadow-lg shadow-secondary/20 group-hover:scale-105 group-hover:border-secondary/60 transition-all duration-300">
+                <div className="w-20 h-20 md:w-36 md:h-36 rounded-2xl bg-muted/50 overflow-hidden border-4 border-secondary/30 shadow-lg shadow-secondary/20 group-hover:scale-105 group-hover:border-secondary/60 transition-all duration-300">
                   {currentLabel.profile?.avatar_url ? <img src={currentLabel.profile.avatar_url} alt={currentLabel.profile.display_name || "Label"} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-muted">
                       <Building2 className="w-12 h-12 text-muted-foreground" />
                     </div>}
@@ -292,15 +292,15 @@ function FeaturedLabelsSection() {
                   <Crown className="w-3 h-3" />
                   Featured Label
                 </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-secondary transition-colors">
+                <h3 className="text-xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-secondary transition-colors">
                   {currentLabel.profile?.display_name || "Unknown Label"}
                 </h3>
                 {currentLabel.profile?.bio && <p className="text-muted-foreground max-w-xl line-clamp-2 mb-4">
                     {currentLabel.profile.bio}
                   </p>}
                 
-                {/* Stats */}
-                <div className="flex items-center justify-center md:justify-start gap-6 mb-4">
+                {/* Stats - hidden on mobile */}
+                <div className="hidden md:flex items-center justify-center md:justify-start gap-6 mb-4">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                       <Music className="w-4 h-4 text-primary" />
