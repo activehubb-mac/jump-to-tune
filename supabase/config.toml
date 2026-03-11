@@ -149,3 +149,6 @@ verify_jwt = false
 
 [functions.stem-separation]
 verify_jwt = false
+
+[functions.generate-card-artwork]
+verify_jwt = false
