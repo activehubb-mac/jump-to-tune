@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useActiveAvatarPromotions, type AvatarPromotion } from "@/hooks/useAvatarPromotions";
-import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
+
 import { cn } from "@/lib/utils";
 
 /** Map current route to exposure zone */
