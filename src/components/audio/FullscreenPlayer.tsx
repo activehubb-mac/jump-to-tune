@@ -471,6 +471,7 @@ export function FullscreenPlayer({
                   </Button>
                 )}
 
+                {isOwned && (
                   <Button
                     variant="ghost"
                     size="icon"
