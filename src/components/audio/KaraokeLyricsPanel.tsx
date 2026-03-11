@@ -84,7 +84,7 @@ export function KaraokeLyricsPanel({
 
   if (!lyrics || parsedLyrics.lines.length === 0) {
     return (
-      <div className="fixed bottom-20 md:bottom-16 left-4 right-4 md:left-auto md:right-20 z-50 w-auto md:w-96 glass-card border border-glass-border/30 backdrop-blur-xl rounded-lg overflow-hidden animate-in slide-in-from-bottom duration-200">
+      <div className="fixed bottom-20 md:bottom-16 left-4 right-4 md:left-auto md:right-20 z-50 w-auto md:w-96 glass-card border border-glass-border/30 rounded-lg overflow-hidden animate-in slide-in-from-bottom duration-200">
         <div className="p-4 flex items-center justify-between border-b border-glass-border/30">
           <div className="flex items-center gap-2">
             <Mic className="w-4 h-4 text-primary" />
@@ -109,13 +109,13 @@ export function KaraokeLyricsPanel({
     <div 
       className={cn(
         "fixed bottom-20 md:bottom-16 left-4 right-4 md:left-auto md:right-20 z-50 w-auto md:w-96",
-        "glass-card border border-glass-border/30 backdrop-blur-xl rounded-lg overflow-hidden",
+        "glass-card border border-glass-border/30 rounded-lg overflow-hidden",
         "animate-in slide-in-from-bottom duration-200",
         !isExpanded && "h-auto"
       )}
     >
       {/* Header */}
-      <div className="p-3 flex items-center justify-between border-b border-glass-border/30 bg-background/50">
+      <div className="p-3 flex items-center justify-between border-b border-glass-border/30 bg-background">
         <div className="flex items-center gap-2 min-w-0">
           <div className={cn(
             "w-6 h-6 rounded-full flex items-center justify-center",
@@ -207,7 +207,7 @@ export function KaraokeLyricsPanel({
 
             {/* Footer with sync status */}
             {hasTimestamps && (
-              <div className="px-4 py-2 border-t border-glass-border/20 bg-background/30">
+              <div className="px-4 py-2 border-t border-glass-border/20 bg-background">
                 <div className="flex items-center justify-between text-xs">
                   <span className={cn(
                     "flex items-center gap-1",

@@ -100,13 +100,13 @@ export default function GoDJSession() {
             )}
             <div className="absolute top-3 left-3 flex gap-2">
               {isScheduled ? (
-                <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm">⏳ Upcoming</Badge>
+                <Badge variant="secondary" className="bg-background">⏳ Upcoming</Badge>
               ) : session.status === "active" ? (
                 <Badge className="bg-green-500/90 text-white">🔴 Live</Badge>
               ) : (
                 <Badge variant="secondary">Archived</Badge>
               )}
-              <Badge variant="outline" className="bg-background/80 backdrop-blur-sm text-xs">
+              <Badge variant="outline" className="bg-background text-xs">
                 {isSpotifySession ? (
                   <><Disc3 className="w-3 h-3 mr-1" />Spotify</>
                 ) : (
@@ -114,7 +114,7 @@ export default function GoDJSession() {
                 )}
               </Badge>
               {session.gating !== "public" && (
-                <Badge variant="outline" className="bg-background/80 backdrop-blur-sm">
+                <Badge variant="outline" className="bg-background">
                   {session.gating === "followers" ? "Followers" : session.gating === "superfan" ? "Superfan" : "Limited"}
                 </Badge>
               )}

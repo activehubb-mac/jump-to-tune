@@ -199,8 +199,8 @@ export function HeroCarousel() {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="border-glass-border bg-background/80 backdrop-blur-sm hover:bg-primary/20" />
-          <CarouselNext className="border-glass-border bg-background/80 backdrop-blur-sm hover:bg-primary/20" />
+          <CarouselPrevious className="border-glass-border bg-background hover:bg-primary/20" />
+          <CarouselNext className="border-glass-border bg-background hover:bg-primary/20" />
         </Carousel>
       </div>
     </section>

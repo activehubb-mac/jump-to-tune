@@ -115,7 +115,7 @@ export function AlbumSection({ albums, isLoading, statsQueryKey }: AlbumSectionP
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 hover:bg-destructive hover:text-destructive-foreground"
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background hover:bg-destructive hover:text-destructive-foreground"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();

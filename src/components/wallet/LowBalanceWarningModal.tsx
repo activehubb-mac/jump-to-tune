@@ -63,7 +63,7 @@ export function LowBalanceWarningModal({
           <div
             className={cn(
               "w-16 h-16 rounded-full flex items-center justify-center",
-              "bg-amber-500/20 backdrop-blur-sm",
+              "bg-amber-500/20",
               "shadow-[0_0_20px_hsl(38_92%_50%/0.4)]"
             )}
           >

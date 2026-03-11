@@ -37,7 +37,7 @@ export function SessionCard({ session, artistName, artistAvatar, listenerCount, 
           {/* Status badge */}
           <div className="absolute top-2 left-2 flex gap-1.5">
             {isScheduled ? (
-              <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm text-xs">
+              <Badge variant="secondary" className="bg-background text-xs">
                 ⏳ Upcoming
               </Badge>
             ) : session.status === "active" ? (
@@ -45,7 +45,7 @@ export function SessionCard({ session, artistName, artistAvatar, listenerCount, 
                 🔴 Live
               </Badge>
             ) : null}
-            <Badge variant="outline" className="bg-background/80 backdrop-blur-sm text-[10px]">
+            <Badge variant="outline" className="bg-background text-[10px]">
               {isSpotify ? (
                 <><Disc3 className="w-3 h-3 mr-0.5" />Spotify</>
               ) : (
@@ -57,7 +57,7 @@ export function SessionCard({ session, artistName, artistAvatar, listenerCount, 
           {/* Listener count */}
           {typeof listenerCount === "number" && (
             <div className="absolute bottom-2 right-2">
-              <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm text-xs gap-1">
+              <Badge variant="secondary" className="bg-background text-xs gap-1">
                 <Headphones className="w-3 h-3" />
                 {listenerCount}
               </Badge>
