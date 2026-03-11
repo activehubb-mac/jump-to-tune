@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform, Clock, FolderPlus, ChevronDown, ChevronUp } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Disc3, Loader2, SkipBack, SkipForward, ListMusic, Shuffle, Repeat, Repeat1, Trash2, GripVertical, Crown, Lock, Download, Mic, MicOff, Mic2, AudioWaveform, Clock, FolderPlus, ChevronDown, ChevronUp, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,6 +17,7 @@ import { useKaraokeData, getInstrumentalUrl } from "@/hooks/useKaraokeData";
 import { Link } from "react-router-dom";
 import { DownloadButton } from "@/components/download/DownloadButton";
 import { usePurchases } from "@/hooks/usePurchases";
+import { useLikes } from "@/hooks/useLikes";
 import { usePlaylists } from "@/hooks/usePlaylists";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { AddToPlaylistModal } from "@/components/playlist/AddToPlaylistModal";
@@ -183,6 +184,7 @@ export function GlobalAudioPlayer() {
 
   const { canUseFeature } = useFeatureGate();
   const { isOwned } = usePurchases();
+  const { isLiked, toggleLike } = useLikes();
   const { createPlaylist } = usePlaylists();
   const { showFeedback } = useFeedbackSafe();
   const [showQueue, setShowQueue] = useState(false);
@@ -909,6 +911,28 @@ export function GlobalAudioPlayer() {
 
             {/* Karaoke, Download, Queue, Volume & Close */}
             <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              {/* Like Button */}
+              {currentTrack && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn(
+                        "h-8 w-8",
+                        isLiked(currentTrack.id) ? "text-red-500" : "text-muted-foreground hover:text-foreground"
+                      )}
+                      onClick={() => toggleLike(currentTrack.id)}
+                    >
+                      <Heart className={cn("h-4 w-4", isLiked(currentTrack.id) && "fill-current")} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>{isLiked(currentTrack.id) ? "Unlike" : "Like"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+
               {/* Karaoke/Lyrics Button - only show if track has karaoke */}
               {hasKaraoke && (
                 <>
@@ -1134,6 +1158,8 @@ export function GlobalAudioPlayer() {
         canShuffle={canShuffle}
         canRepeat={canRepeat}
         isOwned={isOwned(currentTrack.id)}
+        isTrackLiked={isLiked(currentTrack.id)}
+        onToggleLike={() => toggleLike(currentTrack.id)}
         togglePlayPause={needsUserGesture ? resumePlayback : togglePlayPause}
         resumePlayback={resumePlayback}
         seek={seek}

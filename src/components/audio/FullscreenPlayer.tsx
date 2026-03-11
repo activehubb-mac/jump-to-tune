@@ -52,6 +52,8 @@ interface FullscreenPlayerProps {
   canShuffle: boolean;
   canRepeat: boolean;
   isOwned: boolean;
+  isTrackLiked: boolean;
+  onToggleLike: () => void;
   togglePlayPause: () => void;
   resumePlayback: () => void;
   seek: (time: number) => void;
@@ -93,6 +95,8 @@ export function FullscreenPlayer({
   canShuffle,
   canRepeat,
   isOwned,
+  isTrackLiked,
+  onToggleLike,
   togglePlayPause,
   resumePlayback,
   seek,
@@ -430,6 +434,19 @@ export function FullscreenPlayer({
 
               {/* Action Row */}
               <div className="flex items-center justify-center gap-4 w-full max-w-[320px] md:max-w-[400px]">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-10 w-10",
+                    isTrackLiked ? "text-red-500" : "text-white/60 hover:text-white hover:bg-white/10"
+                  )}
+                  onClick={onToggleLike}
+                  title={isTrackLiked ? "Unlike" : "Like"}
+                >
+                  <Heart className={cn("h-5 w-5", isTrackLiked && "fill-current")} />
+                </Button>
+
                 <Button
                   variant="ghost"
                   size="icon"
