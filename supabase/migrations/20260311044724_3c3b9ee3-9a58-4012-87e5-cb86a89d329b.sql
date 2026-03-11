@@ -1,0 +1,1 @@
+UPDATE public.ai_credit_costs SET credit_cost = 2 WHERE action_key = 'stem_separation';

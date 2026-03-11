@@ -232,7 +232,7 @@ export const KaraokeSection = ({
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
                     <p className="text-xs text-muted-foreground">
-                      <span className="text-primary font-medium">No instrumental?</span> We'll automatically generate one using AI stem separation after upload (1.5 AI credits).
+                      <span className="text-primary font-medium">No instrumental?</span> We'll automatically generate one using AI stem separation after upload (2 AI credits).
                     </p>
                   </div>
                 </div>
