@@ -398,6 +398,37 @@
     will-change: transform, opacity;
   }
 
+  /* Character orbit — drift across screen, exit, re-enter from other side */
+  @keyframes character-orbit {
+    0% {
+      transform: translate(var(--orbit-x1), var(--orbit-y1)) scale(1);
+      opacity: var(--orbit-opacity, 0.4);
+    }
+    30% {
+      transform: translate(var(--orbit-x2), var(--orbit-y2)) scale(0.9);
+      opacity: 0;
+    }
+    31% {
+      transform: translate(var(--orbit-x3), var(--orbit-y3)) scale(0.85);
+      opacity: 0;
+    }
+    50% {
+      opacity: var(--orbit-opacity, 0.4);
+    }
+    70% {
+      transform: translate(calc(var(--orbit-x1) + 10vw), calc(var(--orbit-y1) - 15vh)) scale(1.05);
+    }
+    100% {
+      transform: translate(var(--orbit-x1), var(--orbit-y1)) scale(1);
+      opacity: var(--orbit-opacity, 0.4);
+    }
+  }
+
+  .character-orbit {
+    animation: character-orbit linear infinite;
+    will-change: transform, opacity;
+  }
+
   /* Respect reduced motion preference */
   @media (prefers-reduced-motion: reduce) {
     body { animation: none; }
@@ -410,6 +441,7 @@
     .nebula-orb,
     .horizon-line,
     .star-twinkle,
+    .character-orbit,
     .glass-card,
     .glass-card-bordered {
       animation: none;
@@ -420,6 +452,7 @@
       opacity: 0;
     }
     .particle-animate { opacity: 0.3; }
+    .character-orbit { opacity: 0.3; }
     .track-card-3d:hover {
       transform: none;
     }
