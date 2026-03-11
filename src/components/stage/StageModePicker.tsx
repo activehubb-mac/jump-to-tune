@@ -1,5 +1,4 @@
-import { Mic2, Users, Music } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Mic2, Users, Music, MessageSquare, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StageMode } from "@/hooks/useStage";
 
@@ -11,8 +10,10 @@ interface StageModePickerProps {
 
 const MODE_CONFIG: Record<StageMode, { label: string; icon: typeof Mic2; description: string }> = {
   sing: { label: "Sing", icon: Mic2, description: "Sing along with lyrics" },
+  rap: { label: "Rap", icon: MessageSquare, description: "Rap along to the beat" },
   duet: { label: "Duet", icon: Users, description: "Perform alongside the artist" },
   dance: { label: "Dance", icon: Music, description: "Dance or react to the beat" },
+  ai_avatar: { label: "AI Avatar", icon: Bot, description: "Generate an AI avatar performance" },
 };
 
 export function StageModePicker({ availableModes, selectedMode, onSelect }: StageModePickerProps) {

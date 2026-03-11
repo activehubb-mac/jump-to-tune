@@ -17,8 +17,8 @@ interface StageExportProps {
   onRetry: () => void;
 }
 
-const MODE_EMOJI: Record<StageMode, string> = { sing: "🎤", duet: "🎭", dance: "💃" };
-const MODE_LABELS: Record<StageMode, string> = { sing: "Sing Mode", duet: "Duet Mode", dance: "Dance Mode" };
+const MODE_EMOJI: Record<StageMode, string> = { sing: "🎤", duet: "🎭", dance: "💃", rap: "🎙️", ai_avatar: "🤖" };
+const MODE_LABELS: Record<StageMode, string> = { sing: "Sing Mode", duet: "Duet Mode", dance: "Dance Mode", rap: "Rap Mode", ai_avatar: "AI Avatar Mode" };
 
 const CAPTION_SUGGESTIONS = [
   "🎤 Performed on @JumTunes",

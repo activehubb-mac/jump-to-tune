@@ -28,6 +28,8 @@ const MODE_LABELS: Record<StageMode, string> = {
   sing: "Sing Mode",
   duet: "Duet Mode",
   dance: "Dance Mode",
+  rap: "Rap Mode",
+  ai_avatar: "AI Avatar Mode",
 };
 
 export function StageRecorder({
@@ -96,7 +98,6 @@ export function StageRecorder({
     };
   }, []);
 
-  // Elapsed timer
   useEffect(() => {
     if (!isRecording) return;
     const interval = setInterval(() => {
@@ -112,18 +113,15 @@ export function StageRecorder({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Background
     ctx.fillStyle = colors.bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Camera feed (center)
     ctx.save();
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     ctx.restore();
 
-    // Bottom gradient overlay
     const gradH = canvas.height * 0.35;
     const grad = ctx.createLinearGradient(0, canvas.height - gradH, 0, canvas.height);
     grad.addColorStop(0, "rgba(0,0,0,0)");
@@ -131,20 +129,17 @@ export function StageRecorder({
     ctx.fillStyle = grad;
     ctx.fillRect(0, canvas.height - gradH, canvas.width, gradH);
 
-    // Top gradient
     const topGrad = ctx.createLinearGradient(0, 0, 0, 120);
     topGrad.addColorStop(0, "rgba(0,0,0,0.6)");
     topGrad.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = topGrad;
     ctx.fillRect(0, 0, canvas.width, 120);
 
-    // Mode label top-left
     ctx.fillStyle = colors.accent;
     ctx.font = "bold 22px system-ui";
     ctx.textAlign = "left";
     ctx.fillText(MODE_LABELS[mode], 24, 45);
 
-    // Artist + Song title bottom
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 28px system-ui";
     ctx.textAlign = "center";
@@ -153,7 +148,6 @@ export function StageRecorder({
     ctx.font = "20px system-ui";
     ctx.fillText(`by ${artistName}`, canvas.width / 2, canvas.height - 60);
 
-    // Watermark
     ctx.fillStyle = colors.accent;
     ctx.font = "bold 18px system-ui";
     ctx.fillText("JumTunes.com", canvas.width / 2, canvas.height - 24);
@@ -212,11 +206,12 @@ export function StageRecorder({
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
+  const showLyrics = (mode === "sing" || mode === "rap") && lyrics;
+
   return (
     <div className="flex flex-col h-full" style={{ backgroundColor: colors.bg }}>
       <audio ref={audioRef} src={instrumentalUrl} preload="auto" crossOrigin="anonymous" />
 
-      {/* Mode selector before recording */}
       {!isRecording && (
         <div className="flex gap-2 p-4 justify-center">
           <Button
@@ -238,12 +233,11 @@ export function StageRecorder({
         </div>
       )}
 
-      {/* Video preview */}
       {captureMode === "video" && (
         <div className="relative flex-1 min-h-0">
           <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" muted playsInline style={{ transform: "scaleX(-1)", display: isRecording ? "none" : "block" }} />
           <canvas ref={canvasRef} width={720} height={1280} className="absolute inset-0 w-full h-full object-cover" style={{ display: isRecording ? "block" : "none" }} />
-          {isRecording && mode === "sing" && lyrics && (
+          {isRecording && showLyrics && (
             <div className="absolute bottom-28 left-0 right-0 max-h-[35%] px-4">
               <LyricsDisplay lyrics={lyrics} currentTime={currentTime} className="text-white" />
             </div>
@@ -251,7 +245,6 @@ export function StageRecorder({
         </div>
       )}
 
-      {/* Audio mode display */}
       {captureMode === "audio" && (
         <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
           <div className="text-center py-4">
@@ -259,7 +252,7 @@ export function StageRecorder({
             <h3 className="text-lg font-bold text-white mt-1">{trackTitle}</h3>
             <p className="text-sm text-white/60">{artistName}</p>
           </div>
-          {mode === "sing" && lyrics ? (
+          {showLyrics ? (
             <LyricsDisplay lyrics={lyrics} currentTime={currentTime} className="flex-1 text-white" />
           ) : (
             <div className="flex-1 flex items-center justify-center">
@@ -268,21 +261,19 @@ export function StageRecorder({
                   <Mic className="w-10 h-10" style={{ color: colors.accent }} />
                 </div>
                 {isRecording && <p className="text-white/80 text-lg font-mono">{formatTime(elapsed)}</p>}
-                {!isRecording && <p className="text-white/50 text-sm">{mode === "dance" ? "Dance to the beat!" : "Perform with the artist!"}</p>}
+                {!isRecording && <p className="text-white/50 text-sm">{mode === "dance" ? "Dance to the beat!" : mode === "rap" ? "Rap along to the beat!" : "Perform with the artist!"}</p>}
               </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Countdown */}
       {countdown !== null && (
         <div className="absolute inset-0 flex items-center justify-center z-50" style={{ backgroundColor: `${colors.bg}dd` }}>
           <span className="text-8xl font-black animate-pulse" style={{ color: colors.accent }}>{countdown}</span>
         </div>
       )}
 
-      {/* Controls */}
       <div className="p-4 flex items-center justify-center gap-4 border-t border-white/10">
         {!isRecording ? (
           <>
