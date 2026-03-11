@@ -49,9 +49,12 @@ function PromotedAvatar({ promo, index }: { promo: AvatarPromotion; index: numbe
       playTrack({
         id: promo.track_id,
         title: promo.track.title,
-        artist: promo.artist?.display_name || "Unknown",
-        coverUrl: promo.track.cover_art_url || "",
-        audioUrl: "", // Will be resolved by player
+        audio_url: "",
+        cover_art_url: promo.track.cover_art_url || null,
+        artist: {
+          id: promo.artist_id,
+          display_name: promo.artist?.display_name || "Unknown",
+        },
       });
     }
     // Navigate to artist profile
