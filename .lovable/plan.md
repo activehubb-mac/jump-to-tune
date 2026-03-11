@@ -1,24 +1,47 @@
 
-# Make Recent Updates Available for Mobile
 
-The recent changes (hiding track/follower counts from artist cards, hiding price/collectors from track cards) were applied to the homepage and browse pages, but several other pages still display this data on cards. These pages are used on both desktop and mobile.
+# Make All Cards & Panels Fully Opaque
 
-## Changes Required
+## Problem
+Despite fixing the `.glass-card` CSS classes, there are **34 files** across the codebase that still use semi-transparent backgrounds like `bg-card/50`, `bg-background/80`, `bg-card/20`, and `backdrop-blur` — letting the animated background bleed through cards, sections, overlays, sidebars, and panels.
 
-### 1. `src/pages/Artists.tsx` -- Remove tracks/fans from artist cards
+## Plan
 
-**Featured Artists section (lines 149-152):** Remove the stats row showing "X tracks" and "X fans"
+Perform a systematic sweep across all affected files, replacing semi-transparent card/panel backgrounds with fully opaque equivalents:
 
-**All Artists grid (lines 183-187):** Remove "X tracks" text and "X fans" text below each artist name
+| Pattern | Replacement |
+|---------|-------------|
+| `bg-card/50`, `bg-card/80`, `bg-card/20` | `bg-card` |
+| `bg-background/50`, `bg-background/80`, `bg-background/60` | `bg-background` |
+| `bg-sidebar/80`, `bg-sidebar/90` | `bg-sidebar` |
+| `backdrop-blur-xl`, `backdrop-blur-sm`, `backdrop-blur-md` on cards/panels | Remove (unnecessary when opaque) |
 
-### 2. `src/pages/FanDashboard.tsx` -- Remove stats from followed artist cards
+**Exceptions** (keep semi-transparent — these are intentional overlays, not cards):
+- Hover overlays on images (`bg-black/50`, `bg-black/60` over artwork)
+- Button overlays (`bg-destructive/80` on action buttons over images)
+- Badges on images (small floating badges need some transparency)
+- Modal backdrops (dimming layer behind dialogs)
 
-**Line 277:** Change `{artist.trackCount} tracks . {artist.followerCount} followers` to just `"Artist"` label
+### Files to modify (~20 key files):
 
-### 3. Cleanup: Remove unused imports/data
+| File | Change |
+|------|--------|
+| `src/components/browse/SpotifyTrackCard.tsx` | `bg-card/50` -> `bg-card` |
+| `src/components/home/FanZoneSection.tsx` | `bg-card/20` -> `bg-card` |
+| `src/components/home/FeaturedHeroCarousel.tsx` | `bg-card/80` -> `bg-card` |
+| `src/components/audio/KaraokeLyricsPanel.tsx` | Remove `backdrop-blur-xl` |
+| `src/components/ui/sidebar.tsx` | `bg-sidebar/80` -> `bg-sidebar`, `bg-sidebar/90` -> `bg-sidebar`, remove `backdrop-blur-xl` |
+| `src/components/subscription/CheckoutLoadingOverlay.tsx` | Keep (modal backdrop — intentional) |
+| `src/components/superfan/ExclusiveDrops.tsx` | Keep (image overlay — intentional) |
+| `src/pages/Browse.tsx` | `bg-card/50` -> `bg-card` |
+| `src/components/upload/AlbumTrackRow.tsx` | `bg-background/50` -> `bg-background` |
+| `src/components/playlist/PlaylistCard.tsx` | Remove `backdrop-blur-sm` from badge |
+| `src/components/dashboard/TrackCard.tsx` | `bg-background/80` -> `bg-background`, remove `backdrop-blur-sm` on edit/delete buttons |
+| `src/components/browse/HeroCarousel.tsx` | `bg-background/80` -> `bg-background`, remove `backdrop-blur-sm` |
+| `src/components/godj/SessionCard.tsx` | `bg-background/80` -> `bg-background` on badges, remove `backdrop-blur-sm` |
+| `src/pages/GoDJSession.tsx` | `bg-background/80` -> `bg-background` on badges |
+| `src/components/dashboard/AlbumSection.tsx` | `bg-background/80` -> `bg-background` |
+| `src/components/wallet/LowBalanceWarningModal.tsx` | Remove `backdrop-blur-sm` from icon container |
 
-- In `Artists.tsx`: Remove `useFollowerCounts` import and hook call since follower counts are no longer displayed on cards
-- Remove `formatCompactNumber` import if no longer used
-- Remove the `followers` variable assignments in the map callbacks
+This will ensure every card, panel, and section is fully solid — the animated cosmic background stays behind content where it belongs.
 
-These are all the remaining places where track/follower counts appear on artist cards and price/editions appear on track cards outside of profile/detail views. The changes ensure consistency across desktop and mobile.
