@@ -29,7 +29,7 @@ export function Layout({
       <GlobalSubscriptionCheck />
       {!isAdmin && <ParticleBackground />}
       {!isAdmin && <FeaturedArtistSlideshow />}
-      {!isAdmin && <PromotedAvatars />}
+      
       
       <Navbar />
       
