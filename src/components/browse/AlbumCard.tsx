@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCardGlow } from "@/hooks/useCardGlow";
 import { Link } from "react-router-dom";
 import { Disc3, Play, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
