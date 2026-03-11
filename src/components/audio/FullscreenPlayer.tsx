@@ -4,7 +4,9 @@ import {
   ChevronDown, Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1,
   Loader2, MoreHorizontal, ListMusic, Mic2, Heart, FolderPlus, Download,
   Share2, User, Disc3, Lock, Clock, Mic, MicOff, ChevronRight, Shield, UserPlus, UserCheck,
+  Type,
 } from "lucide-react";
+import { LyricsDisplay } from "@/components/sing-mode/LyricsDisplay";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -44,6 +46,7 @@ interface FullscreenPlayerProps {
   isKaraokeMode: boolean;
   karaokeReady: boolean;
   showLyrics: boolean;
+  lyrics: string | null;
   hasNext: boolean;
   hasPrevious: boolean;
   canShuffle: boolean;
@@ -84,6 +87,7 @@ export function FullscreenPlayer({
   isKaraokeMode,
   karaokeReady,
   showLyrics,
+  lyrics,
   hasNext,
   hasPrevious,
   canShuffle,
@@ -274,8 +278,8 @@ export function FullscreenPlayer({
           >
             {/* Main player content - centered */}
             <div className="flex flex-col items-center px-8 gap-6 pt-2 pb-4">
-              {/* Cover Art */}
-              <div className="w-full max-w-[320px] md:max-w-[400px] aspect-square rounded-xl overflow-hidden shadow-2xl shadow-black/50 flex-shrink-0">
+              {/* Cover Art / Lyrics */}
+              <div className="w-full max-w-[320px] md:max-w-[400px] aspect-square rounded-xl overflow-hidden shadow-2xl shadow-black/50 flex-shrink-0 relative">
                 {currentTrack.cover_art_url ? (
                   <img
                     src={currentTrack.cover_art_url}
@@ -287,6 +291,24 @@ export function FullscreenPlayer({
                     <Disc3 className="w-20 h-20 text-white/20" />
                   </div>
                 )}
+                {/* Lyrics overlay */}
+                <AnimatePresence>
+                  {showLyrics && lyrics && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center"
+                    >
+                      <LyricsDisplay
+                        lyrics={lyrics}
+                        currentTime={currentTime}
+                        className="h-full w-full text-white"
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Track Info */}
@@ -431,6 +453,21 @@ export function FullscreenPlayer({
                     title={isKaraokeMode ? "Original audio" : "Karaoke mode"}
                   >
                     {isKaraokeMode ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                  </Button>
+                )}
+
+                {hasKaraoke && lyrics && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-10 w-10",
+                      showLyrics ? "text-[#B8A675] bg-[#B8A675]/10" : "text-white/60 hover:text-white hover:bg-white/10"
+                    )}
+                    onClick={toggleShowLyrics}
+                    title={showLyrics ? "Hide lyrics" : "Show lyrics"}
+                  >
+                    <Type className="h-5 w-5" />
                   </Button>
                 )}
 
