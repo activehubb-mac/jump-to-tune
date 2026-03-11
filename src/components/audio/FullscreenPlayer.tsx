@@ -88,6 +88,7 @@ export function FullscreenPlayer({
   karaokeReady,
   showLyrics,
   lyrics,
+  hasNext,
   hasPrevious,
   canShuffle,
   canRepeat,
