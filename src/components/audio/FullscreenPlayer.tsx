@@ -278,8 +278,8 @@ export function FullscreenPlayer({
           >
             {/* Main player content - centered */}
             <div className="flex flex-col items-center px-8 gap-6 pt-2 pb-4">
-              {/* Cover Art */}
-              <div className="w-full max-w-[320px] md:max-w-[400px] aspect-square rounded-xl overflow-hidden shadow-2xl shadow-black/50 flex-shrink-0">
+              {/* Cover Art / Lyrics */}
+              <div className="w-full max-w-[320px] md:max-w-[400px] aspect-square rounded-xl overflow-hidden shadow-2xl shadow-black/50 flex-shrink-0 relative">
                 {currentTrack.cover_art_url ? (
                   <img
                     src={currentTrack.cover_art_url}
@@ -291,6 +291,24 @@ export function FullscreenPlayer({
                     <Disc3 className="w-20 h-20 text-white/20" />
                   </div>
                 )}
+                {/* Lyrics overlay */}
+                <AnimatePresence>
+                  {showLyrics && lyrics && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center"
+                    >
+                      <LyricsDisplay
+                        lyrics={lyrics}
+                        currentTime={currentTime}
+                        className="h-full w-full text-white"
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Track Info */}
