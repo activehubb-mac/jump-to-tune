@@ -325,35 +325,80 @@
     will-change: transform, opacity;
   }
 
-  /* Robot performer animations */
-  @keyframes robot-float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-18px); }
-  }
+  /* Character performer animations */
 
-  .robot-float {
-    animation: robot-float 6s ease-in-out infinite;
+  /* Robot DJ — aggressive head-bob + scale pulse */
+  @keyframes char-headbob {
+    0%, 100% { transform: translateY(0) scale(1); }
+    15% { transform: translateY(-20px) scale(1.05); }
+    30% { transform: translateY(4px) scale(0.96); }
+    45% { transform: translateY(-16px) scale(1.04); }
+    60% { transform: translateY(2px) scale(0.97); }
+    75% { transform: translateY(-12px) scale(1.03); }
+    90% { transform: translateY(0) scale(0.98); }
+  }
+  .char-headbob {
+    animation: char-headbob 2.5s ease-in-out infinite;
     will-change: transform;
   }
 
-  @keyframes robot-rotate {
-    0% { transform: perspective(800px) rotateY(-8deg); }
-    50% { transform: perspective(800px) rotateY(8deg); }
-    100% { transform: perspective(800px) rotateY(-8deg); }
+  /* Male Singer — smooth sway side-to-side + float */
+  @keyframes char-sway {
+    0%, 100% { transform: translateX(0) translateY(0); }
+    25% { transform: translateX(14px) translateY(-8px); }
+    50% { transform: translateX(0) translateY(-16px); }
+    75% { transform: translateX(-14px) translateY(-8px); }
   }
-
-  .robot-rotate {
-    animation: robot-float 6s ease-in-out infinite, robot-rotate 20s ease-in-out infinite;
+  .char-sway {
+    animation: char-sway 3.5s ease-in-out infinite;
     will-change: transform;
   }
 
-  @keyframes robot-glow-pulse {
+  /* Female Singer — flowing lean + gentle rotation */
+  @keyframes char-lean {
+    0%, 100% { transform: rotateZ(0deg) translateY(0); }
+    25% { transform: rotateZ(3deg) translateY(-10px); }
+    50% { transform: rotateZ(-2deg) translateY(-18px); }
+    75% { transform: rotateZ(2deg) translateY(-6px); }
+  }
+  .char-lean {
+    animation: char-lean 4s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  /* Braids Singer — rhythmic bounce + tilt */
+  @keyframes char-bounce {
+    0%, 100% { transform: translateY(0) rotateY(0deg); }
+    20% { transform: translateY(-22px) rotateY(5deg); }
+    40% { transform: translateY(0) rotateY(-3deg); }
+    60% { transform: translateY(-18px) rotateY(4deg); }
+    80% { transform: translateY(0) rotateY(-2deg); }
+  }
+  .char-bounce {
+    animation: char-bounce 2s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  /* Blonde DJ — energetic lean-forward + scale bounce */
+  @keyframes char-rock {
+    0%, 100% { transform: perspective(800px) rotateX(0deg) scale(1); }
+    20% { transform: perspective(800px) rotateX(6deg) scale(1.04); }
+    40% { transform: perspective(800px) rotateX(-3deg) scale(0.97); }
+    60% { transform: perspective(800px) rotateX(5deg) scale(1.03); }
+    80% { transform: perspective(800px) rotateX(-2deg) scale(0.98); }
+  }
+  .char-rock {
+    animation: char-rock 3s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  /* Performer glow pulse */
+  @keyframes performer-glow-pulse {
     0%, 100% { opacity: 0.3; }
     50% { opacity: 0.6; }
   }
-
-  .robot-glow-pulse {
-    animation: robot-glow-pulse 4s ease-in-out infinite;
+  .performer-glow-pulse {
+    animation: performer-glow-pulse 4s ease-in-out infinite;
     will-change: opacity;
   }
 
@@ -369,9 +414,12 @@
     .nebula-orb,
     .horizon-line,
      .star-twinkle,
-     .robot-float,
-     .robot-rotate,
-     .robot-glow-pulse {
+     .char-headbob,
+     .char-sway,
+     .char-lean,
+     .char-bounce,
+     .char-rock,
+     .performer-glow-pulse {
        animation: none;
      }
     .particle-animate { opacity: 0.3; }
