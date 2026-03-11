@@ -267,11 +267,13 @@ export function ParticleBackground() {
             "--orbit-y3": `${20 + Math.random() * 60}vh`,
           } as React.CSSProperties}
         >
-          <img
+          <video
             src={char.src}
-            alt=""
+            autoPlay
+            loop
+            muted
+            playsInline
             className="w-full h-full object-contain"
-            loading="lazy"
           />
         </div>
       ))}
