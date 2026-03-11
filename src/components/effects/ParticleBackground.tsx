@@ -107,10 +107,10 @@ export function ParticleBackground() {
         name: fa.profile!.display_name || "",
         left: `${5 + Math.random() * 85}%`,
         top: `${5 + Math.random() * 85}%`,
-        size: window.innerWidth < 768 ? 52 + Math.random() * 24 : 72 + Math.random() * 32,
+        size: window.innerWidth < 768 ? 72 + Math.random() * 32 : 110 + Math.random() * 50,
         duration: 20 + Math.random() * 15,
         delay: i * 3,
-        opacity: 0.35 + Math.random() * 0.15,
+        opacity: 0.55 + Math.random() * 0.2,
       }));
   }, [featuredArtists]);
 
