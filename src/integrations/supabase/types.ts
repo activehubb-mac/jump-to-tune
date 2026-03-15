@@ -2257,6 +2257,134 @@ export type Database = {
         }
         Relationships: []
       }
+      qa_dummy_assets: {
+        Row: {
+          asset_type: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          name: string
+        }
+        Insert: {
+          asset_type: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          name: string
+        }
+        Update: {
+          asset_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          name?: string
+        }
+        Relationships: []
+      }
+      qa_test_results: {
+        Row: {
+          action_location: string | null
+          created_at: string | null
+          duration_ms: number | null
+          error_log: string | null
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          run_id: string
+          screenshot_url: string | null
+          status: string | null
+          step_name: string
+          step_order: number | null
+        }
+        Insert: {
+          action_location?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          error_log?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          run_id: string
+          screenshot_url?: string | null
+          status?: string | null
+          step_name: string
+          step_order?: number | null
+        }
+        Update: {
+          action_location?: string | null
+          created_at?: string | null
+          duration_ms?: number | null
+          error_log?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          run_id?: string
+          screenshot_url?: string | null
+          status?: string | null
+          step_name?: string
+          step_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_test_results_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "qa_test_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qa_test_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          error_summary: string | null
+          failed_steps: number | null
+          id: string
+          passed_steps: number | null
+          started_at: string | null
+          status: string | null
+          suite_name: string
+          test_user_id: string | null
+          total_steps: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          error_summary?: string | null
+          failed_steps?: number | null
+          id?: string
+          passed_steps?: number | null
+          started_at?: string | null
+          status?: string | null
+          suite_name: string
+          test_user_id?: string | null
+          total_steps?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          error_summary?: string | null
+          failed_steps?: number | null
+          id?: string
+          passed_steps?: number | null
+          started_at?: string | null
+          status?: string | null
+          suite_name?: string
+          test_user_id?: string | null
+          total_steps?: number | null
+        }
+        Relationships: []
+      }
       rate_limits: {
         Row: {
           action: string
