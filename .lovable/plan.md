@@ -1,24 +1,24 @@
 
-# Make Recent Updates Available for Mobile
 
-The recent changes (hiding track/follower counts from artist cards, hiding price/collectors from track cards) were applied to the homepage and browse pages, but several other pages still display this data on cards. These pages are used on both desktop and mobile.
+## Fix: Always Show Latest UI
 
-## Changes Required
+### The Problem
+When you update your app, some users briefly see the old version because their browser saved a copy of the old files. It's like their phone cached an old photo and keeps showing it instead of the new one.
 
-### 1. `src/pages/Artists.tsx` -- Remove tracks/fans from artist cards
+### What We'll Do (Simple Version)
+We'll add **two small changes** so the app automatically refreshes itself when a new version is available — no action needed from users:
 
-**Featured Artists section (lines 149-152):** Remove the stats row showing "X tracks" and "X fans"
+1. **In the app settings file** (`vite.config.ts`): Tell the browser "always use the newest version immediately, don't wait"
+2. **In the startup file** (`src/main.tsx`): When the app detects a new version arrived, it quietly refreshes the page once so the user sees the latest UI
 
-**All Artists grid (lines 183-187):** Remove "X tracks" text and "X fans" text below each artist name
+### What the User Experiences
+- They open the app → they see the latest version
+- If a new version drops while they're using it → the page refreshes once automatically
+- No manual refresh, no "clear cache", no stale UI
 
-### 2. `src/pages/FanDashboard.tsx` -- Remove stats from followed artist cards
+### Files Changed
+- `vite.config.ts` — 2 lines added
+- `src/main.tsx` — 1 line added inside existing code
 
-**Line 277:** Change `{artist.trackCount} tracks . {artist.followerCount} followers` to just `"Artist"` label
+This is the standard approach used by most modern web apps (Twitter, Spotify Web, etc.) to keep users on the latest version.
 
-### 3. Cleanup: Remove unused imports/data
-
-- In `Artists.tsx`: Remove `useFollowerCounts` import and hook call since follower counts are no longer displayed on cards
-- Remove `formatCompactNumber` import if no longer used
-- Remove the `followers` variable assignments in the map callbacks
-
-These are all the remaining places where track/follower counts appear on artist cards and price/editions appear on track cards outside of profile/detail views. The changes ensure consistency across desktop and mobile.
