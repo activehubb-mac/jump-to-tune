@@ -339,7 +339,7 @@ export async function runTestSuite(
       started_at: new Date().toISOString(),
       total_steps: suite.steps.length,
       created_by: adminUserId,
-    })
+    } as any)
     .select('id')
     .single();
 
