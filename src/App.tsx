@@ -61,6 +61,7 @@ import AdminHome from "./pages/admin/AdminHome";
 import AdminStores from "./pages/admin/AdminStores";
 import AdminCredits from "./pages/admin/AdminCredits";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
+import AdminQALab from "./pages/admin/AdminQALab";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import HelpCenter from "./pages/HelpCenter";
@@ -169,6 +170,7 @@ function RouterContent() {
           <Route path="subscriptions" element={<AdminSubscriptions />} />
           <Route path="reports" element={<AdminReports />} />
           <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="qa-lab" element={<AdminQALab />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

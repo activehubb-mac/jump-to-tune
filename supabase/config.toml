@@ -161,3 +161,6 @@ verify_jwt = false
 
 [functions.ai-avatar-performance]
 verify_jwt = false
+
+[functions.qa-admin]
+verify_jwt = false
