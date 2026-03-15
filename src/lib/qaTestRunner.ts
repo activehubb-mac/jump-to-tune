@@ -385,7 +385,7 @@ export async function runTestSuite(
     : undefined;
 
   // Update the run record
-  await supabase.from('qa_test_runs').update({
+  await (supabase.from('qa_test_runs') as any).update({
     status,
     completed_at: new Date().toISOString(),
     passed_steps: passedSteps,
