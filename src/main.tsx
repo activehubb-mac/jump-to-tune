@@ -16,6 +16,8 @@ if ('serviceWorker' in navigator) {
           console.warn('[PWA] Failed to clear audio cache:', e);
         }
       }
+      // Reload to ensure latest UI is shown
+      window.location.reload();
     });
   });
 }
