@@ -170,6 +170,7 @@ function RouterContent() {
           <Route path="subscriptions" element={<AdminSubscriptions />} />
           <Route path="reports" element={<AdminReports />} />
           <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="qa-lab" element={<AdminQALab />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

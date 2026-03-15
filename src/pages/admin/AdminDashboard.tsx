@@ -18,6 +18,7 @@ const adminNavItems = [
   { path: '/admin/finance', label: 'Finance', icon: DollarSign },
   { path: '/admin/reports', label: 'Reports', icon: Flag },
   { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { path: '/admin/qa-lab', label: 'QA Lab', icon: FlaskConical },
 ];
 
 export default function AdminDashboard() {

@@ -374,7 +374,7 @@ export async function runTestSuite(
       action_location: result.actionLocation,
       duration_ms: result.durationMs,
       metadata: result.metadata as Record<string, unknown>,
-    });
+    } as any);
 
     onProgress?.(i + 1, suite.steps.length, step.name, result.status);
   }
