@@ -61,6 +61,7 @@ import AdminHome from "./pages/admin/AdminHome";
 import AdminStores from "./pages/admin/AdminStores";
 import AdminCredits from "./pages/admin/AdminCredits";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
+import AdminQALab from "./pages/admin/AdminQALab";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import HelpCenter from "./pages/HelpCenter";
