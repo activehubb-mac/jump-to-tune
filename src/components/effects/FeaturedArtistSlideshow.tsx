@@ -1,54 +1,47 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { useFeaturedArtists } from "@/hooks/useFeaturedContent";
+import { useActiveAvatarPromotions } from "@/hooks/useAvatarPromotions";
+
+function routeToZone(pathname: string): string | undefined {
+  if (pathname === "/" || pathname === "/index") return "home";
+  if (pathname === "/browse") return "discovery";
+  return undefined;
+}
 
 export function FeaturedArtistSlideshow() {
   const location = useLocation();
-  const isHomeOrArtist =
-    location.pathname === "/" ||
-    location.pathname === "/index" ||
-    location.pathname.startsWith("/artist");
-
-  const { data: featuredArtists } = useFeaturedArtists("artists_page");
+  const zone = routeToZone(location.pathname);
+  const { data: promotions } = useActiveAvatarPromotions(zone);
 
   const avatars = useMemo(() => {
-    if (!featuredArtists) return [];
-    return featuredArtists
-      .filter((fa) => fa.profile?.avatar_url)
-      .slice(0, 10);
-  }, [featuredArtists]);
+    if (!promotions) return [];
+    return promotions.filter((p) => p.artist?.avatar_url).slice(0, 10);
+  }, [promotions]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!isHomeOrArtist || avatars.length === 0) return;
+    if (!zone || avatars.length === 0) return;
 
-    // Every 10s: show for 3s, then hide
     const interval = setInterval(() => {
       setVisible(true);
       setCurrentIndex((prev) => (prev + 1) % avatars.length);
-
-      setTimeout(() => {
-        setVisible(false);
-      }, 3000);
-    }, 10000);
+      setTimeout(() => setVisible(false), 3000);
+    }, 7000);
 
     return () => clearInterval(interval);
-  }, [isHomeOrArtist, avatars.length]);
+  }, [zone, avatars.length]);
 
-  if (!isHomeOrArtist || avatars.length === 0) return null;
+  if (!zone || avatars.length === 0) return null;
 
   const current = avatars[currentIndex];
-  if (!current?.profile?.avatar_url) return null;
+  if (!current?.artist?.avatar_url) return null;
 
   return (
     <div
       className="fixed inset-0 pointer-events-none overflow-hidden transition-opacity duration-700"
-      style={{
-        zIndex: 0,
-        opacity: visible ? 1 : 0,
-      }}
+      style={{ zIndex: 0, opacity: visible ? 1 : 0 }}
       aria-hidden="true"
     >
       <div className="absolute inset-0 flex items-center justify-center">
@@ -63,19 +56,19 @@ export function FeaturedArtistSlideshow() {
           }}
         >
           <img
-            src={current.profile.avatar_url}
+            src={current.artist.avatar_url}
             alt=""
             className="w-full h-full object-cover"
             loading="lazy"
           />
         </div>
-        {current.profile.display_name && (
+        {current.artist.display_name && (
           <div
             className="absolute bottom-[38%] text-center transition-opacity duration-500"
             style={{ opacity: visible ? 0.25 : 0 }}
           >
             <span className="text-sm font-medium text-foreground tracking-wider uppercase">
-              {current.profile.display_name}
+              {current.artist.display_name}
             </span>
           </div>
         )}
