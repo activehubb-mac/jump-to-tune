@@ -1,24 +1,20 @@
 
-# Make Recent Updates Available for Mobile
 
-The recent changes (hiding track/follower counts from artist cards, hiding price/collectors from track cards) were applied to the homepage and browse pages, but several other pages still display this data on cards. These pages are used on both desktop and mobile.
+## Problem
 
-## Changes Required
+The PWA service worker (`registerType: "autoUpdate"`) caches the app shell (JS/CSS/HTML). When a new build deploys, the old service worker can serve stale cached assets until it activates. The current `main.tsx` only handles `controllerchange` for audio cache — it doesn't force a page reload when a new service worker takes over, so users can see old UI until they manually refresh.
 
-### 1. `src/pages/Artists.tsx` -- Remove tracks/fans from artist cards
+## Plan
 
-**Featured Artists section (lines 149-152):** Remove the stats row showing "X tracks" and "X fans"
+### 1. Force reload on service worker update (`src/main.tsx`)
+- After the new service worker activates and `controllerchange` fires, call `window.location.reload()` to guarantee the fresh assets load immediately
+- This is the standard pattern for `autoUpdate` PWAs to prevent stale UI
 
-**All Artists grid (lines 183-187):** Remove "X tracks" text and "X fans" text below each artist name
+### 2. Add `skipWaiting` to workbox config (`vite.config.ts`)
+- Add `skipWaiting: true` and `clientsClaim: true` to the workbox config so the new service worker activates instantly instead of waiting for all tabs to close
+- This eliminates the window where old cached assets can be served
 
-### 2. `src/pages/FanDashboard.tsx` -- Remove stats from followed artist cards
+### Files to modify
+- `src/main.tsx` — add `window.location.reload()` inside the `controllerchange` handler
+- `vite.config.ts` — add `skipWaiting: true` and `clientsClaim: true` to the workbox options
 
-**Line 277:** Change `{artist.trackCount} tracks . {artist.followerCount} followers` to just `"Artist"` label
-
-### 3. Cleanup: Remove unused imports/data
-
-- In `Artists.tsx`: Remove `useFollowerCounts` import and hook call since follower counts are no longer displayed on cards
-- Remove `formatCompactNumber` import if no longer used
-- Remove the `followers` variable assignments in the map callbacks
-
-These are all the remaining places where track/follower counts appear on artist cards and price/editions appear on track cards outside of profile/detail views. The changes ensure consistency across desktop and mobile.
