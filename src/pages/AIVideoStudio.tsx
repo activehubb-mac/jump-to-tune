@@ -459,6 +459,16 @@ export default function AIVideoStudio() {
         <p className="text-xs text-muted-foreground text-center pb-4">
           Generated videos include a small JumTunes watermark.
         </p>
+
+        {/* Credit Confirm Modal */}
+        <CreditConfirmModal
+          open={showConfirm}
+          onOpenChange={setShowConfirm}
+          onConfirm={handleConfirmGenerate}
+          creditCost={selectedDuration.credits}
+          currentCredits={aiCredits}
+          summary={`${selectedDuration.label} ${STYLE_PRESETS.find(s => s.value === style)?.label ?? style} ${VIDEO_TYPES.find(v => v.value === videoType)?.label ?? videoType}`}
+        />
       </div>
     </Layout>
   );

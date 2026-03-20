@@ -262,13 +262,13 @@ export default function AIViralGenerator() {
             {/* Generate Button */}
             <Button
               className="w-full gradient-accent neon-glow-subtle h-12 text-base"
-              onClick={handleGenerate}
+              onClick={handleGenerateClick}
               disabled={isGenerating || !selectedTrackId || !canAfford}
             >
               {isGenerating ? (
                 <><Loader2 className="h-5 w-5 mr-2 animate-spin" />Generating...</>
               ) : (
-                <><Sparkles className="h-5 w-5 mr-2" />Generate Viral Content ({selectedDuration.credits} credits)</>
+                <><Sparkles className="h-5 w-5 mr-2" />Generate Viral Content ({currentClipOption.credits} credits)</>
               )}
             </Button>
             {!canAfford && !creditsLoading && (
@@ -276,6 +276,15 @@ export default function AIViralGenerator() {
                 Not enough credits. <Link to="/wallet" className="underline">Buy more</Link>
               </p>
             )}
+
+            <CreditConfirmModal
+              open={showConfirm}
+              onOpenChange={setShowConfirm}
+              onConfirm={handleConfirmGenerate}
+              creditCost={currentClipOption.credits}
+              currentCredits={aiCredits}
+              summary={`${currentClipOption.label} · ${STYLE_OPTIONS.find(s => s.value === style)?.label ?? style} style`}
+            />
           </div>
 
           {/* Right: Generated Assets */}
