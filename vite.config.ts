@@ -5,10 +5,25 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
+const buildVersion = Date.now().toString(36);
+
 export default defineConfig(({ mode }) => ({
   define: {
     __BUILD_TIMESTAMP__: JSON.stringify(new Date().toISOString()),
   },
+  plugins: [
+    // Generate version.json in public dir at build time
+    {
+      name: 'generate-version-json',
+      buildStart() {
+        const fs = require('fs');
+        const path = require('path');
+        fs.writeFileSync(
+          path.resolve(__dirname, 'public/version.json'),
+          JSON.stringify({ v: buildVersion })
+        );
+      }
+    },
   server: {
     host: "::",
     port: 8080,
