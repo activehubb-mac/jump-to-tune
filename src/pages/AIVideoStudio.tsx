@@ -187,7 +187,12 @@ export default function AIVideoStudio() {
     );
   }
 
-  const handleGenerate = () => {
+  const handleGenerateClick = () => {
+    setShowConfirm(true);
+  };
+
+  const handleConfirmGenerate = () => {
+    setShowConfirm(false);
     generate({
       track_id: trackId,
       video_type: videoType,
