@@ -45,9 +45,10 @@ export default function AIViralGenerator() {
 
   const [selectedTrackId, setSelectedTrackId] = useState(searchParams.get("track") || "");
   const [format, setFormat] = useState("tiktok");
-  const [duration, setDuration] = useState(10);
+  const [selectedClipOption, setSelectedClipOption] = useState(0);
   const [style, setStyle] = useState("abstract visualizer");
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { assets, isLoading: assetsLoading, generate, isGenerating } = useViralGenerator(selectedTrackId || undefined);
 
