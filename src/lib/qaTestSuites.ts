@@ -45,6 +45,7 @@ export const QA_TEST_SUITES: QATestSuite[] = [
       { name: 'Verify fan role', description: 'Check user_roles entry', actionLocation: '/fan/dashboard', action: 'verify-role', params: { role: 'fan' } },
     ],
   },
+  // ===== AI TOOLS — Phase 2: All edge function calls now include required body params =====
   {
     id: 'ai-release-builder',
     name: 'AI Release Builder',
@@ -53,7 +54,10 @@ export const QA_TEST_SUITES: QATestSuite[] = [
     steps: [
       { name: 'Ensure test artist exists', description: 'Get or create test artist', actionLocation: '/ai-release', action: 'ensure-test-artist' },
       { name: 'Ensure sufficient credits', description: 'Add 100 AI credits to test user', actionLocation: '/wallet', action: 'add-test-credits', params: { credits: 100 } },
-      { name: 'Call AI release builder', description: 'Invoke ai-release-builder edge function', actionLocation: '/ai-release', action: 'call-edge-function', params: { functionName: 'ai-release-builder' }, timeoutMs: 30000 },
+      { name: 'Call AI release builder', description: 'Invoke ai-release-builder edge function', actionLocation: '/ai-release', action: 'call-edge-function', params: {
+        functionName: 'ai-release-builder',
+        body: { prompt: 'QA test release plan for electronic album', genre: 'Electronic' },
+      }, timeoutMs: 30000 },
       { name: 'Verify credits deducted', description: 'Check 60 credits were deducted', actionLocation: '/wallet', action: 'verify-credits-deducted', params: { expected: 60 } },
     ],
   },
@@ -65,7 +69,10 @@ export const QA_TEST_SUITES: QATestSuite[] = [
     steps: [
       { name: 'Ensure test artist exists', description: 'Get or create test artist', actionLocation: '/ai-cover-art', action: 'ensure-test-artist' },
       { name: 'Ensure sufficient credits', description: 'Add 20 AI credits', actionLocation: '/wallet', action: 'add-test-credits', params: { credits: 20 } },
-      { name: 'Call cover art generator', description: 'Invoke ai-cover-art edge function', actionLocation: '/ai-cover-art', action: 'call-edge-function', params: { functionName: 'ai-cover-art' }, timeoutMs: 30000 },
+      { name: 'Call cover art generator', description: 'Invoke ai-cover-art edge function', actionLocation: '/ai-cover-art', action: 'call-edge-function', params: {
+        functionName: 'ai-cover-art',
+        body: { prompt: 'Abstract neon geometry for QA test album', genre: 'Electronic', style: 'abstract' },
+      }, timeoutMs: 30000 },
       { name: 'Verify credits deducted', description: 'Check 10 credits deducted', actionLocation: '/wallet', action: 'verify-credits-deducted', params: { expected: 10 } },
     ],
   },
@@ -77,7 +84,10 @@ export const QA_TEST_SUITES: QATestSuite[] = [
     steps: [
       { name: 'Ensure test artist exists', description: 'Get or create test artist', actionLocation: '/ai-identity', action: 'ensure-test-artist' },
       { name: 'Ensure sufficient credits', description: 'Add 30 AI credits', actionLocation: '/wallet', action: 'add-test-credits', params: { credits: 30 } },
-      { name: 'Call identity builder', description: 'Invoke ai-identity-builder edge function', actionLocation: '/ai-identity', action: 'call-edge-function', params: { functionName: 'ai-identity-builder' }, timeoutMs: 30000 },
+      { name: 'Call identity builder', description: 'Invoke ai-identity-builder edge function', actionLocation: '/ai-identity', action: 'call-edge-function', params: {
+        functionName: 'ai-identity-builder',
+        body: { genre: 'Electronic', style: 'futuristic' },
+      }, timeoutMs: 30000 },
       { name: 'Verify credits deducted', description: 'Check 25 credits deducted', actionLocation: '/wallet', action: 'verify-credits-deducted', params: { expected: 25 } },
     ],
   },
@@ -89,7 +99,10 @@ export const QA_TEST_SUITES: QATestSuite[] = [
     steps: [
       { name: 'Ensure test artist exists', description: 'Get or create test artist', actionLocation: '/ai-video', action: 'ensure-test-artist' },
       { name: 'Ensure sufficient credits', description: 'Add 120 AI credits', actionLocation: '/wallet', action: 'add-test-credits', params: { credits: 120 } },
-      { name: 'Call video generator', description: 'Invoke ai-video-generator edge function', actionLocation: '/ai-video', action: 'call-edge-function', params: { functionName: 'ai-video-generator' }, timeoutMs: 60000 },
+      { name: 'Call video generator', description: 'Invoke ai-video-generator edge function', actionLocation: '/ai-video', action: 'call-edge-function', params: {
+        functionName: 'ai-video-generator',
+        body: { prompt: 'QA test cyberpunk city music video', duration_seconds: 15 },
+      }, timeoutMs: 60000 },
       { name: 'Verify video queue entry', description: 'Check ai_video_queue has new entry', actionLocation: '/ai-video', action: 'verify-table-entry', params: { table: 'ai_video_queue' } },
     ],
   },
@@ -102,7 +115,10 @@ export const QA_TEST_SUITES: QATestSuite[] = [
       { name: 'Ensure test artist exists', description: 'Get or create test artist', actionLocation: '/karaoke', action: 'ensure-test-artist' },
       { name: 'Verify dummy track exists', description: 'Check for test track with karaoke enabled', actionLocation: '/karaoke', action: 'verify-dummy-track' },
       { name: 'Ensure sufficient credits', description: 'Add 10 AI credits', actionLocation: '/wallet', action: 'add-test-credits', params: { credits: 10 } },
-      { name: 'Test stem separation call', description: 'Invoke stem-separation edge function', actionLocation: '/sing/:trackId', action: 'call-edge-function', params: { functionName: 'stem-separation' }, timeoutMs: 30000 },
+      { name: 'Test stem separation call', description: 'Invoke stem-separation edge function', actionLocation: '/sing/:trackId', action: 'call-edge-function', params: {
+        functionName: 'stem-separation',
+        body: { track_id: '$context.testTrackId' },
+      }, timeoutMs: 30000 },
     ],
   },
   {
@@ -114,9 +130,13 @@ export const QA_TEST_SUITES: QATestSuite[] = [
       { name: 'Ensure test fan exists', description: 'Get or create test fan', actionLocation: '/stage/:trackId', action: 'ensure-test-fan' },
       { name: 'Verify dummy track with stage enabled', description: 'Check for test track with stage modes', actionLocation: '/stage/:trackId', action: 'verify-dummy-track-stage' },
       { name: 'Ensure sufficient credits', description: 'Add 50 AI credits', actionLocation: '/wallet', action: 'add-test-credits', params: { credits: 50 } },
-      { name: 'Test avatar performance call', description: 'Invoke ai-avatar-performance edge function', actionLocation: '/stage/:trackId', action: 'call-edge-function', params: { functionName: 'ai-avatar-performance' }, timeoutMs: 60000 },
+      { name: 'Test avatar performance call', description: 'Invoke ai-avatar-performance edge function', actionLocation: '/stage/:trackId', action: 'call-edge-function', params: {
+        functionName: 'ai-avatar-performance',
+        body: { track_id: '$context.testTrackId' },
+      }, timeoutMs: 60000 },
     ],
   },
+  // ===== SOCIAL — Phase 1: All operations routed through proxy =====
   {
     id: 'playlist-creation',
     name: 'Playlist Creation',
@@ -124,10 +144,10 @@ export const QA_TEST_SUITES: QATestSuite[] = [
     category: 'social',
     steps: [
       { name: 'Ensure test fan exists', description: 'Get or create test fan', actionLocation: '/library', action: 'ensure-test-fan' },
-      { name: 'Create playlist', description: 'Insert a new playlist', actionLocation: '/library', action: 'create-test-playlist' },
-      { name: 'Add track to playlist', description: 'Add dummy track to playlist', actionLocation: '/library/playlist/:id', action: 'add-track-to-playlist' },
+      { name: 'Create playlist', description: 'Insert a new playlist via proxy', actionLocation: '/library', action: 'create-test-playlist' },
+      { name: 'Add track to playlist', description: 'Add dummy track to playlist via proxy', actionLocation: '/library/playlist/:id', action: 'add-track-to-playlist' },
       { name: 'Verify playlist content', description: 'Check playlist has 1 track', actionLocation: '/library/playlist/:id', action: 'verify-playlist-tracks', params: { expected: 1 } },
-      { name: 'Delete playlist', description: 'Clean up test playlist', actionLocation: '/library', action: 'delete-test-playlist' },
+      { name: 'Delete playlist', description: 'Clean up test playlist via proxy', actionLocation: '/library', action: 'delete-test-playlist' },
     ],
   },
   {
@@ -137,11 +157,12 @@ export const QA_TEST_SUITES: QATestSuite[] = [
     category: 'social',
     steps: [
       { name: 'Ensure test fan exists', description: 'Get or create test fan', actionLocation: '/vault', action: 'ensure-test-fan' },
-      { name: 'Bookmark a track', description: 'Save dummy track to collection', actionLocation: '/vault', action: 'bookmark-track' },
-      { name: 'Verify bookmark exists', description: 'Check collection_bookmarks table', actionLocation: '/vault', action: 'verify-bookmark' },
-      { name: 'Remove bookmark', description: 'Remove test bookmark', actionLocation: '/vault', action: 'remove-bookmark' },
+      { name: 'Bookmark a track', description: 'Save dummy track to collection via proxy', actionLocation: '/vault', action: 'bookmark-track' },
+      { name: 'Verify bookmark exists', description: 'Check collection_bookmarks via proxy', actionLocation: '/vault', action: 'verify-bookmark' },
+      { name: 'Remove bookmark', description: 'Remove test bookmark via proxy', actionLocation: '/vault', action: 'remove-bookmark' },
     ],
   },
+  // ===== COMMERCE — Phase 2+3: Correct params + ledger assertions =====
   {
     id: 'store-checkout',
     name: 'Store Checkout',
@@ -150,20 +171,23 @@ export const QA_TEST_SUITES: QATestSuite[] = [
     steps: [
       { name: 'Ensure test artist with store', description: 'Get or create test artist with active store', actionLocation: '/artist/store', action: 'ensure-test-artist-store' },
       { name: 'Verify dummy store product', description: 'Check for test product in store_products', actionLocation: '/artist/store', action: 'verify-dummy-product' },
-      { name: 'Call store checkout (test mode)', description: 'Invoke create-store-checkout with test product', actionLocation: '/artist/store', action: 'call-edge-function', params: { functionName: 'create-store-checkout' }, timeoutMs: 15000 },
+      { name: 'Call store checkout (test mode)', description: 'Invoke create-store-checkout with test product', actionLocation: '/artist/store', action: 'call-edge-function', params: {
+        functionName: 'create-store-checkout',
+        body: { productId: '$context.testProductId' },
+      }, timeoutMs: 15000 },
       { name: 'Verify checkout URL returned', description: 'Check Stripe test checkout URL was generated', actionLocation: '/artist/store', action: 'verify-checkout-url' },
     ],
   },
   {
     id: 'credit-deduction',
     name: 'Credit Deduction',
-    description: 'Test wallet credit operations',
+    description: 'Test wallet credit operations with ledger verification',
     category: 'commerce',
     steps: [
       { name: 'Ensure test user exists', description: 'Get or create test user', actionLocation: '/wallet', action: 'ensure-test-fan' },
       { name: 'Set initial credits', description: 'Set wallet to 50 AI credits', actionLocation: '/wallet', action: 'add-test-credits', params: { credits: 50 } },
-      { name: 'Deduct credits', description: 'Call spend-credits edge function', actionLocation: '/wallet', action: 'call-edge-function', params: { functionName: 'spend-credits' }, timeoutMs: 10000 },
-      { name: 'Verify balance decreased', description: 'Check new credit balance', actionLocation: '/wallet', action: 'verify-credit-balance' },
+      { name: 'Deduct credits via proxy', description: 'Deduct 10 credits through ledger-verified proxy', actionLocation: '/wallet', action: 'deduct-test-credits', params: { credits: 10 } },
+      { name: 'Verify balance decreased', description: 'Check credit balance matches expected', actionLocation: '/wallet', action: 'verify-credit-balance' },
     ],
   },
   {
@@ -174,7 +198,10 @@ export const QA_TEST_SUITES: QATestSuite[] = [
     steps: [
       { name: 'Ensure test user exists', description: 'Get or create test user', actionLocation: '/subscription', action: 'ensure-test-fan' },
       { name: 'Verify trial subscription', description: 'Check subscriptions table for trial', actionLocation: '/subscription', action: 'verify-subscription-trial' },
-      { name: 'Call check-subscription', description: 'Invoke check-subscription edge function', actionLocation: '/subscription', action: 'call-edge-function', params: { functionName: 'check-subscription' }, timeoutMs: 10000 },
+      { name: 'Call check-subscription', description: 'Invoke check-subscription edge function', actionLocation: '/subscription', action: 'call-edge-function', params: {
+        functionName: 'check-subscription',
+        body: {},
+      }, timeoutMs: 10000 },
       { name: 'Verify response format', description: 'Check response has subscribed, product_id, subscription_end', actionLocation: '/subscription', action: 'verify-subscription-response' },
     ],
   },
