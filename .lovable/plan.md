@@ -1,19 +1,28 @@
 
 
-## Add Quick "Add Credits" Button to QA Lab
+## Fix "Failed to add credits" — Root Cause
 
-### What
-Add a one-click button on the QA Lab header that adds 500 AI credits to the logged-in admin's wallet, so they can run full end-to-end tests without hitting 402 errors.
+The `add_ai_credits` RPC returns **HTTP 300 (Multiple Choices)** because there are two overloaded versions of the function in the database — one taking `integer` and one taking `numeric`. PostgREST cannot disambiguate which to call.
 
-### How
+### Solution
 
-**File: `src/pages/admin/AdminQALab.tsx`**
+Change `handleAddCredits` in `AdminQALab.tsx` to call the `qa-admin` edge function's existing `add-credits` action instead of the ambiguous RPC. The edge function uses service-role and doesn't have the overload issue.
 
-1. Import `useAICredits` hook and add a `Coins` icon
-2. Add an `handleAddCredits` function that calls `supabase.rpc('add_ai_credits', { p_user_id: user.id, p_credits: 500 })` directly — this uses the existing DB function, no edge function needed, and works because the admin is adding credits to their own wallet
-3. Add a button next to "Reset All Data" showing current balance and a "Add 500 Credits" action
-4. After success, call `refetch()` from `useAICredits` to update the displayed balance
+### File: `src/pages/admin/AdminQALab.tsx`
 
-### UI
-The header will show: `[current balance chip] [Add 500 Credits button] [Reset All Data button]`
+Replace the `supabase.rpc('add_ai_credits', ...)` call with:
+
+```typescript
+const { data: session } = await supabase.auth.getSession();
+const { data, error } = await supabase.functions.invoke('qa-admin', {
+  body: { action: 'add-credits', userId: user.id, credits: 500 }
+});
+if (error || !data?.success) throw new Error(data?.error || 'Failed');
+```
+
+This routes through the already-deployed `qa-admin` edge function which calls the RPC via service-role client (no ambiguity issue).
+
+### Alternative long-term fix
+
+Drop the duplicate `add_ai_credits(uuid, integer)` function via migration, keeping only the `numeric` version. This would fix the RPC call globally. Can be done as a follow-up.
 
