@@ -81,7 +81,7 @@ export function TestSuitesTab({ onRunComplete }: Props) {
         title: allPassed ? 'Full Regression Passed' : 'Regression Has Failures',
         message: `${totalPassed}/${totalSteps} steps passed across ${results.length} suites`,
       });
-      onRunComplete?.();
+      onRunComplete?.(results);
     } catch (err) {
       showFeedback({ type: 'error', title: 'Regression Error', message: err instanceof Error ? err.message : 'Unknown error' });
     } finally {
