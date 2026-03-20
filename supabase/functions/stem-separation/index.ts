@@ -55,14 +55,23 @@ Deno.serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceKey);
 
-    // Verify track ownership
+    // Verify track ownership or admin role
     const { data: track } = await admin
       .from("tracks")
       .select("id, artist_id")
       .eq("id", track_id)
       .single();
 
-    if (!track || track.artist_id !== user.id) {
+    if (!track) {
+      return new Response(JSON.stringify({ success: false, error: "Track not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Allow track owner or admin
+    const { data: isAdmin } = await admin.rpc("has_admin_role", { _user_id: user.id });
+    if (track.artist_id !== user.id && !isAdmin) {
       return new Response(JSON.stringify({ success: false, error: "Track not found or not owned" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
