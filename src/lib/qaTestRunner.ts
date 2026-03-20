@@ -81,7 +81,7 @@ const EDGE_FUNCTION_CONTRACTS: Record<string, EdgeFunctionContract> = {
   'ai-identity-builder': { required: ['genre'], optional: ['style'], authRole: 'artist' },
   'ai-video-generator': { required: ['prompt', 'duration_seconds'], authRole: 'artist' },
   'stem-separation': { required: ['track_id'], authRole: 'authenticated' },
-  'ai-avatar-performance': { required: ['track_id'], authRole: 'authenticated' },
+  'ai-avatar-performance': { required: ['trackId'], authRole: 'authenticated' },
   'spend-credits': { required: ['action', 'credits_used'], authRole: 'authenticated' },
   'create-store-checkout': { required: ['productId'], authRole: 'authenticated' },
   'check-subscription': { required: [], authRole: 'authenticated' },
