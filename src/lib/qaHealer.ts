@@ -154,6 +154,7 @@ export async function runHealer(
   const autoHealed: HealedItem[] = [];
   const pendingApproval: RestrictedItem[] = [];
   const unresolved: UnresolvedItem[] = [];
+  const nonBlocking: NonBlockingItem[] = [];
 
   for (const failure of failures) {
     onProgress?.(`Analyzing: ${failure.suite} → ${failure.step}`);
