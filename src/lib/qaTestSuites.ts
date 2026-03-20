@@ -117,7 +117,7 @@ export const QA_TEST_SUITES: QATestSuite[] = [
       { name: 'Ensure sufficient credits', description: 'Add 10 AI credits', actionLocation: '/wallet', action: 'add-test-credits', params: { credits: 10 } },
       { name: 'Test stem separation call', description: 'Invoke stem-separation edge function', actionLocation: '/sing/:trackId', action: 'call-edge-function', params: {
         functionName: 'stem-separation',
-        body: { track_id: '$context.testTrackId' },
+        body: { track_id: '$context.testTrackId', audio_url: '$context.testTrackAudioUrl' },
       }, timeoutMs: 30000 },
     ],
   },
