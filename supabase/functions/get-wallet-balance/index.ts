@@ -27,14 +27,21 @@ serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("No authorization header provided");
+      return new Response(
+        JSON.stringify({ error: "No authorization header provided" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
     }
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     
     if (userError || !userData.user) {
-      throw new Error("User not authenticated");
+      logStep("Auth failed - session likely expired", { error: userError?.message });
+      return new Response(
+        JSON.stringify({ error: "Not authenticated" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
     }
 
     const userId = userData.user.id;
