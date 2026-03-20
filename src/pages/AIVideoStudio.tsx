@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import {
   Sparkles, Loader2, Zap, Lock, ArrowLeft, Video, Clock,
   Film, Type, Smartphone, User, Monitor, Square, RectangleVertical,
-  CheckCircle2, XCircle, Clock3, Clapperboard,
+  CheckCircle2, XCircle, Clock3, Clapperboard, Trash2, RotateCcw, Download,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
@@ -20,6 +21,7 @@ import {
   EXPORT_FORMATS,
   STYLE_PRESETS,
   DURATION_OPTIONS,
+  type VideoJob,
 } from "@/hooks/useVideoStudio";
 import { formatDistanceToNow } from "date-fns";
 
@@ -36,17 +38,124 @@ const FORMAT_ICONS: Record<string, React.ReactNode> = {
   "1:1": <Square className="h-5 w-5" />,
 };
 
-const STATUS_CONFIG: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
-  queued: { icon: <Clock3 className="h-3.5 w-3.5" />, color: "text-amber-400", label: "Queued" },
-  processing: { icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />, color: "text-blue-400", label: "Processing" },
-  completed: { icon: <CheckCircle2 className="h-3.5 w-3.5" />, color: "text-emerald-400", label: "Completed" },
-  failed: { icon: <XCircle className="h-3.5 w-3.5" />, color: "text-destructive", label: "Failed" },
-};
+// Estimated generation times in seconds per duration option
+const EST_TIME: Record<number, number> = { 15: 120, 30: 180, 60: 300, [-1]: 420 };
+
+function JobStatusBadge({ job }: { job: VideoJob }) {
+  const created = new Date(job.created_at).getTime();
+  const elapsed = (Date.now() - created) / 1000;
+  const est = EST_TIME[job.duration_seconds] ?? 180;
+  const progress = Math.min(Math.round((elapsed / est) * 100), 95);
+
+  if (job.status === "queued") {
+    return (
+      <div className="flex items-center gap-1.5 text-xs font-medium text-amber-400">
+        <Clock3 className="h-3.5 w-3.5" />
+        Queued
+      </div>
+    );
+  }
+  if (job.status === "processing") {
+    return (
+      <div className="space-y-1 min-w-[90px]">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-blue-400">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Processing
+        </div>
+        <Progress value={progress} className="h-1.5 bg-muted" />
+        <p className="text-[10px] text-muted-foreground">~{Math.max(Math.ceil((est - elapsed) / 60), 1)} min left</p>
+      </div>
+    );
+  }
+  if (job.status === "completed") {
+    return (
+      <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-400">
+        <CheckCircle2 className="h-3.5 w-3.5" />
+        Completed
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-1.5 text-xs font-medium text-destructive">
+      <XCircle className="h-3.5 w-3.5" />
+      Failed
+    </div>
+  );
+}
+
+function VideoJobCard({
+  job,
+  onDelete,
+  onRetry,
+  isDeleting,
+}: {
+  job: VideoJob;
+  onDelete: (id: string) => void;
+  onRetry: (job: VideoJob) => void;
+  isDeleting: boolean;
+}) {
+  return (
+    <Card className="glass">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <Badge variant="secondary" className="text-xs capitalize">
+                {job.video_type.replace("_", " ")}
+              </Badge>
+              <Badge variant="outline" className="text-xs">{job.export_format}</Badge>
+              <Badge variant="outline" className="text-xs">{job.style}</Badge>
+            </div>
+            {job.scene_prompt && (
+              <p className="text-xs text-muted-foreground truncate">{job.scene_prompt}</p>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              {job.duration_seconds === -1 ? "Full" : `${job.duration_seconds}s`} · {job.credits_used} credits · {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
+            </p>
+          </div>
+          <JobStatusBadge job={job} />
+        </div>
+
+        {/* Completed: download */}
+        {job.status === "completed" && job.output_url && (
+          <Button size="sm" variant="outline" className="mt-3 w-full" asChild>
+            <a href={job.output_url} target="_blank" rel="noopener noreferrer">
+              <Download className="h-3.5 w-3.5 mr-1.5" /> Download Video
+            </a>
+          </Button>
+        )}
+
+        {/* Failed: retry + delete */}
+        {job.status === "failed" && (
+          <div className="flex gap-2 mt-3">
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1"
+              onClick={() => onRetry(job)}
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Retry
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+              onClick={() => onDelete(job.id)}
+              disabled={isDeleting}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function AIVideoStudio() {
   const { user, role } = useAuth();
   const { aiCredits, isLoading: creditsLoading } = useAICredits();
-  const { jobs, artistTracks, tracksLoading, generate, isGenerating } = useVideoStudio();
+  const { jobs, artistTracks, tracksLoading, generate, isGenerating, deleteJob, isDeleting } = useVideoStudio();
 
   const [trackId, setTrackId] = useState<string | null>(null);
   const [videoType, setVideoType] = useState("music_video");
@@ -57,6 +166,7 @@ export default function AIVideoStudio() {
 
   const selectedDuration = DURATION_OPTIONS.find((d) => d.seconds === duration)!;
   const canAfford = aiCredits >= selectedDuration.credits;
+  const activeJobs = jobs.filter((j) => j.status === "queued" || j.status === "processing");
 
   if (!user || (role !== "artist" && role !== "label")) {
     return (
@@ -84,6 +194,17 @@ export default function AIVideoStudio() {
     });
   };
 
+  const handleRetry = (job: VideoJob) => {
+    generate({
+      track_id: job.track_id,
+      video_type: job.video_type,
+      export_format: job.export_format,
+      duration_seconds: job.duration_seconds,
+      style: job.style,
+      scene_prompt: job.scene_prompt || "",
+    });
+  };
+
   return (
     <Layout>
       <div className="w-full max-w-3xl mx-auto px-4 py-6 sm:py-8 space-y-6">
@@ -102,6 +223,18 @@ export default function AIVideoStudio() {
             <Zap className="h-3 w-3 mr-1" />{creditsLoading ? "..." : aiCredits}
           </Badge>
         </div>
+
+        {/* Active jobs indicator */}
+        {activeJobs.length > 0 && (
+          <Card className="glass border-blue-500/30 bg-blue-500/5">
+            <CardContent className="p-3 flex items-center gap-3">
+              <Loader2 className="h-4 w-4 animate-spin text-blue-400 shrink-0" />
+              <p className="text-sm text-blue-300">
+                {activeJobs.length} video{activeJobs.length > 1 ? "s" : ""} generating… This typically takes 2-5 minutes.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Step 1: Track */}
         <Card className="glass">
@@ -266,7 +399,7 @@ export default function AIVideoStudio() {
             <Button
               className="w-full gradient-accent neon-glow-subtle"
               onClick={handleGenerate}
-              disabled={isGenerating}
+              disabled={isGenerating || !canAfford}
             >
               {isGenerating ? (
                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating…</>
@@ -280,6 +413,9 @@ export default function AIVideoStudio() {
                 <Link to="/wallet" className="underline">Buy more</Link>
               </p>
             )}
+            <p className="text-xs text-muted-foreground text-center">
+              Generation takes ~2-5 minutes. You'll be notified when ready.
+            </p>
           </CardContent>
         </Card>
 
@@ -289,43 +425,15 @@ export default function AIVideoStudio() {
             <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
               <Video className="h-5 w-5 text-primary" /> Your Videos
             </h2>
-            {jobs.map((job) => {
-              const st = STATUS_CONFIG[job.status] ?? STATUS_CONFIG.queued;
-              return (
-                <Card key={job.id} className="glass">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <Badge variant="secondary" className="text-xs capitalize">
-                            {job.video_type.replace("_", " ")}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">{job.export_format}</Badge>
-                          <Badge variant="outline" className="text-xs">{job.style}</Badge>
-                        </div>
-                        {job.scene_prompt && (
-                          <p className="text-xs text-muted-foreground truncate">{job.scene_prompt}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {job.duration_seconds === -1 ? "Full" : `${job.duration_seconds}s`} · {job.credits_used} credits · {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
-                        </p>
-                      </div>
-                      <div className={`flex items-center gap-1 text-xs font-medium ${st.color}`}>
-                        {st.icon}
-                        {st.label}
-                      </div>
-                    </div>
-                    {job.status === "completed" && job.output_url && (
-                      <Button size="sm" variant="outline" className="mt-2 w-full" asChild>
-                        <a href={job.output_url} target="_blank" rel="noopener noreferrer">
-                          Download Video
-                        </a>
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {jobs.map((job) => (
+              <VideoJobCard
+                key={job.id}
+                job={job}
+                onDelete={(id) => deleteJob(id)}
+                onRetry={handleRetry}
+                isDeleting={isDeleting}
+              />
+            ))}
           </div>
         )}
 

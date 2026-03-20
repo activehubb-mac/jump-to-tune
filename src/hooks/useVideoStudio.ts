@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { useAICredits } from "@/hooks/useAICredits";
+import { useEffect, useRef } from "react";
 
 export interface VideoJob {
   id: string;
@@ -57,6 +58,7 @@ export function useVideoStudio() {
   const { showFeedback } = useFeedbackSafe();
   const { refetch: refetchCredits } = useAICredits();
   const queryClient = useQueryClient();
+  const prevJobsRef = useRef<VideoJob[]>([]);
 
   const { data: jobs = [], isLoading: jobsLoading } = useQuery<VideoJob[]>({
     queryKey: ["video-jobs", user?.id],
@@ -71,8 +73,41 @@ export function useVideoStudio() {
       return (data ?? []) as unknown as VideoJob[];
     },
     enabled: !!user,
-    refetchInterval: 15000,
+    refetchInterval: () => {
+      // Poll every 5s if any job is active, otherwise 30s
+      const active = (queryClient.getQueryData<VideoJob[]>(["video-jobs", user?.id]) ?? [])
+        .some((j) => j.status === "queued" || j.status === "processing");
+      return active ? 5000 : 30000;
+    },
   });
+
+  // Detect newly completed jobs and show toast
+  useEffect(() => {
+    const prev = prevJobsRef.current;
+    if (prev.length > 0) {
+      for (const job of jobs) {
+        const old = prev.find((p) => p.id === job.id);
+        if (old && old.status !== "completed" && job.status === "completed") {
+          showFeedback({
+            type: "success",
+            title: "Video Ready! 🎬",
+            message: "Your AI video has finished generating. Download it below.",
+            autoClose: true,
+          });
+          refetchCredits();
+        }
+        if (old && old.status !== "failed" && job.status === "failed") {
+          showFeedback({
+            type: "error",
+            title: "Video Failed",
+            message: "Generation failed. Credits have been refunded.",
+          });
+          refetchCredits();
+        }
+      }
+    }
+    prevJobsRef.current = jobs;
+  }, [jobs, showFeedback, refetchCredits]);
 
   const { data: artistTracks = [], isLoading: tracksLoading } = useQuery({
     queryKey: ["artist-tracks-for-studio", user?.id],
@@ -113,7 +148,7 @@ export function useVideoStudio() {
         try {
           const b = JSON.parse(error.context?.body);
           if (b.error) msg = b.error;
-        } catch {}
+        } catch { /* ignore */ }
         throw new Error(msg);
       }
       return data;
@@ -124,12 +159,26 @@ export function useVideoStudio() {
       showFeedback({
         type: "success",
         title: "Video Queued! 🎬",
-        message: `Used ${data.credits_used} credits. You'll be notified when it's ready.`,
+        message: `Used ${data.credits_used} credits. Generation takes 2-5 minutes.`,
         autoClose: true,
       });
     },
     onError: (err: Error) => {
       showFeedback({ type: "error", title: "Generation Failed", message: err.message });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      const { error } = await supabase
+        .from("ai_video_jobs")
+        .delete()
+        .eq("id", jobId)
+        .eq("user_id", user!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["video-jobs"] });
     },
   });
 
@@ -140,5 +189,7 @@ export function useVideoStudio() {
     tracksLoading,
     generate: generateMutation.mutateAsync,
     isGenerating: generateMutation.isPending,
+    deleteJob: deleteMutation.mutateAsync,
+    isDeleting: deleteMutation.isPending,
   };
 }
