@@ -3,16 +3,37 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useQALab } from '@/hooks/useQALab';
 import { useFeedbackSafe } from '@/contexts/FeedbackContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAICredits } from '@/hooks/useAICredits';
+import { supabase } from '@/integrations/supabase/client';
 import { DummyDataTab } from '@/components/qa-lab/DummyDataTab';
 import { TestUsersTab } from '@/components/qa-lab/TestUsersTab';
 import { TestSuitesTab } from '@/components/qa-lab/TestSuitesTab';
 import { ResultsDashboard } from '@/components/qa-lab/ResultsDashboard';
-import { FlaskConical, Database, Users, PlayCircle, BarChart3, RotateCcw, AlertTriangle } from 'lucide-react';
+import { FlaskConical, Database, Users, PlayCircle, BarChart3, RotateCcw, AlertTriangle, Coins, Zap } from 'lucide-react';
 
 export default function AdminQALab() {
   const [resultsKey, setResultsKey] = useState(0);
+  const [addingCredits, setAddingCredits] = useState(false);
   const { resetAllDummyData, isLoading } = useQALab();
   const { showFeedback } = useFeedbackSafe();
+  const { user } = useAuth();
+  const { aiCredits, isLoading: isLoadingCredits, refetch } = useAICredits();
+
+  const handleAddCredits = async () => {
+    if (!user) return;
+    setAddingCredits(true);
+    try {
+      const { error } = await supabase.rpc('add_ai_credits', { p_user_id: user.id, p_credits: 500 });
+      if (error) throw error;
+      await refetch();
+      showFeedback({ type: 'success', title: 'Credits Added', message: '500 AI credits added to your wallet' });
+    } catch {
+      showFeedback({ type: 'error', title: 'Error', message: 'Failed to add credits' });
+    } finally {
+      setAddingCredits(false);
+    }
+  };
 
   const handleResetAll = async () => {
     if (!confirm('This will delete ALL dummy assets, test runs, and test users. Continue?')) return;
@@ -38,7 +59,15 @@ export default function AdminQALab() {
             <p className="text-xs text-muted-foreground">End-to-end platform testing with sandbox data</p>
           </div>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-muted/50 text-sm">
+            <Zap className="w-3.5 h-3.5 text-primary" />
+            <span className="font-medium">{isLoadingCredits ? '...' : aiCredits}</span>
+            <span className="text-muted-foreground">credits</span>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleAddCredits} disabled={addingCredits}>
+            <Coins className="w-4 h-4 mr-1" /> {addingCredits ? 'Adding...' : 'Add 500 Credits'}
+          </Button>
           <Button size="sm" variant="destructive" onClick={handleResetAll} disabled={isLoading}>
             <RotateCcw className="w-4 h-4 mr-1" /> Reset All Data
           </Button>
