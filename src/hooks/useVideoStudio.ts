@@ -47,10 +47,10 @@ export const STYLE_PRESETS = [
 ] as const;
 
 export const DURATION_OPTIONS = [
-  { seconds: 15, credits: 15, label: "15s" },
-  { seconds: 30, credits: 30, label: "30s" },
-  { seconds: 60, credits: 60, label: "60s" },
-  { seconds: -1, credits: 150, label: "Full" },
+  { seconds: 10, credits: 130, label: "10s (480p)" },
+  { seconds: 15, credits: 180, label: "15s (480p)" },
+  { seconds: 20, credits: 240, label: "20s (480p)" },
+  { seconds: -1, credits: 400, label: "HD (720p)" },
 ] as const;
 
 export function useVideoStudio() {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
+import { CreditConfirmModal } from "@/components/ai/CreditConfirmModal";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -39,7 +40,7 @@ const FORMAT_ICONS: Record<string, React.ReactNode> = {
 };
 
 // Estimated generation times in seconds per duration option
-const EST_TIME: Record<number, number> = { 15: 120, 30: 180, 60: 300, [-1]: 420 };
+const EST_TIME: Record<number, number> = { 10: 120, 15: 150, 20: 200, [-1]: 300 };
 
 function JobStatusBadge({ job }: { job: VideoJob }) {
   const created = new Date(job.created_at).getTime();
@@ -160,9 +161,10 @@ export default function AIVideoStudio() {
   const [trackId, setTrackId] = useState<string | null>(null);
   const [videoType, setVideoType] = useState("music_video");
   const [exportFormat, setExportFormat] = useState("9:16");
-  const [duration, setDuration] = useState(30);
+  const [duration, setDuration] = useState(10);
   const [style, setStyle] = useState("cyberpunk");
   const [scenePrompt, setScenePrompt] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const selectedDuration = DURATION_OPTIONS.find((d) => d.seconds === duration)!;
   const canAfford = aiCredits >= selectedDuration.credits;
@@ -183,7 +185,12 @@ export default function AIVideoStudio() {
     );
   }
 
-  const handleGenerate = () => {
+  const handleGenerateClick = () => {
+    setShowConfirm(true);
+  };
+
+  const handleConfirmGenerate = () => {
+    setShowConfirm(false);
     generate({
       track_id: trackId,
       video_type: videoType,
@@ -218,6 +225,7 @@ export default function AIVideoStudio() {
               <Clapperboard className="h-6 w-6 text-primary" /> AI Video Studio
             </h1>
             <p className="text-sm text-muted-foreground">Generate music videos, lyric videos & viral clips</p>
+            <p className="text-xs text-primary/70 font-medium mt-0.5">Optimized for TikTok, Reels & Shorts</p>
           </div>
           <Badge variant="outline" className="border-primary/50 text-primary">
             <Zap className="h-3 w-3 mr-1" />{creditsLoading ? "..." : aiCredits}
@@ -226,11 +234,11 @@ export default function AIVideoStudio() {
 
         {/* Active jobs indicator */}
         {activeJobs.length > 0 && (
-          <Card className="glass border-blue-500/30 bg-blue-500/5">
+          <Card className="border-blue-500/30 bg-blue-500/5 bg-card/60 backdrop-blur-sm">
             <CardContent className="p-3 flex items-center gap-3">
               <Loader2 className="h-4 w-4 animate-spin text-blue-400 shrink-0" />
               <p className="text-sm text-blue-300">
-                {activeJobs.length} video{activeJobs.length > 1 ? "s" : ""} generating… This typically takes 2-5 minutes.
+                {activeJobs.length} video{activeJobs.length > 1 ? "s" : ""} generating… Credits will be deducted once complete.
               </p>
             </CardContent>
           </Card>
@@ -395,10 +403,18 @@ export default function AIVideoStudio() {
               />
             </div>
 
+            {/* Smart nudge */}
+            {aiCredits < 400 && !creditsLoading && (
+              <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 text-center">
+                💡 You may need more credits for HD video generation.{" "}
+                <Link to="/wallet" className="underline font-medium">Top up</Link>
+              </p>
+            )}
+
             {/* Generate */}
             <Button
               className="w-full gradient-accent neon-glow-subtle"
-              onClick={handleGenerate}
+              onClick={handleGenerateClick}
               disabled={isGenerating || !canAfford}
             >
               {isGenerating ? (
@@ -441,6 +457,16 @@ export default function AIVideoStudio() {
         <p className="text-xs text-muted-foreground text-center pb-4">
           Generated videos include a small JumTunes watermark.
         </p>
+
+        {/* Credit Confirm Modal */}
+        <CreditConfirmModal
+          open={showConfirm}
+          onOpenChange={setShowConfirm}
+          onConfirm={handleConfirmGenerate}
+          creditCost={selectedDuration.credits}
+          currentCredits={aiCredits}
+          summary={`${selectedDuration.label} ${STYLE_PRESETS.find(s => s.value === style)?.label ?? style} ${VIDEO_TYPES.find(v => v.value === videoType)?.label ?? videoType}`}
+        />
       </div>
     </Layout>
   );

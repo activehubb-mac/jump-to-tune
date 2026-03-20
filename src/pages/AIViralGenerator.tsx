@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Sparkles, Loader2, Zap, Lock, ArrowLeft, Video, Clock, Copy, Check, Download, Hash, MessageSquare,
+  Sparkles, Loader2, Zap, Lock, ArrowLeft, Video, Copy, Check, Download, Hash, MessageSquare,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
@@ -16,11 +16,11 @@ import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { CreditConfirmModal } from "@/components/ai/CreditConfirmModal";
 
-const DURATION_OPTIONS = [
-  { seconds: 10, credits: 20, label: "10s" },
-  { seconds: 30, credits: 50, label: "30s" },
-  { seconds: 60, credits: 100, label: "60s" },
+const CLIP_OPTIONS = [
+  { clips: 3, credits: 500, label: "3 Clips" },
+  { clips: 5, credits: 850, label: "5 Clips" },
 ];
 
 const FORMAT_OPTIONS = [
@@ -45,9 +45,10 @@ export default function AIViralGenerator() {
 
   const [selectedTrackId, setSelectedTrackId] = useState(searchParams.get("track") || "");
   const [format, setFormat] = useState("tiktok");
-  const [duration, setDuration] = useState(10);
+  const [selectedClipOption, setSelectedClipOption] = useState(0);
   const [style, setStyle] = useState("abstract visualizer");
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { assets, isLoading: assetsLoading, generate, isGenerating } = useViralGenerator(selectedTrackId || undefined);
 
@@ -74,8 +75,8 @@ export default function AIViralGenerator() {
     if (trackParam) setSelectedTrackId(trackParam);
   }, [searchParams]);
 
-  const selectedDuration = DURATION_OPTIONS.find((d) => d.seconds === duration)!;
-  const canAfford = aiCredits >= selectedDuration.credits;
+  const currentClipOption = CLIP_OPTIONS[selectedClipOption];
+  const canAfford = aiCredits >= currentClipOption.credits;
   const selectedTrack = userTracks.find((t) => t.id === selectedTrackId);
 
   if (!user || (role !== "artist" && role !== "label")) {
@@ -93,20 +94,24 @@ export default function AIViralGenerator() {
     );
   }
 
-  const handleGenerate = async () => {
+  const handleGenerateClick = () => {
     if (!selectedTrackId) {
       showFeedback({ type: "error", title: "Select a Track", message: "Choose a track to promote." });
       return;
     }
     if (!canAfford) {
-      showFeedback({ type: "error", title: "Insufficient Credits", message: `Need ${selectedDuration.credits} credits.` });
+      showFeedback({ type: "error", title: "Insufficient Credits", message: `Need ${currentClipOption.credits} credits.` });
       return;
     }
+    setShowConfirm(true);
+  };
 
+  const handleConfirmGenerate = async () => {
+    setShowConfirm(false);
     await generate({
       track_id: selectedTrackId,
       asset_type: format,
-      duration_seconds: duration,
+      duration_seconds: 10,
       style,
     });
   };
@@ -204,31 +209,28 @@ export default function AIViralGenerator() {
               </CardContent>
             </Card>
 
-            {/* Duration */}
+            {/* Clip Count & Style */}
             <Card className="glass">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">3. Duration & Style</CardTitle>
+                <CardTitle className="text-base">3. Clips & Style</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-sm">Duration</Label>
-                  <div className="grid grid-cols-3 gap-2 mt-2">
-                    {DURATION_OPTIONS.map((d) => (
+                  <Label className="text-sm">Clip Package</Label>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    {CLIP_OPTIONS.map((opt, idx) => (
                       <button
-                        key={d.seconds}
-                        onClick={() => setDuration(d.seconds)}
+                        key={opt.clips}
+                        onClick={() => setSelectedClipOption(idx)}
                         className={cn(
                           "p-3 rounded-lg border text-center transition-all",
-                          duration === d.seconds
+                          selectedClipOption === idx
                             ? "border-primary bg-primary/10"
                             : "border-border bg-muted/30 hover:border-primary/50"
                         )}
                       >
-                        <div className="flex items-center justify-center gap-1 mb-1">
-                          <Clock className="h-3 w-3" />
-                          <span className="font-medium text-sm">{d.label}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{d.credits} credits</span>
+                        <span className="font-medium text-sm text-foreground block">{opt.label}</span>
+                        <span className="text-xs text-muted-foreground">{opt.credits} credits</span>
                       </button>
                     ))}
                   </div>
@@ -260,13 +262,13 @@ export default function AIViralGenerator() {
             {/* Generate Button */}
             <Button
               className="w-full gradient-accent neon-glow-subtle h-12 text-base"
-              onClick={handleGenerate}
+              onClick={handleGenerateClick}
               disabled={isGenerating || !selectedTrackId || !canAfford}
             >
               {isGenerating ? (
                 <><Loader2 className="h-5 w-5 mr-2 animate-spin" />Generating...</>
               ) : (
-                <><Sparkles className="h-5 w-5 mr-2" />Generate Viral Content ({selectedDuration.credits} credits)</>
+                <><Sparkles className="h-5 w-5 mr-2" />Generate Viral Content ({currentClipOption.credits} credits)</>
               )}
             </Button>
             {!canAfford && !creditsLoading && (
@@ -274,6 +276,15 @@ export default function AIViralGenerator() {
                 Not enough credits. <Link to="/wallet" className="underline">Buy more</Link>
               </p>
             )}
+
+            <CreditConfirmModal
+              open={showConfirm}
+              onOpenChange={setShowConfirm}
+              onConfirm={handleConfirmGenerate}
+              creditCost={currentClipOption.credits}
+              currentCredits={aiCredits}
+              summary={`${currentClipOption.label} · ${STYLE_OPTIONS.find(s => s.value === style)?.label ?? style} style`}
+            />
           </div>
 
           {/* Right: Generated Assets */}
