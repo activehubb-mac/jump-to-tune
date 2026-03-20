@@ -75,7 +75,7 @@ interface EdgeFunctionContract {
   authRole?: string;
 }
 
-const EDGE_FUNCTION_CONTRACTS: Record<string, EdgeFunctionContract> = {
+export const EDGE_FUNCTION_CONTRACTS: Record<string, EdgeFunctionContract> = {
   'ai-release-builder': { required: ['prompt'], optional: ['genre', 'mood'], authRole: 'artist' },
   'ai-cover-art': { required: ['prompt'], optional: ['genre', 'style'], authRole: 'artist' },
   'ai-identity-builder': { required: ['genre'], optional: ['style'], authRole: 'artist' },
@@ -138,7 +138,7 @@ async function proxySelect(table: string, match: Record<string, unknown>, target
   return result.data;
 }
 
-async function executeStep(
+export async function executeStep(
   step: QATestStep,
   context: TestContext,
   adminUserId: string

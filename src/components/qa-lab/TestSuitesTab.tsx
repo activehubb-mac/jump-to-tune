@@ -17,7 +17,7 @@ interface RunProgress {
 }
 
 interface Props {
-  onRunComplete?: () => void;
+  onRunComplete?: (results?: RunResult[]) => void;
 }
 
 export function TestSuitesTab({ onRunComplete }: Props) {
@@ -50,7 +50,7 @@ export function TestSuitesTab({ onRunComplete }: Props) {
         title: result.status === 'completed' ? 'All Tests Passed' : 'Some Tests Failed',
         message: `${result.passedSteps}/${result.totalSteps} passed`,
       });
-      onRunComplete?.();
+      onRunComplete?.([result]);
     } catch (err) {
       showFeedback({ type: 'error', title: 'Test Error', message: err instanceof Error ? err.message : 'Unknown error' });
     } finally {
@@ -81,7 +81,7 @@ export function TestSuitesTab({ onRunComplete }: Props) {
         title: allPassed ? 'Full Regression Passed' : 'Regression Has Failures',
         message: `${totalPassed}/${totalSteps} steps passed across ${results.length} suites`,
       });
-      onRunComplete?.();
+      onRunComplete?.(results);
     } catch (err) {
       showFeedback({ type: 'error', title: 'Regression Error', message: err instanceof Error ? err.message : 'Unknown error' });
     } finally {

@@ -10,11 +10,14 @@ import { DummyDataTab } from '@/components/qa-lab/DummyDataTab';
 import { TestUsersTab } from '@/components/qa-lab/TestUsersTab';
 import { TestSuitesTab } from '@/components/qa-lab/TestSuitesTab';
 import { ResultsDashboard } from '@/components/qa-lab/ResultsDashboard';
-import { FlaskConical, Database, Users, PlayCircle, BarChart3, RotateCcw, AlertTriangle, Coins, Zap } from 'lucide-react';
+import { HealerDashboard } from '@/components/qa-lab/HealerDashboard';
+import type { RunResult } from '@/lib/qaTestRunner';
+import { FlaskConical, Database, Users, PlayCircle, BarChart3, RotateCcw, AlertTriangle, Coins, Zap, Activity } from 'lucide-react';
 
 export default function AdminQALab() {
   const [resultsKey, setResultsKey] = useState(0);
   const [addingCredits, setAddingCredits] = useState(false);
+  const [lastRunResults, setLastRunResults] = useState<RunResult[]>([]);
   const { resetAllDummyData, isLoading } = useQALab();
   const { showFeedback } = useFeedbackSafe();
   const { user } = useAuth();
@@ -45,6 +48,13 @@ export default function AdminQALab() {
       setResultsKey(prev => prev + 1);
     } catch {
       showFeedback({ type: 'error', title: 'Error', message: 'Failed to reset data' });
+    }
+  };
+
+  const handleRunComplete = (results?: RunResult[]) => {
+    setResultsKey(prev => prev + 1);
+    if (results && results.length > 0) {
+      setLastRunResults(results);
     }
   };
 
@@ -87,7 +97,7 @@ export default function AdminQALab() {
 
       {/* Tabs */}
       <Tabs defaultValue="suites" className="w-full">
-        <TabsList className="w-full grid grid-cols-4">
+        <TabsList className="w-full grid grid-cols-5">
           <TabsTrigger value="data" className="text-xs gap-1">
             <Database className="w-3.5 h-3.5" /> Data
           </TabsTrigger>
@@ -100,6 +110,9 @@ export default function AdminQALab() {
           <TabsTrigger value="results" className="text-xs gap-1">
             <BarChart3 className="w-3.5 h-3.5" /> Results
           </TabsTrigger>
+          <TabsTrigger value="healer" className="text-xs gap-1">
+            <Activity className="w-3.5 h-3.5" /> Healer
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="data" className="mt-4">
@@ -111,11 +124,15 @@ export default function AdminQALab() {
         </TabsContent>
 
         <TabsContent value="suites" className="mt-4">
-          <TestSuitesTab onRunComplete={() => setResultsKey(prev => prev + 1)} />
+          <TestSuitesTab onRunComplete={handleRunComplete} />
         </TabsContent>
 
         <TabsContent value="results" className="mt-4">
           <ResultsDashboard refreshKey={resultsKey} />
+        </TabsContent>
+
+        <TabsContent value="healer" className="mt-4">
+          <HealerDashboard lastResults={lastRunResults} />
         </TabsContent>
       </Tabs>
     </div>
