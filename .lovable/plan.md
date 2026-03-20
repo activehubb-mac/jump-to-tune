@@ -1,28 +1,46 @@
 
 
-## Fix "Failed to add credits" — Root Cause
+## Fix Credit Function Ambiguity — Full Infrastructure Repair
 
-The `add_ai_credits` RPC returns **HTTP 300 (Multiple Choices)** because there are two overloaded versions of the function in the database — one taking `integer` and one taking `numeric`. PostgREST cannot disambiguate which to call.
+### Root Cause
+There are two overloaded versions of both `add_ai_credits` and `deduct_ai_credits` — one taking `integer`, one taking `numeric`. PostgREST cannot disambiguate, returning HTTP 300. Your wallet currently shows 15 credits.
 
-### Solution
+### Step 1 — Drop Legacy Integer Overloads (Migration)
 
-Change `handleAddCredits` in `AdminQALab.tsx` to call the `qa-admin` edge function's existing `add-credits` action instead of the ambiguous RPC. The edge function uses service-role and doesn't have the overload issue.
+Drop the `integer` versions, keeping only the `numeric` versions (which handle both integer and decimal values):
 
-### File: `src/pages/admin/AdminQALab.tsx`
-
-Replace the `supabase.rpc('add_ai_credits', ...)` call with:
-
-```typescript
-const { data: session } = await supabase.auth.getSession();
-const { data, error } = await supabase.functions.invoke('qa-admin', {
-  body: { action: 'add-credits', userId: user.id, credits: 500 }
-});
-if (error || !data?.success) throw new Error(data?.error || 'Failed');
+```sql
+DROP FUNCTION IF EXISTS public.add_ai_credits(uuid, integer);
+DROP FUNCTION IF EXISTS public.deduct_ai_credits(uuid, integer);
 ```
 
-This routes through the already-deployed `qa-admin` edge function which calls the RPC via service-role client (no ambiguity issue).
+This eliminates ambiguity globally — every caller (edge functions, QA lab, direct RPC) will resolve to the single `numeric` overload.
 
-### Alternative long-term fix
+### Step 2 — Harden `qa-admin` Edge Function
 
-Drop the duplicate `add_ai_credits(uuid, integer)` function via migration, keeping only the `numeric` version. This would fix the RPC call globally. Can be done as a follow-up.
+Update `supabase/functions/qa-admin/index.ts` line 169-172 to explicitly cast credits to numeric:
+
+```typescript
+const { data, error } = await supabaseAdmin.rpc("add_ai_credits", {
+  p_user_id: targetUserId,
+  p_credits: Number(credits),  // ensure numeric
+});
+```
+
+Same for `deduct-test-credits` action (line 309-312).
+
+### Step 3 — Redeploy `qa-admin`
+
+The edge function auto-deploys on save.
+
+### Expected Outcome
+- "Add 500 Credits" button works immediately
+- All QA test suites that call `add-test-credits` or `deduct-test-credits` resolve correctly
+- No more HTTP 300 ambiguity errors anywhere in the platform
+
+### Files Changed
+| File | Change |
+|------|--------|
+| Migration (new) | `DROP FUNCTION` for integer overloads |
+| `supabase/functions/qa-admin/index.ts` | Explicit `Number()` cast on credit params |
 
