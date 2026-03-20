@@ -9,7 +9,7 @@ import { runHealer, analyzeFailures, type HealerReport, type HealedItem, type Re
 import type { RunResult } from '@/lib/qaTestRunner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeedbackSafe } from '@/contexts/FeedbackContext';
-import { Activity, ShieldAlert, ShieldCheck, ShieldX, Zap, Clock, AlertTriangle, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Activity, ShieldAlert, ShieldCheck, ShieldX, Zap, Clock, AlertTriangle, CheckCircle2, XCircle, Loader2, Globe } from 'lucide-react';
 
 interface HealerDashboardProps {
   lastResults: RunResult[];
