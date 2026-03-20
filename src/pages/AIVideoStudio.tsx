@@ -236,11 +236,11 @@ export default function AIVideoStudio() {
 
         {/* Active jobs indicator */}
         {activeJobs.length > 0 && (
-          <Card className="glass border-blue-500/30 bg-blue-500/5">
+          <Card className="border-blue-500/30 bg-blue-500/5 bg-card/60 backdrop-blur-sm">
             <CardContent className="p-3 flex items-center gap-3">
               <Loader2 className="h-4 w-4 animate-spin text-blue-400 shrink-0" />
               <p className="text-sm text-blue-300">
-                {activeJobs.length} video{activeJobs.length > 1 ? "s" : ""} generating… This typically takes 2-5 minutes.
+                {activeJobs.length} video{activeJobs.length > 1 ? "s" : ""} generating… Credits will be deducted once complete.
               </p>
             </CardContent>
           </Card>
