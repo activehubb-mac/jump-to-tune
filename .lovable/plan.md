@@ -1,41 +1,40 @@
 
 
-## Fix: Stale PWA UI Flashing Old Content
+## Permanent Fix: Eliminate Stale PWA UI Flash
+
+### Why Current Fix Is Insufficient
+
+The existing `skipWaiting` + `cleanupOutdatedCaches` + reload-on-`controllerchange` approach works **after** the new service worker activates. But the old SW serves stale precached `index.html` and JS bundles on the **initial navigation** — that's the flash. The reload happens seconds later, but the user already saw old UI.
 
 ### Root Cause
-The service worker precaches all app bundles. Between deploy and SW activation, old cached JS/CSS renders briefly. The `controllerchange` reload in `main.tsx` fixes it *after* the SW activates, but there's a visible flash of stale UI before that happens.
+
+Workbox precache serves `index.html` from cache (CacheFirst) for all navigation requests. When a new deploy lands, the old SW still controls the page and serves the old cached HTML until the new SW finishes installing and activating.
+
+### Permanent Solution: Build-Version Cache Buster
+
+Add a version check in `main.tsx` that runs **before React renders**. If the stored build version doesn't match the current one, nuke all caches and reload immediately — before any UI paints.
 
 ### Changes
 
-**File: `vite.config.ts`**
-- Add `cleanupOutdatedCaches: true` to Workbox config — automatically deletes old precache entries when a new SW activates, preventing stale assets from being served
-- Add `navigationPreload: true` — uses the network response for navigation requests while the SW boots, reducing stale-cache window
-
 **File: `src/main.tsx`**
-- Register for SW `updatefound` event in addition to `controllerchange`
-- When a new SW is detected installing, show nothing disruptive but prepare for immediate reload
-- Add a guard to prevent double-reload (the current code can trigger `reload()` in a loop if the new SW also triggers `controllerchange`)
-
-**File: `src/App.tsx`** (minor)
-- Add a `__BUILD_TIMESTAMP__` log on mount so you can confirm which version is running in console
-
-### Technical Detail
+- Before `createRoot`, compare `__BUILD_TIMESTAMP__` against `localStorage.getItem('app-build')`
+- If mismatch: clear all caches via `caches.keys()` + `caches.delete()`, unregister old SW, store new timestamp, reload — and **skip rendering** (the page will reload with fresh assets)
+- If match: render normally
+- This ensures on first visit after a deploy, the app never paints stale UI
 
 ```text
-Current flow (has flash):
-  Page load → old SW serves cached bundle → renders old UI
-  → new SW installs → activates → controllerchange → reload → new UI
+Flow after fix:
+  Page load → old SW serves old bundle → main.tsx runs
+  → __BUILD_TIMESTAMP__ ≠ localStorage → clear all caches → reload
+  → fresh load from network → new SW installs → stores new timestamp → renders new UI
 
-Fixed flow:
-  Page load → old SW serves cached bundle → renders old UI
-  → new SW installs (cleanupOutdatedCaches deletes old entries)
-  → activates → controllerchange → reload (once, guarded) → new UI
-  
-  Net effect: same reload, but old caches are cleaned so
-  subsequent loads never flash stale content.
+Subsequent loads:
+  → timestamps match → render immediately (no flash, no reload)
 ```
 
+**File: `vite.config.ts`**
+- No changes needed — existing config is correct
+
 ### Files
-- `vite.config.ts` — add `cleanupOutdatedCaches: true`
-- `src/main.tsx` — add reload guard to prevent loops, log build version
+- `src/main.tsx` — add build-version gate before render
 
