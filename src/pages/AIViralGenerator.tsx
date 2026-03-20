@@ -209,31 +209,28 @@ export default function AIViralGenerator() {
               </CardContent>
             </Card>
 
-            {/* Duration */}
+            {/* Clip Count & Style */}
             <Card className="glass">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">3. Duration & Style</CardTitle>
+                <CardTitle className="text-base">3. Clips & Style</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-sm">Duration</Label>
-                  <div className="grid grid-cols-3 gap-2 mt-2">
-                    {DURATION_OPTIONS.map((d) => (
+                  <Label className="text-sm">Clip Package</Label>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    {CLIP_OPTIONS.map((opt, idx) => (
                       <button
-                        key={d.seconds}
-                        onClick={() => setDuration(d.seconds)}
+                        key={opt.clips}
+                        onClick={() => setSelectedClipOption(idx)}
                         className={cn(
                           "p-3 rounded-lg border text-center transition-all",
-                          duration === d.seconds
+                          selectedClipOption === idx
                             ? "border-primary bg-primary/10"
                             : "border-border bg-muted/30 hover:border-primary/50"
                         )}
                       >
-                        <div className="flex items-center justify-center gap-1 mb-1">
-                          <Clock className="h-3 w-3" />
-                          <span className="font-medium text-sm">{d.label}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{d.credits} credits</span>
+                        <span className="font-medium text-sm text-foreground block">{opt.label}</span>
+                        <span className="text-xs text-muted-foreground">{opt.credits} credits</span>
                       </button>
                     ))}
                   </div>
