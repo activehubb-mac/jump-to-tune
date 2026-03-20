@@ -40,7 +40,7 @@ const FORMAT_ICONS: Record<string, React.ReactNode> = {
 };
 
 // Estimated generation times in seconds per duration option
-const EST_TIME: Record<number, number> = { 15: 120, 30: 180, 60: 300, [-1]: 420 };
+const EST_TIME: Record<number, number> = { 10: 120, 15: 150, 20: 200, [-1]: 300 };
 
 function JobStatusBadge({ job }: { job: VideoJob }) {
   const created = new Date(job.created_at).getTime();
