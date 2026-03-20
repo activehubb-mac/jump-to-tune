@@ -75,8 +75,8 @@ export default function AIViralGenerator() {
     if (trackParam) setSelectedTrackId(trackParam);
   }, [searchParams]);
 
-  const selectedDuration = DURATION_OPTIONS.find((d) => d.seconds === duration)!;
-  const canAfford = aiCredits >= selectedDuration.credits;
+  const currentClipOption = CLIP_OPTIONS[selectedClipOption];
+  const canAfford = aiCredits >= currentClipOption.credits;
   const selectedTrack = userTracks.find((t) => t.id === selectedTrackId);
 
   if (!user || (role !== "artist" && role !== "label")) {
