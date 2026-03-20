@@ -227,6 +227,7 @@ export default function AIVideoStudio() {
               <Clapperboard className="h-6 w-6 text-primary" /> AI Video Studio
             </h1>
             <p className="text-sm text-muted-foreground">Generate music videos, lyric videos & viral clips</p>
+            <p className="text-xs text-primary/70 font-medium mt-0.5">Optimized for TikTok, Reels & Shorts</p>
           </div>
           <Badge variant="outline" className="border-primary/50 text-primary">
             <Zap className="h-3 w-3 mr-1" />{creditsLoading ? "..." : aiCredits}
