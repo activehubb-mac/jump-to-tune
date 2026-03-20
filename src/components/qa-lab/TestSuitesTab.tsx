@@ -50,7 +50,7 @@ export function TestSuitesTab({ onRunComplete }: Props) {
         title: result.status === 'completed' ? 'All Tests Passed' : 'Some Tests Failed',
         message: `${result.passedSteps}/${result.totalSteps} passed`,
       });
-      onRunComplete?.();
+      onRunComplete?.([result]);
     } catch (err) {
       showFeedback({ type: 'error', title: 'Test Error', message: err instanceof Error ? err.message : 'Unknown error' });
     } finally {
