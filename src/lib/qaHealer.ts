@@ -266,6 +266,7 @@ export async function runHealer(
     autoHealed,
     pendingApproval,
     unresolved,
+    nonBlocking,
     confidenceScore,
     timestamp: new Date().toISOString(),
     durationMs: Math.round(performance.now() - healerStart),
