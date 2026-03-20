@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Sparkles, Loader2, Zap, Lock, ArrowLeft, Video, Clock, Copy, Check, Download, Hash, MessageSquare,
+  Sparkles, Loader2, Zap, Lock, ArrowLeft, Video, Copy, Check, Download, Hash, MessageSquare,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
@@ -16,11 +16,11 @@ import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { CreditConfirmModal } from "@/components/ai/CreditConfirmModal";
 
-const DURATION_OPTIONS = [
-  { seconds: 10, credits: 20, label: "10s" },
-  { seconds: 30, credits: 50, label: "30s" },
-  { seconds: 60, credits: 100, label: "60s" },
+const CLIP_OPTIONS = [
+  { clips: 3, credits: 500, label: "3 Clips" },
+  { clips: 5, credits: 850, label: "5 Clips" },
 ];
 
 const FORMAT_OPTIONS = [
