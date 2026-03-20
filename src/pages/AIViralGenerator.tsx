@@ -94,20 +94,24 @@ export default function AIViralGenerator() {
     );
   }
 
-  const handleGenerate = async () => {
+  const handleGenerateClick = () => {
     if (!selectedTrackId) {
       showFeedback({ type: "error", title: "Select a Track", message: "Choose a track to promote." });
       return;
     }
     if (!canAfford) {
-      showFeedback({ type: "error", title: "Insufficient Credits", message: `Need ${selectedDuration.credits} credits.` });
+      showFeedback({ type: "error", title: "Insufficient Credits", message: `Need ${currentClipOption.credits} credits.` });
       return;
     }
+    setShowConfirm(true);
+  };
 
+  const handleConfirmGenerate = async () => {
+    setShowConfirm(false);
     await generate({
       track_id: selectedTrackId,
       asset_type: format,
-      duration_seconds: duration,
+      duration_seconds: 10,
       style,
     });
   };
