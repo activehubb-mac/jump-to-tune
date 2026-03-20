@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { runHealer, analyzeFailures, type HealerReport, type HealedItem, type RestrictedItem, type UnresolvedItem } from '@/lib/qaHealer';
+import { runHealer, analyzeFailures, type HealerReport, type HealedItem, type RestrictedItem, type UnresolvedItem, type NonBlockingItem } from '@/lib/qaHealer';
 import type { RunResult } from '@/lib/qaTestRunner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeedbackSafe } from '@/contexts/FeedbackContext';
