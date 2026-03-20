@@ -1,8 +1,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import fs from "fs";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
+
+const buildVersion = Date.now().toString(36);
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -17,6 +20,16 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
+    // Generate version.json in public dir at build time
+    {
+      name: 'generate-version-json',
+      buildStart() {
+        fs.writeFileSync(
+          path.resolve(__dirname, 'public/version.json'),
+          JSON.stringify({ v: buildVersion })
+        );
+      }
+    },
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
@@ -53,18 +66,23 @@ export default defineConfig(({ mode }) => ({
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         navigationPreload: true,
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MiB limit
-        // Skip caching audio URLs with cache-busting params (Safari retry mechanism)
-        navigateFallbackDenylist: [/_nocache=/, /^\/~oauth/],
+        globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        navigateFallbackDenylist: [/_nocache=/, /^\/~oauth/, /version\.json/],
         runtimeCaching: [
           {
-            // Match Supabase storage audio BUT exclude cache-busting URLs
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "navigation-cache",
+              networkTimeoutSeconds: 3,
+            }
+          },
+          {
             urlPattern: ({ url }) => {
               const isSupabaseStorage = url.hostname === 'ezamzkycxqrstuznqaha.supabase.co' && 
                                         url.pathname.includes('/storage/v1/object/public/');
               const hasCacheBuster = url.search.includes('_nocache=');
-              // Don't cache URLs with cache-busting param - let them hit network directly
               return isSupabaseStorage && !hasCacheBuster;
             },
             handler: "NetworkFirst",
@@ -73,12 +91,11 @@ export default defineConfig(({ mode }) => ({
               networkTimeoutSeconds: 10,
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+                maxAgeSeconds: 60 * 60 * 24 * 7
               },
               cacheableResponse: {
                 statuses: [200]
               },
-              // Handle Safari range requests properly
               rangeRequests: true
             }
           }
