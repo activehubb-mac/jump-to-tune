@@ -6,6 +6,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Phase 1: Allowlisted tables for proxy operations
+const PROXY_ALLOWED_TABLES = [
+  'playlists', 'playlist_tracks', 'collection_bookmarks',
+  'artist_stores', 'qa_dummy_assets', 'qa_test_runs', 'qa_test_results',
+];
+
+async function verifyTestUser(supabaseAdmin: any, userId: string): Promise<boolean> {
+  const { data } = await supabaseAdmin.auth.admin.getUserById(userId);
+  return data?.user?.user_metadata?.is_test_user === true;
+}
+
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -54,7 +65,6 @@ serve(async (req: Request) => {
         const email = `qa-test-${role}-${timestamp}@jumtunes-test.internal`;
         const password = `QATest_${timestamp}_${Math.random().toString(36).slice(2)}`;
 
-        // Create user via admin API
         const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
           email,
           password,
@@ -86,7 +96,6 @@ serve(async (req: Request) => {
       }
 
       case "list-test-users": {
-        // List users with is_test_user metadata
         const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers({
           perPage: 100,
         });
@@ -119,13 +128,11 @@ serve(async (req: Request) => {
           return new Response(JSON.stringify({ error: "userId required" }), { status: 400, headers: corsHeaders });
         }
 
-        // Verify it's actually a test user
         const { data: targetUser } = await supabaseAdmin.auth.admin.getUserById(targetUserId);
         if (!targetUser?.user?.user_metadata?.is_test_user) {
           return new Response(JSON.stringify({ error: "Not a test user - cannot delete" }), { status: 400, headers: corsHeaders });
         }
 
-        // Delete user (cascades handle related data)
         const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(targetUserId);
         if (deleteError) {
           return new Response(JSON.stringify({ success: false, error: deleteError.message }), {
@@ -173,6 +180,182 @@ serve(async (req: Request) => {
         return new Response(JSON.stringify({
           success: true,
           newCredits: (data as any)?.new_credits,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // ===== PHASE 1: Proxy operations for RLS-sensitive test fixtures =====
+
+      case "proxy-insert": {
+        const { table, data: rowData, targetUserId } = body;
+        if (!table || !rowData) {
+          return new Response(JSON.stringify({ error: "table and data required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (!PROXY_ALLOWED_TABLES.includes(table)) {
+          return new Response(JSON.stringify({ error: `Table '${table}' not allowed for proxy operations` }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        // If targetUserId is specified, verify it's a test user
+        if (targetUserId) {
+          const isTest = await verifyTestUser(supabaseAdmin, targetUserId);
+          if (!isTest) {
+            return new Response(JSON.stringify({ error: "Target user is not a test user" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+        }
+
+        const { data: inserted, error: insertError } = await supabaseAdmin
+          .from(table)
+          .insert(rowData)
+          .select()
+          .single();
+
+        if (insertError) {
+          return new Response(JSON.stringify({ success: false, error: insertError.message }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        return new Response(JSON.stringify({ success: true, data: inserted }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "proxy-delete": {
+        const { table, match, targetUserId: delTargetUserId } = body;
+        if (!table || !match) {
+          return new Response(JSON.stringify({ error: "table and match required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (!PROXY_ALLOWED_TABLES.includes(table)) {
+          return new Response(JSON.stringify({ error: `Table '${table}' not allowed for proxy operations` }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (delTargetUserId) {
+          const isTest = await verifyTestUser(supabaseAdmin, delTargetUserId);
+          if (!isTest) {
+            return new Response(JSON.stringify({ error: "Target user is not a test user" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+        }
+
+        let query = supabaseAdmin.from(table).delete();
+        for (const [key, val] of Object.entries(match)) {
+          query = query.eq(key, val);
+        }
+        const { error: deleteError } = await query;
+
+        if (deleteError) {
+          return new Response(JSON.stringify({ success: false, error: deleteError.message }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "proxy-select": {
+        const { table, match: selectMatch, targetUserId: selTargetUserId } = body;
+        if (!table || !selectMatch) {
+          return new Response(JSON.stringify({ error: "table and match required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (!PROXY_ALLOWED_TABLES.includes(table)) {
+          return new Response(JSON.stringify({ error: `Table '${table}' not allowed for proxy operations` }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (selTargetUserId) {
+          const isTest = await verifyTestUser(supabaseAdmin, selTargetUserId);
+          if (!isTest) {
+            return new Response(JSON.stringify({ error: "Target user is not a test user" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+        }
+
+        let selectQuery = supabaseAdmin.from(table).select('*');
+        for (const [key, val] of Object.entries(selectMatch)) {
+          selectQuery = selectQuery.eq(key, val);
+        }
+        const { data: rows, error: selectError } = await selectQuery;
+
+        if (selectError) {
+          return new Response(JSON.stringify({ success: false, error: selectError.message }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        return new Response(JSON.stringify({ success: true, data: rows }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // ===== PHASE 3: Credit deduction for test users =====
+
+      case "deduct-test-credits": {
+        const { userId: creditUserId, credits: creditAmount } = body;
+        if (!creditUserId || !creditAmount) {
+          return new Response(JSON.stringify({ error: "userId and credits required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        const isTest = await verifyTestUser(supabaseAdmin, creditUserId);
+        if (!isTest) {
+          return new Response(JSON.stringify({ error: "Target user is not a test user" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        // Get balance before
+        const { data: walletBefore } = await supabaseAdmin
+          .from('credit_wallets')
+          .select('ai_credits')
+          .eq('user_id', creditUserId)
+          .maybeSingle();
+
+        const previousCredits = Number(walletBefore?.ai_credits ?? 0);
+
+        const { data: deductResult, error: deductError } = await supabaseAdmin.rpc("deduct_ai_credits", {
+          p_user_id: creditUserId,
+          p_credits: creditAmount,
+        });
+
+        if (deductError) {
+          return new Response(JSON.stringify({ success: false, error: deductError.message }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        return new Response(JSON.stringify({
+          success: (deductResult as any)?.success ?? false,
+          previousCredits,
+          newCredits: (deductResult as any)?.new_credits,
+          deducted: creditAmount,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // ===== PHASE 3: Get credit balance for test user =====
+
+      case "get-test-credits": {
+        const { userId: balanceUserId } = body;
+        if (!balanceUserId) {
+          return new Response(JSON.stringify({ error: "userId required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        const isTest = await verifyTestUser(supabaseAdmin, balanceUserId);
+        if (!isTest) {
+          return new Response(JSON.stringify({ error: "Target user is not a test user" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        const { data: wallet, error: walletError } = await supabaseAdmin
+          .from('credit_wallets')
+          .select('ai_credits, balance_cents')
+          .eq('user_id', balanceUserId)
+          .maybeSingle();
+
+        if (walletError) {
+          return new Response(JSON.stringify({ success: false, error: walletError.message }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        return new Response(JSON.stringify({
+          success: true,
+          ai_credits: Number(wallet?.ai_credits ?? 0),
+          balance_cents: Number(wallet?.balance_cents ?? 0),
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
