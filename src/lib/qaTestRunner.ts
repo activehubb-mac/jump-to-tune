@@ -498,7 +498,6 @@ export async function executeStep(
               title: data.name || 'QA Test Product',
               description: 'Auto-created by QA test runner',
               type: 'digital',
-              category: 'digital',
               price_cents: (data.metadata as any)?.price_cents || 999,
               status: 'active',
               is_active: true,
