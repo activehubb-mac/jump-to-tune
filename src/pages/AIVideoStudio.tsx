@@ -405,10 +405,18 @@ export default function AIVideoStudio() {
               />
             </div>
 
+            {/* Smart nudge */}
+            {aiCredits < 400 && !creditsLoading && (
+              <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 text-center">
+                💡 You may need more credits for HD video generation.{" "}
+                <Link to="/wallet" className="underline font-medium">Top up</Link>
+              </p>
+            )}
+
             {/* Generate */}
             <Button
               className="w-full gradient-accent neon-glow-subtle"
-              onClick={handleGenerate}
+              onClick={handleGenerateClick}
               disabled={isGenerating || !canAfford}
             >
               {isGenerating ? (
