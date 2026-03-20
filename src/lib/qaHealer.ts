@@ -20,6 +20,11 @@ export const RESTRICTED_CATEGORIES: FailureCategory[] = [
   'STORAGE_PATH_INVALID',
 ];
 
+// Non-blocking: external API failures (billing, transient infra) are logged as warnings, not failures
+export const NON_BLOCKING_CATEGORIES: FailureCategory[] = [
+  'EXTERNAL_API_ERROR',
+];
+
 // ===== Report interfaces =====
 export interface HealedItem {
   suite: string;
