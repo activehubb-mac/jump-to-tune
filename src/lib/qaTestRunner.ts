@@ -385,11 +385,23 @@ async function executeStep(
         if (!track) {
           return { result: makeResult(step, start, 'skipped', 'No tracks in database to add'), context: updatedContext };
         }
-        await proxyInsert('playlist_tracks', {
-          playlist_id: updatedContext.testPlaylistId,
-          track_id: track.id,
-          position: 0,
-        }, updatedContext.testUserId);
+        // Retry once on transient network errors
+        let lastErr: Error | null = null;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            await proxyInsert('playlist_tracks', {
+              playlist_id: updatedContext.testPlaylistId,
+              track_id: track.id,
+              position: 0,
+            }, updatedContext.testUserId);
+            lastErr = null;
+            break;
+          } catch (e) {
+            lastErr = e instanceof Error ? e : new Error(String(e));
+            if (attempt === 0) await new Promise(r => setTimeout(r, 1000));
+          }
+        }
+        if (lastErr) throw lastErr;
         return { result: makeResult(step, start, 'passed'), context: updatedContext };
       }
 
