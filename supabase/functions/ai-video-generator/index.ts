@@ -138,7 +138,7 @@ serve(async (req) => {
     // Start Replicate prediction
     log("Starting Replicate prediction", { model: "minimax/video-01-live", prompt: fullPrompt.substring(0, 100) });
 
-    const createRes = await fetch(REPLICATE_API, {
+    const createRes = await fetch("https://api.replicate.com/v1/models/minimax/video-01-live/predictions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${REPLICATE_API_KEY}`,
@@ -146,7 +146,6 @@ serve(async (req) => {
         Prefer: "wait",
       },
       body: JSON.stringify({
-        version: "minimax/video-01-live",
         input: { prompt: fullPrompt, prompt_optimizer: true },
       }),
     });
