@@ -168,7 +168,7 @@ serve(async (req: Request) => {
         
         const { data, error } = await supabaseAdmin.rpc("add_ai_credits", {
           p_user_id: targetUserId,
-          p_credits: credits,
+          p_credits: Number(credits),
         });
 
         if (error) {
