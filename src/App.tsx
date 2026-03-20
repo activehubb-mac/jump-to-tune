@@ -79,7 +79,7 @@ import AIToolsHub from "./pages/AIToolsHub";
 import CoverArtGenerator from "./pages/CoverArtGenerator";
 import AIIdentityBuilder from "./pages/AIIdentityBuilder";
 import AIPlaylistBuilder from "./pages/AIPlaylistBuilder";
-import AIVideoGenerator from "./pages/AIVideoGenerator";
+import AIVideoStudio from "./pages/AIVideoStudio";
 import AIViralGenerator from "./pages/AIViralGenerator";
 import SingMode from "./pages/SingMode";
 import StagePage from "./pages/Stage";
@@ -135,7 +135,7 @@ function RouterContent() {
         <Route path="/ai-cover-art" element={<CoverArtGenerator />} />
         <Route path="/ai-identity" element={<AIIdentityBuilder />} />
         <Route path="/ai-playlist" element={<AIPlaylistBuilder />} />
-        <Route path="/ai-video" element={<AIVideoGenerator />} />
+        <Route path="/ai-video" element={<AIVideoStudio />} />
         <Route path="/ai-viral" element={<AIViralGenerator />} />
         <Route path="/autopilot" element={<ArtistAutopilot />} />
         <Route path="/upload/album" element={<AlbumUpload />} />

@@ -146,6 +146,65 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_video_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          credits_used: number
+          duration_seconds: number
+          export_format: string
+          id: string
+          metadata: Json | null
+          output_url: string | null
+          scene_prompt: string | null
+          status: string
+          style: string
+          track_id: string | null
+          user_id: string
+          video_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          credits_used?: number
+          duration_seconds?: number
+          export_format?: string
+          id?: string
+          metadata?: Json | null
+          output_url?: string | null
+          scene_prompt?: string | null
+          status?: string
+          style?: string
+          track_id?: string | null
+          user_id: string
+          video_type?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          credits_used?: number
+          duration_seconds?: number
+          export_format?: string
+          id?: string
+          metadata?: Json | null
+          output_url?: string | null
+          scene_prompt?: string | null
+          status?: string
+          style?: string
+          track_id?: string | null
+          user_id?: string
+          video_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_video_jobs_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_video_queue: {
         Row: {
           completed_at: string | null

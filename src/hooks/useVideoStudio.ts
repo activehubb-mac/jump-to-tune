@@ -1,0 +1,144 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { useAICredits } from "@/hooks/useAICredits";
+
+export interface VideoJob {
+  id: string;
+  user_id: string;
+  track_id: string | null;
+  video_type: string;
+  export_format: string;
+  duration_seconds: number;
+  scene_prompt: string | null;
+  style: string;
+  status: string;
+  credits_used: number;
+  output_url: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export const VIDEO_TYPES = [
+  { value: "music_video", label: "Music Video", desc: "Full cinematic AI music video synced to your track", icon: "Film" },
+  { value: "lyric_video", label: "Lyric Video", desc: "Animated lyrics overlaid on styled visuals", icon: "Type" },
+  { value: "viral_clip", label: "Viral Clip", desc: "Short vertical clip for TikTok, Reels & Shorts", icon: "Smartphone" },
+  { value: "avatar_performance", label: "Avatar Performance", desc: "AI avatar performing to your music", icon: "User" },
+] as const;
+
+export const EXPORT_FORMATS = [
+  { value: "9:16", label: "Vertical", desc: "TikTok / Reels / Shorts", ratio: "9:16" },
+  { value: "16:9", label: "YouTube", desc: "Standard widescreen", ratio: "16:9" },
+  { value: "1:1", label: "Square", desc: "Instagram / Facebook", ratio: "1:1" },
+] as const;
+
+export const STYLE_PRESETS = [
+  { value: "cyberpunk", label: "Cyberpunk City" },
+  { value: "anime", label: "Anime Universe" },
+  { value: "luxury", label: "Luxury Nightclub" },
+  { value: "dystopian", label: "Dystopian Army" },
+  { value: "concert", label: "Futuristic Concert" },
+  { value: "abstract", label: "Abstract Visualizer" },
+  { value: "nature", label: "Cinematic Nature" },
+  { value: "retro", label: "Retro VHS" },
+] as const;
+
+export const DURATION_OPTIONS = [
+  { seconds: 15, credits: 15, label: "15s" },
+  { seconds: 30, credits: 30, label: "30s" },
+  { seconds: 60, credits: 60, label: "60s" },
+  { seconds: -1, credits: 150, label: "Full" },
+] as const;
+
+export function useVideoStudio() {
+  const { user } = useAuth();
+  const { showFeedback } = useFeedbackSafe();
+  const { refetch: refetchCredits } = useAICredits();
+  const queryClient = useQueryClient();
+
+  const { data: jobs = [], isLoading: jobsLoading } = useQuery<VideoJob[]>({
+    queryKey: ["video-jobs", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ai_video_jobs")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []) as unknown as VideoJob[];
+    },
+    enabled: !!user,
+    refetchInterval: 15000,
+  });
+
+  const { data: artistTracks = [], isLoading: tracksLoading } = useQuery({
+    queryKey: ["artist-tracks-for-studio", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tracks")
+        .select("id, title, cover_art_url, genre")
+        .eq("artist_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const generateMutation = useMutation({
+    mutationFn: async (params: {
+      track_id: string | null;
+      video_type: string;
+      export_format: string;
+      duration_seconds: number;
+      style: string;
+      scene_prompt: string;
+    }) => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase.functions.invoke("ai-video-generator", {
+        body: {
+          ...params,
+          prompt: params.scene_prompt || `${params.style} style ${params.video_type}`,
+        },
+        headers: { Authorization: `Bearer ${session.session.access_token}` },
+      });
+
+      if (error) {
+        let msg = "Generation failed.";
+        try {
+          const b = JSON.parse(error.context?.body);
+          if (b.error) msg = b.error;
+        } catch {}
+        throw new Error(msg);
+      }
+      return data;
+    },
+    onSuccess: (data) => {
+      refetchCredits();
+      queryClient.invalidateQueries({ queryKey: ["video-jobs"] });
+      showFeedback({
+        type: "success",
+        title: "Video Queued! 🎬",
+        message: `Used ${data.credits_used} credits. You'll be notified when it's ready.`,
+        autoClose: true,
+      });
+    },
+    onError: (err: Error) => {
+      showFeedback({ type: "error", title: "Generation Failed", message: err.message });
+    },
+  });
+
+  return {
+    jobs,
+    jobsLoading,
+    artistTracks,
+    tracksLoading,
+    generate: generateMutation.mutateAsync,
+    isGenerating: generateMutation.isPending,
+  };
+}
