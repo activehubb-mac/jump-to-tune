@@ -37,8 +37,8 @@ export function useWallet() {
     queryKey: ["wallet", userId],
     queryFn: async () => {
       const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        throw new Error("Not authenticated");
+      if (!sessionData.session?.access_token) {
+        return { balance_cents: 0, transactions: [] };
       }
 
       const { data, error } = await supabase.functions.invoke("get-wallet-balance", {
@@ -55,6 +55,10 @@ export function useWallet() {
     },
     enabled: !!userId,
     staleTime: 30000,
+    retry: (failureCount, err) => {
+      if (String(err).includes("401") || String(err).includes("Not authenticated")) return false;
+      return failureCount < 2;
+    },
   });
 
   // Calculate average purchase for low balance threshold
