@@ -230,6 +230,35 @@ export function HealerDashboard({ lastResults }: HealerDashboardProps) {
               </AccordionContent>
             </AccordionItem>
           )}
+
+          {/* Non-blocking (external API) */}
+          {report.nonBlocking.length > 0 && (
+            <AccordionItem value="non-blocking" className="border border-slate-500/30 rounded-lg px-4">
+              <AccordionTrigger className="text-sm py-3">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-slate-400" />
+                  External API Issues ({report.nonBlocking.length})
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-2">
+                  {report.nonBlocking.map((item, i) => (
+                    <Card key={i} className="p-3 border-slate-500/20">
+                      <div className="flex items-start gap-2">
+                        <Globe className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <div className="space-y-1 text-xs">
+                          <div className="font-medium">{item.suite} → {item.step}</div>
+                          <Badge variant="outline" className="text-[10px]">{item.category}</Badge>
+                          <p className="text-muted-foreground">{item.errorMessage}</p>
+                          <p className="text-slate-400 italic">{item.note}</p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
         </Accordion>
       )}
     </div>
