@@ -126,7 +126,7 @@ export function HealerDashboard({ lastResults }: HealerDashboardProps) {
 
       {/* Healer report sections */}
       {report && (
-        <Accordion type="multiple" defaultValue={['auto-healed', 'pending', 'unresolved']} className="space-y-2">
+        <Accordion type="multiple" defaultValue={['auto-healed', 'pending', 'non-blocking', 'unresolved']} className="space-y-2">
           {/* Auto-healed */}
           {report.autoHealed.length > 0 && (
             <AccordionItem value="auto-healed" className="border rounded-lg px-4">
