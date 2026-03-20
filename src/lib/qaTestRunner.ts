@@ -359,6 +359,10 @@ async function executeStep(
         if (error) throw new Error(`Query error: ${error.message}`);
         if (!data) throw new Error('No dummy track found - seed dummy data first');
         updatedContext.testTrackId = data.id;
+        // Try to get a real track audio_url for stem-separation tests
+        const { data: realTrack } = await supabase.from('tracks').select('id, audio_url').not('audio_url', 'is', null).limit(1).maybeSingle();
+        updatedContext.testTrackAudioUrl = realTrack?.audio_url || (data.metadata as any)?.audio_url || 'placeholder://qa-test.mp3';
+        if (realTrack?.id) updatedContext.testTrackId = realTrack.id;
         return { result: makeResult(step, start, 'passed', undefined, { assetName: data.name }), context: updatedContext };
       }
 
