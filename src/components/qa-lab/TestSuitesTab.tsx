@@ -17,7 +17,7 @@ interface RunProgress {
 }
 
 interface Props {
-  onRunComplete?: () => void;
+  onRunComplete?: (results?: RunResult[]) => void;
 }
 
 export function TestSuitesTab({ onRunComplete }: Props) {
