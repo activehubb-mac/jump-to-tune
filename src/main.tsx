@@ -2,11 +2,10 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-declare const __BUILD_TIMESTAMP__: string;
-console.log('[App] Build:', __BUILD_TIMESTAMP__);
+console.log('[App] Build:', __BUILD_TIMESTAMP__, '| Version:', __APP_BUILD_VERSION__);
 
 async function nukeCachesAndReload() {
-  console.log('[PWA] Version mismatch — clearing caches and reloading');
+  console.log('[PWA] Stale bundle detected — clearing caches and reloading');
 
   if ('serviceWorker' in navigator) {
     const registrations = await navigator.serviceWorker.getRegistrations();
@@ -26,13 +25,22 @@ async function checkVersion(): Promise<boolean> {
     const res = await fetch('/version.json', { cache: 'no-store' });
     if (!res.ok) return false;
     const { v } = await res.json();
-    const saved = localStorage.getItem('app-version');
-    console.log('[PWA] Network version:', v, '| Saved:', saved);
+    console.log('[PWA] Network version:', v, '| Bundle version:', __APP_BUILD_VERSION__);
 
+    // Primary check: does the running JS bundle match the server?
+    if (v !== __APP_BUILD_VERSION__) {
+      console.log('[PWA] Bundle mismatch — forcing update');
+      localStorage.setItem('app-version', v);
+      await nukeCachesAndReload();
+      return true;
+    }
+
+    // Secondary: localStorage fallback (first visit after deploy)
+    const saved = localStorage.getItem('app-version');
     if (saved && saved !== v) {
       localStorage.setItem('app-version', v);
       await nukeCachesAndReload();
-      return true; // reload triggered
+      return true;
     }
 
     localStorage.setItem('app-version', v);
@@ -48,9 +56,8 @@ const versionCheckPromise = checkVersion();
 const timeoutPromise = new Promise<boolean>(resolve => setTimeout(() => resolve(false), 3000));
 
 Promise.race([versionCheckPromise, timeoutPromise]).then((reloading) => {
-  if (reloading) return; // page is reloading, don't render
+  if (reloading) return;
 
-  // Guard: only reload once per SW activation
   let hasReloaded = false;
 
   if ('serviceWorker' in navigator) {
