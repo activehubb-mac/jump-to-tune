@@ -159,6 +159,18 @@ export async function runHealer(
   for (const failure of failures) {
     onProgress?.(`Analyzing: ${failure.suite} → ${failure.step}`);
 
+    // Non-blocking: external API errors are informational, not test failures
+    if (NON_BLOCKING_CATEGORIES.includes(failure.category)) {
+      nonBlocking.push({
+        suite: failure.suite,
+        step: failure.step,
+        category: failure.category,
+        errorMessage: failure.errorMessage,
+        note: 'External API/infrastructure issue — not a code bug. Check third-party service billing or status.',
+      });
+      continue;
+    }
+
     // Step B: Check if auto-fix is allowed
     if (isRestricted(failure.category)) {
       pendingApproval.push({
