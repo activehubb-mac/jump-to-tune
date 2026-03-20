@@ -161,7 +161,10 @@ export default function AIVideoStudio() {
   const [trackId, setTrackId] = useState<string | null>(null);
   const [videoType, setVideoType] = useState("music_video");
   const [exportFormat, setExportFormat] = useState("9:16");
-  const [duration, setDuration] = useState(30);
+  const [duration, setDuration] = useState(10);
+  const [style, setStyle] = useState("cyberpunk");
+  const [scenePrompt, setScenePrompt] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
   const [style, setStyle] = useState("cyberpunk");
   const [scenePrompt, setScenePrompt] = useState("");
 
