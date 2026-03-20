@@ -1,0 +1,1 @@
+DELETE FROM ai_video_jobs WHERE status = 'queued';
