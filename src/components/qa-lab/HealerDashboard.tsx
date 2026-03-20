@@ -5,11 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { runHealer, analyzeFailures, type HealerReport, type HealedItem, type RestrictedItem, type UnresolvedItem } from '@/lib/qaHealer';
+import { runHealer, analyzeFailures, type HealerReport, type HealedItem, type RestrictedItem, type UnresolvedItem, type NonBlockingItem } from '@/lib/qaHealer';
 import type { RunResult } from '@/lib/qaTestRunner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeedbackSafe } from '@/contexts/FeedbackContext';
-import { Activity, ShieldAlert, ShieldCheck, ShieldX, Zap, Clock, AlertTriangle, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Activity, ShieldAlert, ShieldCheck, ShieldX, Zap, Clock, AlertTriangle, CheckCircle2, XCircle, Loader2, Globe } from 'lucide-react';
 
 interface HealerDashboardProps {
   lastResults: RunResult[];
@@ -126,7 +126,7 @@ export function HealerDashboard({ lastResults }: HealerDashboardProps) {
 
       {/* Healer report sections */}
       {report && (
-        <Accordion type="multiple" defaultValue={['auto-healed', 'pending', 'unresolved']} className="space-y-2">
+        <Accordion type="multiple" defaultValue={['auto-healed', 'pending', 'non-blocking', 'unresolved']} className="space-y-2">
           {/* Auto-healed */}
           {report.autoHealed.length > 0 && (
             <AccordionItem value="auto-healed" className="border rounded-lg px-4">
@@ -222,6 +222,35 @@ export function HealerDashboard({ lastResults }: HealerDashboardProps) {
                           <Badge variant="outline" className="text-[10px]">{item.category}</Badge>
                           <p className="text-muted-foreground">{item.errorMessage}</p>
                           <p className="text-muted-foreground italic">{item.note}</p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
+
+          {/* Non-blocking (external API) */}
+          {report.nonBlocking.length > 0 && (
+            <AccordionItem value="non-blocking" className="border border-slate-500/30 rounded-lg px-4">
+              <AccordionTrigger className="text-sm py-3">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-slate-400" />
+                  External API Issues ({report.nonBlocking.length})
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-2">
+                  {report.nonBlocking.map((item, i) => (
+                    <Card key={i} className="p-3 border-slate-500/20">
+                      <div className="flex items-start gap-2">
+                        <Globe className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                        <div className="space-y-1 text-xs">
+                          <div className="font-medium">{item.suite} → {item.step}</div>
+                          <Badge variant="outline" className="text-[10px]">{item.category}</Badge>
+                          <p className="text-muted-foreground">{item.errorMessage}</p>
+                          <p className="text-slate-400 italic">{item.note}</p>
                         </div>
                       </div>
                     </Card>

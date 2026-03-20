@@ -21,6 +21,7 @@ const FAILURE_CATEGORY_CONFIG: Record<FailureCategory, { label: string; color: s
   STORAGE_PATH_INVALID: { label: 'Storage Path', color: 'bg-cyan-500/20 text-cyan-400', icon: <HardDrive className="w-3.5 h-3.5" /> },
   ASYNC_TIMEOUT: { label: 'Timeout', color: 'bg-amber-500/20 text-amber-400', icon: <Timer className="w-3.5 h-3.5" /> },
   NULL_UI_STATE: { label: 'Null State', color: 'bg-pink-500/20 text-pink-400', icon: <Eye className="w-3.5 h-3.5" /> },
+  EXTERNAL_API_ERROR: { label: 'External API', color: 'bg-slate-500/20 text-slate-400', icon: <Globe className="w-3.5 h-3.5" /> },
   UNKNOWN: { label: 'Unknown', color: 'bg-muted text-muted-foreground', icon: <AlertTriangle className="w-3.5 h-3.5" /> },
 };
 

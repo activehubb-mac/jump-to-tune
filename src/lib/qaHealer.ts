@@ -20,6 +20,11 @@ export const RESTRICTED_CATEGORIES: FailureCategory[] = [
   'STORAGE_PATH_INVALID',
 ];
 
+// Non-blocking: external API failures (billing, transient infra) are logged as warnings, not failures
+export const NON_BLOCKING_CATEGORIES: FailureCategory[] = [
+  'EXTERNAL_API_ERROR',
+];
+
 // ===== Report interfaces =====
 export interface HealedItem {
   suite: string;
@@ -48,6 +53,14 @@ export interface UnresolvedItem {
   note: string;
 }
 
+export interface NonBlockingItem {
+  suite: string;
+  step: string;
+  category: FailureCategory;
+  errorMessage: string;
+  note: string;
+}
+
 export interface HealerReport {
   totalFailures: number;
   totalSteps: number;
@@ -55,6 +68,7 @@ export interface HealerReport {
   autoHealed: HealedItem[];
   pendingApproval: RestrictedItem[];
   unresolved: UnresolvedItem[];
+  nonBlocking: NonBlockingItem[];
   confidenceScore: number;
   timestamp: string;
   durationMs: number;
@@ -140,9 +154,22 @@ export async function runHealer(
   const autoHealed: HealedItem[] = [];
   const pendingApproval: RestrictedItem[] = [];
   const unresolved: UnresolvedItem[] = [];
+  const nonBlocking: NonBlockingItem[] = [];
 
   for (const failure of failures) {
     onProgress?.(`Analyzing: ${failure.suite} → ${failure.step}`);
+
+    // Non-blocking: external API errors are informational, not test failures
+    if (NON_BLOCKING_CATEGORIES.includes(failure.category)) {
+      nonBlocking.push({
+        suite: failure.suite,
+        step: failure.step,
+        category: failure.category,
+        errorMessage: failure.errorMessage,
+        note: 'External API/infrastructure issue — not a code bug. Check third-party service billing or status.',
+      });
+      continue;
+    }
 
     // Step B: Check if auto-fix is allowed
     if (isRestricted(failure.category)) {
@@ -239,6 +266,7 @@ export async function runHealer(
     autoHealed,
     pendingApproval,
     unresolved,
+    nonBlocking,
     confidenceScore,
     timestamp: new Date().toISOString(),
     durationMs: Math.round(performance.now() - healerStart),

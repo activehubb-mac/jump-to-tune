@@ -13,10 +13,15 @@ export type FailureCategory =
   | 'STORAGE_PATH_INVALID'
   | 'ASYNC_TIMEOUT'
   | 'NULL_UI_STATE'
+  | 'EXTERNAL_API_ERROR'
   | 'UNKNOWN';
 
 function classifyError(errorMessage: string, stepAction: string): FailureCategory {
   const msg = errorMessage.toLowerCase();
+
+  // External API errors — detect before auth/credit classifiers to avoid misclassification
+  if (msg.includes('replicate api error') || msg.includes('insufficient credit') || msg.includes('tls handshake') || msg.includes('502') || msg.includes('api billing') || msg.includes('external service')) return 'EXTERNAL_API_ERROR';
+
   if (msg.includes('row-level security') || msg.includes('policy') || msg.includes('rls')) return 'RLS_DENIED';
   if (msg.includes('not authenticated') || msg.includes('unauthorized') || msg.includes('auth') || msg.includes('invalid token')) return 'AUTH_CONTEXT_MISMATCH';
   if (msg.includes('required') || msg.includes('missing') || msg.includes('no functionname')) return 'EDGE_PARAMS_INVALID';
