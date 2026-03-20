@@ -132,7 +132,16 @@ export const QA_TEST_SUITES: QATestSuite[] = [
       { name: 'Ensure sufficient credits', description: 'Add 50 AI credits', actionLocation: '/wallet', action: 'add-test-credits', params: { credits: 50 } },
       { name: 'Test avatar performance call', description: 'Invoke ai-avatar-performance edge function', actionLocation: '/stage/:trackId', action: 'call-edge-function', params: {
         functionName: 'ai-avatar-performance',
-        body: { track_id: '$context.testTrackId' },
+        body: {
+          trackId: '$context.testTrackId',
+          trackTitle: 'QA Test Track',
+          artistName: 'QA Test Artist',
+          avatarStyle: 'cyber_dj',
+          sceneBackground: 'neon_city',
+          avatarPrompt: 'A futuristic cyber DJ performing on stage',
+          scenePrompt: 'A neon-lit cityscape at night',
+          userId: '$context.testUserId',
+        },
       }, timeoutMs: 60000 },
     ],
   },
