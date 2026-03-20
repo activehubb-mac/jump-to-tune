@@ -138,7 +138,7 @@ async function proxySelect(table: string, match: Record<string, unknown>, target
   return result.data;
 }
 
-async function executeStep(
+export async function executeStep(
   step: QATestStep,
   context: TestContext,
   adminUserId: string
