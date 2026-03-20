@@ -1,84 +1,50 @@
 
 
-## High-Conversion Credit-Transparent AI Tools System
+## Root Cause: Why Old UI Still Appears
 
-### Overview
-Overhaul the AI Tools Hub and individual tool pages with exact pricing, credit transparency, a pre-generation confirmation modal, smart nudges, and premium treatment for AI Video Studio.
+The current version check in `main.tsx` compares `localStorage('app-version')` against network-fetched `version.json`. The flaw:
 
-### Changes
+1. User visits after deploy → version.json returns `"abc123"` → saved to localStorage → app renders fine.
+2. Later, old service worker serves **cached old HTML + old JS** from its precache/navigation cache.
+3. Old JS runs version check → fetches version.json → gets `"abc123"` → matches localStorage → **no reload triggered**.
+4. Old UI renders.
 
-#### 1. `src/pages/AIToolsHub.tsx` — Complete Redesign
+The check only catches the **first visit** after a deploy. After that, the saved version matches the network version, so stale cached bundles slip through.
 
-**Credit Header (Section 1)**
-- Bold credit count + USD equivalent (credits / 100)
-- Progress bar showing credits relative to a contextual max (e.g. 2000)
-- Primary "+ Buy Credits" CTA button linking to `/wallet`
+## Fix: Dual-Check — Network Version vs Embedded Build Version
 
-**Tool Cards (Sections 2–5, 7, 10)**
-- Reorder: AI Video Studio first, then AI Viral Generator, then the rest
-- Replace all vague "20-100" with fixed "Starts at X credits"
-- Each card has a `pricingTiers` array; on hover, expand to show tier breakdown
-- AI Video Studio card: "NEW" badge, gold glow (`shadow-[0_0_20px_hsl(45,80%,50%,0.3)]`), stronger hover elevation
-- Video + Viral cards get value framing text: "Optimized for TikTok, Reels & Shorts"
-- Non-hovered cards dim slightly when any card is hovered (group-hover on container)
-- Smooth transitions, no layout breaking
+Embed the build version string directly into the JS bundle via Vite's `define`. Then in `main.tsx`, compare **both**:
+- Network version.json `v` vs `__APP_BUILD_VERSION__` (baked into the bundle)
+- If they differ → this bundle is stale → nuke caches + reload
 
-**Pricing locked per spec:**
-- AI Playlist Builder: 5 credits
-- AI Release Builder: 10 credits
-- AI Cover Art Generator: 10 credits
-- AI Identity Builder: 15 credits
-- AI Video Generator: Starts at 130 (tiers: 10s/480p=130, 15s/480p=180, 20s/480p=240, HD/720p=400)
-- AI Viral Generator: Starts at 500 (tiers: 3 clips=500, 5 clips=850)
+This way, even if localStorage already has the correct version saved, a stale cached bundle will detect that its own embedded version doesn't match the network truth.
 
-#### 2. `src/hooks/useVideoStudio.ts` — Update DURATION_OPTIONS
+## Changes
 
-Replace current duration/credit tiers:
+### 1. `vite.config.ts`
+- Add `__APP_BUILD_VERSION__: JSON.stringify(buildVersion)` to `define` block (alongside existing `__BUILD_TIMESTAMP__`).
+
+### 2. `src/main.tsx`
+- Declare `__APP_BUILD_VERSION__` global.
+- In `checkVersion()`, after fetching version.json, compare `v` against `__APP_BUILD_VERSION__` (not just localStorage).
+- If `v !== __APP_BUILD_VERSION__` → stale bundle → nuke caches + reload immediately.
+- Keep the localStorage check as a secondary safety net.
+
+### 3. `src/vite-env.d.ts`
+- Add type declaration for `__APP_BUILD_VERSION__`.
+
+```text
+Flow after fix:
+
+Old SW serves cached HTML + old JS
+  → old JS has __APP_BUILD_VERSION__ = "old123"
+  → fetches version.json → gets "new456"
+  → "old123" !== "new456" → nuke + reload
+  → fresh HTML + JS loads → matches → render
 ```
-{ seconds: 10, credits: 130, label: "10s (480p)" }
-{ seconds: 15, credits: 180, label: "15s (480p)" }
-{ seconds: 20, credits: 240, label: "20s (480p)" }
-{ seconds: -1, credits: 400, label: "HD (720p)" }
-```
-
-#### 3. `src/pages/AIViralGenerator.tsx` — Update DURATION_OPTIONS
-
-Replace with clip-count-based pricing:
-```
-{ clips: 3, credits: 500, label: "3 Clips" }
-{ clips: 5, credits: 850, label: "5 Clips" }
-```
-
-#### 4. New: `src/components/ai/CreditConfirmModal.tsx` (Section 6)
-
-Reusable confirmation modal shown before any AI generation:
-- Shows: selected options summary, exact credit cost, remaining credits after
-- Example: "This will cost 180 credits. You will have 1160 credits remaining."
-- Confirm (primary) + Cancel buttons
-- Blocks generation until confirmed
-
-#### 5. `src/pages/AIVideoStudio.tsx` — Integration (Sections 6, 8, 9)
-
-- Wire CreditConfirmModal before `handleGenerate`
-- Smart nudge: if credits < 400, show "You may need more credits for HD video generation"
-- During generation: "Generating… credits will be deducted once complete"
-- After completion toast: "Video created successfully"
-- Value framing text under header
-
-#### 6. `src/pages/AIViralGenerator.tsx` — Integration
-
-- Wire CreditConfirmModal before generate
-- Update pricing display to match new clip-based tiers
-
-#### 7. `src/components/wallet/CreditBalanceChip.tsx` — Add USD equivalent
-
-Show "X credits ≈ $Y.YY" format
 
 ### Files
-- `src/pages/AIToolsHub.tsx` — full redesign with tiered cards + credit header
-- `src/components/ai/CreditConfirmModal.tsx` — new confirmation modal
-- `src/hooks/useVideoStudio.ts` — update DURATION_OPTIONS pricing
-- `src/pages/AIVideoStudio.tsx` — confirm modal + nudges + generation feedback
-- `src/pages/AIViralGenerator.tsx` — clip-based pricing + confirm modal
-- `src/components/wallet/CreditBalanceChip.tsx` — USD equivalent display
+- `vite.config.ts` — add build version to `define`
+- `src/main.tsx` — compare embedded version vs network version
+- `src/vite-env.d.ts` — type declaration
 
