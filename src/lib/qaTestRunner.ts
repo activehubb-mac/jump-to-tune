@@ -60,6 +60,7 @@ interface TestContext {
   testUserEmail?: string;
   testUserRole?: string;
   testTrackId?: string;
+  testTrackAudioUrl?: string;
   testPlaylistId?: string;
   testProductId?: string;
   checkoutUrl?: string;
