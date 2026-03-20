@@ -9,7 +9,7 @@ const corsHeaders = {
 // Phase 1: Allowlisted tables for proxy operations
 const PROXY_ALLOWED_TABLES = [
   'playlists', 'playlist_tracks', 'collection_bookmarks',
-  'artist_stores', 'qa_dummy_assets', 'qa_test_runs', 'qa_test_results',
+  'artist_stores', 'store_products', 'qa_dummy_assets', 'qa_test_runs', 'qa_test_results',
 ];
 
 async function verifyTestUser(supabaseAdmin: any, userId: string): Promise<boolean> {
