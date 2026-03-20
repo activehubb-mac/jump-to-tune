@@ -165,8 +165,6 @@ export default function AIVideoStudio() {
   const [style, setStyle] = useState("cyberpunk");
   const [scenePrompt, setScenePrompt] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
-  const [style, setStyle] = useState("cyberpunk");
-  const [scenePrompt, setScenePrompt] = useState("");
 
   const selectedDuration = DURATION_OPTIONS.find((d) => d.seconds === duration)!;
   const canAfford = aiCredits >= selectedDuration.credits;
