@@ -135,7 +135,7 @@ function RouterContent() {
         <Route path="/ai-cover-art" element={<CoverArtGenerator />} />
         <Route path="/ai-identity" element={<AIIdentityBuilder />} />
         <Route path="/ai-playlist" element={<AIPlaylistBuilder />} />
-        <Route path="/ai-video" element={<AIVideoGenerator />} />
+        <Route path="/ai-video" element={<AIVideoStudio />} />
         <Route path="/ai-viral" element={<AIViralGenerator />} />
         <Route path="/autopilot" element={<ArtistAutopilot />} />
         <Route path="/upload/album" element={<AlbumUpload />} />
