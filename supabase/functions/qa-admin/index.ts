@@ -168,7 +168,7 @@ serve(async (req: Request) => {
         
         const { data, error } = await supabaseAdmin.rpc("add_ai_credits", {
           p_user_id: targetUserId,
-          p_credits: credits,
+          p_credits: Number(credits),
         });
 
         if (error) {
@@ -308,7 +308,7 @@ serve(async (req: Request) => {
 
         const { data: deductResult, error: deductError } = await supabaseAdmin.rpc("deduct_ai_credits", {
           p_user_id: creditUserId,
-          p_credits: creditAmount,
+          p_credits: Number(creditAmount),
         });
 
         if (deductError) {
