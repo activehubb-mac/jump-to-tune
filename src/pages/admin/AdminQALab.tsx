@@ -24,8 +24,10 @@ export default function AdminQALab() {
     if (!user) return;
     setAddingCredits(true);
     try {
-      const { error } = await supabase.rpc('add_ai_credits', { p_user_id: user.id, p_credits: 500 });
-      if (error) throw error;
+      const { data, error } = await supabase.functions.invoke('qa-admin', {
+        body: { action: 'add-credits', userId: user.id, credits: 500 }
+      });
+      if (error || !data?.success) throw new Error(data?.error || 'Failed');
       await refetch();
       showFeedback({ type: 'success', title: 'Credits Added', message: '500 AI credits added to your wallet' });
     } catch {
