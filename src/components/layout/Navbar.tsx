@@ -18,7 +18,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown, Bell, Check, ArrowUp, ArrowDown, Sparkles, Wallet, Heart, AlertTriangle, UserPlus, DollarSign, Mic2, Shield, Store, Gem, Disc3 } from "lucide-react";
+import { Music, Home, Search, User, Building2, Menu, X, LogOut, Library, LayoutDashboard, Upload, Settings, Crown, Bell, Check, ArrowUp, ArrowDown, Sparkles, Wallet, Heart, AlertTriangle, UserPlus, DollarSign, Mic2, Shield, Store, Gem, Disc3, Video } from "lucide-react";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { CreditBalanceChip } from "@/components/wallet/CreditBalanceChip";
 import { SubscriptionCountdownChip } from "@/components/subscription/SubscriptionCountdownChip";
@@ -33,6 +33,7 @@ const navLinks = [
   { href: "/", label: "Home", icon: Home },
   { href: "/browse", label: "Discover", icon: Search },
   { href: "/ai-tools", label: "Create", icon: Sparkles },
+  { href: "/ai-video", label: "Video Studio", icon: Video, authRequired: true },
   { href: "/karaoke", label: "Fan Zone", icon: Mic2 },
   { href: "/go-dj", label: "Go DJ", icon: Disc3 },
   { href: "/artists", label: "Artists", icon: User },
