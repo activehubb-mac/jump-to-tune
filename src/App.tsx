@@ -79,7 +79,7 @@ import AIToolsHub from "./pages/AIToolsHub";
 import CoverArtGenerator from "./pages/CoverArtGenerator";
 import AIIdentityBuilder from "./pages/AIIdentityBuilder";
 import AIPlaylistBuilder from "./pages/AIPlaylistBuilder";
-import AIVideoGenerator from "./pages/AIVideoGenerator";
+import AIVideoStudio from "./pages/AIVideoStudio";
 import AIViralGenerator from "./pages/AIViralGenerator";
 import SingMode from "./pages/SingMode";
 import StagePage from "./pages/Stage";
