@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        version: "25a173108cff36ef9f80f854c162d01df9e6528be175794b81571f6e5deca48e",
+        version: "5a7041cc9b82e5a558fea6b3d7b12dea89625e89da33f0447bd727c2d0ab9e77",
         input: {
           audio: audio_url,
           output_format: "mp3",
