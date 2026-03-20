@@ -53,6 +53,14 @@ export interface UnresolvedItem {
   note: string;
 }
 
+export interface NonBlockingItem {
+  suite: string;
+  step: string;
+  category: FailureCategory;
+  errorMessage: string;
+  note: string;
+}
+
 export interface HealerReport {
   totalFailures: number;
   totalSteps: number;
@@ -60,6 +68,7 @@ export interface HealerReport {
   autoHealed: HealedItem[];
   pendingApproval: RestrictedItem[];
   unresolved: UnresolvedItem[];
+  nonBlocking: NonBlockingItem[];
   confidenceScore: number;
   timestamp: string;
   durationMs: number;
