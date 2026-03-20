@@ -11,6 +11,7 @@ const buildVersion = Date.now().toString(36);
 export default defineConfig(({ mode }) => ({
   define: {
     __BUILD_TIMESTAMP__: JSON.stringify(new Date().toISOString()),
+    __APP_BUILD_VERSION__: JSON.stringify(buildVersion),
   },
   server: {
     host: "::",
