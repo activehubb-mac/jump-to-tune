@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { SubscriptionExpiredModal } from "./SubscriptionExpiredModal";
 
 /**
