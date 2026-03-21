@@ -41,7 +41,7 @@ export function GlobalSubscriptionCheck() {
       
       return () => clearTimeout(timer);
     }
-  }, [user, authLoading, subLoading, isSubscriptionExpired, hasActiveSubscription, hasShownModal]);
+  }, [user, authLoading, subLoading, adminLoading, isAdmin, isSubscriptionExpired, hasActiveSubscription, hasShownModal]);
 
   // Reset the "has shown" flag when user changes (logout/login)
   useEffect(() => {
