@@ -1,26 +1,60 @@
 
 
-## Harden Avatar as Video Face
+## Enhance Global Identity System
 
-### Problem
-When a user selects an avatar identity, it should be clear and enforced that the video will feature that avatar's face. Currently there's no visual confirmation or enforcement.
+Small, targeted changes. No pricing/generation/UI flow modifications.
 
-### Changes — `src/pages/AIVideoStudio.tsx`
+---
 
-1. **Active Avatar Banner** (above Generate button, inside Step 4 card):
-   - If `avatarUrl` is set, show a banner with the avatar thumbnail (32px), text "This avatar will be the face of your video", and an "×" button to clear it
-   - If cleared, reset `avatarUrl`, `identityId`, and `identityBanner` to null
+### 1. Extend `useDefaultIdentity` hook
 
-2. **Avatar Performance Validation**:
-   - If `videoType === "avatar_performance"` and `!avatarUrl`, show amber warning: "Select an identity above to use as the face of your video"
-   - Disable Generate button in this state
+**File**: `src/hooks/useDefaultIdentity.ts`
 
-3. **Include avatar in CreditConfirmModal summary**:
-   - Append `" · Avatar face"` to the summary string when `avatarUrl` is set
+Add `bio` and `artistName` (from `name_suggestions[0]`) to the query and return value:
+
+```ts
+// Select expands to include bio, name_suggestions
+.select("id, avatar_url, visual_theme, settings, bio, name_suggestions")
+
+// Return adds:
+artistName: identity.name_suggestions?.[0] ?? null,
+bio: identity.bio ?? null,
+```
+
+---
+
+### 2. Auto-set default identity on save (not just "Set as Profile")
+
+**File**: `src/pages/AIIdentityBuilder.tsx`
+
+In `handleSave` (around line 214), after `setSavedId(inserted.id)`, call:
+```ts
+await setDefaultIdentity(inserted.id);
+```
+
+This means every new identity automatically becomes the default. User can still switch via version history.
+
+---
+
+### 3. Auto-set after avatar edit completion
+
+**File**: `src/components/ai/AvatarEditModal.tsx`
+
+After a successful edit generation (where the new version is saved), auto-call `setDefaultIdentity(identityId)` — this already happens in the "Set as Profile" handler but NOT after the generation itself. Add it to the generation success path so the edited version's parent identity stays the default.
+
+---
 
 ### Files Changed
 
 | File | Change |
 |---|---|
-| `src/pages/AIVideoStudio.tsx` | Add avatar confirmation banner, validation warning, updated summary |
+| `src/hooks/useDefaultIdentity.ts` | Add `artistName` and `bio` to query & return |
+| `src/pages/AIIdentityBuilder.tsx` | Auto-set default identity on save |
+| `src/components/ai/AvatarEditModal.tsx` | Auto-set default identity after edit generation |
+
+### Not Touched
+- All pricing values and logic
+- Video Studio, Cover Art, Viral Generator (already consume `useDefaultIdentity`)
+- Backend edge functions
+- UI flows and layouts
 
