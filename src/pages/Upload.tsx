@@ -632,12 +632,12 @@ export default function Upload() {
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-primary-foreground" />
                 </div>
-                <h2 className="text-lg font-bold text-foreground">Build Full Release?</h2>
+                <h2 className="text-lg font-bold text-foreground">Turn this into a viral video?</h2>
               </div>
               <p className="text-sm text-muted-foreground">
-                JumBot can auto-generate cover art, avatar, lyric visuals, karaoke, and promo captions for your new track.
+                Create a cinematic music video or viral promo clips for your new track with AI.
               </p>
-              <p className="text-sm font-medium text-primary">Cost: 150 AI Credits (bundle)</p>
+              <p className="text-sm font-medium text-primary">From 130 AI Credits</p>
               <div className="flex gap-3">
                 <Button
                   variant="outline"
@@ -651,10 +651,10 @@ export default function Upload() {
                 </Button>
                 <Button
                   className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground"
-                  onClick={() => navigate(`/autopilot?trackId=${showAutopilotOffer}`)}
+                  onClick={() => navigate(`/ai-video?trackId=${showAutopilotOffer}`)}
                 >
                   <Rocket className="w-4 h-4 mr-2" />
-                  Launch Autopilot
+                  Create Video
                 </Button>
               </div>
             </div>

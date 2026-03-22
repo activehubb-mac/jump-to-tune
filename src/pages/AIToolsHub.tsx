@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,89 +5,108 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
 import { useDefaultIdentity } from "@/hooks/useDefaultIdentity";
-import { Sparkles, Image, User, ListMusic, Video, Music, Zap, Lock, Rocket, Plus, Clapperboard, CheckCircle2 } from "lucide-react";
+import { Sparkles, User, ListMusic, Zap, Lock, Plus, Clapperboard, CheckCircle2, TrendingUp, Flame, Image, Music, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { AI_TOOL_PRICING } from "@/lib/aiPricing";
 
-interface PricingTier {
-  label: string;
-  credits: number;
-}
-
-interface AITool {
+interface SectionTool {
   title: string;
   desc: string;
   icon: React.ElementType;
   credits: number | string;
   href: string;
   roles: string[];
-  pricingTiers?: PricingTier[];
   isPremium?: boolean;
 }
 
-const AI_TOOLS: AITool[] = [
+interface ToolSection {
+  label: string;
+  emoji: string;
+  icon: React.ElementType;
+  tools: SectionTool[];
+}
+
+const TOOL_SECTIONS: ToolSection[] = [
   {
-    title: AI_TOOL_PRICING.artist_drop.label,
-    desc: "Go from zero to a full release in one guided flow",
-    icon: Rocket,
-    credits: AI_TOOL_PRICING.artist_drop.base,
-    href: "/ai-drop",
-    roles: ["artist", "label"],
-    isPremium: true,
+    label: "Go Viral",
+    emoji: "🔥",
+    icon: Flame,
+    tools: [
+      {
+        title: AI_TOOL_PRICING.video_studio.label,
+        desc: "Create cinematic videos from your music",
+        icon: Clapperboard,
+        credits: AI_TOOL_PRICING.video_studio.base,
+        href: "/ai-video",
+        roles: ["artist", "label"],
+        isPremium: true,
+      },
+      {
+        title: AI_TOOL_PRICING.viral_generator.label,
+        desc: "Turn your song into viral-ready clips",
+        icon: Rocket,
+        credits: AI_TOOL_PRICING.viral_generator.base,
+        href: "/ai-viral",
+        roles: ["artist", "label"],
+      },
+    ],
   },
   {
-    title: AI_TOOL_PRICING.video_studio.label,
-    desc: "Create cinematic videos from your music",
-    icon: Clapperboard,
-    credits: `From ${AI_TOOL_PRICING.video_studio.base}`,
-    href: "/ai-video",
-    roles: ["artist", "label"],
-    isPremium: true,
-    pricingTiers: AI_TOOL_PRICING.video_studio.tiers,
+    label: "Build Your Artist",
+    emoji: "⚡",
+    icon: Sparkles,
+    tools: [
+      {
+        title: AI_TOOL_PRICING.artist_drop.label,
+        desc: "Go from zero to a full release in one flow",
+        icon: Rocket,
+        credits: AI_TOOL_PRICING.artist_drop.base,
+        href: "/ai-drop",
+        roles: ["artist", "label"],
+        isPremium: true,
+      },
+      {
+        title: AI_TOOL_PRICING.identity_builder.label,
+        desc: "Create your AI artist identity",
+        icon: User,
+        credits: AI_TOOL_PRICING.identity_builder.base,
+        href: "/ai-identity",
+        roles: ["artist", "label"],
+      },
+      {
+        title: AI_TOOL_PRICING.cover_art.label,
+        desc: "Generate professional album artwork",
+        icon: Image,
+        credits: AI_TOOL_PRICING.cover_art.base,
+        href: "/ai-cover-art",
+        roles: ["artist", "label"],
+      },
+      {
+        title: AI_TOOL_PRICING.release_builder.label,
+        desc: "Generate artwork, titles, and tags",
+        icon: Music,
+        credits: AI_TOOL_PRICING.release_builder.base,
+        href: "/ai-release",
+        roles: ["artist", "label"],
+      },
+    ],
   },
   {
-    title: AI_TOOL_PRICING.viral_generator.label,
-    desc: "Turn your song into viral-ready clips",
-    icon: Rocket,
-    credits: `From ${AI_TOOL_PRICING.viral_generator.base}`,
-    href: "/ai-viral",
-    roles: ["artist", "label"],
-    pricingTiers: AI_TOOL_PRICING.viral_generator.tiers,
-  },
-  {
-    title: AI_TOOL_PRICING.playlist_builder.label,
-    desc: "Describe a mood and get a curated playlist",
-    icon: ListMusic,
-    credits: AI_TOOL_PRICING.playlist_builder.base,
-    href: "/ai-playlist",
-    roles: ["artist", "label", "fan"],
-  },
-  {
-    title: AI_TOOL_PRICING.release_builder.label,
-    desc: "Generate artwork, titles, and tags for your release",
-    icon: Music,
-    credits: AI_TOOL_PRICING.release_builder.base,
-    href: "/ai-release",
-    roles: ["artist", "label"],
-  },
-  {
-    title: AI_TOOL_PRICING.cover_art.label,
-    desc: "Generate professional album artwork",
-    icon: Image,
-    credits: AI_TOOL_PRICING.cover_art.base,
-    href: "/ai-cover-art",
-    roles: ["artist", "label"],
-  },
-  {
-    title: AI_TOOL_PRICING.identity_builder.label,
-    desc: "Create your AI artist identity",
-    icon: User,
-    credits: `From ${AI_TOOL_PRICING.identity_builder.base}`,
-    href: "/ai-identity",
-    roles: ["artist", "label"],
-    pricingTiers: AI_TOOL_PRICING.identity_builder.tiers,
+    label: "Grow Your Reach",
+    emoji: "📈",
+    icon: TrendingUp,
+    tools: [
+      {
+        title: AI_TOOL_PRICING.playlist_builder.label,
+        desc: "Describe a mood and get a curated playlist",
+        icon: ListMusic,
+        credits: AI_TOOL_PRICING.playlist_builder.base,
+        href: "/ai-playlist",
+        roles: ["artist", "label", "fan"],
+      },
+    ],
   },
 ];
 
@@ -96,9 +114,6 @@ export default function AIToolsHub() {
   const { user, role } = useAuth();
   const { aiCredits, isLoading } = useAICredits();
   const { identityId, avatarUrl: identityAvatarUrl } = useDefaultIdentity();
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-
-  
 
   return (
     <Layout>
@@ -114,7 +129,7 @@ export default function AIToolsHub() {
             <div className="mt-4 inline-flex flex-col items-center gap-2">
               <div className="flex items-center gap-3">
                 <div className="text-left">
-                   <p className="text-2xl font-bold text-foreground">
+                  <p className="text-2xl font-bold text-foreground">
                     {isLoading ? "..." : aiCredits.toLocaleString()}
                     <span className="text-sm font-normal text-muted-foreground ml-1.5">credits</span>
                   </p>
@@ -139,7 +154,7 @@ export default function AIToolsHub() {
                 )}
               </Avatar>
               <span className="text-xs font-medium text-primary flex items-center gap-1">
-                <CheckCircle2 className="h-3 w-3" /> Active Artist Identity Enabled
+                <CheckCircle2 className="h-3 w-3" /> Active Artist Identity
               </span>
             </div>
           )}
@@ -154,77 +169,70 @@ export default function AIToolsHub() {
             </Button>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {AI_TOOLS.map((tool, idx) => {
-              const Icon = tool.icon;
-              const hasAccess = tool.roles.includes(role || "fan");
-              const isHovered = hoveredIdx === idx;
-              const anyHovered = hoveredIdx !== null;
-
+          <div className="space-y-8">
+            {TOOL_SECTIONS.map((section) => {
+              const SectionIcon = section.icon;
               return (
-                <Link
-                  key={tool.href}
-                  to={hasAccess ? tool.href : "#"}
-                  className={cn(
-                    !hasAccess && "pointer-events-none opacity-50",
-                    "block"
-                  )}
-                  onMouseEnter={() => setHoveredIdx(idx)}
-                  onMouseLeave={() => setHoveredIdx(null)}
-                >
-                  <Card
-                    className={cn(
-                      "border transition-all duration-300 h-full cursor-pointer relative overflow-hidden",
-                      "bg-card/60 backdrop-blur-sm",
-                      tool.isPremium
-                        ? "border-[hsl(45,80%,50%,0.3)] shadow-[0_0_20px_hsl(45,80%,50%,0.15)]"
-                        : "border-border",
-                      isHovered && tool.isPremium && "shadow-[0_0_30px_hsl(45,80%,50%,0.3)] border-[hsl(45,80%,50%,0.5)] -translate-y-1",
-                      isHovered && !tool.isPremium && "border-primary/50 -translate-y-0.5 shadow-md",
-                      anyHovered && !isHovered && "opacity-60",
-                    )}
-                  >
-                    <CardContent className="p-5">
-                      <div className="flex items-start gap-3">
-                        <div className={cn(
-                          "p-2.5 rounded-lg transition-colors",
-                          tool.isPremium
-                            ? "bg-[hsl(45,80%,50%,0.1)] text-[hsl(45,80%,60%)]"
-                            : "bg-primary/10 text-primary",
-                          isHovered && tool.isPremium && "bg-[hsl(45,80%,50%,0.2)]",
-                          isHovered && !tool.isPremium && "bg-primary/20",
-                        )}>
-                          <Icon className="h-6 w-6" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-foreground text-sm">{tool.title}</h3>
-                            {tool.isPremium && (
-                              <Badge className="bg-[hsl(45,80%,50%)] text-[hsl(45,80%,10%)] text-[10px] px-1.5 py-0 h-4 font-bold">
-                                NEW
-                              </Badge>
+                <div key={section.label}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-lg">{section.emoji}</span>
+                    <SectionIcon className="h-5 w-5 text-primary" />
+                    <h2 className="text-lg font-bold text-foreground">{section.label}</h2>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {section.tools.map((tool) => {
+                      const Icon = tool.icon;
+                      const hasAccess = tool.roles.includes(role || "fan");
+
+                      return (
+                        <Link
+                          key={tool.href}
+                          to={hasAccess ? tool.href : "#"}
+                          className={cn(
+                            !hasAccess && "pointer-events-none opacity-50",
+                            "block"
+                          )}
+                        >
+                          <Card
+                            className={cn(
+                              "border transition-all duration-300 h-full cursor-pointer hover:-translate-y-0.5 hover:shadow-md",
+                              "bg-card/60 backdrop-blur-sm",
+                              tool.isPremium
+                                ? "border-[hsl(45,80%,50%,0.3)] hover:border-[hsl(45,80%,50%,0.5)] hover:shadow-[0_0_20px_hsl(45,80%,50%,0.15)]"
+                                : "border-border hover:border-primary/50",
                             )}
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{tool.desc}</p>
-
-                          <Badge variant="secondary" className="mt-2 text-xs">
-                            <Zap className="h-3 w-3 mr-1" />
-                            {typeof tool.credits === "number" ? `${tool.credits} credits` : `${tool.credits} credits`}
-                          </Badge>
-                        </div>
-                      </div>
-
-
-
-
-                      {!hasAccess && (
-                        <p className="text-xs text-destructive mt-2 flex items-center gap-1">
-                          <Lock className="h-3 w-3" />Artist access required
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Link>
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-center gap-3">
+                                <div className={cn(
+                                  "p-2 rounded-lg shrink-0",
+                                  tool.isPremium
+                                    ? "bg-[hsl(45,80%,50%,0.1)] text-[hsl(45,80%,60%)]"
+                                    : "bg-primary/10 text-primary",
+                                )}>
+                                  <Icon className="h-5 w-5" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-semibold text-foreground text-sm">{tool.title}</h3>
+                                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{tool.desc}</p>
+                                </div>
+                                <Badge variant="secondary" className="text-xs shrink-0">
+                                  <Zap className="h-3 w-3 mr-1" />
+                                  {tool.credits}
+                                </Badge>
+                              </div>
+                              {!hasAccess && (
+                                <p className="text-xs text-destructive mt-2 flex items-center gap-1">
+                                  <Lock className="h-3 w-3" />Artist access required
+                                </p>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
           </div>
