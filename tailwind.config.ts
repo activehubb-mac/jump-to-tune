@@ -90,21 +90,46 @@ export default {
           "0%, 100%": { transform: "scale(1)" },
           "50%": { transform: "scale(1.06)" },
         },
+        "ken-burns-slow": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.04)" },
+        },
+        "ken-burns-cinematic": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.08)" },
+        },
         "avatar-breathe": {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-2px)" },
         },
+        "avatar-breathe-slow": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-3px)" },
+        },
         "avatar-glow": {
           "0%, 100%": { boxShadow: "0 0 8px hsl(var(--primary) / 0.2)" },
           "50%": { boxShadow: "0 0 20px hsl(var(--primary) / 0.4)" },
+        },
+        "avatar-glow-strong": {
+          "0%, 100%": { boxShadow: "0 0 12px hsl(var(--primary) / 0.3)" },
+          "50%": { boxShadow: "0 0 28px hsl(var(--primary) / 0.55)" },
+        },
+        "avatar-glow-cinematic": {
+          "0%, 100%": { boxShadow: "0 0 15px hsl(var(--primary) / 0.3), 0 0 30px hsl(var(--accent) / 0.15)" },
+          "50%": { boxShadow: "0 0 35px hsl(var(--primary) / 0.5), 0 0 50px hsl(var(--accent) / 0.25)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "ken-burns": "ken-burns 6s ease-in-out infinite",
+        "ken-burns-slow": "ken-burns-slow 8s ease-in-out infinite",
+        "ken-burns-cinematic": "ken-burns-cinematic 10s ease-in-out infinite",
         "avatar-breathe": "avatar-breathe 4s ease-in-out infinite",
+        "avatar-breathe-slow": "avatar-breathe-slow 6s ease-in-out infinite",
         "avatar-glow": "avatar-glow 3s ease-in-out infinite",
+        "avatar-glow-strong": "avatar-glow-strong 3s ease-in-out infinite",
+        "avatar-glow-cinematic": "avatar-glow-cinematic 4s ease-in-out infinite",
       },
       backgroundSize: {
         "200%": "200% 200%",

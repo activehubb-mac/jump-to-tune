@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import type { MotionTier } from "@/components/ai/LiveAvatarPreview";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,6 +70,9 @@ export default function AIIdentityBuilder() {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [result, setResult] = useState<IdentityResult | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [motionTier, setMotionTier] = useState<MotionTier>("basic");
+  const [motionConfirmOpen, setMotionConfirmOpen] = useState(false);
+  const [pendingMotionTier, setPendingMotionTier] = useState<MotionTier>("performance");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const pricing = AI_TOOL_PRICING.identity_builder;
@@ -224,7 +228,38 @@ export default function AIIdentityBuilder() {
     }
     params.set("style", mode === "photo" ? outputStyle : "artistic");
     if (savedId) params.set("identity_id", savedId);
+    if (motionTier !== "basic") params.set("motion_level", motionTier);
     navigate(`/ai-video?${params.toString()}`);
+  };
+
+  const motionCost = pendingMotionTier === "cinematic" ? 200 : 80;
+
+  const handleMotionUpgrade = async () => {
+    if (!user) return;
+    setMotionConfirmOpen(false);
+    try {
+      const { data, error } = await supabase.rpc("deduct_ai_credits", {
+        p_user_id: user.id,
+        p_credits: motionCost,
+      });
+      if (error) throw error;
+      const result = data as unknown as { success: boolean };
+      if (!result.success) {
+        showFeedback({ type: "error", title: "Insufficient Credits", message: `You need ${motionCost} credits for this upgrade.` });
+        return;
+      }
+      setMotionTier(pendingMotionTier);
+      refetch();
+      showFeedback({ type: "success", title: "Motion Upgraded!", message: `${pendingMotionTier === "cinematic" ? "Cinematic" : "Performance"} avatar activated.` });
+      // Persist to saved identity if exists
+      if (savedId) {
+        await supabase.from("artist_identities").update({
+          settings: { motion_level: pendingMotionTier, motion_enabled: true },
+        }).eq("id", savedId);
+      }
+    } catch (err: any) {
+      showFeedback({ type: "error", title: "Upgrade Failed", message: err.message || "Please try again." });
+    }
   };
 
   const handleSetAsProfile = async () => {
@@ -377,7 +412,7 @@ export default function AIIdentityBuilder() {
                 <Card className="glass border-primary/20 overflow-hidden">
                   <div className="relative">
                     {result.avatar_image && (
-                      <LiveAvatarPreview src={result.avatar_image} />
+                      <LiveAvatarPreview src={result.avatar_image} tier={motionTier} />
                     )}
                     <div className="absolute top-2 left-2">
                       <Badge className="bg-primary/80 text-primary-foreground backdrop-blur-sm gap-1">
@@ -428,12 +463,27 @@ export default function AIIdentityBuilder() {
                   <Button size="sm" variant="outline" onClick={handleUseInVideo} className="gap-1.5">
                     <Video className="h-3.5 w-3.5" />Use in Video
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => { const params = new URLSearchParams(); params.set("style", mode === "photo" ? outputStyle : "artistic"); if (savedId) params.set("identity_id", savedId); params.set("type", "avatar_performance"); navigate(`/ai-video?${params.toString()}`); }} className="gap-1.5">
+                  <Button
+                    size="sm"
+                    variant={motionTier === "performance" ? "default" : "outline"}
+                    disabled={motionTier === "performance" || motionTier === "cinematic"}
+                    onClick={() => { setPendingMotionTier("performance"); setMotionConfirmOpen(true); }}
+                    className="gap-1.5"
+                  >
                     <Play className="h-3.5 w-3.5" />Animate — 80 credits
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={motionTier === "cinematic" ? "default" : "outline"}
+                    disabled={motionTier === "cinematic"}
+                    onClick={() => { setPendingMotionTier("cinematic"); setMotionConfirmOpen(true); }}
+                    className="gap-1.5"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />Cinematic — 200 credits
                   </Button>
                 </div>
 
-                {/* Name suggestions (if multiple) */}
+
                 {result.name_suggestions?.length > 1 && (
                   <Card className="glass"><CardHeader className="pb-2"><CardTitle className="text-sm">All Name Suggestions</CardTitle></CardHeader>
                     <CardContent><div className="space-y-2">{result.name_suggestions.map((name, i) => (
@@ -457,6 +507,14 @@ export default function AIIdentityBuilder() {
         creditCost={cost}
         currentCredits={aiCredits}
         summary={mode === "vision" ? "Generate a complete AI artist identity" : `Photo recreate in ${OUTPUT_STYLES.find(s => s.value === outputStyle)?.label} style${hdMode ? " (HD)" : ""}`}
+      />
+      <CreditConfirmModal
+        open={motionConfirmOpen}
+        onOpenChange={setMotionConfirmOpen}
+        onConfirm={handleMotionUpgrade}
+        creditCost={motionCost}
+        currentCredits={aiCredits}
+        summary={`${pendingMotionTier === "cinematic" ? "Cinematic" : "Performance"} Motion Upgrade`}
       />
     </Layout>
   );
