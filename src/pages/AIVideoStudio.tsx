@@ -294,7 +294,75 @@ export default function AIVideoStudio() {
           </Card>
         )}
 
-        {/* Active jobs indicator */}
+        {/* Saved Identities Picker */}
+        {!identityBanner && (
+          <Card className="glass">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <UserCircle className="h-5 w-5 text-primary" />
+                Saved Identities
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {identitiesLoading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+                </div>
+              ) : savedIdentities.length === 0 ? (
+                <Link
+                  to="/ai-identity"
+                  className="flex items-center gap-2 text-sm text-primary hover:underline"
+                >
+                  <Plus className="h-4 w-4" /> Create your first identity →
+                </Link>
+              ) : (
+                <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
+                  {savedIdentities.map((identity) => {
+                    const isSelected = identityId === identity.id;
+                    return (
+                      <button
+                        key={identity.id}
+                        onClick={() => {
+                          setIdentityId(identity.id);
+                          setIdentityBanner(`Using saved identity: ${identity.visual_theme || identity.id.slice(0, 8)}`);
+                          setVideoType("avatar_performance");
+                          if (identity.visual_theme) {
+                            const matchedStyle = STYLE_PRESETS.find(
+                              (s) => s.value.toLowerCase() === identity.visual_theme?.toLowerCase()
+                            );
+                            if (matchedStyle) setStyle(matchedStyle.value);
+                          }
+                          setScenePrompt(
+                            `Artist avatar performance video${identity.visual_theme ? ` in ${identity.visual_theme} style` : ""}`
+                          );
+                        }}
+                        className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border shrink-0 transition-all w-20 ${
+                          isSelected
+                            ? "border-primary bg-primary/10 ring-1 ring-primary/30"
+                            : "border-glass-border bg-muted/30 hover:border-primary/40"
+                        }`}
+                      >
+                        <Avatar className="h-12 w-12">
+                          {identity.avatar_url ? (
+                            <AvatarImage src={identity.avatar_url} alt="Identity" />
+                          ) : null}
+                          <AvatarFallback className="bg-muted text-muted-foreground">
+                            <User className="h-5 w-5" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-[10px] text-muted-foreground truncate w-full text-center">
+                          {identity.visual_theme || "Identity"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+
         {activeJobs.length > 0 && (
           <Card className="border-blue-500/30 bg-blue-500/5 bg-card/60 backdrop-blur-sm">
             <CardContent className="p-3 flex items-center gap-3">
