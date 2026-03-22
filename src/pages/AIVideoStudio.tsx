@@ -243,20 +243,24 @@ export default function AIVideoStudio() {
   const [motionLevel, setMotionLevel] = useState<string | null>(null);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const avatarUrl = params.get("avatar_url");
+    const avatarParam = params.get("avatar_url");
     const identityStyle = params.get("style");
     const idParam = params.get("identity_id");
     const typeParam = params.get("type");
     const motionParam = params.get("motion_level");
-    if (avatarUrl || identityStyle || idParam) {
+    if (avatarParam || identityStyle || idParam) {
       setIdentityBanner(idParam ? `Using saved identity ${idParam.slice(0, 8)}…` : "Using your AI Identity avatar");
       if (identityStyle) setStyle(identityStyle);
       setVideoType(typeParam || "avatar_performance");
       if (idParam) setIdentityId(idParam);
-      if (avatarUrl) setAvatarUrl(avatarUrl);
+      if (avatarParam) setAvatarUrl(avatarParam);
       if (identityStyle) {
         setScenePrompt(`Artist avatar performance video in ${identityStyle} style`);
       }
+    } else if (defaultAvatarUrl && !avatarUrl) {
+      // Auto-load default identity if no URL params
+      setAvatarUrl(defaultAvatarUrl);
+      if (defaultIdentityId) setIdentityId(defaultIdentityId);
     }
     if (motionParam) {
       setMotionLevel(motionParam);
