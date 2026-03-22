@@ -71,6 +71,7 @@ export default function AIIdentityBuilder() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [showPromoPrompt, setShowPromoPrompt] = useState(false);
   const [result, setResult] = useState<IdentityResult | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
