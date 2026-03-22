@@ -71,6 +71,8 @@ export function useDefaultIdentity() {
     avatarUrl: data?.avatarUrl ?? null,
     visualTheme: data?.visualTheme ?? null,
     settings: data?.settings ?? null,
+    artistName: data?.artistName ?? null,
+    bio: data?.bio ?? null,
     isLoading,
     setDefaultIdentity,
   };
