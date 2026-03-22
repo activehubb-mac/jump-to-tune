@@ -54,6 +54,15 @@ export const AI_TOOL_PRICING: Record<string, ToolPricing> = {
       { label: "HD Video (720p)", credits: 400 },
     ],
   },
+  avatar_edit: {
+    label: "Avatar Editor",
+    base: 10,
+    tiers: [
+      { label: "Quick Edit", credits: 10 },
+      { label: "Style Shift", credits: 15 },
+      { label: "Full Recreate", credits: 25 },
+    ],
+  },
 };
 
 export function getToolCost(key: string): number {

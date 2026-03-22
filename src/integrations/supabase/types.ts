@@ -1656,6 +1656,44 @@ export type Database = {
         }
         Relationships: []
       }
+      identity_versions: {
+        Row: {
+          avatar_url: string
+          created_at: string | null
+          edit_mode: string
+          id: string
+          identity_id: string
+          settings: Json | null
+          user_id: string
+        }
+        Insert: {
+          avatar_url: string
+          created_at?: string | null
+          edit_mode: string
+          id?: string
+          identity_id: string
+          settings?: Json | null
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string
+          created_at?: string | null
+          edit_mode?: string
+          id?: string
+          identity_id?: string
+          settings?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identity_versions_identity_id_fkey"
+            columns: ["identity_id"]
+            isOneToOne: false
+            referencedRelation: "artist_identities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_queue: {
         Row: {
           attempts: number

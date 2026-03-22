@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Sparkles, Loader2, Zap, Lock, ArrowLeft, User, Palette, Copy, Upload, Camera, RefreshCw, Wand2, Video, Save, Eye, UserCheck } from "lucide-react";
+import { Sparkles, Loader2, Zap, Lock, ArrowLeft, User, Palette, Copy, Upload, Camera, RefreshCw, Wand2, Video, Save, Eye, UserCheck, Paintbrush } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CreditConfirmModal } from "@/components/ai/CreditConfirmModal";
 import { AI_TOOL_PRICING } from "@/lib/aiPricing";
 import { LiveAvatarPreview } from "@/components/ai/LiveAvatarPreview";
+import { AvatarEditModal } from "@/components/ai/AvatarEditModal";
 import { cn } from "@/lib/utils";
 
 const OUTPUT_STYLES = [
@@ -72,6 +73,7 @@ export default function AIIdentityBuilder() {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [result, setResult] = useState<IdentityResult | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const pricing = AI_TOOL_PRICING.identity_builder;
@@ -442,10 +444,15 @@ export default function AIIdentityBuilder() {
                    <Button size="sm" variant="outline" onClick={() => handleUseInVideo("performance")} className="gap-1.5">
                      <Video className="h-3.5 w-3.5" />Create Video — 130 credits
                    </Button>
-                   <Button size="sm" variant="outline" onClick={() => handleUseInVideo("cinematic")} className="gap-1.5">
-                     <Sparkles className="h-3.5 w-3.5" />HD Video — 400 credits
-                   </Button>
-                 </div>
+                    <Button size="sm" variant="outline" onClick={() => handleUseInVideo("cinematic")} className="gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5" />HD Video — 400 credits
+                    </Button>
+                    {savedId && (
+                      <Button size="sm" variant="outline" onClick={() => setEditModalOpen(true)} className="gap-1.5 border-primary/30 text-primary">
+                        <Paintbrush className="h-3.5 w-3.5" />Edit Avatar
+                      </Button>
+                    )}
+                  </div>
 
 
                 {result.name_suggestions?.length > 1 && (
@@ -472,6 +479,15 @@ export default function AIIdentityBuilder() {
         currentCredits={aiCredits}
         summary={mode === "vision" ? "Generate a complete AI artist identity" : `Photo recreate in ${OUTPUT_STYLES.find(s => s.value === outputStyle)?.label} style${hdMode ? " (HD)" : ""}`}
       />
+
+      {savedId && (
+        <AvatarEditModal
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          identityId={savedId}
+          currentAvatarUrl={result?.avatar_image ?? null}
+        />
+      )}
     </Layout>
   );
 }
