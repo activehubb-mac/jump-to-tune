@@ -168,14 +168,18 @@ export default function AIVideoStudio() {
 
   // Accept identity params from AI Identity Builder
   const [identityBanner, setIdentityBanner] = useState<string | null>(null);
+  const [identityId, setIdentityId] = useState<string | null>(null);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const avatarUrl = params.get("avatar_url");
     const identityStyle = params.get("style");
-    if (avatarUrl || identityStyle) {
-      setIdentityBanner("Using your AI Identity avatar");
+    const idParam = params.get("identity_id");
+    const typeParam = params.get("type");
+    if (avatarUrl || identityStyle || idParam) {
+      setIdentityBanner(idParam ? `Using saved identity ${idParam.slice(0, 8)}…` : "Using your AI Identity avatar");
       if (identityStyle) setStyle(identityStyle);
-      setVideoType("avatar_performance");
+      setVideoType(typeParam || "avatar_performance");
+      if (idParam) setIdentityId(idParam);
       if (identityStyle) {
         setScenePrompt(`Artist avatar performance video in ${identityStyle} style`);
       }
