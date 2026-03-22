@@ -136,9 +136,9 @@ serve(async (req) => {
     ].filter(Boolean).join(". ");
 
     // Start Replicate prediction
-    log("Starting Replicate prediction", { model: "minimax/video-01-live", prompt: fullPrompt.substring(0, 100) });
+    log("Starting Replicate prediction", { model: "minimax/video-01", prompt: fullPrompt.substring(0, 100) });
 
-    const createRes = await fetch("https://api.replicate.com/v1/models/minimax/video-01-live/predictions", {
+    const createRes = await fetch("https://api.replicate.com/v1/models/minimax/video-01/predictions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${REPLICATE_API_KEY}`,
@@ -153,7 +153,12 @@ serve(async (req) => {
     if (!createRes.ok) {
       const errBody = await createRes.text();
       log("Replicate create error", { status: createRes.status, body: errBody });
-      throw new Error(`Replicate API error: ${createRes.status}`);
+      let detail = `Replicate API error: ${createRes.status}`;
+      try {
+        const parsed = JSON.parse(errBody);
+        if (parsed.detail) detail = typeof parsed.detail === "string" ? parsed.detail : JSON.stringify(parsed.detail);
+      } catch { /* use default */ }
+      throw new Error(detail);
     }
 
     const prediction = await createRes.json();
