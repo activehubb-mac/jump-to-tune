@@ -16,6 +16,7 @@ import { FanZoneSection } from "@/components/home/FanZoneSection";
 import { AIDJSection } from "@/components/home/AIDJSection";
 import { MusicGalaxy } from "@/components/home/MusicGalaxy";
 import { KaraokePromoBanner } from "@/components/home/KaraokePromoBanner";
+import { DailyGrowthPlan } from "@/components/home/DailyGrowthPlan";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { useState, useEffect } from "react";
