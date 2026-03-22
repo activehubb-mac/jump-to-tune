@@ -23,26 +23,6 @@ const STYLE_PROMPTS: Record<string, string> = {
   retro: "Retro VHS aesthetic, scan lines, 80s colors, analog distortion",
 };
 
-const REPLICATE_API = "https://api.replicate.com/v1/predictions";
-
-async function waitForPrediction(predictionId: string, apiToken: string, maxPolls = 120): Promise<{ status: string; output: unknown; error?: string }> {
-  for (let i = 0; i < maxPolls; i++) {
-    await new Promise((r) => setTimeout(r, 5000));
-    const res = await fetch(`${REPLICATE_API}/${predictionId}`, {
-      headers: { Authorization: `Bearer ${apiToken}`, "Content-Type": "application/json" },
-    });
-    if (!res.ok) {
-      log("Poll HTTP error", { status: res.status });
-      continue;
-    }
-    const data = await res.json();
-    log("Poll status", { status: data.status, poll: i + 1 });
-    if (data.status === "succeeded") return { status: "succeeded", output: data.output };
-    if (data.status === "failed" || data.status === "canceled") return { status: data.status, output: null, error: data.error || "Generation failed" };
-  }
-  return { status: "timeout", output: null, error: "Generation timed out after 10 minutes" };
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -135,7 +115,7 @@ serve(async (req) => {
       "cinematic quality, high detail, smooth motion",
     ].filter(Boolean).join(". ");
 
-    // Start Replicate prediction
+    // Start Replicate prediction — DO NOT WAIT, return immediately
     log("Starting Replicate prediction", { model: "minimax/video-01", prompt: fullPrompt.substring(0, 100) });
 
     const createRes = await fetch("https://api.replicate.com/v1/models/minimax/video-01/predictions", {
@@ -143,7 +123,6 @@ serve(async (req) => {
       headers: {
         Authorization: `Bearer ${REPLICATE_API_KEY}`,
         "Content-Type": "application/json",
-        Prefer: "wait",
       },
       body: JSON.stringify({
         input: { prompt: fullPrompt, prompt_optimizer: true },
@@ -163,81 +142,22 @@ serve(async (req) => {
 
     const prediction = await createRes.json();
     const predictionId = prediction.id;
-    log("Prediction created", { predictionId, status: prediction.status });
+    log("Prediction created — returning immediately", { predictionId, status: prediction.status });
 
-    // Update job to processing
+    // Update job to processing with prediction_id
     await supabase.from("ai_video_jobs").update({
       status: "processing",
       metadata: { watermark: true, beat_sync: true, prediction_id: predictionId },
     }).eq("id", jobId);
 
-    // Return immediately — let the client poll. But continue processing in background.
-    // Edge functions have a ~400s timeout on Supabase, so we'll poll here.
-    let result: { status: string; output: unknown; error?: string };
-
-    if (prediction.status === "succeeded") {
-      result = { status: "succeeded", output: prediction.output };
-    } else if (prediction.status === "failed" || prediction.status === "canceled") {
-      result = { status: prediction.status, output: null, error: prediction.error };
-    } else {
-      result = await waitForPrediction(predictionId, REPLICATE_API_KEY, 60); // ~5 min max
-    }
-
-    if (result.status === "succeeded" && result.output) {
-      log("Generation succeeded, downloading video");
-
-      // Get the video URL from output
-      const videoUrl = typeof result.output === "string"
-        ? result.output
-        : Array.isArray(result.output)
-          ? result.output[0]
-          : null;
-
-      if (!videoUrl) throw new Error("No video URL in output");
-
-      // Download video
-      const videoRes = await fetch(videoUrl);
-      if (!videoRes.ok) throw new Error("Failed to download generated video");
-      const videoBlob = await videoRes.blob();
-
-      // Upload to ai-videos bucket
-      const filePath = `${userId}/${jobId}.mp4`;
-      const { error: uploadError } = await supabase.storage
-        .from("ai-videos")
-        .upload(filePath, videoBlob, { contentType: "video/mp4", upsert: true });
-
-      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
-
-      const { data: publicUrl } = supabase.storage.from("ai-videos").getPublicUrl(filePath);
-
-      // Update job as completed
-      await supabase.from("ai_video_jobs").update({
-        status: "completed",
-        output_url: publicUrl.publicUrl,
-        completed_at: new Date().toISOString(),
-        metadata: { watermark: true, beat_sync: true, prediction_id: predictionId },
-      }).eq("id", jobId);
-
-      log("Job completed", { jobId, outputUrl: publicUrl.publicUrl });
-
-      // Try to send push notification (fire and forget)
-      try {
-        await supabase.functions.invoke("send-push-notification", {
-          body: { user_id: userId, title: "Video Ready! 🎬", body: "Your AI video has finished generating.", data: { route: "/ai-video" } },
-        });
-      } catch (e) { log("Push notification failed (non-critical)", { error: String(e) }); }
-
-      return new Response(JSON.stringify({
-        status: "completed", job_id: jobId,
-        output_url: publicUrl.publicUrl,
-        credits_used: creditCost,
-        credits_remaining: deductResult.new_credits,
-      }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
-
-    } else {
-      // Failed or timed out — refund credits
-      throw new Error(result.error || "Video generation failed");
-    }
+    // Return immediately — frontend will poll via poll-video-job
+    return new Response(JSON.stringify({
+      status: "processing",
+      job_id: jobId,
+      prediction_id: predictionId,
+      credits_used: creditCost,
+      credits_remaining: deductResult.new_credits,
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
 
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
@@ -247,7 +167,6 @@ serve(async (req) => {
     if (userId && creditCost > 0) {
       log("Refunding credits", { userId, creditCost });
       await supabase.rpc("add_ai_credits", { p_user_id: userId, p_credits: creditCost });
-      // Log refund
       await supabase.from("ai_credit_usage").insert({
         user_id: userId, action: "video_studio_refund", credits_used: -creditCost,
         metadata: { reason: msg, job_id: jobId },
