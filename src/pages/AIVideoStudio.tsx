@@ -12,11 +12,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Sparkles, Loader2, Zap, Lock, ArrowLeft, Video, Clock,
   Film, Type, Smartphone, User, Monitor, Square, RectangleVertical,
   CheckCircle2, XCircle, Clock3, Clapperboard, Trash2, RotateCcw, Download,
-  UserCircle, Plus,
+  UserCircle, Plus, Expand,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
