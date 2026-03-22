@@ -379,41 +379,51 @@ export default function AIVideoStudio() {
                   {savedIdentities.map((identity) => {
                     const isSelected = identityId === identity.id;
                     return (
-                      <button
-                        key={identity.id}
-                        onClick={() => {
-                          setIdentityId(identity.id);
-                          setAvatarUrl(identity.avatar_url || null);
-                          setIdentityBanner(`Using saved identity: ${identity.visual_theme || identity.id.slice(0, 8)}`);
-                          setVideoType("avatar_performance");
-                          if (identity.visual_theme) {
-                            const matchedStyle = STYLE_PRESETS.find(
-                              (s) => s.value.toLowerCase() === identity.visual_theme?.toLowerCase()
+                      <div key={identity.id} className="relative shrink-0">
+                        <button
+                          onClick={() => {
+                            setIdentityId(identity.id);
+                            setAvatarUrl(identity.avatar_url || null);
+                            setIdentityBanner(`Using saved identity: ${identity.visual_theme || identity.id.slice(0, 8)}`);
+                            setVideoType("avatar_performance");
+                            if (identity.visual_theme) {
+                              const matchedStyle = STYLE_PRESETS.find(
+                                (s) => s.value.toLowerCase() === identity.visual_theme?.toLowerCase()
+                              );
+                              if (matchedStyle) setStyle(matchedStyle.value);
+                            }
+                            setScenePrompt(
+                              `Artist avatar performance video${identity.visual_theme ? ` in ${identity.visual_theme} style` : ""}`
                             );
-                            if (matchedStyle) setStyle(matchedStyle.value);
-                          }
-                          setScenePrompt(
-                            `Artist avatar performance video${identity.visual_theme ? ` in ${identity.visual_theme} style` : ""}`
-                          );
-                        }}
-                        className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border shrink-0 transition-all w-20 ${
-                          isSelected
-                            ? "border-primary bg-primary/10 ring-1 ring-primary/30"
-                            : "border-glass-border bg-muted/30 hover:border-primary/40"
-                        }`}
-                      >
-                        <Avatar className="h-12 w-12">
-                          {identity.avatar_url ? (
-                            <AvatarImage src={identity.avatar_url} alt="Identity" />
-                          ) : null}
-                          <AvatarFallback className="bg-muted text-muted-foreground">
-                            <User className="h-5 w-5" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-[10px] text-muted-foreground truncate w-full text-center">
-                          {identity.visual_theme || "Identity"}
-                        </span>
-                      </button>
+                          }}
+                          className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-all w-20 ${
+                            isSelected
+                              ? "border-primary bg-primary/10 ring-1 ring-primary/30"
+                              : "border-glass-border bg-muted/30 hover:border-primary/40"
+                          }`}
+                        >
+                          <Avatar className="h-12 w-12">
+                            {identity.avatar_url ? (
+                              <AvatarImage src={identity.avatar_url} alt="Identity" />
+                            ) : null}
+                            <AvatarFallback className="bg-muted text-muted-foreground">
+                              <User className="h-5 w-5" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-[10px] text-muted-foreground truncate w-full text-center">
+                            {identity.visual_theme || "Identity"}
+                          </span>
+                        </button>
+                        {identity.avatar_url && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setPreviewIdentity(identity); }}
+                            className="absolute top-1 right-1 h-5 w-5 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center border border-border/50 hover:bg-primary/20 transition-colors z-10"
+                            aria-label="Preview avatar"
+                          >
+                            <Expand className="h-3 w-3 text-muted-foreground" />
+                          </button>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
