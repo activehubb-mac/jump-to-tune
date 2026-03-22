@@ -168,6 +168,7 @@ export default function AIVideoStudio() {
   const [style, setStyle] = useState("cyberpunk");
   const [scenePrompt, setScenePrompt] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   // Saved identities
   const [savedIdentities, setSavedIdentities] = useState<any[]>([]);
