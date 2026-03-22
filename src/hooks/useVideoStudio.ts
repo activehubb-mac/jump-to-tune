@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { useAICredits } from "@/hooks/useAICredits";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 export interface VideoJob {
   id: string;
@@ -59,6 +59,26 @@ export function useVideoStudio() {
   const { refetch: refetchCredits } = useAICredits();
   const queryClient = useQueryClient();
   const prevJobsRef = useRef<VideoJob[]>([]);
+  const pollingRef = useRef<Set<string>>(new Set());
+
+  // Poll a single active job via the poll-video-job edge function
+  const pollJob = useCallback(async (jobId: string) => {
+    if (pollingRef.current.has(jobId)) return; // already polling this job
+    pollingRef.current.add(jobId);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) return;
+
+      await supabase.functions.invoke("poll-video-job", {
+        body: { job_id: jobId },
+        headers: { Authorization: `Bearer ${session.session.access_token}` },
+      });
+    } catch {
+      // Non-critical — will retry on next cycle
+    } finally {
+      pollingRef.current.delete(jobId);
+    }
+  }, []);
 
   const { data: jobs = [], isLoading: jobsLoading } = useQuery<VideoJob[]>({
     queryKey: ["video-jobs", user?.id],
@@ -74,14 +94,25 @@ export function useVideoStudio() {
     },
     enabled: !!user,
     refetchInterval: () => {
-      // Poll every 5s if any job is active, otherwise 30s
       const active = (queryClient.getQueryData<VideoJob[]>(["video-jobs", user?.id]) ?? [])
         .some((j) => j.status === "queued" || j.status === "processing");
       return active ? 5000 : 30000;
     },
   });
 
-  // Detect newly completed jobs and show toast
+  // Trigger poll-video-job for any active jobs whenever jobs list refreshes
+  useEffect(() => {
+    for (const job of jobs) {
+      if (job.status === "processing" || job.status === "queued") {
+        const metadata = job.metadata as Record<string, unknown> | null;
+        if (metadata?.prediction_id) {
+          pollJob(job.id);
+        }
+      }
+    }
+  }, [jobs, pollJob]);
+
+  // Detect newly completed/failed jobs and show toast
   useEffect(() => {
     const prev = prevJobsRef.current;
     if (prev.length > 0) {
@@ -159,7 +190,7 @@ export function useVideoStudio() {
       showFeedback({
         type: "success",
         title: "Video Queued! 🎬",
-        message: `Used ${data.credits_used} credits. Generation takes 2-5 minutes.`,
+        message: `Used ${data.credits_used} credits. Generation takes 3-5 minutes.`,
         autoClose: true,
       });
     },
