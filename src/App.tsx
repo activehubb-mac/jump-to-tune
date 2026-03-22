@@ -76,6 +76,7 @@ import GoDJMixBuilder from "./pages/GoDJMixBuilder";
 import GoDJMixPlayback from "./pages/GoDJMixPlayback";
 import AIReleaseBuilder from "./pages/AIReleaseBuilder";
 import AIToolsHub from "./pages/AIToolsHub";
+import AIArtistDrop from "./pages/AIArtistDrop";
 import CoverArtGenerator from "./pages/CoverArtGenerator";
 import AIIdentityBuilder from "./pages/AIIdentityBuilder";
 import AIPlaylistBuilder from "./pages/AIPlaylistBuilder";
