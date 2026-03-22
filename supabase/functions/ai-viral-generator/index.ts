@@ -129,7 +129,7 @@ serve(async (req) => {
           messages: [
             {
               role: "system",
-              content: `You are a viral music marketing expert. Create short-form social media copy for a music promotional clip. Be punchy, use trending language, and focus on engagement. The content is for ${formatLabel}.`,
+              content: `You are a viral music marketing expert. Create short-form social media copy for a music promotional clip. Be punchy, use trending language, and focus on engagement. The content is for ${formatLabel}.${visual_theme ? ` The artist's visual brand is "${visual_theme}" style.` : ""}${avatar_url ? " The artist has a distinctive AI-generated visual identity." : ""}`,
             },
             {
               role: "user",
@@ -139,6 +139,7 @@ Artist: "${artistName}"
 Genre: ${track.genre || "Unknown"}
 Mood: ${(track.mood_tags || []).join(", ") || "N/A"}
 Description: ${track.description || "N/A"}
+Visual Theme: ${visual_theme || "N/A"}
 Duration: ${duration_seconds}s ${style} clip
 Format: ${formatLabel}`,
             },

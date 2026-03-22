@@ -152,7 +152,7 @@ serve(async (req) => {
     // Update job to processing with prediction_id
     await supabase.from("ai_video_jobs").update({
       status: "processing",
-      metadata: { watermark: true, beat_sync: true, prediction_id: predictionId },
+      metadata: { watermark: true, beat_sync: true, prediction_id: predictionId, avatar_url: avatar_url || null },
     }).eq("id", jobId);
 
     // Return immediately — frontend will poll via poll-video-job

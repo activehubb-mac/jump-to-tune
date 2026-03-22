@@ -116,6 +116,8 @@ export default function AIViralGenerator() {
       duration_seconds: 10,
       style,
       clip_count: currentClipOption.clips,
+      avatar_url: defaultAvatarUrl || undefined,
+      visual_theme: defaultTheme || undefined,
     });
   };
 
