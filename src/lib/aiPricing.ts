@@ -1,3 +1,8 @@
+/**
+ * CANONICAL PRICING SOURCE — all frontend AI tool pricing lives here.
+ * Backend edge functions have their own copies but this file drives all UI.
+ * The `ai_credit_costs` DB table exists for admin/analytics only — not consumed by tools.
+ */
 export interface PricingTier {
   label: string;
   credits: number;

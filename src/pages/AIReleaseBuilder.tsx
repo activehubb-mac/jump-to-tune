@@ -64,7 +64,7 @@ interface ReleaseResult {
 export default function AIReleaseBuilder() {
   const navigate = useNavigate();
   const { user, role } = useAuth();
-  const { aiCredits, getCost, isLoading: creditsLoading, refetch: refetchCredits } = useAICredits();
+  const { aiCredits, isLoading: creditsLoading, refetch: refetchCredits } = useAICredits();
   const { showFeedback } = useFeedbackSafe();
 
   const [prompt, setPrompt] = useState("");
@@ -75,7 +75,7 @@ export default function AIReleaseBuilder() {
   const [result, setResult] = useState<ReleaseResult | null>(null);
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
 
-  const cost = getCost("release_builder") || 10;
+  const cost = 10;
   const canAfford = aiCredits >= cost;
 
   if (!user) {

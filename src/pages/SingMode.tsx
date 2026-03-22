@@ -18,13 +18,13 @@ export default function SingMode() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: singTrack, isLoading } = useSingModeTrack(trackId);
-  const { aiCredits, getCost, refetch: refetchCredits } = useAICredits();
+  const { aiCredits, refetch: refetchCredits } = useAICredits();
   const [stage, setStage] = useState<Stage>("intro");
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
   const [trackMeta, setTrackMeta] = useState<{ title: string; artist_name: string } | null>(null);
   const [isDeducting, setIsDeducting] = useState(false);
 
-  const singCost = getCost("sing_mode") || 5;
+  const singCost = 5;
   const canAfford = aiCredits >= singCost;
 
   // Fetch track metadata

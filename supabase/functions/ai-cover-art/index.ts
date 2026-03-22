@@ -28,7 +28,7 @@ serve(async (req) => {
     if (userError || !userData.user) throw new Error("Not authenticated");
     const userId = userData.user.id;
 
-    const { prompt, style_hint, is_regenerate } = await req.json();
+    const { prompt, style_hint, is_regenerate, avatar_url } = await req.json();
     if (!prompt) {
       return new Response(JSON.stringify({ error: "Prompt is required" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
@@ -58,7 +58,8 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const fullPrompt = `Generate a 1:1 square album cover art. Style: ${style_hint || "modern, bold, visually striking"}. ${prompt}. No text on the image.`;
+    const identityContext = avatar_url ? " The artwork should reflect the artist's visual identity and personal brand." : "";
+    const fullPrompt = `Generate a 1:1 square album cover art. Style: ${style_hint || "modern, bold, visually striking"}. ${prompt}.${identityContext} No text on the image.`;
 
     const imageResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

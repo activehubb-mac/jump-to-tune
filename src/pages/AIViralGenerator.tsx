@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
 import { useViralGenerator } from "@/hooks/useViralGenerator";
+import { useDefaultIdentity } from "@/hooks/useDefaultIdentity";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -41,6 +42,7 @@ export default function AIViralGenerator() {
   const { user, role } = useAuth();
   const { aiCredits, isLoading: creditsLoading } = useAICredits();
   const { showFeedback } = useFeedbackSafe();
+  const { avatarUrl: defaultAvatarUrl, visualTheme: defaultTheme } = useDefaultIdentity();
   const [searchParams] = useSearchParams();
 
   const [selectedTrackId, setSelectedTrackId] = useState(searchParams.get("track") || "");
@@ -114,6 +116,8 @@ export default function AIViralGenerator() {
       duration_seconds: 10,
       style,
       clip_count: currentClipOption.clips,
+      avatar_url: defaultAvatarUrl || undefined,
+      visual_theme: defaultTheme || undefined,
     });
   };
 

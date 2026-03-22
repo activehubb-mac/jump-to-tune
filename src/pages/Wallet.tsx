@@ -13,6 +13,7 @@ import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { AI_TOOL_PRICING } from "@/lib/aiPricing";
 import { openExternalUrl, getMobileHeaders } from "@/lib/platformBrowser";
 
 const AI_CREDIT_PACKS = [
@@ -28,7 +29,7 @@ const STARTER_PACK = {
 
 export default function WalletPage() {
   const { user } = useAuth();
-  const { aiCredits, costs, isLoading: creditsLoading, refetch: refetchCredits } = useAICredits();
+  const { aiCredits, isLoading: creditsLoading, refetch: refetchCredits } = useAICredits();
   const { transactions, isLoading: walletLoading, refetch: refetchWallet } = useWallet();
   const { showFeedback } = useFeedbackSafe();
   const [purchasingPack, setPurchasingPack] = useState<number | null>(null);
@@ -122,10 +123,10 @@ export default function WalletPage() {
                   <CardTitle className="text-sm flex items-center gap-2"><Info className="h-4 w-4 text-primary" />AI Tool Costs</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {costs.slice(0, 7).map((c) => (
-                    <div key={c.action_key} className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">{c.label}</span>
-                      <span className="font-medium text-foreground">{c.credit_cost} credits</span>
+                  {Object.entries(AI_TOOL_PRICING).slice(0, 7).map(([key, tool]) => (
+                    <div key={key} className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">{tool.label}</span>
+                      <span className="font-medium text-foreground">{tool.base} credits</span>
                     </div>
                   ))}
                 </CardContent>

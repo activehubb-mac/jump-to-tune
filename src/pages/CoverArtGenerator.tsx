@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sparkles, Loader2, Image as ImageIcon, Zap, RefreshCw, Download, Lock, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
+import { useDefaultIdentity } from "@/hooks/useDefaultIdentity";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getToolCost } from "@/lib/aiPricing";
@@ -17,6 +18,7 @@ import { getToolCost } from "@/lib/aiPricing";
 export default function CoverArtGenerator() {
   const { user } = useAuth();
   const { aiCredits, isLoading: creditsLoading, refetch } = useAICredits();
+  const { avatarUrl: defaultAvatarUrl, visualTheme: defaultTheme } = useDefaultIdentity();
   const { showFeedback } = useFeedbackSafe();
 
   const [prompt, setPrompt] = useState("");
@@ -49,8 +51,14 @@ export default function CoverArtGenerator() {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error("Not authenticated");
 
+      // Enhance prompt with identity context if available
+      let enhancedPrompt = prompt;
+      if (defaultAvatarUrl && defaultTheme) {
+        enhancedPrompt = `${prompt}. Incorporate the artist's visual identity and ${defaultTheme} style into the artwork.`;
+      }
+
       const { data, error } = await supabase.functions.invoke("ai-cover-art", {
-        body: { prompt, style_hint: styleHint, is_regenerate: regenerate },
+        body: { prompt: enhancedPrompt, style_hint: styleHint, is_regenerate: regenerate, avatar_url: defaultAvatarUrl || undefined },
         headers: { Authorization: `Bearer ${session.session.access_token}` },
       });
 

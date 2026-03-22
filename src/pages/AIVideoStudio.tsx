@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useDefaultIdentity } from "@/hooks/useDefaultIdentity";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Layout } from "@/components/layout/Layout";
 import { CreditConfirmModal } from "@/components/ai/CreditConfirmModal";
@@ -205,6 +206,7 @@ function VideoJobCard({
 export default function AIVideoStudio() {
   const { user, role } = useAuth();
   const { aiCredits, isLoading: creditsLoading } = useAICredits();
+  const { avatarUrl: defaultAvatarUrl, identityId: defaultIdentityId } = useDefaultIdentity();
   const { jobs, artistTracks, tracksLoading, generate, isGenerating, deleteJob, isDeleting } = useVideoStudio();
 
   const [trackId, setTrackId] = useState<string | null>(null);
@@ -241,20 +243,24 @@ export default function AIVideoStudio() {
   const [motionLevel, setMotionLevel] = useState<string | null>(null);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const avatarUrl = params.get("avatar_url");
+    const avatarParam = params.get("avatar_url");
     const identityStyle = params.get("style");
     const idParam = params.get("identity_id");
     const typeParam = params.get("type");
     const motionParam = params.get("motion_level");
-    if (avatarUrl || identityStyle || idParam) {
+    if (avatarParam || identityStyle || idParam) {
       setIdentityBanner(idParam ? `Using saved identity ${idParam.slice(0, 8)}…` : "Using your AI Identity avatar");
       if (identityStyle) setStyle(identityStyle);
       setVideoType(typeParam || "avatar_performance");
       if (idParam) setIdentityId(idParam);
-      if (avatarUrl) setAvatarUrl(avatarUrl);
+      if (avatarParam) setAvatarUrl(avatarParam);
       if (identityStyle) {
         setScenePrompt(`Artist avatar performance video in ${identityStyle} style`);
       }
+    } else if (defaultAvatarUrl && !avatarUrl) {
+      // Auto-load default identity if no URL params
+      setAvatarUrl(defaultAvatarUrl);
+      if (defaultIdentityId) setIdentityId(defaultIdentityId);
     }
     if (motionParam) {
       setMotionLevel(motionParam);
@@ -303,6 +309,7 @@ export default function AIVideoStudio() {
   };
 
   const handleRetry = (job: VideoJob) => {
+    const jobAvatarUrl = (job.metadata as any)?.avatar_url || avatarUrl;
     generate({
       track_id: job.track_id,
       video_type: job.video_type,
@@ -310,6 +317,7 @@ export default function AIVideoStudio() {
       duration_seconds: job.duration_seconds,
       style: job.style,
       scene_prompt: job.scene_prompt || "",
+      avatar_url: jobAvatarUrl || undefined,
     });
   };
 

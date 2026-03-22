@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDefaultIdentity } from "@/hooks/useDefaultIdentity";
 
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,7 @@ export default function AIIdentityBuilder() {
   const { user, role } = useAuth();
   const { aiCredits, isLoading: creditsLoading, refetch } = useAICredits();
   const { showFeedback } = useFeedbackSafe();
+  const { setDefaultIdentity } = useDefaultIdentity();
   const navigate = useNavigate();
 
   const [mode, setMode] = useState<"vision" | "photo">("vision");
@@ -247,6 +249,12 @@ export default function AIIdentityBuilder() {
       }
       const { error } = await supabase.from("profiles").update({ avatar_url: avatarUrl }).eq("id", user.id);
       if (error) throw error;
+
+      // Also set as default identity if we have a saved identity
+      if (savedId) {
+        await setDefaultIdentity(savedId);
+      }
+
       showFeedback({ type: "success", title: "Profile Updated!", message: "Your avatar has been set as your profile picture.", autoClose: true });
     } catch (err) {
       showFeedback({ type: "error", title: "Failed", message: err instanceof Error ? err.message : "Could not update profile." });
@@ -380,7 +388,7 @@ export default function AIIdentityBuilder() {
                 <Card className="glass border-primary/20 overflow-hidden">
                   <div className="relative">
                     {result.avatar_image && (
-                      <LiveAvatarPreview src={result.avatar_image} />
+                      <LiveAvatarPreview src={result.avatar_image} motionTier={(savedId ? "performance" : "basic")} />
                     )}
                     <div className="absolute top-2 left-2">
                       <Badge className="bg-primary/80 text-primary-foreground backdrop-blur-sm gap-1">
@@ -429,7 +437,7 @@ export default function AIIdentityBuilder() {
                     <Wand2 className="h-3.5 w-3.5" />New Style
                   </Button>
                    <Button size="sm" variant="outline" onClick={() => handleUseInVideo()} className="gap-1.5">
-                     <Video className="h-3.5 w-3.5" />Use in Video
+                     <Video className="h-3.5 w-3.5" />Preview in Video Studio
                    </Button>
                    <Button size="sm" variant="outline" onClick={() => handleUseInVideo("performance")} className="gap-1.5">
                      <Video className="h-3.5 w-3.5" />Create Video — 130 credits

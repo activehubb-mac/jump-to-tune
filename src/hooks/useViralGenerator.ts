@@ -25,6 +25,8 @@ interface GenerateParams {
   duration_seconds: number;
   style: string;
   clip_count?: number;
+  avatar_url?: string;
+  visual_theme?: string;
 }
 
 export function useViralGenerator(trackId?: string) {
