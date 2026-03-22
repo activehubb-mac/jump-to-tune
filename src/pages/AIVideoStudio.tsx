@@ -252,6 +252,7 @@ export default function AIVideoStudio() {
       duration_seconds: duration,
       style,
       scene_prompt: scenePrompt,
+      avatar_url: avatarUrl || undefined,
     });
   };
 
