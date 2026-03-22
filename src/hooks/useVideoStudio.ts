@@ -145,7 +145,7 @@ export function useVideoStudio() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tracks")
-        .select("id, title, cover_art_url, genre")
+        .select("id, title, cover_art_url, genre, audio_url")
         .eq("artist_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
