@@ -729,7 +729,7 @@ export default function AIVideoStudio() {
           onConfirm={handleConfirmGenerate}
           creditCost={selectedDuration.credits}
           currentCredits={aiCredits}
-          summary={`${selectedDuration.label} ${STYLE_PRESETS.find(s => s.value === style)?.label ?? style} ${VIDEO_TYPES.find(v => v.value === videoType)?.label ?? videoType}`}
+          summary={`${selectedDuration.label} ${STYLE_PRESETS.find(s => s.value === style)?.label ?? style} ${VIDEO_TYPES.find(v => v.value === videoType)?.label ?? videoType}${avatarUrl ? " · Avatar face" : ""}`}
         />
       </div>
     </Layout>
