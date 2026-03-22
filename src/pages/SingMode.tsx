@@ -24,7 +24,7 @@ export default function SingMode() {
   const [trackMeta, setTrackMeta] = useState<{ title: string; artist_name: string } | null>(null);
   const [isDeducting, setIsDeducting] = useState(false);
 
-  const singCost = getCost("sing_mode") || 5;
+  const singCost = 5;
   const canAfford = aiCredits >= singCost;
 
   // Fetch track metadata

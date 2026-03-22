@@ -38,7 +38,7 @@ export default function StagePage() {
   const [generationProgress, setGenerationProgress] = useState("");
 
   const availableModes = getAvailableModes(stageTrack);
-  const currentCost = selectedMode ? (getCost(`stage_${selectedMode}`) || CREDIT_COSTS[selectedMode]) : 0;
+  const currentCost = selectedMode ? CREDIT_COSTS[selectedMode] : 0;
   const canAfford = aiCredits >= currentCost;
 
   useEffect(() => {
