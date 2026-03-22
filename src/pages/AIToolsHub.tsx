@@ -209,7 +209,7 @@ export default function AIToolsHub() {
 
                           <Badge variant="secondary" className="mt-2 text-xs">
                             <Zap className="h-3 w-3 mr-1" />
-                            {typeof tool.credits === "number" ? `${tool.credits} credits` : tool.credits}
+                            {typeof tool.credits === "number" ? `${tool.credits} credits` : `${tool.credits} credits`}
                           </Badge>
                         </div>
                       </div>
