@@ -381,7 +381,7 @@ export default function AIIdentityBuilder() {
                 <Card className="glass border-primary/20 overflow-hidden">
                   <div className="relative">
                     {result.avatar_image && (
-                      <LiveAvatarPreview src={result.avatar_image} />
+                      <LiveAvatarPreview src={result.avatar_image} tier={motionTier} />
                     )}
                     <div className="absolute top-2 left-2">
                       <Badge className="bg-primary/80 text-primary-foreground backdrop-blur-sm gap-1">
