@@ -2,38 +2,11 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
 
-export type MotionTier = "basic" | "performance" | "cinematic";
-
 interface LiveAvatarPreviewProps {
   src: string;
   className?: string;
   showBadge?: boolean;
-  tier?: MotionTier;
 }
-
-const TIER_CONFIG: Record<MotionTier, { badge: string; kenBurns: string; breathe: string; glow: string; extra: string }> = {
-  basic: {
-    badge: "Live Avatar Ready",
-    kenBurns: "animate-ken-burns",
-    breathe: "animate-avatar-breathe",
-    glow: "animate-avatar-glow opacity-60",
-    extra: "",
-  },
-  performance: {
-    badge: "Performance Avatar",
-    kenBurns: "animate-ken-burns-slow",
-    breathe: "animate-avatar-breathe",
-    glow: "animate-avatar-glow-strong opacity-80",
-    extra: "",
-  },
-  cinematic: {
-    badge: "Cinematic Avatar",
-    kenBurns: "animate-ken-burns-cinematic",
-    breathe: "animate-avatar-breathe-slow",
-    glow: "animate-avatar-glow-cinematic opacity-90",
-    extra: "[perspective:1000px]",
-  },
-};
 
 export function LiveAvatarPreview({ src, className, showBadge = true, tier = "basic" }: LiveAvatarPreviewProps) {
   const config = TIER_CONFIG[tier];
