@@ -183,8 +183,8 @@ export default function AIIdentityBuilder() {
       }
 
       const settings = mode === "vision"
-        ? { mode, genre, vibe, inspiration, visual_style: visualStyle, color_palette: colorPalette, accessories }
-        : { mode, output_style: outputStyle, preserve_likeness: LIKENESS_LABELS[likeness].toLowerCase(), accessories: photoAccessories, background_style: backgroundStyle, hd: hdMode };
+        ? { mode, genre, vibe, inspiration, visual_style: visualStyle, color_palette: colorPalette, accessories, motion_enabled: true, motion_tier: "basic" }
+        : { mode, output_style: outputStyle, preserve_likeness: LIKENESS_LABELS[likeness].toLowerCase(), accessories: photoAccessories, background_style: backgroundStyle, hd: hdMode, motion_enabled: true, motion_tier: "basic" };
 
       const { data: inserted, error: insertErr } = await supabase
         .from("artist_identities")
