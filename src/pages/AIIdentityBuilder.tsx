@@ -213,13 +213,36 @@ export default function AIIdentityBuilder() {
   const handleUseInVideo = () => {
     const params = new URLSearchParams();
     if (result?.avatar_image) {
-      // If it's a long base64, we can't pass via URL — just pass style
       if (!result.avatar_image.startsWith("data:")) {
         params.set("avatar_url", result.avatar_image);
       }
     }
     params.set("style", mode === "photo" ? outputStyle : "artistic");
+    if (savedId) params.set("identity_id", savedId);
     navigate(`/ai-video?${params.toString()}`);
+  };
+
+  const handleSetAsProfile = async () => {
+    if (!result?.avatar_image || !user) return;
+    try {
+      let avatarUrl = result.avatar_image;
+      if (avatarUrl.startsWith("data:")) {
+        const base64Data = avatarUrl.split(",")[1];
+        const byteArray = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+        const fileName = `${user.id}/${Date.now()}.png`;
+        const { error: uploadErr } = await supabase.storage
+          .from("avatars")
+          .upload(fileName, byteArray, { contentType: "image/png", upsert: true });
+        if (uploadErr) throw uploadErr;
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(fileName);
+        avatarUrl = urlData.publicUrl;
+      }
+      const { error } = await supabase.from("profiles").update({ avatar_url: avatarUrl }).eq("id", user.id);
+      if (error) throw error;
+      showFeedback({ type: "success", title: "Profile Updated!", message: "Your avatar has been set as your profile picture.", autoClose: true });
+    } catch (err) {
+      showFeedback({ type: "error", title: "Failed", message: err instanceof Error ? err.message : "Could not update profile." });
+    }
   };
 
   const copy = (text: string) => {
