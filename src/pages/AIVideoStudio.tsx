@@ -169,6 +169,25 @@ export default function AIVideoStudio() {
   const [scenePrompt, setScenePrompt] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // Saved identities
+  const [savedIdentities, setSavedIdentities] = useState<any[]>([]);
+  const [identitiesLoading, setIdentitiesLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    setIdentitiesLoading(true);
+    supabase
+      .from("artist_identities")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        setSavedIdentities(data || []);
+        setIdentitiesLoading(false);
+      });
+  }, [user]);
+
   // Accept identity params from AI Identity Builder
   const [identityBanner, setIdentityBanner] = useState<string | null>(null);
   const [identityId, setIdentityId] = useState<string | null>(null);
