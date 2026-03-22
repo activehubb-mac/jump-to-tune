@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDefaultIdentity } from "@/hooks/useDefaultIdentity";
 
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
