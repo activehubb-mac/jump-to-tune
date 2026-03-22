@@ -132,6 +132,7 @@ function RouterContent() {
         <Route path="/label/roster" element={<LabelRoster />} />
         <Route path="/upload" element={<Upload />} />
         <Route path="/ai-tools" element={<AIToolsHub />} />
+        <Route path="/ai-drop" element={<AIArtistDrop />} />
         <Route path="/ai-release" element={<AIReleaseBuilder />} />
         <Route path="/ai-cover-art" element={<CoverArtGenerator />} />
         <Route path="/ai-identity" element={<AIIdentityBuilder />} />

@@ -30,6 +30,15 @@ interface AITool {
 
 const AI_TOOLS: AITool[] = [
   {
+    title: AI_TOOL_PRICING.artist_drop.label,
+    desc: "Go from zero to a full release in one guided flow",
+    icon: Rocket,
+    credits: AI_TOOL_PRICING.artist_drop.base,
+    href: "/ai-drop",
+    roles: ["artist", "label"],
+    isPremium: true,
+  },
+  {
     title: AI_TOOL_PRICING.video_studio.label,
     desc: "Create cinematic videos from your music",
     icon: Clapperboard,

@@ -305,6 +305,12 @@ export default function ArtistDashboard() {
                     Upload New Track
                   </Link>
                 </Button>
+                <Button variant="outline" className="w-full justify-start border-[hsl(45,80%,50%,0.3)] hover:border-[hsl(45,80%,50%,0.5)] text-sm" asChild>
+                  <Link to="/ai-drop">
+                    <Rocket className="w-4 h-4 mr-2 text-[hsl(45,80%,50%)]" />
+                    Create My First Drop
+                  </Link>
+                </Button>
                 <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50 text-sm" asChild>
                   <Link to="/artist/analytics">
                     <BarChart3 className="w-4 h-4 mr-2" />
