@@ -249,6 +249,12 @@ export default function AIIdentityBuilder() {
       }
       const { error } = await supabase.from("profiles").update({ avatar_url: avatarUrl }).eq("id", user.id);
       if (error) throw error;
+
+      // Also set as default identity if we have a saved identity
+      if (savedId) {
+        await setDefaultIdentity(savedId);
+      }
+
       showFeedback({ type: "success", title: "Profile Updated!", message: "Your avatar has been set as your profile picture.", autoClose: true });
     } catch (err) {
       showFeedback({ type: "error", title: "Failed", message: err instanceof Error ? err.message : "Could not update profile." });
