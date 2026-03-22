@@ -43,6 +43,7 @@ serve(async (req) => {
       asset_type = "tiktok",
       duration_seconds = 10,
       style = "abstract visualizer",
+      clip_count = 3,
     } = body;
 
     // Validate inputs
@@ -64,9 +65,9 @@ serve(async (req) => {
       });
     }
 
-    const creditCost = DURATION_CREDITS[duration_seconds];
+    const creditCost = CLIP_PACK_CREDITS[clip_count];
     if (!creditCost) {
-      return new Response(JSON.stringify({ error: "Invalid duration. Choose 10, 30, or 60 seconds." }), {
+      return new Response(JSON.stringify({ error: "Invalid clip_count. Choose 3 or 5." }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
       });
     }
