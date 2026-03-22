@@ -168,6 +168,7 @@ export default function AIVideoStudio() {
   const [style, setStyle] = useState("cyberpunk");
   const [scenePrompt, setScenePrompt] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   // Saved identities
   const [savedIdentities, setSavedIdentities] = useState<any[]>([]);
@@ -204,6 +205,7 @@ export default function AIVideoStudio() {
       if (identityStyle) setStyle(identityStyle);
       setVideoType(typeParam || "avatar_performance");
       if (idParam) setIdentityId(idParam);
+      if (avatarUrl) setAvatarUrl(avatarUrl);
       if (identityStyle) {
         setScenePrompt(`Artist avatar performance video in ${identityStyle} style`);
       }
@@ -250,6 +252,7 @@ export default function AIVideoStudio() {
       duration_seconds: duration,
       style,
       scene_prompt: scenePrompt,
+      avatar_url: avatarUrl || undefined,
     });
   };
 
@@ -324,6 +327,7 @@ export default function AIVideoStudio() {
                         key={identity.id}
                         onClick={() => {
                           setIdentityId(identity.id);
+                          setAvatarUrl(identity.avatar_url || null);
                           setIdentityBanner(`Using saved identity: ${identity.visual_theme || identity.id.slice(0, 8)}`);
                           setVideoType("avatar_performance");
                           if (identity.visual_theme) {

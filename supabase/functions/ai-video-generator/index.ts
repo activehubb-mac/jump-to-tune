@@ -59,6 +59,7 @@ serve(async (req) => {
       duration_seconds = 30,
       style = "cyberpunk",
       scene_prompt = "",
+      avatar_url = null,
     } = body;
 
     const duration = duration_seconds || 30;
@@ -116,17 +117,21 @@ serve(async (req) => {
     ].filter(Boolean).join(". ");
 
     // Start Replicate prediction — DO NOT WAIT, return immediately
-    log("Starting Replicate prediction", { model: "minimax/video-01", prompt: fullPrompt.substring(0, 100) });
+    const isImageToVideo = !!avatar_url;
+    const modelSlug = isImageToVideo ? "minimax/video-01-live" : "minimax/video-01";
+    const replicateInput = isImageToVideo
+      ? { prompt: fullPrompt, first_frame_image: avatar_url, prompt_optimizer: true }
+      : { prompt: fullPrompt, prompt_optimizer: true };
 
-    const createRes = await fetch("https://api.replicate.com/v1/models/minimax/video-01/predictions", {
+    log("Starting Replicate prediction", { model: modelSlug, hasAvatar: isImageToVideo, prompt: fullPrompt.substring(0, 100) });
+
+    const createRes = await fetch(`https://api.replicate.com/v1/models/${modelSlug}/predictions`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${REPLICATE_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        input: { prompt: fullPrompt, prompt_optimizer: true },
-      }),
+      body: JSON.stringify({ input: replicateInput }),
     });
 
     if (!createRes.ok) {
