@@ -437,7 +437,7 @@ export default function AIIdentityBuilder() {
                     <Wand2 className="h-3.5 w-3.5" />New Style
                   </Button>
                    <Button size="sm" variant="outline" onClick={() => handleUseInVideo()} className="gap-1.5">
-                     <Video className="h-3.5 w-3.5" />Use in Video
+                     <Video className="h-3.5 w-3.5" />Preview in Video Studio
                    </Button>
                    <Button size="sm" variant="outline" onClick={() => handleUseInVideo("performance")} className="gap-1.5">
                      <Video className="h-3.5 w-3.5" />Create Video — 130 credits
