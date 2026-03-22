@@ -1,67 +1,56 @@
 
 
-## Fix: Centralize All Credit Pricing — Frontend + Backend Alignment
+## Add Cinematic Tier to Motion Upgrade System
 
-### Problem
-The centralized config (`src/lib/aiPricing.ts`) has the correct values, but several frontends and backends still use old hardcoded numbers:
-
-| Tool | Config says | Frontend uses | Backend uses |
-|---|---|---|---|
-| Cover Art | 10 | 3 (first) / 1 (regen) | 3 / 1 |
-| Release Builder | 10 | 10 ✓ | **5** |
-| Playlist Builder | 5 | 5 ✓ | **3** |
-| Identity Builder | 15/25/40 | 15/25/40 ✓ | dynamic ✓ |
+### Current State
+- "Animate — 80 credits" button exists at line 431-433, but it just navigates to Video Studio without any credit deduction or confirmation
+- `LiveAvatarPreview` uses basic CSS animations (ken-burns, breathe, glow)
+- Pricing config in `aiPricing.ts` already has the tiers defined (basic: 0, performance: 80, cinematic: 200)
+- No actual credit deduction happens for motion upgrades — the button just routes to Video Studio
 
 ### Changes
 
-#### 1. `src/pages/CoverArtGenerator.tsx` — Fix frontend cost
+#### 1. `src/components/ai/LiveAvatarPreview.tsx` — Add tier-based visual differentiation
 
-Line 27: Replace `const cost = hasGenerated ? 1 : 3` with:
-```typescript
-import { getToolCost } from "@/lib/aiPricing";
-const cost = getToolCost("cover_art"); // always 10
+Add a `tier` prop (`"basic" | "performance" | "cinematic"`):
+- **basic** (default): current animations
+- **performance**: slightly slower, stronger glow
+- **cinematic**: slowest ken-burns (10s), enhanced glow with dual-color pulse, subtle 3D perspective tilt via CSS `perspective` + `rotateY`, deeper vignette, badge says "Cinematic Avatar"
+
+#### 2. `src/pages/AIIdentityBuilder.tsx` — Add Cinematic button + credit deduction flow
+
+Add state: `motionTier` (tracks current tier), `motionConfirmOpen`, `pendingMotionTier`
+
+**New buttons** (replace current single Animate button):
 ```
-Remove the regen discount (or keep regen at reduced cost if desired — but it must match backend). Update button text to show consistent "10 credits".
+Animate — 80 credits    (Performance)
+Cinematic — 200 credits
+```
 
-Also update the backend to match:
+**On click**: open `CreditConfirmModal` with the appropriate cost (80 or 200).
 
-#### 2. `supabase/functions/ai-cover-art/index.ts` — Fix backend cost
+**On confirm**:
+- Call `supabase.rpc("deduct_ai_credits", { p_user_id, p_credits })` directly
+- If success: update `motionTier` state, update saved identity settings if `savedId` exists, show success toast
+- If fail (insufficient): show error toast
+- Pass `motionTier` to `<LiveAvatarPreview tier={motionTier} />`
 
-Line 38: Replace `const creditCost = is_regenerate ? 1 : 3` with `const creditCost = 10`. Flat 10 credits per generation, matching the centralized config.
+**"Use in Video" and navigate**: pass `motion_level` param alongside existing params
 
-#### 3. `supabase/functions/ai-release-builder/index.ts` — Fix backend cost
+#### 3. `src/pages/AIVideoStudio.tsx` — Read `motion_level` param
 
-Line 14: Replace `const CREDIT_COST = 5` with `const CREDIT_COST = 10`.
-
-#### 4. `supabase/functions/ai-playlist-builder/index.ts` — Fix backend cost
-
-Line 13: Replace `const CREDIT_COST = 3` with `const CREDIT_COST = 5`.
-
-#### 5. `src/pages/AIIdentityBuilder.tsx` — Use config instead of magic numbers
-
-Line 75: Replace `const cost = mode === "vision" ? 15 : hdMode ? 40 : 25` with a lookup from `pricing.tiers` to stay DRY (values happen to match, but should reference the config).
-
-#### 6. `src/pages/AIPlaylistBuilder.tsx` — Already correct (5), no change needed.
-
-#### 7. `src/pages/AIReleaseBuilder.tsx` — Already uses `getCost("release_builder") || 10`, correct.
-
-### Deployments Required
-After editing, the 3 edge functions need redeployment:
-- `ai-cover-art`
-- `ai-release-builder`
-- `ai-playlist-builder`
+Read `motion_level` from URL params. If "cinematic", pre-select HD tier (400 credits) and show "Cinematic Identity loaded" banner.
 
 ### Files
+
 | File | Change |
 |---|---|
-| `src/pages/CoverArtGenerator.tsx` | Use `getToolCost("cover_art")` = 10 |
-| `supabase/functions/ai-cover-art/index.ts` | `creditCost = 10` |
-| `supabase/functions/ai-release-builder/index.ts` | `CREDIT_COST = 10` |
-| `supabase/functions/ai-playlist-builder/index.ts` | `CREDIT_COST = 5` |
-| `src/pages/AIIdentityBuilder.tsx` | Reference pricing tiers instead of magic numbers |
+| `src/components/ai/LiveAvatarPreview.tsx` | Add `tier` prop with visual differentiation per tier |
+| `src/pages/AIIdentityBuilder.tsx` | Add Cinematic button, credit deduction on confirm, motion tier state |
+| `src/pages/AIVideoStudio.tsx` | Read `motion_level` param, auto-select HD for cinematic |
 
-### NOT Touched
-- Cover Art Generator logic, prompts, output — only the cost number changes
-- `src/lib/aiPricing.ts` — already correct
-- `src/pages/AIToolsHub.tsx` — already pulls from centralized config
+### Not Touched
+- Cover Art Generator — untouched
+- Edge functions — no changes needed (credit deduction uses existing `deduct_ai_credits` RPC)
+- `aiPricing.ts` — already has correct tiers
 
