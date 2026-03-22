@@ -628,6 +628,7 @@ export default function AIVideoStudio() {
                 onDelete={(id) => deleteJob(id)}
                 onRetry={handleRetry}
                 isDeleting={isDeleting}
+                artistTracks={artistTracks}
               />
             ))}
           </div>
