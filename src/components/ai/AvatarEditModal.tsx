@@ -122,6 +122,7 @@ export function AvatarEditModal({ open, onOpenChange, identityId, currentAvatarU
       setResultImage(data.avatar_image);
       refetch();
       invalidate();
+      await setDefaultIdentity(identityId);
       showFeedback({ type: "success", title: "Avatar Updated! ✨", message: `Used ${data.credits_used} credits.`, autoClose: true });
     } catch (err) {
       showFeedback({ type: "error", title: "Error", message: err instanceof Error ? err.message : "Unknown error" });

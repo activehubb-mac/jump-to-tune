@@ -11,6 +11,8 @@ interface DefaultIdentity {
   avatarUrl: string | null;
   visualTheme: string | null;
   settings: Record<string, unknown> | null;
+  artistName: string | null;
+  bio: string | null;
 }
 
 export function useDefaultIdentity() {
@@ -28,18 +30,18 @@ export function useDefaultIdentity() {
         .single();
 
       if (pErr || !profile?.default_identity_id) {
-        return { identityId: null, avatarUrl: null, visualTheme: null, settings: null };
+      return { identityId: null, avatarUrl: null, visualTheme: null, settings: null, artistName: null, bio: null };
       }
 
       // Step 2: fetch the identity row
       const { data: identity, error: iErr } = await supabase
         .from("artist_identities")
-        .select("id, avatar_url, visual_theme, settings")
+        .select("id, avatar_url, visual_theme, settings, bio, name_suggestions")
         .eq("id", profile.default_identity_id)
         .single();
 
       if (iErr || !identity) {
-        return { identityId: null, avatarUrl: null, visualTheme: null, settings: null };
+        return { identityId: null, avatarUrl: null, visualTheme: null, settings: null, artistName: null, bio: null };
       }
 
       return {
@@ -47,6 +49,8 @@ export function useDefaultIdentity() {
         avatarUrl: identity.avatar_url,
         visualTheme: identity.visual_theme,
         settings: identity.settings as Record<string, unknown> | null,
+        artistName: (identity.name_suggestions as string[] | null)?.[0] ?? null,
+        bio: identity.bio ?? null,
       };
     },
     enabled: !!user,
@@ -67,6 +71,8 @@ export function useDefaultIdentity() {
     avatarUrl: data?.avatarUrl ?? null,
     visualTheme: data?.visualTheme ?? null,
     settings: data?.settings ?? null,
+    artistName: data?.artistName ?? null,
+    bio: data?.bio ?? null,
     isLoading,
     setDefaultIdentity,
   };

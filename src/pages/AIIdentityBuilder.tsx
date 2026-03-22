@@ -212,7 +212,8 @@ export default function AIIdentityBuilder() {
 
       if (insertErr) throw insertErr;
       setSavedId(inserted.id);
-      showFeedback({ type: "success", title: "Identity Saved!", message: "Your artist identity has been saved to your profile.", autoClose: true });
+      await setDefaultIdentity(inserted.id);
+      showFeedback({ type: "success", title: "Identity Saved!", message: "Your artist identity has been saved and set as default.", autoClose: true });
     } catch (err) {
       showFeedback({ type: "error", title: "Save Failed", message: err instanceof Error ? err.message : "Could not save identity." });
     } finally {
