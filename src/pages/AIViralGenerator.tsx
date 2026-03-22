@@ -113,6 +113,7 @@ export default function AIViralGenerator() {
       asset_type: format,
       duration_seconds: 10,
       style,
+      clip_count: currentClipOption.clips,
     });
   };
 
