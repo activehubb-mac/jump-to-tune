@@ -3,11 +3,12 @@ import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
-import { Sparkles, Image, User, ListMusic, Video, Music, Zap, Lock, Rocket, Plus, Clapperboard } from "lucide-react";
+import { useDefaultIdentity } from "@/hooks/useDefaultIdentity";
+import { Sparkles, Image, User, ListMusic, Video, Music, Zap, Lock, Rocket, Plus, Clapperboard, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { AI_TOOL_PRICING } from "@/lib/aiPricing";
 
@@ -25,34 +26,31 @@ interface AITool {
   roles: string[];
   pricingTiers?: PricingTier[];
   isPremium?: boolean;
-  valueFrame?: string;
 }
 
 const AI_TOOLS: AITool[] = [
   {
     title: AI_TOOL_PRICING.video_studio.label,
-    desc: "Generate cinematic AI music videos synced to your track",
+    desc: "Create cinematic videos from your music",
     icon: Clapperboard,
-    credits: `Starts at ${AI_TOOL_PRICING.video_studio.base}`,
+    credits: `From ${AI_TOOL_PRICING.video_studio.base}`,
     href: "/ai-video",
     roles: ["artist", "label"],
     isPremium: true,
-    valueFrame: "Optimized for TikTok, Reels & Shorts",
     pricingTiers: AI_TOOL_PRICING.video_studio.tiers,
   },
   {
     title: AI_TOOL_PRICING.viral_generator.label,
-    desc: "Turn songs into TikTok, IG Reels & YouTube Shorts promo clips",
+    desc: "Turn your song into viral-ready clips",
     icon: Rocket,
-    credits: `Starts at ${AI_TOOL_PRICING.viral_generator.base}`,
+    credits: `From ${AI_TOOL_PRICING.viral_generator.base}`,
     href: "/ai-viral",
     roles: ["artist", "label"],
-    valueFrame: "Designed to help your content go viral",
     pricingTiers: AI_TOOL_PRICING.viral_generator.tiers,
   },
   {
     title: AI_TOOL_PRICING.playlist_builder.label,
-    desc: "Describe a mood and AI creates a curated playlist",
+    desc: "Describe a mood and get a curated playlist",
     icon: ListMusic,
     credits: AI_TOOL_PRICING.playlist_builder.base,
     href: "/ai-playlist",
@@ -60,7 +58,7 @@ const AI_TOOLS: AITool[] = [
   },
   {
     title: AI_TOOL_PRICING.release_builder.label,
-    desc: "Generate cover art, titles, descriptions, and tags for your release",
+    desc: "Generate artwork, titles, and tags for your release",
     icon: Music,
     credits: AI_TOOL_PRICING.release_builder.base,
     href: "/ai-release",
@@ -68,7 +66,7 @@ const AI_TOOLS: AITool[] = [
   },
   {
     title: AI_TOOL_PRICING.cover_art.label,
-    desc: "Create stunning AI cover art for your tracks and albums",
+    desc: "Generate professional album artwork",
     icon: Image,
     credits: AI_TOOL_PRICING.cover_art.base,
     href: "/ai-cover-art",
@@ -76,9 +74,9 @@ const AI_TOOLS: AITool[] = [
   },
   {
     title: AI_TOOL_PRICING.identity_builder.label,
-    desc: "Generate your artist identity from a vision or recreate yourself from a photo",
+    desc: "Create your AI artist identity",
     icon: User,
-    credits: `Starts at ${AI_TOOL_PRICING.identity_builder.base}`,
+    credits: `From ${AI_TOOL_PRICING.identity_builder.base}`,
     href: "/ai-identity",
     roles: ["artist", "label"],
     pricingTiers: AI_TOOL_PRICING.identity_builder.tiers,
@@ -88,10 +86,10 @@ const AI_TOOLS: AITool[] = [
 export default function AIToolsHub() {
   const { user, role } = useAuth();
   const { aiCredits, isLoading } = useAICredits();
+  const { identityId, avatarUrl: identityAvatarUrl } = useDefaultIdentity();
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
-  const progressMax = 2000;
-  const progressPercent = Math.min((aiCredits / progressMax) * 100, 100);
+  const dollarValue = (aiCredits / 100).toFixed(2);
 
   return (
     <Layout>
@@ -111,6 +109,9 @@ export default function AIToolsHub() {
                     {isLoading ? "..." : aiCredits.toLocaleString()}
                     <span className="text-sm font-normal text-muted-foreground ml-1.5">credits</span>
                   </p>
+                  {!isLoading && (
+                    <p className="text-xs text-muted-foreground">≈ ${dollarValue}</p>
+                  )}
                 </div>
                 <Button asChild size="sm" className="bg-primary text-primary-foreground gap-1.5">
                   <Link to="/wallet">
@@ -118,10 +119,22 @@ export default function AIToolsHub() {
                   </Link>
                 </Button>
               </div>
-              <Progress
-                value={isLoading ? 0 : progressPercent}
-                className="h-1.5 w-48 bg-muted"
-              />
+            </div>
+          )}
+
+          {/* Active Identity Banner */}
+          {user && identityId && (
+            <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+              <Avatar className="h-5 w-5">
+                {identityAvatarUrl ? (
+                  <AvatarImage src={identityAvatarUrl} alt="Identity" />
+                ) : (
+                  <AvatarFallback className="bg-primary/20 text-primary text-[10px]">AI</AvatarFallback>
+                )}
+              </Avatar>
+              <span className="text-xs font-medium text-primary flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" /> Active Artist Identity Enabled
+              </span>
             </div>
           )}
         </div>
@@ -192,10 +205,6 @@ export default function AIToolsHub() {
                             <Zap className="h-3 w-3 mr-1" />
                             {typeof tool.credits === "number" ? `${tool.credits} credits` : tool.credits}
                           </Badge>
-
-                          {tool.valueFrame && (
-                            <p className="text-[10px] text-primary/70 mt-1.5 font-medium">{tool.valueFrame}</p>
-                          )}
                         </div>
                       </div>
 
