@@ -9,13 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Sparkles, Loader2, Zap, Lock, ArrowLeft, User, Palette, Copy, Upload, Camera, RefreshCw, Wand2, Video, Save, Eye } from "lucide-react";
+import { Sparkles, Loader2, Zap, Lock, ArrowLeft, User, Palette, Copy, Upload, Camera, RefreshCw, Wand2, Video, Save, Eye, UserCheck, Play } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { supabase } from "@/integrations/supabase/client";
 import { CreditConfirmModal } from "@/components/ai/CreditConfirmModal";
 import { AI_TOOL_PRICING } from "@/lib/aiPricing";
+import { LiveAvatarPreview } from "@/components/ai/LiveAvatarPreview";
 import { cn } from "@/lib/utils";
 
 const OUTPUT_STYLES = [
@@ -182,8 +183,8 @@ export default function AIIdentityBuilder() {
       }
 
       const settings = mode === "vision"
-        ? { mode, genre, vibe, inspiration, visual_style: visualStyle, color_palette: colorPalette, accessories }
-        : { mode, output_style: outputStyle, preserve_likeness: LIKENESS_LABELS[likeness].toLowerCase(), accessories: photoAccessories, background_style: backgroundStyle, hd: hdMode };
+        ? { mode, genre, vibe, inspiration, visual_style: visualStyle, color_palette: colorPalette, accessories, motion_enabled: true, motion_tier: "basic" }
+        : { mode, output_style: outputStyle, preserve_likeness: LIKENESS_LABELS[likeness].toLowerCase(), accessories: photoAccessories, background_style: backgroundStyle, hd: hdMode, motion_enabled: true, motion_tier: "basic" };
 
       const { data: inserted, error: insertErr } = await supabase
         .from("artist_identities")
@@ -212,13 +213,36 @@ export default function AIIdentityBuilder() {
   const handleUseInVideo = () => {
     const params = new URLSearchParams();
     if (result?.avatar_image) {
-      // If it's a long base64, we can't pass via URL — just pass style
       if (!result.avatar_image.startsWith("data:")) {
         params.set("avatar_url", result.avatar_image);
       }
     }
     params.set("style", mode === "photo" ? outputStyle : "artistic");
+    if (savedId) params.set("identity_id", savedId);
     navigate(`/ai-video?${params.toString()}`);
+  };
+
+  const handleSetAsProfile = async () => {
+    if (!result?.avatar_image || !user) return;
+    try {
+      let avatarUrl = result.avatar_image;
+      if (avatarUrl.startsWith("data:")) {
+        const base64Data = avatarUrl.split(",")[1];
+        const byteArray = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+        const fileName = `${user.id}/${Date.now()}.png`;
+        const { error: uploadErr } = await supabase.storage
+          .from("avatars")
+          .upload(fileName, byteArray, { contentType: "image/png", upsert: true });
+        if (uploadErr) throw uploadErr;
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(fileName);
+        avatarUrl = urlData.publicUrl;
+      }
+      const { error } = await supabase.from("profiles").update({ avatar_url: avatarUrl }).eq("id", user.id);
+      if (error) throw error;
+      showFeedback({ type: "success", title: "Profile Updated!", message: "Your avatar has been set as your profile picture.", autoClose: true });
+    } catch (err) {
+      showFeedback({ type: "error", title: "Failed", message: err instanceof Error ? err.message : "Could not update profile." });
+    }
   };
 
   const copy = (text: string) => {
@@ -348,7 +372,7 @@ export default function AIIdentityBuilder() {
                 <Card className="glass border-primary/20 overflow-hidden">
                   <div className="relative">
                     {result.avatar_image && (
-                      <img src={result.avatar_image} alt="AI Avatar" className="w-full aspect-square object-cover" />
+                      <LiveAvatarPreview src={result.avatar_image} />
                     )}
                     <div className="absolute top-2 left-2">
                       <Badge className="bg-primary/80 text-primary-foreground backdrop-blur-sm gap-1">
@@ -387,6 +411,9 @@ export default function AIIdentityBuilder() {
                     <Save className="h-3.5 w-3.5" />
                     {savedId ? "Saved ✓" : isSaving ? "Saving..." : "Save Artist Identity"}
                   </Button>
+                  <Button size="sm" variant="outline" onClick={handleSetAsProfile} className="gap-1.5">
+                    <UserCheck className="h-3.5 w-3.5" />Set as Profile
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => { setResult(null); setSavedId(null); handleGenerate(); }} className="gap-1.5">
                     <RefreshCw className="h-3.5 w-3.5" />Regenerate
                   </Button>
@@ -395,6 +422,9 @@ export default function AIIdentityBuilder() {
                   </Button>
                   <Button size="sm" variant="outline" onClick={handleUseInVideo} className="gap-1.5">
                     <Video className="h-3.5 w-3.5" />Use in Video
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { const params = new URLSearchParams(); params.set("style", mode === "photo" ? outputStyle : "artistic"); if (savedId) params.set("identity_id", savedId); params.set("type", "avatar_performance"); navigate(`/ai-video?${params.toString()}`); }} className="gap-1.5">
+                    <Play className="h-3.5 w-3.5" />Animate (Upgrade)
                   </Button>
                 </div>
 

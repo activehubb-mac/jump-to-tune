@@ -40,6 +40,15 @@ export const AI_TOOL_PRICING: Record<string, ToolPricing> = {
       { label: "5 Clips", credits: 850 },
     ],
   },
+  identity_motion: {
+    label: "Avatar Motion",
+    base: 0,
+    tiers: [
+      { label: "Basic (CSS Preview)", credits: 0 },
+      { label: "Performance Mode", credits: 80 },
+      { label: "Cinematic Mode", credits: 200 },
+    ],
+  },
 };
 
 export function getToolCost(key: string): number {
