@@ -18,6 +18,7 @@ import { getToolCost } from "@/lib/aiPricing";
 export default function CoverArtGenerator() {
   const { user } = useAuth();
   const { aiCredits, isLoading: creditsLoading, refetch } = useAICredits();
+  const { avatarUrl: defaultAvatarUrl, visualTheme: defaultTheme } = useDefaultIdentity();
   const { showFeedback } = useFeedbackSafe();
 
   const [prompt, setPrompt] = useState("");
