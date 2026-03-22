@@ -1,84 +1,82 @@
 
 
-## AI Identity Builder Final Form + Pricing Fixes
+## AI Identity Builder: Default Motion System
 
-### Database: New `artist_identities` Table
+### Reality Check
 
-Create a migration for storing saved identities:
+The request asks for CSS-based "breathing/blinking" animations on generated avatars. These are **static images** — real facial animation (blinking, head movement) requires video generation models like Replicate's `minimax/video-01-live`, which costs 130+ credits and takes 2+ minutes. That contradicts "load instantly, low compute cost, no heavy credits."
 
-```sql
-CREATE TABLE public.artist_identities (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  avatar_url text,
-  reference_photo_url text,
-  name_suggestions text[],
-  bio text,
-  visual_theme text,
-  tagline text,
-  settings jsonb DEFAULT '{}'::jsonb,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
-
-ALTER TABLE public.artist_identities ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can manage own identities"
-  ON public.artist_identities FOR ALL TO authenticated
-  USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
-```
-
-Settings JSONB stores: mode, output_style, preserve_likeness, accessories, background_style, genre, vibe, etc.
+**Practical approach**: Use CSS/canvas animations to create the *illusion* of a living avatar — subtle zoom, parallax drift, ambient glow pulses, and floating particle effects. This is genuinely lightweight, instant, and free. Real motion (lip-sync, head movement) belongs in the upgrade tiers that route to the Video Studio.
 
 ---
 
-### File Changes
+### Changes
 
-#### 1. `src/pages/AIIdentityBuilder.tsx` — Enhance Results Section
+#### 1. New Component: `src/components/ai/LiveAvatarPreview.tsx`
 
-**Save Artist Identity button:**
-- After successful generation, show "Save Artist Identity" button
-- On click: upload avatar image to `avatars` bucket, optionally upload reference photo, then insert row into `artist_identities`
-- Show success toast
+A reusable component that wraps any avatar image with layered CSS animations:
+- Slow Ken Burns zoom-in/out loop (4s cycle via CSS keyframes)
+- Subtle vertical float/breathing motion (translateY ±2px)
+- Ambient glow pulse on border (opacity oscillation)
+- Soft vignette overlay with slight opacity shift
+- "Live Avatar Ready" badge overlay
 
-**Artist Profile Preview section:**
-- After generation, render a mock profile card showing:
-  - Avatar image
-  - First name suggestion (or "Your Artist Name")
-  - Bio text
-  - Visual theme
-  - Tagline
-- Styled as a realistic profile preview card
+Props: `src: string`, `className?: string`, `showBadge?: boolean`
 
-**Keep existing action buttons** (Regenerate, New Style, Use in Video)
+All CSS-only — zero compute, zero API calls, instant render.
 
-**"Use in Video" enhancement:**
-- Instead of plain link to `/ai-video`, navigate with query params: `?avatar_url=...&style=...`
-- Pass the generated avatar base64/URL and style config
+#### 2. `src/pages/AIIdentityBuilder.tsx` — Use LiveAvatarPreview
 
-#### 2. `src/pages/AIVideoStudio.tsx` — Accept Identity Params
+Replace the static `<img>` in the results section (line 351) with `<LiveAvatarPreview>`. Add a "Live Avatar Ready" tag automatically after generation.
 
-- Read `avatar_url` and `style` from URL search params on mount
-- If present, pre-fill the prompt with identity context (e.g., "Artist avatar performance video in [style] style")
-- Show a small banner: "Using your AI Identity avatar"
+Update action buttons to include:
+- **Set as Artist Profile** — updates `profiles.avatar_url` with the generated image
+- **Animate (Upgrade)** — routes to Video Studio with `avatar_performance` type pre-selected
 
-#### 3. `supabase/functions/ai-identity-builder/index.ts` — Prompt Quality Boost
+Update `handleSaveIdentity` to store a `motion_enabled: true` flag in the settings JSONB.
 
-Enhance the photo mode prompt by appending:
-- "editorial photography lighting, music industry branding, album-ready composition, realistic lighting balance"
+Update `handleUseInVideo` to also pass `identity_id` (if saved) via URL params.
 
-Do NOT change the structure — only append quality modifiers to the existing `editPrompt` string. Same for vision mode's avatar_prompt instruction.
+#### 3. `src/lib/aiPricing.ts` — Add Motion Tier Pricing
 
-#### 4. `src/components/wallet/CreditBalanceChip.tsx` — Remove Dollar Display
-
-Change line 42 from:
+Add motion tier definitions (for display/future use):
 ```
-{aiCredits} credits <span ...>≈ ${(aiCredits / 100).toFixed(2)}</span>
-```
-To:
-```
-{aiCredits} credits
+identity_motion: {
+  label: "Avatar Motion",
+  base: 0,
+  tiers: [
+    { label: "Basic (CSS Preview)", credits: 0 },
+    { label: "Performance Mode", credits: 80 },
+    { label: "Cinematic Mode", credits: 200 },
+  ],
+}
 ```
 
-#### 5. `src/pages/AITool
+#### 4. `src/pages/AIVideoStudio.tsx` — Accept Identity ID
+
+Extend the existing URL param reading to also accept `identity_id`, and if present, show which saved identity is being used.
+
+#### 5. `tailwind.config.ts` — Add Keyframes
+
+Add `ken-burns` and `avatar-breathe` keyframes for the live preview animations.
+
+#### 6. Database: `artist_identities` Table — No Schema Change Needed
+
+The existing `settings` JSONB column can store `motion_enabled: true` and `motion_tier: "basic"` without migration.
+
+---
+
+### NOT Touched
+- Cover Art Generator — completely untouched
+- Edge function `ai-identity-builder` — no changes (motion is CSS-only)
+- No new API calls for the default motion preview
+
+### Files
+| File | Change |
+|---|---|
+| `src/components/ai/LiveAvatarPreview.tsx` | **New** — CSS-animated avatar wrapper |
+| `src/pages/AIIdentityBuilder.tsx` | Use LiveAvatarPreview, add Set as Profile + Animate buttons |
+| `src/lib/aiPricing.ts` | Add motion tier pricing definitions |
+| `src/pages/AIVideoStudio.tsx` | Accept `identity_id` param |
+| `tailwind.config.ts` | Add animation keyframes |
+
