@@ -277,6 +277,7 @@ export default function AIVideoStudio() {
   const selectedDuration = DURATION_OPTIONS.find((d) => d.seconds === duration)!;
   const canAfford = aiCredits >= selectedDuration.credits;
   const activeJobs = jobs.filter((j) => j.status === "queued" || j.status === "processing");
+  const needsAvatar = videoType === "avatar_performance" && !avatarUrl;
 
   if (!user || (role !== "artist" && role !== "label")) {
     return (
