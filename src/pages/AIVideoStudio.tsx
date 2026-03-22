@@ -17,7 +17,7 @@ import {
   Sparkles, Loader2, Zap, Lock, ArrowLeft, Video, Clock,
   Film, Type, Smartphone, User, Monitor, Square, RectangleVertical,
   CheckCircle2, XCircle, Clock3, Clapperboard, Trash2, RotateCcw, Download,
-  UserCircle, Plus, Expand,
+  UserCircle, Plus, Expand, X, AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
@@ -277,6 +277,7 @@ export default function AIVideoStudio() {
   const selectedDuration = DURATION_OPTIONS.find((d) => d.seconds === duration)!;
   const canAfford = aiCredits >= selectedDuration.credits;
   const activeJobs = jobs.filter((j) => j.status === "queued" || j.status === "processing");
+  const needsAvatar = videoType === "avatar_performance" && !avatarUrl;
 
   if (!user || (role !== "artist" && role !== "label")) {
     return (
@@ -650,11 +651,34 @@ export default function AIVideoStudio() {
               </p>
             )}
 
+            {/* Active Avatar Banner */}
+            {avatarUrl && (
+              <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+                <img src={avatarUrl} alt="Active avatar" className="h-8 w-8 rounded-full object-cover ring-1 ring-primary/40" />
+                <p className="text-sm text-primary flex-1">This avatar will be the face of your video</p>
+                <button
+                  onClick={() => { setAvatarUrl(null); setIdentityId(null); setIdentityBanner(null); }}
+                  className="h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center hover:bg-destructive/20 transition-colors"
+                  aria-label="Clear avatar"
+                >
+                  <X className="h-3 w-3 text-muted-foreground" />
+                </button>
+              </div>
+            )}
+
+            {/* Missing avatar warning */}
+            {needsAvatar && (
+              <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+                <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+                <p className="text-xs text-amber-400">Select an identity above to use as the face of your video</p>
+              </div>
+            )}
+
             {/* Generate */}
             <Button
               className="w-full gradient-accent neon-glow-subtle"
               onClick={handleGenerateClick}
-              disabled={isGenerating || !canAfford}
+              disabled={isGenerating || !canAfford || needsAvatar}
             >
               {isGenerating ? (
                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating…</>
@@ -705,7 +729,7 @@ export default function AIVideoStudio() {
           onConfirm={handleConfirmGenerate}
           creditCost={selectedDuration.credits}
           currentCredits={aiCredits}
-          summary={`${selectedDuration.label} ${STYLE_PRESETS.find(s => s.value === style)?.label ?? style} ${VIDEO_TYPES.find(v => v.value === videoType)?.label ?? videoType}`}
+          summary={`${selectedDuration.label} ${STYLE_PRESETS.find(s => s.value === style)?.label ?? style} ${VIDEO_TYPES.find(v => v.value === videoType)?.label ?? videoType}${avatarUrl ? " · Avatar face" : ""}`}
         />
       </div>
     </Layout>
