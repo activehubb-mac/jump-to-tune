@@ -1,25 +1,47 @@
 
 
-## Fix: Use User's Avatar Image in Video Generation
+## Fix: Audio Not Playing in Generated Videos
 
 ### Problem
-The Video Studio receives the user's `avatar_url` from URL params and saved identities but never sends it to the backend. The edge function uses `minimax/video-01` (text-to-video only), which generates a random character from the text prompt. The user's actual avatar is completely ignored.
+Replicate's minimax video models (video-01 and video-01-live) generate **silent video only** — they are visual AI models with no audio capability. The selected track is stored as `track_id` in the job record but is never merged into the final MP4. The downloaded video from Replicate has no audio track.
 
 ### Solution
-When an avatar URL is available, switch to `minimax/video-01-live` (image-to-video model) and pass the avatar as `first_frame_image`. This makes the generated video start from and resemble the user's actual avatar.
+Since ffmpeg is not available in Supabase edge functions, merging audio server-side is not feasible. Instead, we add **client-side synchronized playback**: when a completed video plays, the associated track audio plays alongside it automatically.
 
 ### Changes
 
-#### 1. `src/pages/AIVideoStudio.tsx` — Pass avatar URL to generate call
+#### 1. `src/pages/AIVideoStudio.tsx` — VideoJobCard: Add inline video player with synced audio
 
-Track the selected avatar URL in state (from URL params and from the saved identities picker). Pass it as `avatar_url` in the `generate()` call body alongside the existing params.
+For completed jobs with `output_url`:
+- Replace the "Download" link with an inline `<video>` player (with controls, muted by default)
+- If `track_id` exists, look up the track's `audio_url` from `artistTracks` (already loaded)
+- Add a hidden `<audio>` element with the track's audio URL
+- On video play/pause/seek, sync the audio element (play/pause/currentTime)
+- Keep the Download button below the player
+- Show the track name below the video: "Playing with: [Track Title]"
 
-Lines affected: ~195-210 (store avatarUrl in state), ~244-254 (pass to generate), ~330-360 (identity picker onClick sets avatarUrl).
+**Key logic:**
+```
+const videoRef = useRef<HTMLVideoElement>(null);
+const audioRef = useRef<HTMLAudioElement>(null);
 
-#### 2. `src/hooks/useVideoStudio.ts` — Forward `avatar_url` to edge function
+// On video play → audio.play()
+// On video pause → audio.pause()
+// On video seeked → audio.currentTime = video.currentTime
+```
 
-Add `avatar_url?: string` to the generate mutation's param type and include it in the `supabase.functions.invoke` body.
+#### 2. Pass `artistTracks` to `VideoJobCard`
 
-#### 3. `supabase/functions/ai-video-generator/index.ts` — Use image-to-video model when avatar provided
+Add `artistTracks` prop so the card can resolve `track_id` → `audio_url` and title.
 
-- Read `avatar_url` from the request
+### Files
+
+| File | Change |
+|---|---|
+| `src/pages/AIVideoStudio.tsx` | Add synced video+audio player in VideoJobCard, pass artistTracks prop |
+
+### Not Touched
+- Edge functions (no changes)
+- Video generation pipeline (no changes)
+- All other pages and features
+
