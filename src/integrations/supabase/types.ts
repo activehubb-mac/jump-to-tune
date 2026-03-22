@@ -517,6 +517,48 @@ export type Database = {
         }
         Relationships: []
       }
+      artist_identities: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          id: string
+          name_suggestions: string[] | null
+          reference_photo_url: string | null
+          settings: Json | null
+          tagline: string | null
+          updated_at: string | null
+          user_id: string
+          visual_theme: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          name_suggestions?: string[] | null
+          reference_photo_url?: string | null
+          settings?: Json | null
+          tagline?: string | null
+          updated_at?: string | null
+          user_id: string
+          visual_theme?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          name_suggestions?: string[] | null
+          reference_photo_url?: string | null
+          settings?: Json | null
+          tagline?: string | null
+          updated_at?: string | null
+          user_id?: string
+          visual_theme?: string | null
+        }
+        Relationships: []
+      }
       artist_stores: {
         Row: {
           artist_id: string
