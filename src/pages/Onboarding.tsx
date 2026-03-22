@@ -18,21 +18,21 @@ import { ONBOARDING_GENRES } from "@/lib/genres";
 const SUBSCRIPTION_TIERS = [
   {
     tier: "fan" as const,
-    name: "Fan",
-    price: "$0.99",
-    features: ["Unlimited streaming", "Download to collection", "Download to device"],
+    name: "Creator",
+    price: "$10",
+    features: ["Unlimited streaming", "300 AI credits/month", "Download to collection & device"],
   },
   {
     tier: "artist" as const,
-    name: "Artist",
-    price: "$4.99",
-    features: ["All Fan features", "Upload unlimited tracks", "Artist dashboard & analytics"],
+    name: "Creator Pro",
+    price: "$25",
+    features: ["All Creator features", "800 AI credits/month", "Upload unlimited tracks & analytics"],
   },
   {
     tier: "label" as const,
-    name: "Label",
-    price: "$9.99",
-    features: ["All Artist features", "Manage up to 10 artists", "Label dashboard & analytics"],
+    name: "Label / Studio",
+    price: "$79",
+    features: ["All Creator Pro features", "2,000 AI credits/month", "Manage up to 10 artists"],
   },
 ];
 

@@ -747,7 +747,50 @@ serve(async (req) => {
           .maybeSingle();
 
         if (orderLookupError || !refundedOrder) {
-          logStep("No store order found for refunded charge", { paymentIntentId });
+          logStep("No store order found for refunded charge — checking for AI credit pack", { paymentIntentId });
+
+          // ── AI CREDIT PACK REFUND CLAWBACK ──────────────────────────────
+          try {
+            const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+            const piMeta = paymentIntent.metadata || {};
+
+            if (piMeta.type === "ai_credit_pack" && piMeta.user_id && piMeta.ai_credits) {
+              const creditsToRemove = Number(piMeta.ai_credits);
+              const targetUserId = piMeta.user_id;
+              logStep("AI credit pack refund detected", { targetUserId, creditsToRemove });
+
+              const { data: deductResult } = await supabaseClient.rpc("deduct_ai_credits", {
+                p_user_id: targetUserId,
+                p_credits: creditsToRemove,
+              });
+
+              if (deductResult?.success) {
+                logStep("AI credits clawed back successfully", { deductResult });
+              } else {
+                logStep("Insufficient credits for full clawback — flagging account", { deductResult });
+                await supabaseClient.from("notifications").insert({
+                  user_id: targetUserId,
+                  type: "account_flag",
+                  title: "Credit Pack Refund",
+                  message: `A refund of ${creditsToRemove} AI credits was issued but your balance was insufficient. Account flagged for admin review.`,
+                  metadata: { payment_intent_id: paymentIntentId, credits_attempted: creditsToRemove },
+                });
+              }
+
+              // Log the reversal transaction
+              await supabaseClient.from("ai_credit_usage").insert({
+                user_id: targetUserId,
+                action: "credit_pack_refund_clawback",
+                credits_used: creditsToRemove,
+                metadata: { payment_intent_id: paymentIntentId, success: deductResult?.success ?? false },
+              });
+            } else {
+              logStep("Refunded charge is not an AI credit pack, skipping");
+            }
+          } catch (piError) {
+            logStep("Error retrieving payment intent for refund clawback", { error: String(piError) });
+          }
+
           break;
         }
 
