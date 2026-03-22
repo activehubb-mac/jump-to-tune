@@ -432,10 +432,24 @@ export default function AIIdentityBuilder() {
                   <Button size="sm" variant="outline" onClick={handleUseInVideo} className="gap-1.5">
                     <Video className="h-3.5 w-3.5" />Use in Video
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => { const params = new URLSearchParams(); params.set("style", mode === "photo" ? outputStyle : "artistic"); if (savedId) params.set("identity_id", savedId); params.set("type", "avatar_performance"); navigate(`/ai-video?${params.toString()}`); }} className="gap-1.5">
+                  <Button
+                    size="sm"
+                    variant={motionTier === "performance" ? "default" : "outline"}
+                    disabled={motionTier === "performance" || motionTier === "cinematic"}
+                    onClick={() => { setPendingMotionTier("performance"); setMotionConfirmOpen(true); }}
+                    className="gap-1.5"
+                  >
                     <Play className="h-3.5 w-3.5" />Animate — 80 credits
                   </Button>
-                </div>
+                  <Button
+                    size="sm"
+                    variant={motionTier === "cinematic" ? "default" : "outline"}
+                    disabled={motionTier === "cinematic"}
+                    onClick={() => { setPendingMotionTier("cinematic"); setMotionConfirmOpen(true); }}
+                    className="gap-1.5"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />Cinematic — 200 credits
+                  </Button>
 
                 {/* Name suggestions (if multiple) */}
                 {result.name_suggestions?.length > 1 && (
