@@ -63,7 +63,7 @@ serve(async (req) => {
     logStep("Artist Stripe account found", { accountId: artistProfile.stripe_account_id });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2025-11-17.clover",
+      apiVersion: "2025-08-27.basil",
     });
 
     // Check if fan already has a Stripe customer

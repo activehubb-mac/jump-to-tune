@@ -67,7 +67,7 @@ serve(async (req) => {
       status: subscription.status 
     });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-11-17.clover" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     if (action === "pause") {
       // Pause the subscription - using void behavior (no charges during pause)

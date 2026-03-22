@@ -90,7 +90,7 @@ serve(async (req) => {
     if (profile.stripe_account_id) {
       try {
         const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-          apiVersion: "2025-11-17.clover",
+          apiVersion: "2025-08-27.basil",
         });
 
         const account = await stripe.accounts.retrieve(profile.stripe_account_id);

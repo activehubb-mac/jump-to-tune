@@ -81,7 +81,7 @@ serve(async (req) => {
       if (subError) {
         logStep("Error fetching subscription", { error: subError.message });
       } else if (subscription) {
-        const stripe = new Stripe(stripeSecretKey, { apiVersion: "2025-11-17.clover" });
+        const stripe = new Stripe(stripeSecretKey, { apiVersion: "2025-08-27.basil" });
         
         // Cancel active subscription if exists
         if (subscription.stripe_subscription_id) {
