@@ -60,7 +60,7 @@ export function CreditConfirmModal({
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                Credits will be deducted once generation completes successfully.
+                Credits are deducted before generation begins. Refunded automatically if generation fails.
               </p>
             </div>
           </AlertDialogDescription>
