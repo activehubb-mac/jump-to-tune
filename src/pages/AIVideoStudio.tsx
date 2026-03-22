@@ -205,6 +205,7 @@ export default function AIVideoStudio() {
       if (identityStyle) setStyle(identityStyle);
       setVideoType(typeParam || "avatar_performance");
       if (idParam) setIdentityId(idParam);
+      if (avatarUrl) setAvatarUrl(avatarUrl);
       if (identityStyle) {
         setScenePrompt(`Artist avatar performance video in ${identityStyle} style`);
       }
