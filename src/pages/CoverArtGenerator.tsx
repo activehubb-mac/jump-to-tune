@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getToolCost } from "@/lib/aiPricing";
 
 export default function CoverArtGenerator() {
   const { user } = useAuth();
