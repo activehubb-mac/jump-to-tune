@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { CreditConfirmModal } from "@/components/ai/CreditConfirmModal";
@@ -166,6 +166,23 @@ export default function AIVideoStudio() {
   const [scenePrompt, setScenePrompt] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // Accept identity params from AI Identity Builder
+  const [identityBanner, setIdentityBanner] = useState<string | null>(null);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const avatarUrl = params.get("avatar_url");
+    const identityStyle = params.get("style");
+    if (avatarUrl || identityStyle) {
+      setIdentityBanner("Using your AI Identity avatar");
+      if (identityStyle) setStyle(identityStyle);
+      setVideoType("avatar_performance");
+      if (identityStyle) {
+        setScenePrompt(`Artist avatar performance video in ${identityStyle} style`);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const selectedDuration = DURATION_OPTIONS.find((d) => d.seconds === duration)!;
   const canAfford = aiCredits >= selectedDuration.credits;
   const activeJobs = jobs.filter((j) => j.status === "queued" || j.status === "processing");
@@ -231,6 +248,16 @@ export default function AIVideoStudio() {
             <Zap className="h-3 w-3 mr-1" />{creditsLoading ? "..." : aiCredits}
           </Badge>
         </div>
+
+        {/* Identity builder banner */}
+        {identityBanner && (
+          <Card className="border-primary/30 bg-primary/5 bg-card/60 backdrop-blur-sm">
+            <CardContent className="p-3 flex items-center gap-3">
+              <User className="h-4 w-4 text-primary shrink-0" />
+              <p className="text-sm text-primary">{identityBanner}</p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Active jobs indicator */}
         {activeJobs.length > 0 && (

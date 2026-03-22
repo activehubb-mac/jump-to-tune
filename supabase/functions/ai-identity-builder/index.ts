@@ -93,7 +93,7 @@ serve(async (req) => {
       const accessoriesPrompt = accessories ? `Include these accessories: ${accessories}.` : "";
       const bgPrompt = background_style ? `Background: ${background_style}.` : "";
 
-      const editPrompt = `Transform this person into a premium artist identity portrait. Style: ${stylePrompt}. ${likenessInstruction} ${accessoriesPrompt} ${bgPrompt} Professional quality, no text, square format, suitable for artist profile picture.`;
+      const editPrompt = `Transform this person into a premium artist identity portrait. Style: ${stylePrompt}. ${likenessInstruction} ${accessoriesPrompt} ${bgPrompt} Editorial photography lighting, music industry branding, album-ready composition, realistic lighting balance. Professional quality, no text, square format, suitable for artist profile picture.`;
 
       const imageModel = hd ? "google/gemini-3-pro-image-preview" : "google/gemini-2.5-flash-image";
 
@@ -217,6 +217,7 @@ serve(async (req) => {
           const imgData = await imgResp.json();
           avatarBase64 = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url || null;
         }
+        // Note: avatar prompt already includes quality modifiers from AI response
       } catch (e) {
         logStep("Avatar generation failed, continuing", { error: String(e) });
       }
