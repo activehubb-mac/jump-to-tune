@@ -162,6 +162,7 @@ export function useVideoStudio() {
       duration_seconds: number;
       style: string;
       scene_prompt: string;
+      avatar_url?: string;
     }) => {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error("Not authenticated");

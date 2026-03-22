@@ -327,6 +327,7 @@ export default function AIVideoStudio() {
                         key={identity.id}
                         onClick={() => {
                           setIdentityId(identity.id);
+                          setAvatarUrl(identity.avatar_url || null);
                           setIdentityBanner(`Using saved identity: ${identity.visual_theme || identity.id.slice(0, 8)}`);
                           setVideoType("avatar_performance");
                           if (identity.visual_theme) {
