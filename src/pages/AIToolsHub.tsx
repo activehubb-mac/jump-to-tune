@@ -89,7 +89,6 @@ export default function AIToolsHub() {
   const { aiCredits, isLoading } = useAICredits();
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
-  const usdEquivalent = (aiCredits / 100).toFixed(2);
   const progressMax = 2000;
   const progressPercent = Math.min((aiCredits / progressMax) * 100, 100);
 
