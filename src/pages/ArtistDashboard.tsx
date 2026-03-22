@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Music, Upload, DollarSign, Users, TrendingUp, BarChart3, Plus, Lock, AlertCircle, Loader2, Trash2, Wallet } from "lucide-react";
+import { Music, Upload, DollarSign, Users, TrendingUp, BarChart3, Plus, Lock, AlertCircle, Loader2, Trash2, Wallet, Rocket } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useArtistStats } from "@/hooks/useArtistStats";
