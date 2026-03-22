@@ -234,9 +234,10 @@ export default function Index() {
 
         {/* ===== SIMPLIFIED ARTIST/LABEL ACTION CARDS ===== */}
         {user && (role === "artist" || role === "label") && (
-          <section className="py-12 md:py-16">
-            <div className="container mx-auto px-4">
-              <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+          <section className="py-8 md:py-12">
+            <div className="container mx-auto px-4 max-w-3xl space-y-4">
+              <DailyGrowthPlan />
+              <div className="grid sm:grid-cols-3 gap-4">
                 <Link to="/upload" className="glass-card-bordered p-6 text-center group hover:bg-primary/10 transition-all duration-300">
                   <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                     <Upload className="w-7 h-7 text-primary-foreground" />
