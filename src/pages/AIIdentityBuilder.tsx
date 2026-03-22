@@ -450,8 +450,9 @@ export default function AIIdentityBuilder() {
                   >
                     <Sparkles className="h-3.5 w-3.5" />Cinematic — 200 credits
                   </Button>
+                </div>
 
-                {/* Name suggestions (if multiple) */}
+
                 {result.name_suggestions?.length > 1 && (
                   <Card className="glass"><CardHeader className="pb-2"><CardTitle className="text-sm">All Name Suggestions</CardTitle></CardHeader>
                     <CardContent><div className="space-y-2">{result.name_suggestions.map((name, i) => (
