@@ -133,7 +133,12 @@ export default function WalletPage() {
                 </CardContent>
               </Card>
 
-              <AutoReloadPanel />
+              {!creditsLoading && aiCredits < 100 && (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground text-center">Running low? Turn on auto-refill to never run out</p>
+                  <AutoReloadPanel />
+                </div>
+              )}
             </div>
 
             {/* Main Content */}

@@ -231,50 +231,79 @@ export default function Index() {
           </div>
         </section>
 
-        {/* ===== DISCOVER ===== */}
-        <DiscoverSection />
-
-        {/* ===== CREATE WITH AI ===== */}
-        <CreateWithAISection />
-
-        {/* ===== FAN ZONE ===== */}
-        <FanZoneSection />
-
-        {/* ===== AI DJ ===== */}
-        <AIDJSection />
-
-        {/* ===== MUSIC GALAXY TOGGLE ===== */}
-        <section className="py-16 md:py-24">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center">
-              <div className="glass-card-bordered p-8 md:p-12 relative overflow-hidden">
-                {/* Background image */}
-                <img src={featureGalaxyCta} alt="" className="absolute inset-0 w-full h-full object-cover opacity-45 animate-card-drift" />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/40 to-transparent" />
-                
-                <div className="relative z-10">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center mx-auto mb-6">
-                    <Globe className="w-10 h-10 text-primary" />
+        {/* ===== SIMPLIFIED ARTIST/LABEL ACTION CARDS ===== */}
+        {user && (role === "artist" || role === "label") && (
+          <section className="py-12 md:py-16">
+            <div className="container mx-auto px-4">
+              <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+                <Link to="/upload" className="glass-card-bordered p-6 text-center group hover:bg-primary/10 transition-all duration-300">
+                  <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                    <Upload className="w-7 h-7 text-primary-foreground" />
                   </div>
-                  <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                    Music <span className="text-gradient">Galaxy</span>
-                  </h2>
-                  <p className="text-muted-foreground text-lg mb-8 max-w-lg mx-auto">
-                    Explore songs as floating nodes in an interactive galaxy. Discover connections between tracks, genres, and artists.
-                  </p>
-                  <Button
-                    size="lg"
-                    className="gradient-accent neon-glow-subtle hover:scale-105 transition-all duration-300 text-lg px-8"
-                    onClick={() => setShowGalaxy(true)}
-                  >
-                    <Globe className="w-5 h-5 mr-2" />
-                    Explore Music Galaxy
-                  </Button>
-                </div>
+                  <h3 className="font-semibold text-foreground text-lg">Upload Song</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Share your music</p>
+                </Link>
+                <Link to={role === "label" ? "/label/dashboard" : "/artist/dashboard"} className="glass-card-bordered p-6 text-center group hover:bg-primary/10 transition-all duration-300">
+                  <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                    <Music className="w-7 h-7 text-primary-foreground" />
+                  </div>
+                  <h3 className="font-semibold text-foreground text-lg">My Music</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Manage your releases</p>
+                </Link>
+                <Link to="/ai-tools" className="glass-card-bordered p-6 text-center group hover:bg-primary/10 transition-all duration-300">
+                  <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                    <Sparkles className="w-7 h-7 text-primary-foreground" />
+                  </div>
+                  <h3 className="font-semibold text-foreground text-lg">Grow My Music</h3>
+                  <p className="text-sm text-muted-foreground mt-1">AI-powered tools</p>
+                </Link>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
+
+        {/* ===== FAN / GUEST CONTENT ===== */}
+        {(!user || role === "fan") && (
+          <>
+            <DiscoverSection />
+            <CreateWithAISection />
+            <FanZoneSection />
+            <AIDJSection />
+
+            {/* Music Galaxy CTA */}
+            <section className="py-16 md:py-24">
+              <div className="container mx-auto px-4">
+                <div className="max-w-3xl mx-auto text-center">
+                  <div className="glass-card-bordered p-8 md:p-12 relative overflow-hidden">
+                    <img src={featureGalaxyCta} alt="" className="absolute inset-0 w-full h-full object-cover opacity-45 animate-card-drift" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/40 to-transparent" />
+                    <div className="relative z-10">
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center mx-auto mb-6">
+                        <Globe className="w-10 h-10 text-primary" />
+                      </div>
+                      <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                        Music <span className="text-gradient">Galaxy</span>
+                      </h2>
+                      <p className="text-muted-foreground text-lg mb-8 max-w-lg mx-auto">
+                        Explore songs as floating nodes in an interactive galaxy. Discover connections between tracks, genres, and artists.
+                      </p>
+                      <Button
+                        size="lg"
+                        className="gradient-accent neon-glow-subtle hover:scale-105 transition-all duration-300 text-lg px-8"
+                        onClick={() => setShowGalaxy(true)}
+                      >
+                        <Globe className="w-5 h-5 mr-2" />
+                        Explore Music Galaxy
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <KaraokePromoBanner />
+          </>
+        )}
 
         {/* ===== GUEST-ONLY SECTIONS ===== */}
         {!user && (
@@ -343,9 +372,6 @@ export default function Index() {
             </section>
           </>
         )}
-
-        {/* Karaoke Promo */}
-        <KaraokePromoBanner />
       </div>
 
       <PremiumFeatureModal open={showPremiumModal} onOpenChange={setShowPremiumModal} feature="Add to Queue" />
