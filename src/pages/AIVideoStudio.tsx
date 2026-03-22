@@ -168,7 +168,7 @@ export default function AIVideoStudio() {
 
   // Accept identity params from AI Identity Builder
   const [identityBanner, setIdentityBanner] = useState<string | null>(null);
-  useState(() => {
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const avatarUrl = params.get("avatar_url");
     const identityStyle = params.get("style");
@@ -180,7 +180,8 @@ export default function AIVideoStudio() {
         setScenePrompt(`Artist avatar performance video in ${identityStyle} style`);
       }
     }
-  });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const selectedDuration = DURATION_OPTIONS.find((d) => d.seconds === duration)!;
   const canAfford = aiCredits >= selectedDuration.credits;
