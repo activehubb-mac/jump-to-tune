@@ -73,6 +73,7 @@ export default function AIIdentityBuilder() {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [result, setResult] = useState<IdentityResult | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const pricing = AI_TOOL_PRICING.identity_builder;
