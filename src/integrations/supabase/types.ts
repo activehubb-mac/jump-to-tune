@@ -2119,6 +2119,7 @@ export type Database = {
           banner_image_url: string | null
           bio: string | null
           created_at: string
+          default_identity_id: string | null
           display_name: string | null
           display_name_font: string | null
           id: string
@@ -2136,6 +2137,7 @@ export type Database = {
           banner_image_url?: string | null
           bio?: string | null
           created_at?: string
+          default_identity_id?: string | null
           display_name?: string | null
           display_name_font?: string | null
           id: string
@@ -2153,6 +2155,7 @@ export type Database = {
           banner_image_url?: string | null
           bio?: string | null
           created_at?: string
+          default_identity_id?: string | null
           display_name?: string | null
           display_name_font?: string | null
           id?: string
@@ -2165,7 +2168,15 @@ export type Database = {
           updated_at?: string
           website_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_default_identity_id_fkey"
+            columns: ["default_identity_id"]
+            isOneToOne: false
+            referencedRelation: "artist_identities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       promotion_purchases: {
         Row: {
