@@ -479,6 +479,15 @@ export default function AIIdentityBuilder() {
         currentCredits={aiCredits}
         summary={mode === "vision" ? "Generate a complete AI artist identity" : `Photo recreate in ${OUTPUT_STYLES.find(s => s.value === outputStyle)?.label} style${hdMode ? " (HD)" : ""}`}
       />
+
+      {savedId && (
+        <AvatarEditModal
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          identityId={savedId}
+          currentAvatarUrl={result?.avatar_image ?? null}
+        />
+      )}
     </Layout>
   );
 }
