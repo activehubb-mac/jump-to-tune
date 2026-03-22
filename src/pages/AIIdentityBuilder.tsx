@@ -428,28 +428,16 @@ export default function AIIdentityBuilder() {
                   <Button size="sm" variant="outline" onClick={() => { setResult(null); setSavedId(null); setOutputStyle(OUTPUT_STYLES[(OUTPUT_STYLES.findIndex(s => s.value === outputStyle) + 1) % OUTPUT_STYLES.length].value); }} className="gap-1.5">
                     <Wand2 className="h-3.5 w-3.5" />New Style
                   </Button>
-                  <Button size="sm" variant="outline" onClick={handleUseInVideo} className="gap-1.5">
-                    <Video className="h-3.5 w-3.5" />Use in Video
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={motionTier === "performance" ? "default" : "outline"}
-                    disabled={motionTier === "performance" || motionTier === "cinematic"}
-                    onClick={() => { setPendingMotionTier("performance"); setMotionConfirmOpen(true); }}
-                    className="gap-1.5"
-                  >
-                    <Play className="h-3.5 w-3.5" />Animate — 80 credits
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={motionTier === "cinematic" ? "default" : "outline"}
-                    disabled={motionTier === "cinematic"}
-                    onClick={() => { setPendingMotionTier("cinematic"); setMotionConfirmOpen(true); }}
-                    className="gap-1.5"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />Cinematic — 200 credits
-                  </Button>
-                </div>
+                   <Button size="sm" variant="outline" onClick={() => handleUseInVideo()} className="gap-1.5">
+                     <Video className="h-3.5 w-3.5" />Use in Video
+                   </Button>
+                   <Button size="sm" variant="outline" onClick={() => handleUseInVideo("performance")} className="gap-1.5">
+                     <Video className="h-3.5 w-3.5" />Create Video — 130 credits
+                   </Button>
+                   <Button size="sm" variant="outline" onClick={() => handleUseInVideo("cinematic")} className="gap-1.5">
+                     <Sparkles className="h-3.5 w-3.5" />HD Video — 400 credits
+                   </Button>
+                 </div>
 
 
                 {result.name_suggestions?.length > 1 && (
