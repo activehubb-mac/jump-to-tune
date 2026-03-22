@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useDefaultIdentity } from "@/hooks/useDefaultIdentity";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Layout } from "@/components/layout/Layout";
 import { CreditConfirmModal } from "@/components/ai/CreditConfirmModal";
