@@ -41,12 +41,12 @@ export const AI_TOOL_PRICING: Record<string, ToolPricing> = {
     ],
   },
   identity_motion: {
-    label: "Avatar Motion",
+    label: "Avatar Video",
     base: 0,
     tiers: [
-      { label: "Basic (CSS Preview)", credits: 0 },
-      { label: "Performance Mode", credits: 80 },
-      { label: "Cinematic Mode", credits: 200 },
+      { label: "Basic (Live Preview)", credits: 0 },
+      { label: "Video (10s 480p)", credits: 130 },
+      { label: "HD Video (720p)", credits: 400 },
     ],
   },
 };
