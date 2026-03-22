@@ -381,9 +381,8 @@ export default function AIArtistDrop() {
       <CreditConfirmModal
         open={showConfirm}
         onOpenChange={setShowConfirm}
-        credits={creditCost}
-        currentBalance={aiCredits}
-        toolName="AI Artist Drop"
+        creditCost={creditCost}
+        currentCredits={aiCredits}
         summary={`${genre} · ${mood}${useIdentity ? " · Artist identity" : ""}`}
         onConfirm={handleGenerate}
       />
