@@ -30,7 +30,7 @@ export function useDefaultIdentity() {
         .single();
 
       if (pErr || !profile?.default_identity_id) {
-        return { identityId: null, avatarUrl: null, visualTheme: null, settings: null };
+      return { identityId: null, avatarUrl: null, visualTheme: null, settings: null, artistName: null, bio: null };
       }
 
       // Step 2: fetch the identity row
