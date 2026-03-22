@@ -1,46 +1,81 @@
 
 
-## Enhance Global Identity System
+## AI Artist Drop — Implementation Plan
 
-Small, targeted changes. No pricing/generation/UI flow modifications.
+### Overview
+A guided wizard flow that orchestrates existing Identity, Cover Art, and Release Builder systems into a single "drop" experience. One new page, one new edge function (song concept generator), one pricing entry. No existing systems modified.
 
 ---
 
-### 1. Extend `useDefaultIdentity` hook
+### Pricing
 
-**File**: `src/hooks/useDefaultIdentity.ts`
-
-Add `bio` and `artistName` (from `name_suggestions[0]`) to the query and return value:
-
+**Add to `src/lib/aiPricing.ts`**:
 ```ts
-// Select expands to include bio, name_suggestions
-.select("id, avatar_url, visual_theme, settings, bio, name_suggestions")
-
-// Return adds:
-artistName: identity.name_suggestions?.[0] ?? null,
-bio: identity.bio ?? null,
+artist_drop: {
+  label: "AI Artist Drop",
+  base: 40,
+},
 ```
 
 ---
 
-### 2. Auto-set default identity on save (not just "Set as Profile")
+### New Edge Function: `supabase/functions/ai-artist-drop/index.ts`
 
-**File**: `src/pages/AIIdentityBuilder.tsx`
+Lightweight orchestrator that:
+1. Authenticates user, deducts 40 credits atomically
+2. Accepts `{ genre, mood, song_idea?, avatar_url?, visual_theme? }`
+3. Calls Lovable AI (Gemini) to generate a song concept: title, description, tags, mood tags, cover art prompt, lyrics outline
+4. Calls Gemini image generation to create cover art using the cover art prompt + identity context
+5. Returns full package: `{ title, description, genre_tags, mood_tags, lyrics_outline, cover_image, avatar_url }`
+6. On any failure after credit deduction, refunds credits via `add_ai_credits`
 
-In `handleSave` (around line 214), after `setSavedId(inserted.id)`, call:
-```ts
-await setDefaultIdentity(inserted.id);
-```
-
-This means every new identity automatically becomes the default. User can still switch via version history.
+Does NOT call the existing `ai-release-builder` or `ai-cover-art` functions — it uses the same AI models directly to avoid double credit charges. Single 40-credit charge covers everything.
 
 ---
 
-### 3. Auto-set after avatar edit completion
+### New Page: `src/pages/AIArtistDrop.tsx`
 
-**File**: `src/components/ai/AvatarEditModal.tsx`
+Multi-step wizard with 4 screens:
 
-After a successful edit generation (where the new version is saved), auto-call `setDefaultIdentity(identityId)` — this already happens in the "Set as Profile" handler but NOT after the generation itself. Add it to the generation success path so the edited version's parent identity stays the default.
+**Step 1 — Input**:
+- Genre selector (using `MAIN_GENRES` from `src/lib/genres.ts`)
+- Mood/vibe text input
+- Optional song idea textarea
+- Toggle: "Use my artist identity" (auto-checked if `useDefaultIdentity` returns an identity)
+- "Create My Drop — 40 credits" button
+
+**Step 2 — Generating** (loading state):
+- Progress animation showing stages: "Crafting concept...", "Generating artwork...", "Building release..."
+
+**Step 3 — Result Screen**:
+- Avatar (from identity or placeholder)
+- Song title (editable)
+- Cover art image
+- Description
+- Genre + mood tags
+- Lyrics outline
+
+**Step 4 — Next Actions**:
+- "Create Music Video" → navigates to `/ai-video`
+- "Generate Viral Clips" → navigates to `/ai-viral`
+- "Save Project" → saves to a `drop_projects` concept (localStorage for now, no new DB table needed)
+- "Start Over" → resets wizard
+
+---
+
+### Route
+
+**`src/App.tsx`**: Add `<Route path="/ai-drop" element={<AIArtistDrop />} />`
+
+---
+
+### Entry Points
+
+1. **AIToolsHub.tsx**: Add "AI Artist Drop" as a featured card at the top of the grid (with premium gold styling, similar to Video Studio). Roles: `["artist", "label"]`.
+
+2. **ArtistDashboard.tsx**: Add a "Create My First Drop" CTA button in the Quick Actions section (below "Upload New Track"). Only show if user has no tracks yet OR always show as a quick action.
+
+3. **Onboarding.tsx**: After onboarding completion, if role is artist, show a prompt/banner linking to `/ai-drop`.
 
 ---
 
@@ -48,13 +83,16 @@ After a successful edit generation (where the new version is saved), auto-call `
 
 | File | Change |
 |---|---|
-| `src/hooks/useDefaultIdentity.ts` | Add `artistName` and `bio` to query & return |
-| `src/pages/AIIdentityBuilder.tsx` | Auto-set default identity on save |
-| `src/components/ai/AvatarEditModal.tsx` | Auto-set default identity after edit generation |
+| `src/lib/aiPricing.ts` | Add `artist_drop` pricing entry |
+| `supabase/functions/ai-artist-drop/index.ts` | New edge function — concept + cover art orchestrator |
+| `src/pages/AIArtistDrop.tsx` | New page — wizard flow |
+| `src/App.tsx` | Add route `/ai-drop` |
+| `src/pages/AIToolsHub.tsx` | Add AI Artist Drop card (top of grid, premium style) |
+| `src/pages/ArtistDashboard.tsx` | Add "Create My First Drop" quick action button |
 
 ### Not Touched
-- All pricing values and logic
-- Video Studio, Cover Art, Viral Generator (already consume `useDefaultIdentity`)
-- Backend edge functions
-- UI flows and layouts
+- Identity Builder, Cover Art Generator, Video Studio, Viral Generator
+- All existing edge functions
+- Credit deduction logic (reuses existing `deduct_ai_credits` / `add_ai_credits`)
+- Database schema (no new tables needed)
 
