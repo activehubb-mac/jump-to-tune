@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Layout } from "@/components/layout/Layout";
 import { CreditConfirmModal } from "@/components/ai/CreditConfirmModal";
 import { Button } from "@/components/ui/button";
