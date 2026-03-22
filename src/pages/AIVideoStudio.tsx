@@ -12,11 +12,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Sparkles, Loader2, Zap, Lock, ArrowLeft, Video, Clock,
   Film, Type, Smartphone, User, Monitor, Square, RectangleVertical,
   CheckCircle2, XCircle, Clock3, Clapperboard, Trash2, RotateCcw, Download,
-  UserCircle, Plus,
+  UserCircle, Plus, Expand,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
@@ -221,6 +222,7 @@ export default function AIVideoStudio() {
   // Saved identities
   const [savedIdentities, setSavedIdentities] = useState<any[]>([]);
   const [identitiesLoading, setIdentitiesLoading] = useState(false);
+  const [previewIdentity, setPreviewIdentity] = useState<any | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -377,41 +379,51 @@ export default function AIVideoStudio() {
                   {savedIdentities.map((identity) => {
                     const isSelected = identityId === identity.id;
                     return (
-                      <button
-                        key={identity.id}
-                        onClick={() => {
-                          setIdentityId(identity.id);
-                          setAvatarUrl(identity.avatar_url || null);
-                          setIdentityBanner(`Using saved identity: ${identity.visual_theme || identity.id.slice(0, 8)}`);
-                          setVideoType("avatar_performance");
-                          if (identity.visual_theme) {
-                            const matchedStyle = STYLE_PRESETS.find(
-                              (s) => s.value.toLowerCase() === identity.visual_theme?.toLowerCase()
+                      <div key={identity.id} className="relative shrink-0">
+                        <button
+                          onClick={() => {
+                            setIdentityId(identity.id);
+                            setAvatarUrl(identity.avatar_url || null);
+                            setIdentityBanner(`Using saved identity: ${identity.visual_theme || identity.id.slice(0, 8)}`);
+                            setVideoType("avatar_performance");
+                            if (identity.visual_theme) {
+                              const matchedStyle = STYLE_PRESETS.find(
+                                (s) => s.value.toLowerCase() === identity.visual_theme?.toLowerCase()
+                              );
+                              if (matchedStyle) setStyle(matchedStyle.value);
+                            }
+                            setScenePrompt(
+                              `Artist avatar performance video${identity.visual_theme ? ` in ${identity.visual_theme} style` : ""}`
                             );
-                            if (matchedStyle) setStyle(matchedStyle.value);
-                          }
-                          setScenePrompt(
-                            `Artist avatar performance video${identity.visual_theme ? ` in ${identity.visual_theme} style` : ""}`
-                          );
-                        }}
-                        className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border shrink-0 transition-all w-20 ${
-                          isSelected
-                            ? "border-primary bg-primary/10 ring-1 ring-primary/30"
-                            : "border-glass-border bg-muted/30 hover:border-primary/40"
-                        }`}
-                      >
-                        <Avatar className="h-12 w-12">
-                          {identity.avatar_url ? (
-                            <AvatarImage src={identity.avatar_url} alt="Identity" />
-                          ) : null}
-                          <AvatarFallback className="bg-muted text-muted-foreground">
-                            <User className="h-5 w-5" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-[10px] text-muted-foreground truncate w-full text-center">
-                          {identity.visual_theme || "Identity"}
-                        </span>
-                      </button>
+                          }}
+                          className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-all w-20 ${
+                            isSelected
+                              ? "border-primary bg-primary/10 ring-1 ring-primary/30"
+                              : "border-glass-border bg-muted/30 hover:border-primary/40"
+                          }`}
+                        >
+                          <Avatar className="h-12 w-12">
+                            {identity.avatar_url ? (
+                              <AvatarImage src={identity.avatar_url} alt="Identity" />
+                            ) : null}
+                            <AvatarFallback className="bg-muted text-muted-foreground">
+                              <User className="h-5 w-5" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-[10px] text-muted-foreground truncate w-full text-center">
+                            {identity.visual_theme || "Identity"}
+                          </span>
+                        </button>
+                        {identity.avatar_url && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setPreviewIdentity(identity); }}
+                            className="absolute top-1 right-1 h-5 w-5 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center border border-border/50 hover:bg-primary/20 transition-colors z-10"
+                            aria-label="Preview avatar"
+                          >
+                            <Expand className="h-3 w-3 text-muted-foreground" />
+                          </button>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -420,6 +432,45 @@ export default function AIVideoStudio() {
           </Card>
         )}
 
+        {/* Avatar Preview Dialog */}
+        <Dialog open={!!previewIdentity} onOpenChange={(open) => !open && setPreviewIdentity(null)}>
+          <DialogContent className="max-w-xs sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="text-base">{previewIdentity?.visual_theme || "Identity Preview"}</DialogTitle>
+            </DialogHeader>
+            {previewIdentity?.avatar_url && (
+              <div className="space-y-4">
+                <img
+                  src={previewIdentity.avatar_url}
+                  alt="Avatar preview"
+                  className="w-full aspect-square object-cover rounded-lg"
+                />
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    const identity = previewIdentity;
+                    setIdentityId(identity.id);
+                    setAvatarUrl(identity.avatar_url || null);
+                    setIdentityBanner(`Using saved identity: ${identity.visual_theme || identity.id.slice(0, 8)}`);
+                    setVideoType("avatar_performance");
+                    if (identity.visual_theme) {
+                      const matchedStyle = STYLE_PRESETS.find(
+                        (s) => s.value.toLowerCase() === identity.visual_theme?.toLowerCase()
+                      );
+                      if (matchedStyle) setStyle(matchedStyle.value);
+                    }
+                    setScenePrompt(
+                      `Artist avatar performance video${identity.visual_theme ? ` in ${identity.visual_theme} style` : ""}`
+                    );
+                    setPreviewIdentity(null);
+                  }}
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-1.5" /> Select This Identity
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {activeJobs.length > 0 && (
           <Card className="border-blue-500/30 bg-blue-500/5 bg-card/60 backdrop-blur-sm">
