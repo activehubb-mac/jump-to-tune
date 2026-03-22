@@ -28,7 +28,7 @@ const STARTER_PACK = {
 
 export default function WalletPage() {
   const { user } = useAuth();
-  const { aiCredits, costs, isLoading: creditsLoading, refetch: refetchCredits } = useAICredits();
+  const { aiCredits, isLoading: creditsLoading, refetch: refetchCredits } = useAICredits();
   const { transactions, isLoading: walletLoading, refetch: refetchWallet } = useWallet();
   const { showFeedback } = useFeedbackSafe();
   const [purchasingPack, setPurchasingPack] = useState<number | null>(null);
