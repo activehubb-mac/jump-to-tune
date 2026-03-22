@@ -59,6 +59,7 @@ serve(async (req) => {
       duration_seconds = 30,
       style = "cyberpunk",
       scene_prompt = "",
+      avatar_url = null,
     } = body;
 
     const duration = duration_seconds || 30;
