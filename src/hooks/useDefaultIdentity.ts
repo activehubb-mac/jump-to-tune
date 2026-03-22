@@ -11,6 +11,8 @@ interface DefaultIdentity {
   avatarUrl: string | null;
   visualTheme: string | null;
   settings: Record<string, unknown> | null;
+  artistName: string | null;
+  bio: string | null;
 }
 
 export function useDefaultIdentity() {
