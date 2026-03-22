@@ -53,7 +53,7 @@ serve(async (req) => {
     }
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2025-11-17.clover",
+      apiVersion: "2025-08-27.basil",
     });
 
     const origin = req.headers.get("origin") || "https://jump-to-tune.lovable.app";

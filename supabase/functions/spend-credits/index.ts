@@ -382,7 +382,7 @@ serve(async (req) => {
     if (earningsRecipient?.stripe_account_id && earningsRecipient?.stripe_payouts_enabled && artistPayoutCents > 0) {
       try {
         const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-          apiVersion: "2025-11-17.clover",
+          apiVersion: "2025-08-27.basil",
         });
 
         logStep(`Initiating Stripe transfer to ${recipientType}`, {

@@ -1,3 +1,4 @@
+// Credit costs: 15s=130, 30s=180, 60s=240, 120s=400 — canonical source: src/lib/aiPricing.ts
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 

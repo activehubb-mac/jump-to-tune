@@ -1,3 +1,4 @@
+// Credit costs: quick=10, style=15, full=25 — canonical source: src/lib/aiPricing.ts
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 

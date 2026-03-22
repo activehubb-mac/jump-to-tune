@@ -134,7 +134,7 @@ serve(async (req) => {
 
       // If has Stripe subscription, check Stripe for active status
       if (localSub.stripe_subscription_id) {
-        const stripe = new Stripe(stripeKey, { apiVersion: "2025-11-17.clover" });
+        const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
         
         try {
           const subscription = await stripe.subscriptions.retrieve(localSub.stripe_subscription_id);
@@ -263,7 +263,7 @@ serve(async (req) => {
     }
 
     // Check Stripe for any subscriptions by email
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-11-17.clover" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
 
     if (customers.data.length === 0) {
