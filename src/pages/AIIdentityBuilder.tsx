@@ -70,9 +70,6 @@ export default function AIIdentityBuilder() {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [result, setResult] = useState<IdentityResult | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [motionTier, setMotionTier] = useState<MotionTier>("basic");
-  const [motionConfirmOpen, setMotionConfirmOpen] = useState(false);
-  const [pendingMotionTier, setPendingMotionTier] = useState<MotionTier>("performance");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const pricing = AI_TOOL_PRICING.identity_builder;
