@@ -23,7 +23,7 @@ export default function StagePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: stageTrack, isLoading } = useStageTrack(trackId);
-  const { aiCredits, getCost, refetch: refetchCredits } = useAICredits();
+  const { aiCredits, refetch: refetchCredits } = useAICredits();
   const [stage, setStage] = useState<Stage>("intro");
   const [selectedMode, setSelectedMode] = useState<StageMode | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<StageTemplate>("spotlight");
