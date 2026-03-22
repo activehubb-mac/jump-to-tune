@@ -114,13 +114,10 @@ export default function AIToolsHub() {
             <div className="mt-4 inline-flex flex-col items-center gap-2">
               <div className="flex items-center gap-3">
                 <div className="text-left">
-                  <p className="text-2xl font-bold text-foreground">
+                   <p className="text-2xl font-bold text-foreground">
                     {isLoading ? "..." : aiCredits.toLocaleString()}
                     <span className="text-sm font-normal text-muted-foreground ml-1.5">credits</span>
                   </p>
-                  {!isLoading && (
-                    <p className="text-xs text-muted-foreground">≈ ${dollarValue}</p>
-                  )}
                 </div>
                 <Button asChild size="sm" className="bg-primary text-primary-foreground gap-1.5">
                   <Link to="/wallet">
