@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Zap, ArrowLeft, RefreshCw, CreditCard, Info, History, Sparkles } from "lucide-react";
+import { AutoReloadPanel } from "@/components/wallet/AutoReloadPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
 import { useWallet } from "@/hooks/useWallet";
