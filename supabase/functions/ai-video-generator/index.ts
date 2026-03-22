@@ -10,7 +10,7 @@ const corsHeaders = {
 const log = (step: string, d?: Record<string, unknown>) =>
   console.log(`[AI-VIDEO] ${step}${d ? ` ${JSON.stringify(d)}` : ""}`);
 
-const DURATION_CREDITS: Record<number, number> = { 15: 15, 30: 30, 60: 60, [-1]: 150 };
+const DURATION_CREDITS: Record<number, number> = { 10: 130, 15: 180, 20: 240, [-1]: 400 };
 
 const STYLE_PROMPTS: Record<string, string> = {
   cyberpunk: "Cyberpunk neon-lit city, rain-soaked streets, holographic signs, cinematic lighting",

@@ -10,7 +10,7 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[AI-VIRAL-GENERATOR] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
 
-const DURATION_CREDITS: Record<number, number> = { 10: 20, 30: 50, 60: 100 };
+const CLIP_PACK_CREDITS: Record<number, number> = { 3: 500, 5: 850 };
 
 const VALID_ASSET_TYPES = ["tiktok", "instagram_reel", "youtube_short", "square_promo"];
 const VALID_STYLES = ["abstract visualizer", "cinematic scenes", "lyric-focused promo", "cover-art motion promo"];
