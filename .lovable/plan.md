@@ -1,18 +1,30 @@
 
 
-## Fix: Motion Upgrade Buttons — Route to Video Studio Instead of CSS Tricks
+## Add "Saved Identities" Picker to AI Video Studio
 
 ### Problem
-Currently, "Animate — 80 credits" and "Cinematic — 200 credits" deduct credits and only swap CSS animation classes (slightly different zoom speed/glow). Users pay 80-200 credits and see no meaningful change. CSS cannot make a static image blink, breathe, or move realistically.
+Once an artist saves an identity, there's no way to load it into the Video Studio without going back to the Identity Builder and regenerating. The "Use in Video" flow only works immediately after generation.
 
 ### Solution
-Remove the client-side credit deduction from these buttons entirely. Instead, route users to the AI Video Studio with the avatar pre-loaded, where real video generation (via minimax/video-01-live) actually happens and credits are deducted by the video backend.
+Add a "Saved Identities" section to the Video Studio that fetches from `artist_identities` and lets users pick one to pre-load their avatar and style into the video generation form.
 
 ### Changes
 
-#### 1. `src/pages/AIIdentityBuilder.tsx` — Rewire motion buttons
+#### 1. `src/pages/AIVideoStudio.tsx` — Add Saved Identities picker
 
-**Remove**: `handleMotionUpgrade` function, `motionConfirmOpen`/`pendingMotionTier`/`motionTier` state, the second `CreditConfirmModal`
+Between the header and Step 1 (Track), add a new card:
+- Query `artist_identities` for `user_id = auth.uid()`, ordered by `created_at desc`, limit 10
+- Show each as a small clickable card with avatar thumbnail, visual theme, and date
+- On click: set `scenePrompt` to include the identity's style/theme, set `videoType` to `avatar_performance`, set `style` from identity settings, show the identity banner, store `identityId`
+- If no saved identities, show a subtle link: "Create your first identity →" linking to `/ai-identity`
 
-**Replace the two buttons with**:
-- **
+#### 2. No other files changed
+- No database changes needed — `artist_identities` table already exists with proper RLS
+- No edge function changes — the Video Studio already generates videos from prompts
+
+### Files
+
+| File | Change |
+|---|---|
+| `src/pages/AIVideoStudio.tsx` | Add saved identities query + picker UI between header and Step 1 |
+
