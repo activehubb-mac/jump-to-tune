@@ -1,82 +1,67 @@
 
 
-## AI Identity Builder: Default Motion System
+## Fix: Centralize All Credit Pricing — Frontend + Backend Alignment
 
-### Reality Check
+### Problem
+The centralized config (`src/lib/aiPricing.ts`) has the correct values, but several frontends and backends still use old hardcoded numbers:
 
-The request asks for CSS-based "breathing/blinking" animations on generated avatars. These are **static images** — real facial animation (blinking, head movement) requires video generation models like Replicate's `minimax/video-01-live`, which costs 130+ credits and takes 2+ minutes. That contradicts "load instantly, low compute cost, no heavy credits."
-
-**Practical approach**: Use CSS/canvas animations to create the *illusion* of a living avatar — subtle zoom, parallax drift, ambient glow pulses, and floating particle effects. This is genuinely lightweight, instant, and free. Real motion (lip-sync, head movement) belongs in the upgrade tiers that route to the Video Studio.
-
----
+| Tool | Config says | Frontend uses | Backend uses |
+|---|---|---|---|
+| Cover Art | 10 | 3 (first) / 1 (regen) | 3 / 1 |
+| Release Builder | 10 | 10 ✓ | **5** |
+| Playlist Builder | 5 | 5 ✓ | **3** |
+| Identity Builder | 15/25/40 | 15/25/40 ✓ | dynamic ✓ |
 
 ### Changes
 
-#### 1. New Component: `src/components/ai/LiveAvatarPreview.tsx`
+#### 1. `src/pages/CoverArtGenerator.tsx` — Fix frontend cost
 
-A reusable component that wraps any avatar image with layered CSS animations:
-- Slow Ken Burns zoom-in/out loop (4s cycle via CSS keyframes)
-- Subtle vertical float/breathing motion (translateY ±2px)
-- Ambient glow pulse on border (opacity oscillation)
-- Soft vignette overlay with slight opacity shift
-- "Live Avatar Ready" badge overlay
-
-Props: `src: string`, `className?: string`, `showBadge?: boolean`
-
-All CSS-only — zero compute, zero API calls, instant render.
-
-#### 2. `src/pages/AIIdentityBuilder.tsx` — Use LiveAvatarPreview
-
-Replace the static `<img>` in the results section (line 351) with `<LiveAvatarPreview>`. Add a "Live Avatar Ready" tag automatically after generation.
-
-Update action buttons to include:
-- **Set as Artist Profile** — updates `profiles.avatar_url` with the generated image
-- **Animate (Upgrade)** — routes to Video Studio with `avatar_performance` type pre-selected
-
-Update `handleSaveIdentity` to store a `motion_enabled: true` flag in the settings JSONB.
-
-Update `handleUseInVideo` to also pass `identity_id` (if saved) via URL params.
-
-#### 3. `src/lib/aiPricing.ts` — Add Motion Tier Pricing
-
-Add motion tier definitions (for display/future use):
+Line 27: Replace `const cost = hasGenerated ? 1 : 3` with:
+```typescript
+import { getToolCost } from "@/lib/aiPricing";
+const cost = getToolCost("cover_art"); // always 10
 ```
-identity_motion: {
-  label: "Avatar Motion",
-  base: 0,
-  tiers: [
-    { label: "Basic (CSS Preview)", credits: 0 },
-    { label: "Performance Mode", credits: 80 },
-    { label: "Cinematic Mode", credits: 200 },
-  ],
-}
-```
+Remove the regen discount (or keep regen at reduced cost if desired — but it must match backend). Update button text to show consistent "10 credits".
 
-#### 4. `src/pages/AIVideoStudio.tsx` — Accept Identity ID
+Also update the backend to match:
 
-Extend the existing URL param reading to also accept `identity_id`, and if present, show which saved identity is being used.
+#### 2. `supabase/functions/ai-cover-art/index.ts` — Fix backend cost
 
-#### 5. `tailwind.config.ts` — Add Keyframes
+Line 38: Replace `const creditCost = is_regenerate ? 1 : 3` with `const creditCost = 10`. Flat 10 credits per generation, matching the centralized config.
 
-Add `ken-burns` and `avatar-breathe` keyframes for the live preview animations.
+#### 3. `supabase/functions/ai-release-builder/index.ts` — Fix backend cost
 
-#### 6. Database: `artist_identities` Table — No Schema Change Needed
+Line 14: Replace `const CREDIT_COST = 5` with `const CREDIT_COST = 10`.
 
-The existing `settings` JSONB column can store `motion_enabled: true` and `motion_tier: "basic"` without migration.
+#### 4. `supabase/functions/ai-playlist-builder/index.ts` — Fix backend cost
 
----
+Line 13: Replace `const CREDIT_COST = 3` with `const CREDIT_COST = 5`.
 
-### NOT Touched
-- Cover Art Generator — completely untouched
-- Edge function `ai-identity-builder` — no changes (motion is CSS-only)
-- No new API calls for the default motion preview
+#### 5. `src/pages/AIIdentityBuilder.tsx` — Use config instead of magic numbers
+
+Line 75: Replace `const cost = mode === "vision" ? 15 : hdMode ? 40 : 25` with a lookup from `pricing.tiers` to stay DRY (values happen to match, but should reference the config).
+
+#### 6. `src/pages/AIPlaylistBuilder.tsx` — Already correct (5), no change needed.
+
+#### 7. `src/pages/AIReleaseBuilder.tsx` — Already uses `getCost("release_builder") || 10`, correct.
+
+### Deployments Required
+After editing, the 3 edge functions need redeployment:
+- `ai-cover-art`
+- `ai-release-builder`
+- `ai-playlist-builder`
 
 ### Files
 | File | Change |
 |---|---|
-| `src/components/ai/LiveAvatarPreview.tsx` | **New** — CSS-animated avatar wrapper |
-| `src/pages/AIIdentityBuilder.tsx` | Use LiveAvatarPreview, add Set as Profile + Animate buttons |
-| `src/lib/aiPricing.ts` | Add motion tier pricing definitions |
-| `src/pages/AIVideoStudio.tsx` | Accept `identity_id` param |
-| `tailwind.config.ts` | Add animation keyframes |
+| `src/pages/CoverArtGenerator.tsx` | Use `getToolCost("cover_art")` = 10 |
+| `supabase/functions/ai-cover-art/index.ts` | `creditCost = 10` |
+| `supabase/functions/ai-release-builder/index.ts` | `CREDIT_COST = 10` |
+| `supabase/functions/ai-playlist-builder/index.ts` | `CREDIT_COST = 5` |
+| `src/pages/AIIdentityBuilder.tsx` | Reference pricing tiers instead of magic numbers |
+
+### NOT Touched
+- Cover Art Generator logic, prompts, output — only the cost number changes
+- `src/lib/aiPricing.ts` — already correct
+- `src/pages/AIToolsHub.tsx` — already pulls from centralized config
 
