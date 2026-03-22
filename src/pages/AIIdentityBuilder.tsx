@@ -45,6 +45,7 @@ export default function AIIdentityBuilder() {
   const { user, role } = useAuth();
   const { aiCredits, isLoading: creditsLoading, refetch } = useAICredits();
   const { showFeedback } = useFeedbackSafe();
+  const { setDefaultIdentity } = useDefaultIdentity();
   const navigate = useNavigate();
 
   const [mode, setMode] = useState<"vision" | "photo">("vision");
