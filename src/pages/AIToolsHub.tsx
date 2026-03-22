@@ -214,24 +214,8 @@ export default function AIToolsHub() {
                         </div>
                       </div>
 
-                      {/* Pricing tier breakdown on hover */}
-                      {tool.pricingTiers && (
-                        <div
-                          className={cn(
-                            "overflow-hidden transition-all duration-300 ease-out",
-                            isHovered ? "max-h-40 opacity-100 mt-3" : "max-h-0 opacity-0 mt-0"
-                          )}
-                        >
-                          <div className="border-t border-border/50 pt-2.5 space-y-1">
-                            {tool.pricingTiers.map((tier) => (
-                              <div key={tier.label} className="flex justify-between text-xs">
-                                <span className="text-muted-foreground">{tier.label}</span>
-                                <span className="text-foreground font-medium">{tier.credits} credits</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+
+
 
                       {!hasAccess && (
                         <p className="text-xs text-destructive mt-2 flex items-center gap-1">
