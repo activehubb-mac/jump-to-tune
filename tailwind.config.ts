@@ -123,8 +123,13 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "ken-burns": "ken-burns 6s ease-in-out infinite",
+        "ken-burns-slow": "ken-burns-slow 8s ease-in-out infinite",
+        "ken-burns-cinematic": "ken-burns-cinematic 10s ease-in-out infinite",
         "avatar-breathe": "avatar-breathe 4s ease-in-out infinite",
+        "avatar-breathe-slow": "avatar-breathe-slow 6s ease-in-out infinite",
         "avatar-glow": "avatar-glow 3s ease-in-out infinite",
+        "avatar-glow-strong": "avatar-glow-strong 3s ease-in-out infinite",
+        "avatar-glow-cinematic": "avatar-glow-cinematic 4s ease-in-out infinite",
       },
       backgroundSize: {
         "200%": "200% 200%",
