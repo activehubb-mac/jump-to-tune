@@ -411,6 +411,9 @@ export default function AIIdentityBuilder() {
                     <Save className="h-3.5 w-3.5" />
                     {savedId ? "Saved ✓" : isSaving ? "Saving..." : "Save Artist Identity"}
                   </Button>
+                  <Button size="sm" variant="outline" onClick={handleSetAsProfile} className="gap-1.5">
+                    <UserCheck className="h-3.5 w-3.5" />Set as Profile
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => { setResult(null); setSavedId(null); handleGenerate(); }} className="gap-1.5">
                     <RefreshCw className="h-3.5 w-3.5" />Regenerate
                   </Button>
@@ -419,6 +422,9 @@ export default function AIIdentityBuilder() {
                   </Button>
                   <Button size="sm" variant="outline" onClick={handleUseInVideo} className="gap-1.5">
                     <Video className="h-3.5 w-3.5" />Use in Video
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { const params = new URLSearchParams(); params.set("style", mode === "photo" ? outputStyle : "artistic"); if (savedId) params.set("identity_id", savedId); params.set("type", "avatar_performance"); navigate(`/ai-video?${params.toString()}`); }} className="gap-1.5">
+                    <Play className="h-3.5 w-3.5" />Animate (Upgrade)
                   </Button>
                 </div>
 
