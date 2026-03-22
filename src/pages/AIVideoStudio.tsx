@@ -166,6 +166,22 @@ export default function AIVideoStudio() {
   const [scenePrompt, setScenePrompt] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // Accept identity params from AI Identity Builder
+  const [identityBanner, setIdentityBanner] = useState<string | null>(null);
+  useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const avatarUrl = params.get("avatar_url");
+    const identityStyle = params.get("style");
+    if (avatarUrl || identityStyle) {
+      setIdentityBanner("Using your AI Identity avatar");
+      if (identityStyle) setStyle(identityStyle);
+      setVideoType("avatar_performance");
+      if (identityStyle) {
+        setScenePrompt(`Artist avatar performance video in ${identityStyle} style`);
+      }
+    }
+  });
+
   const selectedDuration = DURATION_OPTIONS.find((d) => d.seconds === duration)!;
   const canAfford = aiCredits >= selectedDuration.credits;
   const activeJobs = jobs.filter((j) => j.status === "queued" || j.status === "processing");

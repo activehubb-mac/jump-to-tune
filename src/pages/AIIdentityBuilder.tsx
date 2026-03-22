@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Sparkles, Loader2, Zap, Lock, ArrowLeft, User, Palette, Copy, Upload, Camera, RefreshCw, Wand2, Video } from "lucide-react";
+import { Sparkles, Loader2, Zap, Lock, ArrowLeft, User, Palette, Copy, Upload, Camera, RefreshCw, Wand2, Video, Save, Eye } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
@@ -42,6 +42,7 @@ export default function AIIdentityBuilder() {
   const { user, role } = useAuth();
   const { aiCredits, isLoading: creditsLoading, refetch } = useAICredits();
   const { showFeedback } = useFeedbackSafe();
+  const navigate = useNavigate();
 
   const [mode, setMode] = useState<"vision" | "photo">("vision");
 
@@ -57,12 +58,14 @@ export default function AIIdentityBuilder() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [outputStyle, setOutputStyle] = useState("realistic");
-  const [likeness, setLikeness] = useState(1); // 0=Low, 1=Medium, 2=High
+  const [likeness, setLikeness] = useState(1);
   const [photoAccessories, setPhotoAccessories] = useState("");
   const [backgroundStyle, setBackgroundStyle] = useState("");
   const [hdMode, setHdMode] = useState(false);
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedId, setSavedId] = useState<string | null>(null);
   const [result, setResult] = useState<IdentityResult | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -113,6 +116,7 @@ export default function AIIdentityBuilder() {
     setConfirmOpen(false);
     setIsGenerating(true);
     setResult(null);
+    setSavedId(null);
     try {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error("Not authenticated");
@@ -129,13 +133,10 @@ export default function AIIdentityBuilder() {
       const { data, error } = await supabase.functions.invoke("ai-identity-builder", {
         body: {
           mode,
-          genre,
-          vibe,
-          inspiration,
+          genre, vibe, inspiration,
           visual_style: visualStyle,
           color_palette: colorPalette,
           accessories: mode === "vision" ? accessories : photoAccessories,
-          // Photo-mode fields
           photo_base64,
           output_style: outputStyle,
           preserve_likeness: LIKENESS_LABELS[likeness].toLowerCase(),
@@ -159,6 +160,65 @@ export default function AIIdentityBuilder() {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleSaveIdentity = async () => {
+    if (!result || !user) return;
+    setIsSaving(true);
+    try {
+      let avatarUrl = result.avatar_image;
+
+      // Upload avatar to storage if it's a base64 image
+      if (avatarUrl && avatarUrl.startsWith("data:")) {
+        const base64Data = avatarUrl.split(",")[1];
+        const byteArray = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+        const fileName = `${user.id}/identity-${Date.now()}.png`;
+        const { error: uploadErr } = await supabase.storage
+          .from("avatars")
+          .upload(fileName, byteArray, { contentType: "image/png", upsert: true });
+        if (uploadErr) throw uploadErr;
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(fileName);
+        avatarUrl = urlData.publicUrl;
+      }
+
+      const settings = mode === "vision"
+        ? { mode, genre, vibe, inspiration, visual_style: visualStyle, color_palette: colorPalette, accessories }
+        : { mode, output_style: outputStyle, preserve_likeness: LIKENESS_LABELS[likeness].toLowerCase(), accessories: photoAccessories, background_style: backgroundStyle, hd: hdMode };
+
+      const { data: inserted, error: insertErr } = await supabase
+        .from("artist_identities")
+        .insert({
+          user_id: user.id,
+          avatar_url: avatarUrl,
+          name_suggestions: result.name_suggestions || [],
+          bio: result.bio || null,
+          visual_theme: result.visual_theme || null,
+          tagline: result.tagline || null,
+          settings,
+        })
+        .select("id")
+        .single();
+
+      if (insertErr) throw insertErr;
+      setSavedId(inserted.id);
+      showFeedback({ type: "success", title: "Identity Saved!", message: "Your artist identity has been saved to your profile.", autoClose: true });
+    } catch (err) {
+      showFeedback({ type: "error", title: "Save Failed", message: err instanceof Error ? err.message : "Could not save identity." });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleUseInVideo = () => {
+    const params = new URLSearchParams();
+    if (result?.avatar_image) {
+      // If it's a long base64, we can't pass via URL — just pass style
+      if (!result.avatar_image.startsWith("data:")) {
+        params.set("avatar_url", result.avatar_image);
+      }
+    }
+    params.set("style", mode === "photo" ? outputStyle : "artistic");
+    navigate(`/ai-video?${params.toString()}`);
   };
 
   const copy = (text: string) => {
@@ -284,40 +344,69 @@ export default function AIIdentityBuilder() {
             )}
             {result && (
               <div className="space-y-4 animate-in fade-in duration-500">
-                {result.avatar_image && (
-                  <Card className="glass"><CardContent className="p-4"><img src={result.avatar_image} alt="AI Avatar" className="w-full aspect-square object-cover rounded-lg" /></CardContent></Card>
-                )}
+                {/* Artist Profile Preview */}
+                <Card className="glass border-primary/20 overflow-hidden">
+                  <div className="relative">
+                    {result.avatar_image && (
+                      <img src={result.avatar_image} alt="AI Avatar" className="w-full aspect-square object-cover" />
+                    )}
+                    <div className="absolute top-2 left-2">
+                      <Badge className="bg-primary/80 text-primary-foreground backdrop-blur-sm gap-1">
+                        <Eye className="h-3 w-3" /> Profile Preview
+                      </Badge>
+                    </div>
+                  </div>
+                  <CardContent className="p-4 space-y-2">
+                    <h3 className="text-lg font-bold text-foreground">
+                      {result.name_suggestions?.[0] || "Your Artist Name"}
+                    </h3>
+                    {result.tagline && (
+                      <p className="text-sm italic text-primary">"{result.tagline}"</p>
+                    )}
+                    {result.bio && (
+                      <p className="text-sm text-muted-foreground">{result.bio}</p>
+                    )}
+                    {result.visual_theme && (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Palette className="h-3 w-3 text-primary" />
+                        <span>{result.visual_theme}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
-                {/* Post-generation actions */}
+                {/* Action buttons */}
                 <div className="flex flex-wrap gap-2">
-                  <Button size="sm" variant="outline" onClick={() => { setResult(null); handleGenerate(); }} className="gap-1.5"><RefreshCw className="h-3.5 w-3.5" />Regenerate</Button>
-                  <Button size="sm" variant="outline" onClick={() => { setResult(null); setOutputStyle(OUTPUT_STYLES[(OUTPUT_STYLES.findIndex(s => s.value === outputStyle) + 1) % OUTPUT_STYLES.length].value); }} className="gap-1.5"><Wand2 className="h-3.5 w-3.5" />New Style</Button>
-                  <Button size="sm" variant="outline" asChild className="gap-1.5"><Link to="/ai-video"><Video className="h-3.5 w-3.5" />Use in Video</Link></Button>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={handleSaveIdentity}
+                    disabled={isSaving || !!savedId}
+                    className={cn("gap-1.5", savedId && "bg-emerald-600 hover:bg-emerald-600")}
+                  >
+                    <Save className="h-3.5 w-3.5" />
+                    {savedId ? "Saved ✓" : isSaving ? "Saving..." : "Save Artist Identity"}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { setResult(null); setSavedId(null); handleGenerate(); }} className="gap-1.5">
+                    <RefreshCw className="h-3.5 w-3.5" />Regenerate
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { setResult(null); setSavedId(null); setOutputStyle(OUTPUT_STYLES[(OUTPUT_STYLES.findIndex(s => s.value === outputStyle) + 1) % OUTPUT_STYLES.length].value); }} className="gap-1.5">
+                    <Wand2 className="h-3.5 w-3.5" />New Style
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={handleUseInVideo} className="gap-1.5">
+                    <Video className="h-3.5 w-3.5" />Use in Video
+                  </Button>
                 </div>
 
-                {result.name_suggestions?.length > 0 && (
-                  <Card className="glass"><CardHeader className="pb-2"><CardTitle className="text-sm">Name Suggestions</CardTitle></CardHeader>
+                {/* Name suggestions (if multiple) */}
+                {result.name_suggestions?.length > 1 && (
+                  <Card className="glass"><CardHeader className="pb-2"><CardTitle className="text-sm">All Name Suggestions</CardTitle></CardHeader>
                     <CardContent><div className="space-y-2">{result.name_suggestions.map((name, i) => (
                       <div key={i} className="flex items-center justify-between px-3 py-2 rounded-md bg-muted/30">
                         <span className="font-medium text-foreground">{name}</span>
                         <Button variant="ghost" size="sm" onClick={() => copy(name)}><Copy className="h-3 w-3" /></Button>
                       </div>
                     ))}</div></CardContent>
-                  </Card>
-                )}
-                {result.tagline && (
-                  <Card className="glass"><CardHeader className="pb-2"><div className="flex justify-between"><CardTitle className="text-sm">Tagline</CardTitle><Button variant="ghost" size="sm" onClick={() => copy(result.tagline)}><Copy className="h-3 w-3" /></Button></div></CardHeader>
-                    <CardContent><p className="text-sm italic text-primary">"{result.tagline}"</p></CardContent>
-                  </Card>
-                )}
-                {result.bio && (
-                  <Card className="glass"><CardHeader className="pb-2"><div className="flex justify-between"><CardTitle className="text-sm">Bio</CardTitle><Button variant="ghost" size="sm" onClick={() => copy(result.bio)}><Copy className="h-3 w-3" /></Button></div></CardHeader>
-                    <CardContent><p className="text-sm text-foreground/80">{result.bio}</p></CardContent>
-                  </Card>
-                )}
-                {result.visual_theme && (
-                  <Card className="glass"><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Palette className="h-4 w-4 text-primary" />Visual Theme</CardTitle></CardHeader>
-                    <CardContent><p className="text-sm text-foreground/80">{result.visual_theme}</p></CardContent>
                   </Card>
                 )}
               </div>
@@ -332,7 +421,7 @@ export default function AIIdentityBuilder() {
         onConfirm={executeGenerate}
         creditCost={cost}
         currentCredits={aiCredits}
-        summary={mode === "vision" ? "Generate artist identity from your vision" : `Photo recreate (${hdMode ? "HD" : "Standard"}) — ${OUTPUT_STYLES.find(s => s.value === outputStyle)?.label}`}
+        summary={mode === "vision" ? "Generate a complete AI artist identity" : `Photo recreate in ${OUTPUT_STYLES.find(s => s.value === outputStyle)?.label} style${hdMode ? " (HD)" : ""}`}
       />
     </Layout>
   );

@@ -39,7 +39,7 @@ export function CreditBalanceChip({
         <span className="animate-pulse">...</span>
       ) : (
         <span className="font-semibold">
-          {aiCredits} credits <span className="font-normal text-muted-foreground">≈ ${(aiCredits / 100).toFixed(2)}</span>
+          {aiCredits} credits
         </span>
       )}
     </Button>

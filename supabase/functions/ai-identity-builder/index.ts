@@ -217,6 +217,7 @@ serve(async (req) => {
           const imgData = await imgResp.json();
           avatarBase64 = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url || null;
         }
+        // Note: avatar prompt already includes quality modifiers from AI response
       } catch (e) {
         logStep("Avatar generation failed, continuing", { error: String(e) });
       }
