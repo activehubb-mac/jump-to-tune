@@ -64,7 +64,7 @@ interface ReleaseResult {
 export default function AIReleaseBuilder() {
   const navigate = useNavigate();
   const { user, role } = useAuth();
-  const { aiCredits, getCost, isLoading: creditsLoading, refetch: refetchCredits } = useAICredits();
+  const { aiCredits, isLoading: creditsLoading, refetch: refetchCredits } = useAICredits();
   const { showFeedback } = useFeedbackSafe();
 
   const [prompt, setPrompt] = useState("");
