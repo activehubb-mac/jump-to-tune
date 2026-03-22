@@ -432,6 +432,45 @@ export default function AIVideoStudio() {
           </Card>
         )}
 
+        {/* Avatar Preview Dialog */}
+        <Dialog open={!!previewIdentity} onOpenChange={(open) => !open && setPreviewIdentity(null)}>
+          <DialogContent className="max-w-xs sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="text-base">{previewIdentity?.visual_theme || "Identity Preview"}</DialogTitle>
+            </DialogHeader>
+            {previewIdentity?.avatar_url && (
+              <div className="space-y-4">
+                <img
+                  src={previewIdentity.avatar_url}
+                  alt="Avatar preview"
+                  className="w-full aspect-square object-cover rounded-lg"
+                />
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    const identity = previewIdentity;
+                    setIdentityId(identity.id);
+                    setAvatarUrl(identity.avatar_url || null);
+                    setIdentityBanner(`Using saved identity: ${identity.visual_theme || identity.id.slice(0, 8)}`);
+                    setVideoType("avatar_performance");
+                    if (identity.visual_theme) {
+                      const matchedStyle = STYLE_PRESETS.find(
+                        (s) => s.value.toLowerCase() === identity.visual_theme?.toLowerCase()
+                      );
+                      if (matchedStyle) setStyle(matchedStyle.value);
+                    }
+                    setScenePrompt(
+                      `Artist avatar performance video${identity.visual_theme ? ` in ${identity.visual_theme} style` : ""}`
+                    );
+                    setPreviewIdentity(null);
+                  }}
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-1.5" /> Select This Identity
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {activeJobs.length > 0 && (
           <Card className="border-blue-500/30 bg-blue-500/5 bg-card/60 backdrop-blur-sm">
