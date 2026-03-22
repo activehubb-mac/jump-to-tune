@@ -132,6 +132,8 @@ export default function WalletPage() {
                   ))}
                 </CardContent>
               </Card>
+
+              <AutoReloadPanel />
             </div>
 
             {/* Main Content */}
