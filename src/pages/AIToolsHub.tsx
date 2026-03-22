@@ -9,6 +9,7 @@ import { useAICredits } from "@/hooks/useAICredits";
 import { Sparkles, Image, User, ListMusic, Video, Music, Zap, Lock, Rocket, Plus, Clapperboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AI_TOOL_PRICING } from "@/lib/aiPricing";
 
 interface PricingTier {
   label: string;
