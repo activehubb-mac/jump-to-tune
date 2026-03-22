@@ -16,7 +16,6 @@ import { FanZoneSection } from "@/components/home/FanZoneSection";
 import { AIDJSection } from "@/components/home/AIDJSection";
 import { MusicGalaxy } from "@/components/home/MusicGalaxy";
 import { KaraokePromoBanner } from "@/components/home/KaraokePromoBanner";
-import { DailyGrowthPlan } from "@/components/home/DailyGrowthPlan";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { useState, useEffect } from "react";
@@ -235,8 +234,37 @@ export default function Index() {
         {/* ===== SIMPLIFIED ARTIST/LABEL ACTION CARDS ===== */}
         {user && (role === "artist" || role === "label") && (
           <section className="py-8 md:py-12">
-            <div className="container mx-auto px-4 max-w-3xl space-y-4">
-              <DailyGrowthPlan />
+            <div className="container mx-auto px-4 max-w-3xl space-y-6">
+              {/* Grow Today */}
+              <div className="space-y-2">
+                <h2 className="text-xl font-bold text-foreground">Grow Today</h2>
+                <p className="text-sm text-muted-foreground">Do this to grow your music today</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <Link
+                    to="/ai-video"
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-card/60 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                  >
+                    <span className="text-2xl">🎬</span>
+                    <span className="text-xs font-semibold text-foreground text-center">Create Video</span>
+                  </Link>
+                  <Link
+                    to="/ai-release"
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-card/60 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                  >
+                    <span className="text-2xl">📢</span>
+                    <span className="text-xs font-semibold text-foreground text-center">Create Promo</span>
+                  </Link>
+                  <Link
+                    to="/ai-playlist"
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-card/60 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                  >
+                    <span className="text-2xl">🎧</span>
+                    <span className="text-xs font-semibold text-foreground text-center">Boost Song</span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
               <div className="grid sm:grid-cols-3 gap-4">
                 <Link to="/upload" className="glass-card-bordered p-6 text-center group hover:bg-primary/10 transition-all duration-300">
                   <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
