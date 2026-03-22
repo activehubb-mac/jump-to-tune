@@ -36,12 +36,12 @@ export function useDefaultIdentity() {
       // Step 2: fetch the identity row
       const { data: identity, error: iErr } = await supabase
         .from("artist_identities")
-        .select("id, avatar_url, visual_theme, settings")
+        .select("id, avatar_url, visual_theme, settings, bio, name_suggestions")
         .eq("id", profile.default_identity_id)
         .single();
 
       if (iErr || !identity) {
-        return { identityId: null, avatarUrl: null, visualTheme: null, settings: null };
+        return { identityId: null, avatarUrl: null, visualTheme: null, settings: null, artistName: null, bio: null };
       }
 
       return {
@@ -49,6 +49,8 @@ export function useDefaultIdentity() {
         avatarUrl: identity.avatar_url,
         visualTheme: identity.visual_theme,
         settings: identity.settings as Record<string, unknown> | null,
+        artistName: (identity.name_suggestions as string[] | null)?.[0] ?? null,
+        bio: identity.bio ?? null,
       };
     },
     enabled: !!user,
