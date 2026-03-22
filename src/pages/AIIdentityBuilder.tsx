@@ -216,7 +216,7 @@ export default function AIIdentityBuilder() {
     }
   };
 
-  const handleUseInVideo = () => {
+  const handleUseInVideo = (tier?: "performance" | "cinematic") => {
     const params = new URLSearchParams();
     if (result?.avatar_image) {
       if (!result.avatar_image.startsWith("data:")) {
@@ -224,39 +224,10 @@ export default function AIIdentityBuilder() {
       }
     }
     params.set("style", mode === "photo" ? outputStyle : "artistic");
+    params.set("type", "avatar_performance");
     if (savedId) params.set("identity_id", savedId);
-    if (motionTier !== "basic") params.set("motion_level", motionTier);
+    if (tier) params.set("motion_level", tier);
     navigate(`/ai-video?${params.toString()}`);
-  };
-
-  const motionCost = pendingMotionTier === "cinematic" ? 200 : 80;
-
-  const handleMotionUpgrade = async () => {
-    if (!user) return;
-    setMotionConfirmOpen(false);
-    try {
-      const { data, error } = await supabase.rpc("deduct_ai_credits", {
-        p_user_id: user.id,
-        p_credits: motionCost,
-      });
-      if (error) throw error;
-      const result = data as unknown as { success: boolean };
-      if (!result.success) {
-        showFeedback({ type: "error", title: "Insufficient Credits", message: `You need ${motionCost} credits for this upgrade.` });
-        return;
-      }
-      setMotionTier(pendingMotionTier);
-      refetch();
-      showFeedback({ type: "success", title: "Motion Upgraded!", message: `${pendingMotionTier === "cinematic" ? "Cinematic" : "Performance"} avatar activated.` });
-      // Persist to saved identity if exists
-      if (savedId) {
-        await supabase.from("artist_identities").update({
-          settings: { motion_level: pendingMotionTier, motion_enabled: true },
-        }).eq("id", savedId);
-      }
-    } catch (err: any) {
-      showFeedback({ type: "error", title: "Upgrade Failed", message: err.message || "Please try again." });
-    }
   };
 
   const handleSetAsProfile = async () => {
