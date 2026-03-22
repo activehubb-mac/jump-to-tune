@@ -10,7 +10,7 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[AI-PLAYLIST-BUILDER] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
 
-const CREDIT_COST = 3;
+const CREDIT_COST = 5;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });

@@ -35,7 +35,7 @@ serve(async (req) => {
       });
     }
 
-    const creditCost = is_regenerate ? 1 : 3;
+    const creditCost = 10;
 
     const { data: deductResult } = await supabaseClient.rpc("deduct_ai_credits", {
       p_user_id: userId, p_credits: creditCost,

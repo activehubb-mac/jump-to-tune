@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getToolCost } from "@/lib/aiPricing";
 
 export default function CoverArtGenerator() {
   const { user } = useAuth();
@@ -24,7 +25,7 @@ export default function CoverArtGenerator() {
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [hasGenerated, setHasGenerated] = useState(false);
 
-  const cost = hasGenerated ? 1 : 3;
+  const cost = getToolCost("cover_art");
   const canAfford = aiCredits >= cost;
 
   if (!user) {
@@ -108,7 +109,7 @@ export default function CoverArtGenerator() {
                 <Input value={styleHint} onChange={e => setStyleHint(e.target.value)} placeholder="minimalist, abstract, photorealistic..." className="mt-1 bg-muted/50 border-glass-border" disabled={isGenerating} />
               </div>
               <Button className="w-full gradient-accent neon-glow-subtle" onClick={() => handleGenerate(hasGenerated)} disabled={isGenerating || !prompt}>
-                {isGenerating ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : hasGenerated ? <><RefreshCw className="h-4 w-4 mr-2" />Regenerate ({cost} credit)</> : <><Sparkles className="h-4 w-4 mr-2" />Generate Cover ({cost} credits)</>}
+                {isGenerating ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : hasGenerated ? <><RefreshCw className="h-4 w-4 mr-2" />Regenerate ({cost} credits)</> : <><Sparkles className="h-4 w-4 mr-2" />Generate Cover ({cost} credits)</>}
               </Button>
             </CardContent>
           </Card>
