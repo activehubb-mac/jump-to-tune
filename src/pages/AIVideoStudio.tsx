@@ -17,7 +17,7 @@ import {
   Sparkles, Loader2, Zap, Lock, ArrowLeft, Video, Clock,
   Film, Type, Smartphone, User, Monitor, Square, RectangleVertical,
   CheckCircle2, XCircle, Clock3, Clapperboard, Trash2, RotateCcw, Download,
-  UserCircle, Plus, Expand,
+  UserCircle, Plus, Expand, X, AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
