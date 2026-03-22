@@ -10,7 +10,7 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[AI-VIRAL-GENERATOR] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
 
-const DURATION_CREDITS: Record<number, number> = { 10: 20, 30: 50, 60: 100 };
+const CLIP_PACK_CREDITS: Record<number, number> = { 3: 500, 5: 850 };
 
 const VALID_ASSET_TYPES = ["tiktok", "instagram_reel", "youtube_short", "square_promo"];
 const VALID_STYLES = ["abstract visualizer", "cinematic scenes", "lyric-focused promo", "cover-art motion promo"];
@@ -43,6 +43,7 @@ serve(async (req) => {
       asset_type = "tiktok",
       duration_seconds = 10,
       style = "abstract visualizer",
+      clip_count = 3,
     } = body;
 
     // Validate inputs
@@ -64,9 +65,9 @@ serve(async (req) => {
       });
     }
 
-    const creditCost = DURATION_CREDITS[duration_seconds];
+    const creditCost = CLIP_PACK_CREDITS[clip_count];
     if (!creditCost) {
-      return new Response(JSON.stringify({ error: "Invalid duration. Choose 10, 30, or 60 seconds." }), {
+      return new Response(JSON.stringify({ error: "Invalid clip_count. Choose 3 or 5." }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
       });
     }

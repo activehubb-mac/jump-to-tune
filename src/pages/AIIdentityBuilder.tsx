@@ -429,7 +429,7 @@ export default function AIIdentityBuilder() {
                     <Video className="h-3.5 w-3.5" />Use in Video
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => { const params = new URLSearchParams(); params.set("style", mode === "photo" ? outputStyle : "artistic"); if (savedId) params.set("identity_id", savedId); params.set("type", "avatar_performance"); navigate(`/ai-video?${params.toString()}`); }} className="gap-1.5">
-                    <Play className="h-3.5 w-3.5" />Animate (Upgrade)
+                    <Play className="h-3.5 w-3.5" />Animate — 80 credits
                   </Button>
                 </div>
 

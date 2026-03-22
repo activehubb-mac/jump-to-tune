@@ -24,6 +24,7 @@ interface GenerateParams {
   asset_type: string;
   duration_seconds: number;
   style: string;
+  clip_count?: number;
 }
 
 export function useViralGenerator(trackId?: string) {
