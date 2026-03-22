@@ -28,7 +28,7 @@ serve(async (req) => {
     if (userError || !userData.user) throw new Error("Not authenticated");
     const userId = userData.user.id;
 
-    const { prompt, style_hint, is_regenerate } = await req.json();
+    const { prompt, style_hint, is_regenerate, avatar_url } = await req.json();
     if (!prompt) {
       return new Response(JSON.stringify({ error: "Prompt is required" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
