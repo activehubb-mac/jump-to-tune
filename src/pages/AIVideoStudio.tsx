@@ -92,12 +92,37 @@ function VideoJobCard({
   onDelete,
   onRetry,
   isDeleting,
+  artistTracks,
 }: {
   job: VideoJob;
   onDelete: (id: string) => void;
   onRetry: (job: VideoJob) => void;
   isDeleting: boolean;
+  artistTracks: { id: string; title: string; cover_art_url: string | null; genre: string | null; audio_url?: string }[];
 }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const linkedTrack = job.track_id ? artistTracks.find((t) => t.id === job.track_id) : null;
+  const trackAudioUrl = linkedTrack?.audio_url || null;
+
+  const handlePlay = useCallback(() => {
+    if (audioRef.current && videoRef.current) {
+      audioRef.current.currentTime = videoRef.current.currentTime;
+      audioRef.current.play().catch(() => {});
+    }
+  }, []);
+
+  const handlePause = useCallback(() => {
+    audioRef.current?.pause();
+  }, []);
+
+  const handleSeeked = useCallback(() => {
+    if (audioRef.current && videoRef.current) {
+      audioRef.current.currentTime = videoRef.current.currentTime;
+    }
+  }, []);
+
   return (
     <Card className="glass">
       <CardContent className="p-4">
@@ -120,13 +145,34 @@ function VideoJobCard({
           <JobStatusBadge job={job} />
         </div>
 
-        {/* Completed: download */}
+        {/* Completed: inline video player with synced audio */}
         {job.status === "completed" && job.output_url && (
-          <Button size="sm" variant="outline" className="mt-3 w-full" asChild>
-            <a href={job.output_url} target="_blank" rel="noopener noreferrer">
-              <Download className="h-3.5 w-3.5 mr-1.5" /> Download Video
-            </a>
-          </Button>
+          <div className="mt-3 space-y-2">
+            <video
+              ref={videoRef}
+              src={job.output_url}
+              controls
+              playsInline
+              className="w-full rounded-lg bg-black"
+              onPlay={handlePlay}
+              onPause={handlePause}
+              onSeeked={handleSeeked}
+            />
+            {trackAudioUrl && (
+              <>
+                <audio ref={audioRef} src={trackAudioUrl} preload="auto" />
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Film className="h-3 w-3" />
+                  Playing with: <span className="font-medium text-foreground">{linkedTrack?.title}</span>
+                </p>
+              </>
+            )}
+            <Button size="sm" variant="outline" className="w-full" asChild>
+              <a href={job.output_url} target="_blank" rel="noopener noreferrer" download>
+                <Download className="h-3.5 w-3.5 mr-1.5" /> Download Video
+              </a>
+            </Button>
+          </div>
         )}
 
         {/* Failed: retry + delete */}
