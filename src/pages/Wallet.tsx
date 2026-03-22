@@ -110,7 +110,22 @@ export default function WalletPage() {
                   </div>
                   <p className="text-sm text-foreground/80 mb-1">Available Credits</p>
                   <p className="text-4xl font-bold text-foreground">{creditsLoading ? "..." : aiCredits.toLocaleString()}</p>
-                  <p className="text-xs text-foreground/60 mt-1">AI credits</p>
+                  {!creditsLoading && aiCredits > 0 && (
+                    <div className="mt-3 space-y-1">
+                      {aiCredits >= 130 && (
+                        <p className="text-xs text-foreground/60">≈ {Math.floor(aiCredits / 130)} videos</p>
+                      )}
+                      {aiCredits >= 40 && aiCredits < 130 && (
+                        <p className="text-xs text-foreground/60">≈ {Math.floor(aiCredits / 40)} identities</p>
+                      )}
+                      {aiCredits < 40 && aiCredits >= 5 && (
+                        <p className="text-xs text-foreground/60">≈ {Math.floor(aiCredits / 5)} playlists</p>
+                      )}
+                    </div>
+                  )}
+                  {!creditsLoading && aiCredits === 0 && (
+                    <p className="text-xs text-foreground/60 mt-1">Top up to start creating</p>
+                  )}
                 </div>
                 <CardContent className="p-4">
                   <Button className="w-full gradient-accent neon-glow-subtle" asChild>

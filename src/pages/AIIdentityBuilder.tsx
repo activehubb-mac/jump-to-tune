@@ -71,6 +71,7 @@ export default function AIIdentityBuilder() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [showPromoPrompt, setShowPromoPrompt] = useState(false);
   const [result, setResult] = useState<IdentityResult | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -213,6 +214,7 @@ export default function AIIdentityBuilder() {
       if (insertErr) throw insertErr;
       setSavedId(inserted.id);
       await setDefaultIdentity(inserted.id);
+      setShowPromoPrompt(true);
       showFeedback({ type: "success", title: "Identity Saved!", message: "Your artist identity has been saved and set as default.", autoClose: true });
     } catch (err) {
       showFeedback({ type: "error", title: "Save Failed", message: err instanceof Error ? err.message : "Could not save identity." });
@@ -488,6 +490,40 @@ export default function AIIdentityBuilder() {
           identityId={savedId}
           currentAvatarUrl={result?.avatar_image ?? null}
         />
+      )}
+
+      {/* Post-save promo prompt */}
+      {showPromoPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <Video className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <h2 className="text-lg font-bold text-foreground">Create your first promo clip?</h2>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Your new identity is ready. Use it to create a cinematic video or viral promo clip.
+            </p>
+            <p className="text-sm font-medium text-primary">From 130 AI Credits</p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowPromoPrompt(false)}
+              >
+                Later
+              </Button>
+              <Button
+                className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                onClick={() => navigate("/ai-video")}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Create Video
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </Layout>
   );
