@@ -464,14 +464,6 @@ export default function AIIdentityBuilder() {
         currentCredits={aiCredits}
         summary={mode === "vision" ? "Generate a complete AI artist identity" : `Photo recreate in ${OUTPUT_STYLES.find(s => s.value === outputStyle)?.label} style${hdMode ? " (HD)" : ""}`}
       />
-      <CreditConfirmModal
-        open={motionConfirmOpen}
-        onOpenChange={setMotionConfirmOpen}
-        onConfirm={handleMotionUpgrade}
-        creditCost={motionCost}
-        currentCredits={aiCredits}
-        summary={`${pendingMotionTier === "cinematic" ? "Cinematic" : "Performance"} Motion Upgrade`}
-      />
     </Layout>
   );
 }
