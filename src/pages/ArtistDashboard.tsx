@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Music, Upload, DollarSign, Users, TrendingUp, BarChart3, Plus, Lock, AlertCircle, Loader2, Trash2, Wallet } from "lucide-react";
+import { Music, Upload, DollarSign, Users, TrendingUp, BarChart3, Plus, Lock, AlertCircle, Loader2, Trash2, Wallet, Rocket } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useArtistStats } from "@/hooks/useArtistStats";
@@ -303,6 +303,12 @@ export default function ArtistDashboard() {
                   <Link to="/upload">
                     <Plus className="w-4 h-4 mr-2" />
                     Upload New Track
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start border-[hsl(45,80%,50%,0.3)] hover:border-[hsl(45,80%,50%,0.5)] text-sm" asChild>
+                  <Link to="/ai-drop">
+                    <Rocket className="w-4 h-4 mr-2 text-[hsl(45,80%,50%)]" />
+                    Create My First Drop
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start border-glass-border hover:border-primary/50 text-sm" asChild>

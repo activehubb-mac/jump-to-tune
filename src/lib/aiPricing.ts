@@ -63,6 +63,10 @@ export const AI_TOOL_PRICING: Record<string, ToolPricing> = {
       { label: "Full Recreate", credits: 25 },
     ],
   },
+  artist_drop: {
+    label: "AI Artist Drop",
+    base: 40,
+  },
 };
 
 export function getToolCost(key: string): number {
