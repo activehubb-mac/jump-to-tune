@@ -98,7 +98,7 @@ export default function AIToolsHub() {
   const { identityId, avatarUrl: identityAvatarUrl } = useDefaultIdentity();
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
-  const dollarValue = (aiCredits / 100).toFixed(2);
+  
 
   return (
     <Layout>
