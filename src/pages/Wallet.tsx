@@ -13,6 +13,7 @@ import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
+import { AI_TOOL_PRICING } from "@/lib/aiPricing";
 import { openExternalUrl, getMobileHeaders } from "@/lib/platformBrowser";
 
 const AI_CREDIT_PACKS = [
