@@ -44,6 +44,8 @@ serve(async (req) => {
       duration_seconds = 10,
       style = "abstract visualizer",
       clip_count = 3,
+      avatar_url = null,
+      visual_theme = null,
     } = body;
 
     // Validate inputs
