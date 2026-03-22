@@ -309,6 +309,7 @@ export default function AIVideoStudio() {
   };
 
   const handleRetry = (job: VideoJob) => {
+    const jobAvatarUrl = (job.metadata as any)?.avatar_url || avatarUrl;
     generate({
       track_id: job.track_id,
       video_type: job.video_type,
@@ -316,6 +317,7 @@ export default function AIVideoStudio() {
       duration_seconds: job.duration_seconds,
       style: job.style,
       scene_prompt: job.scene_prompt || "",
+      avatar_url: jobAvatarUrl || undefined,
     });
   };
 

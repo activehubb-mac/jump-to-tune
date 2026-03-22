@@ -51,8 +51,14 @@ export default function CoverArtGenerator() {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error("Not authenticated");
 
+      // Enhance prompt with identity context if available
+      let enhancedPrompt = prompt;
+      if (defaultAvatarUrl && defaultTheme) {
+        enhancedPrompt = `${prompt}. Incorporate the artist's visual identity and ${defaultTheme} style into the artwork.`;
+      }
+
       const { data, error } = await supabase.functions.invoke("ai-cover-art", {
-        body: { prompt, style_hint: styleHint, is_regenerate: regenerate },
+        body: { prompt: enhancedPrompt, style_hint: styleHint, is_regenerate: regenerate, avatar_url: defaultAvatarUrl || undefined },
         headers: { Authorization: `Bearer ${session.session.access_token}` },
       });
 
