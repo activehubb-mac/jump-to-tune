@@ -106,9 +106,9 @@ export default function AIToolsHub() {
         {/* Credit Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground flex items-center justify-center gap-3">
-            <Sparkles className="h-8 w-8 text-primary" /> AI Tools
+            <Sparkles className="h-8 w-8 text-primary" /> Grow My Music
           </h1>
-          <p className="text-muted-foreground mt-2">Powerful AI tools to build your music brand</p>
+          <p className="text-muted-foreground mt-2">AI-powered tools to build your music brand</p>
 
           {user && (
             <div className="mt-4 inline-flex flex-col items-center gap-2">
