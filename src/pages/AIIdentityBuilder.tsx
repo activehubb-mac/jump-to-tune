@@ -72,7 +72,12 @@ export default function AIIdentityBuilder() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const pricing = AI_TOOL_PRICING.identity_builder;
-  const cost = mode === "vision" ? 15 : hdMode ? 40 : 25;
+  const tiers = pricing?.tiers ?? [];
+  const cost = mode === "vision"
+    ? (tiers.find(t => t.label.toLowerCase().includes("vision"))?.credits ?? 15)
+    : hdMode
+      ? (tiers.find(t => t.label.toLowerCase().includes("hd"))?.credits ?? 40)
+      : (tiers.find(t => t.label.toLowerCase().includes("photo"))?.credits ?? 25);
   const canAfford = aiCredits >= cost;
 
   if (!user || (role !== "artist" && role !== "label")) {

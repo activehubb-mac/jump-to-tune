@@ -11,7 +11,7 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[AI-RELEASE-BUILDER] ${step}${detailsStr}`);
 };
 
-const CREDIT_COST = 5;
+const CREDIT_COST = 10;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
