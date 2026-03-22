@@ -637,6 +637,39 @@ export type Database = {
         }
         Relationships: []
       }
+      auto_reload_logs: {
+        Row: {
+          credits_after: number | null
+          credits_before: number | null
+          error_message: string | null
+          id: string
+          stripe_session_id: string | null
+          success: boolean
+          triggered_at: string
+          user_id: string
+        }
+        Insert: {
+          credits_after?: number | null
+          credits_before?: number | null
+          error_message?: string | null
+          id?: string
+          stripe_session_id?: string | null
+          success?: boolean
+          triggered_at?: string
+          user_id: string
+        }
+        Update: {
+          credits_after?: number | null
+          credits_before?: number | null
+          error_message?: string | null
+          id?: string
+          stripe_session_id?: string | null
+          success?: boolean
+          triggered_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       autopilot_sessions: {
         Row: {
           avatar_url: string | null
@@ -872,6 +905,11 @@ export type Database = {
       credit_wallets: {
         Row: {
           ai_credits: number
+          auto_reload_enabled: boolean
+          auto_reload_last_triggered_at: string | null
+          auto_reload_pack_credits: number | null
+          auto_reload_pack_product_id: string | null
+          auto_reload_threshold: number
           balance_cents: number
           created_at: string
           id: string
@@ -880,6 +918,11 @@ export type Database = {
         }
         Insert: {
           ai_credits?: number
+          auto_reload_enabled?: boolean
+          auto_reload_last_triggered_at?: string | null
+          auto_reload_pack_credits?: number | null
+          auto_reload_pack_product_id?: string | null
+          auto_reload_threshold?: number
           balance_cents?: number
           created_at?: string
           id?: string
@@ -888,6 +931,11 @@ export type Database = {
         }
         Update: {
           ai_credits?: number
+          auto_reload_enabled?: boolean
+          auto_reload_last_triggered_at?: string | null
+          auto_reload_pack_credits?: number | null
+          auto_reload_pack_product_id?: string | null
+          auto_reload_threshold?: number
           balance_cents?: number
           created_at?: string
           id?: string
