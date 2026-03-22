@@ -16,6 +16,7 @@ import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { supabase } from "@/integrations/supabase/client";
 import { CreditConfirmModal } from "@/components/ai/CreditConfirmModal";
 import { AI_TOOL_PRICING } from "@/lib/aiPricing";
+import { LiveAvatarPreview } from "@/components/ai/LiveAvatarPreview";
 import { cn } from "@/lib/utils";
 
 const OUTPUT_STYLES = [
