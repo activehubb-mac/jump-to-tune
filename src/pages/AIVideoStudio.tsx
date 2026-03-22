@@ -222,6 +222,7 @@ export default function AIVideoStudio() {
   // Saved identities
   const [savedIdentities, setSavedIdentities] = useState<any[]>([]);
   const [identitiesLoading, setIdentitiesLoading] = useState(false);
+  const [previewIdentity, setPreviewIdentity] = useState<any | null>(null);
 
   useEffect(() => {
     if (!user) return;
