@@ -249,6 +249,16 @@ export default function AIVideoStudio() {
           </Badge>
         </div>
 
+        {/* Identity builder banner */}
+        {identityBanner && (
+          <Card className="border-primary/30 bg-primary/5 bg-card/60 backdrop-blur-sm">
+            <CardContent className="p-3 flex items-center gap-3">
+              <User className="h-4 w-4 text-primary shrink-0" />
+              <p className="text-sm text-primary">{identityBanner}</p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Active jobs indicator */}
         {activeJobs.length > 0 && (
           <Card className="border-blue-500/30 bg-blue-500/5 bg-card/60 backdrop-blur-sm">
