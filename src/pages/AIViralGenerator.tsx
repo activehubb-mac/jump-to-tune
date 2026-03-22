@@ -42,6 +42,7 @@ export default function AIViralGenerator() {
   const { user, role } = useAuth();
   const { aiCredits, isLoading: creditsLoading } = useAICredits();
   const { showFeedback } = useFeedbackSafe();
+  const { avatarUrl: defaultAvatarUrl, visualTheme: defaultTheme } = useDefaultIdentity();
   const [searchParams] = useSearchParams();
 
   const [selectedTrackId, setSelectedTrackId] = useState(searchParams.get("track") || "");
