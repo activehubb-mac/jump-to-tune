@@ -75,7 +75,7 @@ export default function AIReleaseBuilder() {
   const [result, setResult] = useState<ReleaseResult | null>(null);
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
 
-  const cost = getCost("release_builder") || 5;
+  const cost = getCost("release_builder") || 10;
   const canAfford = aiCredits >= cost;
 
   if (!user) {

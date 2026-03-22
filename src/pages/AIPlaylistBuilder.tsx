@@ -40,7 +40,7 @@ export default function AIPlaylistBuilder() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<PlaylistResult | null>(null);
 
-  const cost = 3;
+  const cost = 5;
   const canAfford = aiCredits >= cost;
 
   if (!user) {

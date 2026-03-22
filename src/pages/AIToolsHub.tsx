@@ -110,9 +110,6 @@ export default function AIToolsHub() {
                     {isLoading ? "..." : aiCredits.toLocaleString()}
                     <span className="text-sm font-normal text-muted-foreground ml-1.5">credits</span>
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    ≈ ${isLoading ? "..." : usdEquivalent}
-                  </p>
                 </div>
                 <Button asChild size="sm" className="bg-primary text-primary-foreground gap-1.5">
                   <Link to="/wallet">
