@@ -98,7 +98,7 @@ serve(async (req) => {
         scene_prompt: scene_prompt || prompt || null,
         style, credits_used: creditCost,
         status: "queued",
-        metadata: { watermark: true, beat_sync: true },
+        metadata: { watermark: true, beat_sync: true, avatar_url: avatar_url || null },
       })
       .select("id")
       .single();
