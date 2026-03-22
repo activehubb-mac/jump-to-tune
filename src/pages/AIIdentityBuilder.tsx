@@ -444,10 +444,15 @@ export default function AIIdentityBuilder() {
                    <Button size="sm" variant="outline" onClick={() => handleUseInVideo("performance")} className="gap-1.5">
                      <Video className="h-3.5 w-3.5" />Create Video — 130 credits
                    </Button>
-                   <Button size="sm" variant="outline" onClick={() => handleUseInVideo("cinematic")} className="gap-1.5">
-                     <Sparkles className="h-3.5 w-3.5" />HD Video — 400 credits
-                   </Button>
-                 </div>
+                    <Button size="sm" variant="outline" onClick={() => handleUseInVideo("cinematic")} className="gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5" />HD Video — 400 credits
+                    </Button>
+                    {savedId && (
+                      <Button size="sm" variant="outline" onClick={() => setEditModalOpen(true)} className="gap-1.5 border-primary/30 text-primary">
+                        <Paintbrush className="h-3.5 w-3.5" />Edit Avatar
+                      </Button>
+                    )}
+                  </div>
 
 
                 {result.name_suggestions?.length > 1 && (
