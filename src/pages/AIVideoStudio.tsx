@@ -206,6 +206,7 @@ function VideoJobCard({
 export default function AIVideoStudio() {
   const { user, role } = useAuth();
   const { aiCredits, isLoading: creditsLoading } = useAICredits();
+  const { avatarUrl: defaultAvatarUrl, identityId: defaultIdentityId } = useDefaultIdentity();
   const { jobs, artistTracks, tracksLoading, generate, isGenerating, deleteJob, isDeleting } = useVideoStudio();
 
   const [trackId, setTrackId] = useState<string | null>(null);
