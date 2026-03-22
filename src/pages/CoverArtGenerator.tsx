@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sparkles, Loader2, Image as ImageIcon, Zap, RefreshCw, Download, Lock, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
+import { useDefaultIdentity } from "@/hooks/useDefaultIdentity";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getToolCost } from "@/lib/aiPricing";
