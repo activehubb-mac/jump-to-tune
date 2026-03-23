@@ -218,6 +218,8 @@ export default function AIVideoStudio() {
   const [scenePrompt, setScenePrompt] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
   // Saved identities
   const [savedIdentities, setSavedIdentities] = useState<any[]>([]);
