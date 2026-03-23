@@ -20,8 +20,10 @@ export function ParticleBackground() {
   const isGoDJ = location.pathname.startsWith("/go-dj");
 
   // Glowing dots + stars
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
   const particles = useMemo(() => {
-    const count = window.innerWidth < 768 ? 20 : 35;
+    const count = isMobile ? 12 : 35;
     const items: Particle[] = [];
     const shapes: ParticleShape[] = ["dot", "dot", "glow", "star"];
 
@@ -44,7 +46,7 @@ export function ParticleBackground() {
 
   // Shooting stars — small, subtle, spaced out
   const shootingStars = useMemo(() => {
-    const count = window.innerWidth < 768 ? 4 : 8;
+    const count = isMobile ? 2 : 8;
     return Array.from({ length: count }, (_, i) => ({
       id: i,
       left: `${Math.random() * 80}%`,
