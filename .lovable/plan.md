@@ -1,44 +1,52 @@
 
 
-## Mobile End-to-End Diagnosis — Results
+## Allow Direct Avatar Upload for AI Tools
 
-### Pages Tested (390x844 iPhone viewport)
+### Problem
+Artists who already have their own avatar/photo can only use AI-generated identities in the Video Studio, Viral Generator, and other tools. There's no way to upload a custom image directly — they're forced through the Identity Builder first.
 
-| Page | Status | Notes |
-|---|---|---|
-| **Homepage** (`/`) | PASS | Hero carousel, CTA buttons, trending/new releases, footer all render cleanly |
-| **Browse** (`/browse`) | PASS | Featured carousel, search, filters, mood tags, track grid all responsive |
-| **Grow My Music** (`/ai-tools`) | PASS | Auth gate works correctly for unauthenticated users |
-| **Help Center** (`/help`) | PASS | Search, FAQ categories render well |
-| **Go DJ** (`/go-dj`) | PASS | Hero image, sessions, leaderboard all display correctly |
-| **Karaoke** (`/karaoke`) | PASS | Track cards with pricing, search bar, grid layout clean |
-| **Auth (Sign In)** | PASS | Logo, form fields, password input all visible |
-| **Auth (Sign Up)** | PASS | Role selector (Fan/Artist/Label), all form fields accessible, "Create Account" button reachable |
-| **Subscription** (`/subscription`) | PASS | Auth gate displays correctly |
-| **Artists** (`/artists`) | PASS | Search bar, loading spinner visible |
-| **JumBot** | PASS | Opens/closes correctly, quick action buttons render, input field accessible |
-| **Navigation (hamburger)** | PASS | All links visible and tappable |
-| **Footer** | PASS | Two-column layout, all links present |
+### Solution
+Add an "Upload Your Own" option alongside the existing Saved Identities picker in the Video Studio. This uses the existing `avatars` storage bucket and requires zero backend changes.
 
-### Issues Found
+---
 
-| Issue | Severity | Description |
-|---|---|---|
-| **Mobile nav menu z-index bleed** | LOW | Footer content slightly visible behind the open hamburger menu. Not blocking interaction but visually imperfect. |
-| **Style recalc overhead** | LOW | 15,921 style recalculations (8.97s) detected in performance profile — likely caused by particle/animation effects. Acceptable for launch but worth monitoring. |
-| **CLS shift** | LOW | CLS of 0.0385 (within "good" threshold) from `glass-card-bordered` elements shifting on load. |
+### Changes
 
-### Performance Summary
+**File: `src/pages/AIVideoStudio.tsx`**
 
-- JS Heap: 28.7MB (healthy)
-- DOM Nodes: 4,324 (acceptable)
-- CLS: 0.0385 (good)
-- No console errors detected
-- No broken routes from navigation links
+In the "Saved Identities" card (lines 357-434), add an "Upload Image" button at the start of the identity row:
 
-### Verdict
+- Small upload button (same size as identity avatars) with a `+` / Upload icon
+- Hidden file input accepting `image/jpeg,image/png,image/webp`
+- On file select:
+  1. Upload to `avatars` bucket under `{userId}/video-{timestamp}.{ext}`
+  2. Get public URL
+  3. Set `avatarUrl` state to the uploaded URL
+  4. Set `identityBanner` to "Using your uploaded image"
+  5. Auto-select `avatar_performance` video type
+- Show the uploaded image as a selected avatar thumbnail in the row
+- Max 5MB validation, same as existing `useAvatarUpload`
 
-**Mobile is launch-ready.** All critical flows (auth, browse, karaoke, navigation, JumBot) work correctly at phone viewport. The three low-severity issues are cosmetic and do not block launch.
+Also add the same upload option to:
 
-No code changes required.
+**File: `src/pages/AIViralGenerator.tsx`**
+- Add an "Upload Image" button in the avatar/identity section so artists can use their own image for viral clips
+
+**File: `src/pages/CoverArtGenerator.tsx`**
+- Add upload option for reference image input
+
+---
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `src/pages/AIVideoStudio.tsx` | Add "Upload Your Own" button in Saved Identities picker |
+| `src/pages/AIViralGenerator.tsx` | Add "Upload Image" option for custom avatar |
+| `src/pages/CoverArtGenerator.tsx` | Add "Upload Image" option for reference art |
+
+### Not Touched
+- Identity Builder, avatar editing, credit system, edge functions
+- `useAvatarUpload` hook (profile-specific, not reused here — inline upload logic instead)
+- Storage buckets (reuses existing `avatars` bucket)
 
