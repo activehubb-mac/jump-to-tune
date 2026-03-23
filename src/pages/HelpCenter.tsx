@@ -91,11 +91,11 @@ const faqCategories: FAQCategory[] = [
     items: [
       {
         question: "What subscription plans are available?",
-        answer: "We offer Fan, Artist, and Label plans. Each comes with different features and credit allowances. Visit the Subscription page to see detailed plan comparisons."
+        answer: "We offer three plans: Creator ($10/mo, 300 AI credits), Creator Pro ($25/mo, 800 AI credits), and Label/Studio ($79/mo, 2000 AI credits). Each plan includes monthly credit refreshes and access to all AI tools. Visit the Subscription page for detailed comparisons."
       },
       {
         question: "How do credits work?",
-        answer: "Credits are our in-app currency used to purchase tracks. You can buy credits in your Wallet or earn them through various activities. Credits never expire."
+        answer: "Credits are used for AI tools (video generation, cover art, identity building, etc.) and to purchase tracks. You can buy credit packs in your Wallet ($10/100, $40/500, $98/2000), earn credits through subscriptions, or enable auto-reload to top up automatically when your balance is low. Credits never expire."
       },
       {
         question: "How do I cancel my subscription?",
@@ -108,6 +108,33 @@ const faqCategories: FAQCategory[] = [
       {
         question: "Can I get a refund?",
         answer: "Refunds are handled on a case-by-case basis. Contact our support team with your purchase details and reason for the refund request."
+      }
+    ]
+  },
+  {
+    id: "ai-tools",
+    title: "AI Tools & Credits",
+    icon: <Sparkles className="h-5 w-5" />,
+    items: [
+      {
+        question: "What AI tools are available?",
+        answer: "JumTunes offers a full suite of AI tools under 'Grow My Music': AI Playlist Builder (5 credits), AI Release Builder (10 credits), Cover Art Generator (10 credits), AI Identity Builder (15–40 credits), AI Artist Drop (40 credits), AI Video Studio (130–400 credits), and AI Viral Generator (500–850 credits)."
+      },
+      {
+        question: "How much do AI tools cost?",
+        answer: "Each tool has a fixed credit cost: Playlist Builder = 5, Release Builder = 10, Cover Art = 10, Identity Builder = 15–40 (depending on mode), Artist Drop = 40, Video Studio = 130–400 (depending on duration/resolution), Viral Generator = 500–850 (depending on clip count). Credits are deducted before generation and refunded if generation fails."
+      },
+      {
+        question: "What is AI Artist Drop?",
+        answer: "AI Artist Drop is a one-click release package for 40 credits. It generates your artist identity, cover art, and a full release concept in a single flow — perfect for getting started quickly."
+      },
+      {
+        question: "What is auto-reload?",
+        answer: "Auto-reload automatically purchases a credit pack when your balance drops below a threshold you set. You can enable it in your Wallet settings and choose which pack to auto-buy. It prevents interruptions while using AI tools."
+      },
+      {
+        question: "What happens if I run out of credits?",
+        answer: "You'll be prompted to purchase more credits or enable auto-reload. You can buy credit packs (100/$10, 500/$40, 2000/$98) or upgrade your subscription for monthly credit refreshes."
       }
     ]
   },
