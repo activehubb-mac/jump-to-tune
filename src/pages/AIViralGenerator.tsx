@@ -119,9 +119,29 @@ export default function AIViralGenerator() {
       duration_seconds: 10,
       style,
       clip_count: currentClipOption.clips,
-      avatar_url: defaultAvatarUrl || undefined,
+      avatar_url: customAvatarUrl || defaultAvatarUrl || undefined,
       visual_theme: defaultTheme || undefined,
     });
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (file.size > 5 * 1024 * 1024) return;
+    setIsUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/viral-${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { cacheControl: "3600", upsert: true });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      setCustomAvatarUrl(urlData.publicUrl);
+      showFeedback({ type: "success", title: "Image uploaded", message: "Your image will be used for generation.", autoClose: true });
+    } catch { /* silent */ }
+    finally {
+      setIsUploadingAvatar(false);
+      if (uploadInputRef.current) uploadInputRef.current.value = "";
+    }
   };
 
   const copyToClipboard = (text: string, field: string) => {
