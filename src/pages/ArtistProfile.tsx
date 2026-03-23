@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { DMCAReportModal } from "@/components/moderation/DMCAReportModal";
 import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock, Star, Store, Megaphone, Info, Globe, Bell, Plus, Pencil, Trash2 } from "lucide-react";
+import { Music, Users, Play, Pause, Heart, Share2, ExternalLink, Disc3, Loader2, UserPlus, UserMinus, ListPlus, Lock, Star, Store, Megaphone, Info, Globe, Bell, Plus, Pencil, Trash2, Flag } from "lucide-react";
 import { AnnouncementCard } from "@/components/artist/AnnouncementCard";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { ActivityFeed } from "@/components/artist/ActivityFeed";
@@ -60,6 +61,7 @@ export default function ArtistProfile() {
   const { data: djTier } = useDJTier(id);
   const { isActivated: djActivated, isLoading: djActivationLoading, activate: djActivate } = useDJActivation();
   const [showCreateSession, setShowCreateSession] = useState(false);
+  const [showDMCAReport, setShowDMCAReport] = useState(false);
   const [showMixWizard, setShowMixWizard] = useState(false);
   const [editSession, setEditSession] = useState<DJSession | null>(null);
   const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
@@ -130,6 +132,12 @@ export default function ArtistProfile() {
         onOpenChange={setShowPremiumModal}
         feature="Add to Queue"
       />
+      <DMCAReportModal
+        open={showDMCAReport}
+        onOpenChange={setShowDMCAReport}
+        contentUrl={window.location.href}
+        contentName={artist?.display_name}
+      />
       {isOwnProfile && id ? (
         <BannerUpload
           userId={id}
@@ -183,6 +191,11 @@ export default function ArtistProfile() {
                 </Link>
               </Button>
               {artist.website_url && <Button variant="ghost" className="text-muted-foreground hover:text-foreground" asChild><a href={artist.website_url} target="_blank" rel="noopener noreferrer"><ExternalLink className="w-4 h-4 mr-2" />Website</a></Button>}
+              {!isOwnProfile && (
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive" onClick={() => setShowDMCAReport(true)}>
+                  <Flag className="w-4 h-4 mr-2" />Report
+                </Button>
+              )}
             </div>
           </div>
         </div>

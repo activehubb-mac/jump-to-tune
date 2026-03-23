@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { DMCAReportModal } from "@/components/moderation/DMCAReportModal";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1,
   Loader2, MoreHorizontal, ListMusic, Mic2, Heart, FolderPlus, Download,
   Share2, User, Disc3, Lock, Clock, Mic, MicOff, ChevronRight, Shield, UserPlus, UserCheck,
-  Type,
+  Type, Flag,
 } from "lucide-react";
 import { LyricsDisplay } from "@/components/sing-mode/LyricsDisplay";
 import { Button } from "@/components/ui/button";
@@ -115,6 +116,7 @@ export function FullscreenPlayer({
 }: FullscreenPlayerProps) {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
+  const [showDMCAReport, setShowDMCAReport] = useState(false);
 
   const [bioExpanded, setBioExpanded] = useState(false);
   const { isFollowing, toggleFollow, isToggling } = useFollow();
@@ -749,9 +751,16 @@ export function FullscreenPlayer({
                 <MenuButton icon={Mic2} label="View Credits" onClick={() => { setShowMenu(false); onOpenCredits(); }} />
                 <MenuButton icon={Download} label="Download" onClick={() => { setShowMenu(false); onDownload(); }} />
                 <MenuButton icon={Share2} label="Share (Copy Link)" onClick={handleShare} />
+                <MenuButton icon={Flag} label="Report Content" onClick={() => { setShowMenu(false); setShowDMCAReport(true); }} />
               </div>
             </DrawerContent>
           </Drawer>
+          <DMCAReportModal
+            open={showDMCAReport}
+            onOpenChange={setShowDMCAReport}
+            contentUrl={`${window.location.origin}/artist/${currentTrack.artist?.id}`}
+            contentName={currentTrack.title}
+          />
         </motion.div>
       )}
     </AnimatePresence>
