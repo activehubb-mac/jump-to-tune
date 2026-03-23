@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Loader2, Image as ImageIcon, Zap, RefreshCw, Download, Lock, ArrowLeft } from "lucide-react";
+import { Sparkles, Loader2, Image as ImageIcon, Zap, RefreshCw, Download, Lock, ArrowLeft, Upload } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
 import { useDefaultIdentity } from "@/hooks/useDefaultIdentity";

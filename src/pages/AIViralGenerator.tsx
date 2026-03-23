@@ -287,6 +287,49 @@ export default function AIViralGenerator() {
               </CardContent>
             </Card>
 
+            {/* Artist Image Upload */}
+            <Card className="glass">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">4. Artist Image (Optional)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <input
+                  ref={uploadInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                />
+                <div className="flex items-center gap-3">
+                  {(customAvatarUrl || defaultAvatarUrl) ? (
+                    <div className="relative">
+                      <img src={customAvatarUrl || defaultAvatarUrl!} alt="Avatar" className="h-14 w-14 rounded-full object-cover border border-border" />
+                      <button
+                        onClick={() => uploadInputRef.current?.click()}
+                        className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-primary flex items-center justify-center"
+                      >
+                        <Upload className="h-3 w-3 text-primary-foreground" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => uploadInputRef.current?.click()}
+                      disabled={isUploadingAvatar}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-dashed border-primary/40 bg-muted/30 hover:border-primary hover:bg-primary/5 transition-all"
+                    >
+                      {isUploadingAvatar ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      ) : (
+                        <Upload className="h-4 w-4 text-primary" />
+                      )}
+                      <span className="text-sm text-muted-foreground">Upload your image</span>
+                    </button>
+                  )}
+                  <p className="text-xs text-muted-foreground flex-1">Use your own photo or avatar for promo clips</p>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Generate Button */}
             <Button
               className="w-full gradient-accent neon-glow-subtle h-12 text-base"
