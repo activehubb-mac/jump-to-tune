@@ -386,13 +386,24 @@ export function Navbar() {
             </button>
           </div>
 
+          {/* Mobile Navigation Overlay */}
+          {isOpen && (
+            <div 
+              className="fixed inset-0 bg-black/60 md:hidden"
+              style={{ top: 'calc(4rem + env(safe-area-inset-top, 0px))', zIndex: 40 }}
+              onClick={() => setIsOpen(false)}
+              aria-hidden="true"
+            />
+          )}
+
           {/* Mobile Navigation */}
           {isOpen && (
             <div 
-              className="md:hidden py-4 overflow-y-auto overscroll-contain touch-pan-y"
+              className="md:hidden py-4 overflow-y-auto overscroll-contain touch-pan-y relative bg-background"
               style={{ 
                 maxHeight: 'calc(100vh - 4rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
-                WebkitOverflowScrolling: 'touch'
+                WebkitOverflowScrolling: 'touch',
+                zIndex: 50,
               }}
             >
               <div className="flex flex-col gap-2">
