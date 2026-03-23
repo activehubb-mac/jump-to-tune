@@ -5,7 +5,7 @@ import {
   ChevronDown, Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1,
   Loader2, MoreHorizontal, ListMusic, Mic2, Heart, FolderPlus, Download,
   Share2, User, Disc3, Lock, Clock, Mic, MicOff, ChevronRight, Shield, UserPlus, UserCheck,
-  Type,
+  Type, Flag,
 } from "lucide-react";
 import { LyricsDisplay } from "@/components/sing-mode/LyricsDisplay";
 import { Button } from "@/components/ui/button";
