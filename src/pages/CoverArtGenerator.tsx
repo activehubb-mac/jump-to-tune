@@ -56,7 +56,9 @@ export default function CoverArtGenerator() {
 
       // Enhance prompt with identity context if available
       let enhancedPrompt = prompt;
-      if (defaultAvatarUrl && defaultTheme) {
+      if (referenceImage) {
+        enhancedPrompt = `${prompt}. Use the provided reference image as inspiration for the artwork style.`;
+      } else if (defaultAvatarUrl && defaultTheme) {
         enhancedPrompt = `${prompt}. Incorporate the artist's visual identity and ${defaultTheme} style into the artwork.`;
       }
 
