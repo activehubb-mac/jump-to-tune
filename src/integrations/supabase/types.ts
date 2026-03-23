@@ -517,36 +517,6 @@ export type Database = {
         }
         Relationships: []
       }
-      artist_engagement: {
-        Row: {
-          created_at: string
-          growth_score: number
-          id: string
-          last_active_date: string | null
-          streak_days: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          growth_score?: number
-          id?: string
-          last_active_date?: string | null
-          streak_days?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          growth_score?: number
-          id?: string
-          last_active_date?: string | null
-          streak_days?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       artist_identities: {
         Row: {
           avatar_url: string | null
@@ -970,60 +940,6 @@ export type Database = {
           created_at?: string
           id?: string
           updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      daily_bonus_claims: {
-        Row: {
-          claim_date: string
-          created_at: string
-          credits_awarded: number
-          id: string
-          user_id: string
-        }
-        Insert: {
-          claim_date?: string
-          created_at?: string
-          credits_awarded?: number
-          id?: string
-          user_id: string
-        }
-        Update: {
-          claim_date?: string
-          created_at?: string
-          credits_awarded?: number
-          id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      daily_tasks: {
-        Row: {
-          completed: boolean
-          completed_at: string | null
-          created_at: string
-          id: string
-          task_date: string
-          task_key: string
-          user_id: string
-        }
-        Insert: {
-          completed?: boolean
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          task_date?: string
-          task_key: string
-          user_id: string
-        }
-        Update: {
-          completed?: boolean
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          task_date?: string
-          task_key?: string
           user_id?: string
         }
         Relationships: []
