@@ -162,6 +162,10 @@ const faqCategories: FAQCategory[] = [
       {
         question: "How do I add karaoke/sing-along versions?",
         answer: "When uploading a track, you can enable the Karaoke feature and upload an instrumental version along with synced lyrics (LRC format)."
+      },
+      {
+        question: "What is 'Grow My Music' and how do I use AI tools?",
+        answer: "Grow My Music is your AI toolkit hub. From your homepage, use the 'Grow Today' quick actions or navigate to Grow My Music in the menu. Start with AI Artist Drop to create your full release package, then use Video Studio and Viral Generator to promote your music."
       }
     ]
   },
