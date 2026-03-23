@@ -61,6 +61,7 @@ export default function ArtistProfile() {
   const { data: djTier } = useDJTier(id);
   const { isActivated: djActivated, isLoading: djActivationLoading, activate: djActivate } = useDJActivation();
   const [showCreateSession, setShowCreateSession] = useState(false);
+  const [showDMCAReport, setShowDMCAReport] = useState(false);
   const [showMixWizard, setShowMixWizard] = useState(false);
   const [editSession, setEditSession] = useState<DJSession | null>(null);
   const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
