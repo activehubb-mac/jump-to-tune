@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DMCAReportModal } from "@/components/moderation/DMCAReportModal";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1,
