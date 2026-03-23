@@ -1,61 +1,37 @@
 
 
-## Simplify JumTunes for Launch
+## Add "Grow Today" Block to Artist Homepage
 
-UI-only changes to reduce overwhelm. No backend, Stripe, credit, or AI system modifications.
-
----
-
-### 1. Simplified Homepage for Logged-In Artists/Labels
-
-**File**: `src/pages/Index.tsx`
-
-Replace the current artist/label homepage sections (DiscoverSection, CreateWithAISection, FanZoneSection, AIDJSection, MusicGalaxy CTA, KaraokePromoBanner) with three clean action cards when user is artist or label:
-
-- **Upload Song** → `/upload` (Upload icon, primary CTA)
-- **My Music** → `/artist/dashboard` or `/label/dashboard` (Music icon)
-- **Grow My Music** → `/ai-tools` (Sparkles icon)
-
-Keep the FeaturedHeroCarousel and hero text. Remove all other sections for authenticated artists/labels. Fan and guest views remain unchanged.
+### Overview
+Add a prominent "Grow Today" action block above the existing artist/label action cards on the homepage. Three buttons driving direct navigation to Video Studio, Release Builder, and Playlist Builder.
 
 ---
 
-### 2. AI Tools Hub — Rename & Simplify
+### Changes
 
-**File**: `src/pages/AIToolsHub.tsx`
+**File: `src/pages/Index.tsx`**
 
-- Change page title from "AI Tools" to "Grow My Music"
-- Remove hover-state tier breakdowns (the `pricingTiers` expand-on-hover feature)
-- Show only the credit cost badge per tool (e.g. "40 credits"), not "From X credits" with tier details
-- Keep all existing tools and links — just reduce visual noise
+Insert a new section **before** the existing "SIMPLIFIED ARTIST/LABEL ACTION CARDS" section (line 234), visible only to logged-in artists/labels:
 
----
+```
+Grow Today
+Do this to grow your music today
 
-### 3. Credit Display Simplification
+[🎬 Create Video]  [📢 Create Promo]  [🎧 Boost Song]
+```
 
-**File**: `src/pages/AIToolsHub.tsx`
+- **Create Video** → links to `/ai-video`
+- **Create Promo** → links to `/ai-release`
+- **Boost Song** → links to `/ai-playlist`
 
-- Remove the `≈ $X.XX` dollar conversion line under credits
-- Keep only: `{credits} credits` + "Buy Credits" button
+Implementation details:
+- Three `Link` buttons in a responsive grid (`grid-cols-3` on mobile, full width)
+- Each button: icon + label, gradient/primary styling, hover scale effect
+- Section has a heading ("Grow Today") and subtext ("Do this to grow your music today")
+- Compact card styling using existing `glass-card-bordered` pattern
+- Placed between the hero section and the Upload/My Music/Grow My Music cards
 
----
-
-### 4. Auto-Reload — Hide Until Needed
-
-**File**: `src/pages/Wallet.tsx`
-
-- Don't show `AutoReloadPanel` by default
-- Show it only when credits < 100, with a subtle prompt: "Running low? Turn on auto-refill to never run out"
-- Keep the full panel functionality once expanded
-
----
-
-### 5. Navbar Simplification for Artists
-
-**File**: `src/components/layout/Navbar.tsx`
-
-- Rename "Create" nav link label to "Grow My Music" (keeps `/ai-tools` href)
-- Remove "Video Studio" as a separate top-level nav item (it's accessible inside AI Tools Hub)
+No new components needed — this is ~30 lines of JSX added inline to Index.tsx.
 
 ---
 
@@ -63,16 +39,8 @@ Keep the FeaturedHeroCarousel and hero text. Remove all other sections for authe
 
 | File | Change |
 |---|---|
-| `src/pages/Index.tsx` | Show 3 action cards for artists/labels instead of multiple sections |
-| `src/pages/AIToolsHub.tsx` | Rename to "Grow My Music", remove tier breakdowns and dollar display |
-| `src/pages/Wallet.tsx` | Conditionally show AutoReloadPanel only when credits < 100 |
-| `src/components/layout/Navbar.tsx` | Rename "Create" → "Grow My Music", remove Video Studio nav entry |
+| `src/pages/Index.tsx` | Add "Grow Today" section above artist action cards |
 
 ### Not Touched
-- Onboarding flow (already has avatar/bio/genres/subscription steps)
-- Stripe/checkout/webhook logic
-- Credit deduction or pricing systems
-- AI tool pages or edge functions
-- Fan purchase flow
-- Artist store or payout systems
+- AI tool pages, pricing, credit system, backend functions, auto-reload, navigation
 
