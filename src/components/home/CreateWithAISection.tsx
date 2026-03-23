@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useRef, useEffect } from "react";
-import { Mic2, Music, Wand2, FileText, Palette, Sparkles } from "lucide-react";
+import { Mic2, Music, Wand2, FileText, Palette, Sparkles, Clapperboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const aiTools = [
