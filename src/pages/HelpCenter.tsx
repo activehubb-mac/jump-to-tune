@@ -15,7 +15,8 @@ import {
   Mic2, 
   Settings, 
   HelpCircle,
-  Mail
+  Mail,
+  Sparkles
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
