@@ -54,6 +54,16 @@ const aiTools = [
     videoSrc: "/videos/ai-cover-art.mp4",
     playbackRate: 1,
   },
+  {
+    title: "AI Video Studio",
+    description: "Generate cinematic AI music videos synced to your track",
+    icon: Clapperboard,
+    href: "/ai-video",
+    gradient: "from-primary/20 to-accent/20",
+    glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--primary)/0.3)]",
+    videoSrc: "/videos/ai-video-studio.mov",
+    playbackRate: 0.5,
+  },
 ];
 
 function AIToolCard({ tool }: { tool: typeof aiTools[0] }) {
