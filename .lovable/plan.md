@@ -1,47 +1,47 @@
 
 
-## Add AI Video Studio Card to Create With AI Section
+## Replace Terms Page with Termly Iframe
 
-### Overview
-Add a sixth card to the existing `aiTools` array in `CreateWithAISection.tsx`. The card reuses the existing `AIToolCard` component — no new components needed. Copy the uploaded `.mov` file to `public/videos/` for use as the card's background video.
+### Change
 
----
+**File: `src/pages/Terms.tsx`**
 
-### Changes
+Replace the entire file with a simple Layout wrapper containing a full-viewport iframe pointing to the Termly policy URL.
 
-**Step 1: Copy uploaded video**
-- Copy `user-uploads://928aa056-6344-4ec4-a1c5-ededaf4574e4.mov` → `public/videos/ai-video-studio.mov`
+```tsx
+import { Layout } from "@/components/layout/Layout";
 
-**Step 2: Add card entry** — `src/components/home/CreateWithAISection.tsx`
-
-Add to the `aiTools` array (after AI Cover Art, line 56):
-
-```js
-{
-  title: "AI Video Studio",
-  description: "Generate cinematic AI music videos synced to your track",
-  icon: Clapperboard,  // from lucide-react
-  href: "/ai-video",
-  gradient: "from-primary/20 to-accent/20",
-  glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--primary)/0.3)]",
-  videoSrc: "/videos/ai-video-studio.mov",
-  playbackRate: 0.5,
+export default function Terms() {
+  return (
+    <Layout>
+      <div className="w-full bg-background" style={{ minHeight: "100vh" }}>
+        <iframe
+          src="https://app.termly.io/policy-viewer/policy.html?policyUUID=7ab0d082-f2d6-4d35-a392-28736c10547f"
+          title="Terms and Conditions"
+          style={{
+            width: "100%",
+            height: "100vh",
+            border: "none",
+            display: "block",
+          }}
+          allowFullScreen
+        />
+      </div>
+    </Layout>
+  );
 }
 ```
 
-Import `Clapperboard` from `lucide-react`.
-
-That's it — the existing `AIToolCard` component handles autoplay, muted loop, hover zoom (scale 1.05), glow, dark overlay, responsive aspect ratio, and mobile playsInline. The 3-column grid naturally accommodates the 6th card (2 rows of 3).
-
----
+- Keeps existing Layout (header + footer)
+- Full-width iframe, 100vh height, no border
+- `display: block` prevents inline-element gap
+- Dark background behind iframe while loading
+- No horizontal scroll, smooth vertical scroll handled by Termly's own viewer
+- Removes all 640 lines of hardcoded legal text
 
 ### Files Changed
 
 | File | Change |
 |---|---|
-| `public/videos/ai-video-studio.mov` | New — uploaded video asset |
-| `src/components/home/CreateWithAISection.tsx` | Add Clapperboard import + AI Video Studio entry to aiTools array |
-
-### Not Touched
-- AIToolCard component logic, layout grid, pricing, credit system, other cards
+| `src/pages/Terms.tsx` | Replace content with Termly iframe |
 
