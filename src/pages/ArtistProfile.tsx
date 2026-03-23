@@ -185,6 +185,11 @@ export default function ArtistProfile() {
                 </Link>
               </Button>
               {artist.website_url && <Button variant="ghost" className="text-muted-foreground hover:text-foreground" asChild><a href={artist.website_url} target="_blank" rel="noopener noreferrer"><ExternalLink className="w-4 h-4 mr-2" />Website</a></Button>}
+              {!isOwnProfile && (
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive" onClick={() => setShowDMCAReport(true)}>
+                  <Flag className="w-4 h-4 mr-2" />Report
+                </Button>
+              )}
             </div>
           </div>
         </div>

@@ -116,6 +116,7 @@ export function FullscreenPlayer({
 }: FullscreenPlayerProps) {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
+  const [showDMCAReport, setShowDMCAReport] = useState(false);
 
   const [bioExpanded, setBioExpanded] = useState(false);
   const { isFollowing, toggleFollow, isToggling } = useFollow();
