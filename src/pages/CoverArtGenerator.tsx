@@ -118,6 +118,50 @@ export default function CoverArtGenerator() {
                 <Textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="A dark cyberpunk cityscape with neon lights reflecting on wet streets, moody purple and blue tones..." className="mt-1 min-h-[120px] bg-muted/50 border-glass-border" disabled={isGenerating} />
               </div>
               <div>
+                <Label>Reference Image (Optional)</Label>
+                <input
+                  ref={refInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !user) return;
+                    if (file.size > 5 * 1024 * 1024) return;
+                    setIsUploadingRef(true);
+                    try {
+                      const ext = file.name.split(".").pop();
+                      const path = `${user.id}/cover-ref-${Date.now()}.${ext}`;
+                      const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { cacheControl: "3600", upsert: true });
+                      if (uploadErr) throw uploadErr;
+                      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+                      setReferenceImage(urlData.publicUrl);
+                    } catch { /* silent */ }
+                    finally {
+                      setIsUploadingRef(false);
+                      if (refInputRef.current) refInputRef.current.value = "";
+                    }
+                  }}
+                />
+                <div className="mt-1 flex items-center gap-3">
+                  {referenceImage ? (
+                    <div className="relative">
+                      <img src={referenceImage} alt="Reference" className="h-16 w-16 rounded-lg object-cover border border-border" />
+                      <button onClick={() => setReferenceImage(null)} className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive flex items-center justify-center text-destructive-foreground text-xs">×</button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => refInputRef.current?.click()}
+                      disabled={isUploadingRef || isGenerating}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-primary/40 bg-muted/30 hover:border-primary hover:bg-primary/5 transition-all"
+                    >
+                      {isUploadingRef ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Upload className="h-4 w-4 text-primary" />}
+                      <span className="text-sm text-muted-foreground">Upload reference</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div>
                 <Label>Style Hint</Label>
                 <Input value={styleHint} onChange={e => setStyleHint(e.target.value)} placeholder="minimalist, abstract, photorealistic..." className="mt-1 bg-muted/50 border-glass-border" disabled={isGenerating} />
               </div>
