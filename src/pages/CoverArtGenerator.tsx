@@ -26,6 +26,9 @@ export default function CoverArtGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [referenceImage, setReferenceImage] = useState<string | null>(null);
+  const [isUploadingRef, setIsUploadingRef] = useState(false);
+  const refInputRef = useRef<HTMLInputElement>(null);
 
   const cost = getToolCost("cover_art");
   const canAfford = aiCredits >= cost;
