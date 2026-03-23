@@ -1355,6 +1355,39 @@ export type Database = {
         }
         Relationships: []
       }
+      dmca_reports: {
+        Row: {
+          content_url: string
+          created_at: string
+          description: string | null
+          email: string
+          id: string
+          name: string
+          reason: string
+          status: string
+        }
+        Insert: {
+          content_url: string
+          created_at?: string
+          description?: string | null
+          email: string
+          id?: string
+          name: string
+          reason: string
+          status?: string
+        }
+        Update: {
+          content_url?: string
+          created_at?: string
+          description?: string | null
+          email?: string
+          id?: string
+          name?: string
+          reason?: string
+          status?: string
+        }
+        Relationships: []
+      }
       drop_waitlists: {
         Row: {
           created_at: string
