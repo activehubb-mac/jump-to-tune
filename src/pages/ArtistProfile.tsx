@@ -132,6 +132,12 @@ export default function ArtistProfile() {
         onOpenChange={setShowPremiumModal}
         feature="Add to Queue"
       />
+      <DMCAReportModal
+        open={showDMCAReport}
+        onOpenChange={setShowDMCAReport}
+        contentUrl={window.location.href}
+        contentName={artist?.display_name}
+      />
       {isOwnProfile && id ? (
         <BannerUpload
           userId={id}

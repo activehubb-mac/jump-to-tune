@@ -751,9 +751,16 @@ export function FullscreenPlayer({
                 <MenuButton icon={Mic2} label="View Credits" onClick={() => { setShowMenu(false); onOpenCredits(); }} />
                 <MenuButton icon={Download} label="Download" onClick={() => { setShowMenu(false); onDownload(); }} />
                 <MenuButton icon={Share2} label="Share (Copy Link)" onClick={handleShare} />
+                <MenuButton icon={Flag} label="Report Content" onClick={() => { setShowMenu(false); setShowDMCAReport(true); }} />
               </div>
             </DrawerContent>
           </Drawer>
+          <DMCAReportModal
+            open={showDMCAReport}
+            onOpenChange={setShowDMCAReport}
+            contentUrl={`${window.location.origin}/artist/${currentTrack.artist?.id}`}
+            contentName={currentTrack.title}
+          />
         </motion.div>
       )}
     </AnimatePresence>
