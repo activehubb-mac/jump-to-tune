@@ -46,7 +46,7 @@ export function ParticleBackground() {
 
   // Shooting stars — small, subtle, spaced out
   const shootingStars = useMemo(() => {
-    const count = window.innerWidth < 768 ? 4 : 8;
+    const count = isMobile ? 2 : 8;
     return Array.from({ length: count }, (_, i) => ({
       id: i,
       left: `${Math.random() * 80}%`,
