@@ -51,6 +51,9 @@ export default function AIViralGenerator() {
   const [style, setStyle] = useState("abstract visualizer");
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [customAvatarUrl, setCustomAvatarUrl] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
   const { assets, isLoading: assetsLoading, generate, isGenerating } = useViralGenerator(selectedTrackId || undefined);
 
