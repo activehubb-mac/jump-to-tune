@@ -1,7 +1,7 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Music, Disc3, Users, Building2, Headphones, Zap, Shield, Upload, LayoutDashboard, Library, Sparkles, Loader2, Play, Rocket, Crown, Star, Mic2, Globe } from "lucide-react";
+import { Music, Disc3, Users, Building2, Headphones, Zap, Shield, Upload, LayoutDashboard, Library, Sparkles, Loader2, Play, Rocket, Crown, Star, Mic2, Globe, Video, Megaphone } from "lucide-react";
 import featureAiCreation from "@/assets/feature-ai-creation.jpg";
 import featureKaraoke from "@/assets/feature-karaoke.jpg";
 import featureGalaxy from "@/assets/feature-galaxy.jpg";
