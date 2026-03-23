@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useRef, useEffect } from "react";
-import { Mic2, Music, Wand2, FileText, Palette, Sparkles } from "lucide-react";
+import { Mic2, Music, Wand2, FileText, Palette, Sparkles, Clapperboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const aiTools = [
@@ -53,6 +53,16 @@ const aiTools = [
     glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.3)]",
     videoSrc: "/videos/ai-cover-art.mp4",
     playbackRate: 1,
+  },
+  {
+    title: "AI Video Studio",
+    description: "Generate cinematic AI music videos synced to your track",
+    icon: Clapperboard,
+    href: "/ai-video",
+    gradient: "from-primary/20 to-accent/20",
+    glowColor: "group-hover:shadow-[0_0_30px_hsl(var(--primary)/0.3)]",
+    videoSrc: "/videos/ai-video-studio.mov",
+    playbackRate: 0.5,
   },
 ];
 
