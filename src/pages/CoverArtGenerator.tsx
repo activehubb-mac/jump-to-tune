@@ -63,7 +63,7 @@ export default function CoverArtGenerator() {
       }
 
       const { data, error } = await supabase.functions.invoke("ai-cover-art", {
-        body: { prompt: enhancedPrompt, style_hint: styleHint, is_regenerate: regenerate, avatar_url: defaultAvatarUrl || undefined },
+        body: { prompt: enhancedPrompt, style_hint: styleHint, is_regenerate: regenerate, avatar_url: referenceImage || defaultAvatarUrl || undefined },
         headers: { Authorization: `Bearer ${session.session.access_token}` },
       });
 
