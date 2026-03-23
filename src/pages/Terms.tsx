@@ -10,7 +10,7 @@ export default function Terms() {
 
   return (
     <Layout>
-      <div className="w-full bg-background" style={{ minHeight: "100vh" }}>
+      <div className="w-full" style={{ minHeight: "100vh", backgroundColor: "#ffffff" }}>
         {!iframeLoaded && !iframeError && (
           <div className="flex items-center justify-center py-20">
             <p className="text-muted-foreground">Loading Terms and Conditions...</p>
