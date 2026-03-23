@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Sparkles, Loader2, Zap, Lock, ArrowLeft, Video, Copy, Check, Download, Hash, MessageSquare,
+  Sparkles, Loader2, Zap, Lock, ArrowLeft, Video, Copy, Check, Download, Hash, MessageSquare, Upload, User,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
@@ -51,6 +51,9 @@ export default function AIViralGenerator() {
   const [style, setStyle] = useState("abstract visualizer");
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [customAvatarUrl, setCustomAvatarUrl] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
   const { assets, isLoading: assetsLoading, generate, isGenerating } = useViralGenerator(selectedTrackId || undefined);
 
@@ -116,9 +119,29 @@ export default function AIViralGenerator() {
       duration_seconds: 10,
       style,
       clip_count: currentClipOption.clips,
-      avatar_url: defaultAvatarUrl || undefined,
+      avatar_url: customAvatarUrl || defaultAvatarUrl || undefined,
       visual_theme: defaultTheme || undefined,
     });
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (file.size > 5 * 1024 * 1024) return;
+    setIsUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/viral-${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { cacheControl: "3600", upsert: true });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      setCustomAvatarUrl(urlData.publicUrl);
+      showFeedback({ type: "success", title: "Image uploaded", message: "Your image will be used for generation.", autoClose: true });
+    } catch { /* silent */ }
+    finally {
+      setIsUploadingAvatar(false);
+      if (uploadInputRef.current) uploadInputRef.current.value = "";
+    }
   };
 
   const copyToClipboard = (text: string, field: string) => {
@@ -260,6 +283,49 @@ export default function AIViralGenerator() {
                       </button>
                     ))}
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Artist Image Upload */}
+            <Card className="glass">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">4. Artist Image (Optional)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <input
+                  ref={uploadInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                />
+                <div className="flex items-center gap-3">
+                  {(customAvatarUrl || defaultAvatarUrl) ? (
+                    <div className="relative">
+                      <img src={customAvatarUrl || defaultAvatarUrl!} alt="Avatar" className="h-14 w-14 rounded-full object-cover border border-border" />
+                      <button
+                        onClick={() => uploadInputRef.current?.click()}
+                        className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-primary flex items-center justify-center"
+                      >
+                        <Upload className="h-3 w-3 text-primary-foreground" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => uploadInputRef.current?.click()}
+                      disabled={isUploadingAvatar}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-dashed border-primary/40 bg-muted/30 hover:border-primary hover:bg-primary/5 transition-all"
+                    >
+                      {isUploadingAvatar ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      ) : (
+                        <Upload className="h-4 w-4 text-primary" />
+                      )}
+                      <span className="text-sm text-muted-foreground">Upload your image</span>
+                    </button>
+                  )}
+                  <p className="text-xs text-muted-foreground flex-1">Use your own photo or avatar for promo clips</p>
                 </div>
               </CardContent>
             </Card>

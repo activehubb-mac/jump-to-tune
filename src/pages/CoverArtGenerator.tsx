@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Loader2, Image as ImageIcon, Zap, RefreshCw, Download, Lock, ArrowLeft } from "lucide-react";
+import { Sparkles, Loader2, Image as ImageIcon, Zap, RefreshCw, Download, Lock, ArrowLeft, Upload } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
 import { useDefaultIdentity } from "@/hooks/useDefaultIdentity";
@@ -26,6 +26,9 @@ export default function CoverArtGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [referenceImage, setReferenceImage] = useState<string | null>(null);
+  const [isUploadingRef, setIsUploadingRef] = useState(false);
+  const refInputRef = useRef<HTMLInputElement>(null);
 
   const cost = getToolCost("cover_art");
   const canAfford = aiCredits >= cost;
@@ -53,12 +56,14 @@ export default function CoverArtGenerator() {
 
       // Enhance prompt with identity context if available
       let enhancedPrompt = prompt;
-      if (defaultAvatarUrl && defaultTheme) {
+      if (referenceImage) {
+        enhancedPrompt = `${prompt}. Use the provided reference image as inspiration for the artwork style.`;
+      } else if (defaultAvatarUrl && defaultTheme) {
         enhancedPrompt = `${prompt}. Incorporate the artist's visual identity and ${defaultTheme} style into the artwork.`;
       }
 
       const { data, error } = await supabase.functions.invoke("ai-cover-art", {
-        body: { prompt: enhancedPrompt, style_hint: styleHint, is_regenerate: regenerate, avatar_url: defaultAvatarUrl || undefined },
+        body: { prompt: enhancedPrompt, style_hint: styleHint, is_regenerate: regenerate, avatar_url: referenceImage || defaultAvatarUrl || undefined },
         headers: { Authorization: `Bearer ${session.session.access_token}` },
       });
 
@@ -111,6 +116,50 @@ export default function CoverArtGenerator() {
               <div>
                 <Label>Cover Art Description *</Label>
                 <Textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="A dark cyberpunk cityscape with neon lights reflecting on wet streets, moody purple and blue tones..." className="mt-1 min-h-[120px] bg-muted/50 border-glass-border" disabled={isGenerating} />
+              </div>
+              <div>
+                <Label>Reference Image (Optional)</Label>
+                <input
+                  ref={refInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !user) return;
+                    if (file.size > 5 * 1024 * 1024) return;
+                    setIsUploadingRef(true);
+                    try {
+                      const ext = file.name.split(".").pop();
+                      const path = `${user.id}/cover-ref-${Date.now()}.${ext}`;
+                      const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { cacheControl: "3600", upsert: true });
+                      if (uploadErr) throw uploadErr;
+                      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+                      setReferenceImage(urlData.publicUrl);
+                    } catch { /* silent */ }
+                    finally {
+                      setIsUploadingRef(false);
+                      if (refInputRef.current) refInputRef.current.value = "";
+                    }
+                  }}
+                />
+                <div className="mt-1 flex items-center gap-3">
+                  {referenceImage ? (
+                    <div className="relative">
+                      <img src={referenceImage} alt="Reference" className="h-16 w-16 rounded-lg object-cover border border-border" />
+                      <button onClick={() => setReferenceImage(null)} className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive flex items-center justify-center text-destructive-foreground text-xs">×</button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => refInputRef.current?.click()}
+                      disabled={isUploadingRef || isGenerating}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-primary/40 bg-muted/30 hover:border-primary hover:bg-primary/5 transition-all"
+                    >
+                      {isUploadingRef ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Upload className="h-4 w-4 text-primary" />}
+                      <span className="text-sm text-muted-foreground">Upload reference</span>
+                    </button>
+                  )}
+                </div>
               </div>
               <div>
                 <Label>Style Hint</Label>

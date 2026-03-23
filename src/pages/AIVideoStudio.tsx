@@ -17,7 +17,7 @@ import {
   Sparkles, Loader2, Zap, Lock, ArrowLeft, Video, Clock,
   Film, Type, Smartphone, User, Monitor, Square, RectangleVertical,
   CheckCircle2, XCircle, Clock3, Clapperboard, Trash2, RotateCcw, Download,
-  UserCircle, Plus, Expand, X, AlertTriangle,
+  UserCircle, Plus, Expand, X, AlertTriangle, Upload,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAICredits } from "@/hooks/useAICredits";
@@ -218,6 +218,8 @@ export default function AIVideoStudio() {
   const [scenePrompt, setScenePrompt] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
   // Saved identities
   const [savedIdentities, setSavedIdentities] = useState<any[]>([]);
@@ -377,6 +379,47 @@ export default function AIVideoStudio() {
                 </Link>
               ) : (
                 <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
+                  {/* Upload Your Own button */}
+                  <div className="shrink-0">
+                    <input
+                      ref={uploadInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file || !user) return;
+                        if (file.size > 5 * 1024 * 1024) return;
+                        setIsUploadingAvatar(true);
+                        try {
+                          const ext = file.name.split(".").pop();
+                          const path = `${user.id}/video-${Date.now()}.${ext}`;
+                          const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { cacheControl: "3600", upsert: true });
+                          if (uploadErr) throw uploadErr;
+                          const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+                          setAvatarUrl(urlData.publicUrl);
+                          setIdentityBanner("Using your uploaded image");
+                          setVideoType("avatar_performance");
+                        } catch { /* silent */ }
+                        finally {
+                          setIsUploadingAvatar(false);
+                          if (uploadInputRef.current) uploadInputRef.current.value = "";
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={() => uploadInputRef.current?.click()}
+                      disabled={isUploadingAvatar}
+                      className="flex flex-col items-center gap-1.5 p-2 rounded-lg border border-dashed border-primary/40 bg-muted/30 hover:border-primary hover:bg-primary/5 transition-all w-20 h-full justify-center"
+                    >
+                      {isUploadingAvatar ? (
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      ) : (
+                        <Upload className="h-6 w-6 text-primary" />
+                      )}
+                      <span className="text-[10px] text-muted-foreground text-center">Upload Own</span>
+                    </button>
+                  </div>
                   {savedIdentities.map((identity) => {
                     const isSelected = identityId === identity.id;
                     return (
