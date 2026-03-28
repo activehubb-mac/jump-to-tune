@@ -14,9 +14,9 @@ const logStep = (step: string, details?: any) => {
 
 // Map Stripe price IDs to tiers (reverse of SUBSCRIPTION_PRICES)
 const PRICE_TO_TIER: Record<string, "fan" | "artist" | "label"> = {
-  "price_1T7sAyEKeZaBsSwj3L6Izcpg": "fan",    // Creator $10/mo
-  "price_1T7smDEKeZaBsSwjVd5hBpyq": "artist",  // Creator Pro $25/mo
-  "price_1T7sFHEKeZaBsSwjLEDZiC7L": "label",   // Label/Studio $79/mo
+  "price_1T7sAyEKeZaBsSwj3L6Izcpg": "fan",    // Creator (~$9.99/mo UI)
+  "price_1T7smDEKeZaBsSwjVd5hBpyq": "artist",  // Creator Pro (~$24.99/mo)
+  "price_1T7sFHEKeZaBsSwjLEDZiC7L": "label",   // Label/Studio (~$79.99/mo)
   // Legacy price IDs (keep for existing subscribers)
   "price_1SpXymEKeZaBsSwjs3UezAPu": "fan",
   "price_1SpXyyEKeZaBsSwj0fe2MazX": "artist",

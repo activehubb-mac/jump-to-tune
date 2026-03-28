@@ -19,19 +19,19 @@ const SUBSCRIPTION_TIERS = [
   {
     tier: "fan" as const,
     name: "Creator",
-    price: "$10",
+    price: "$9.99",
     features: ["Unlimited streaming", "300 AI credits/month", "Download to collection & device"],
   },
   {
     tier: "artist" as const,
     name: "Creator Pro",
-    price: "$25",
+    price: "$24.99",
     features: ["All Creator features", "800 AI credits/month", "Upload unlimited tracks & analytics"],
   },
   {
     tier: "label" as const,
     name: "Label / Studio",
-    price: "$79",
+    price: "$79.99",
     features: ["All Creator Pro features", "2,000 AI credits/month", "Manage up to 10 artists"],
   },
 ];

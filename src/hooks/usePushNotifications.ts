@@ -2,19 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { isNative, getPlatform as getAppPlatform } from "@/lib/platform";
 
-// Check if running in Capacitor native app
-const isNativeApp = () => {
-  return typeof (window as any).Capacitor !== "undefined";
-};
+const isNativeApp = () => isNative();
 
-// Detect platform
-const getPlatform = (): "ios" | "android" | "web" => {
-  if (!isNativeApp()) return "web";
-  const userAgent = window.navigator.userAgent.toLowerCase();
-  if (/iphone|ipad|ipod/.test(userAgent)) return "ios";
-  return "android";
-};
+const getPlatform = (): "ios" | "android" | "web" => getAppPlatform();
 
 interface PushNotificationState {
   isSupported: boolean;

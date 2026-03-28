@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">JumTunes</string>
+    <string name="title_activity_main">JumTunes</string>
+    <string name="package_name">com.jumtunes.app</string>
+    <string name="custom_url_scheme">com.jumtunes.app</string>
+</resources>

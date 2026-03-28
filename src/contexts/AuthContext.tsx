@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthRedirectUrl } from "@/lib/platform";
 
 type AppRole = "fan" | "artist" | "label";
 
@@ -136,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, displayName: string, selectedRole: AppRole): Promise<SignUpResult> => {
-    const redirectUrl = `${window.location.origin}/auth/callback`;
+    const redirectUrl = getAuthRedirectUrl("/auth/callback");
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -182,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const resendConfirmationEmail = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/auth/callback`;
+    const redirectUrl = getAuthRedirectUrl("/auth/callback");
     
     const { error } = await supabase.auth.resend({
       type: "signup",
@@ -196,7 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/auth/reset-password`;
+    const redirectUrl = getAuthRedirectUrl("/auth/reset-password");
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,

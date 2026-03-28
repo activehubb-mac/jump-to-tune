@@ -246,9 +246,13 @@ serve(async (req) => {
         });
       }
       
-      // Dates are still valid — return local data as-is
+      // Dates are still valid — return local data as-is (incl. store subs with no Stripe id)
+      const subscribed =
+        localSub.status === "active" ||
+        localSub.status === "trialing" ||
+        localSub.status === "past_due";
       return new Response(JSON.stringify({
-        subscribed: localSub.status === "active" || localSub.status === "trialing",
+        subscribed,
         status: localSub.status,
         tier: localSub.tier,
         trial_ends_at: localSub.trial_ends_at,

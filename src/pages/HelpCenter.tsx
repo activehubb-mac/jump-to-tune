@@ -91,7 +91,7 @@ const faqCategories: FAQCategory[] = [
     items: [
       {
         question: "What subscription plans are available?",
-        answer: "We offer three plans: Creator ($10/mo, 300 AI credits), Creator Pro ($25/mo, 800 AI credits), and Label/Studio ($79/mo, 2000 AI credits). Each plan includes monthly credit refreshes and access to all AI tools. Visit the Subscription page for detailed comparisons."
+        answer: "We offer three plans: Creator ($9.99/mo, 300 AI credits), Creator Pro ($24.99/mo, 800 AI credits), and Label/Studio ($79.99/mo, 2000 AI credits). Each plan includes monthly credit refreshes and access to all AI tools. Visit the Subscription page for detailed comparisons."
       },
       {
         question: "How do credits work?",

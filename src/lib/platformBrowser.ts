@@ -1,14 +1,10 @@
 import { Browser } from "@capacitor/browser";
+import { isNative } from "@/lib/platform";
 
 /**
  * Detects if the app is running as a native Capacitor app
  */
-export const isNativeApp = (): boolean => {
-  return (
-    typeof (window as any).Capacitor !== "undefined" &&
-    (window as any).Capacitor.isNativePlatform()
-  );
-};
+export const isNativeApp = (): boolean => isNative();
 
 /**
  * Opens a URL in the appropriate browser based on platform

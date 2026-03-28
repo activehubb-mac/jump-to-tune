@@ -22,3 +22,21 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Native build artifacts (keep native project config tracked)
+android/app/build/
+android/.gradle/
+android/build/
+android/local.properties
+android/app/release/
+ios/App/Pods/
+ios/DerivedData/
+*.jks
+*.keystore
+
+# Local review / store screenshots (not app assets)
+/subscription*.png
+
+# Firebase / push config (add per-project, do not commit secrets)
+# google-services.json
+# GoogleService-Info.plist

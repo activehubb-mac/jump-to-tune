@@ -8,6 +8,9 @@ import { FeedbackModal } from "@/components/ui/feedback-modal";
 import { GlobalAudioPlayer } from "@/components/audio/GlobalAudioPlayer";
 import { useStatusBar } from "@/hooks/useStatusBar";
 import { useDeepLinkHandler } from "@/hooks/useDeepLinkHandler";
+import { useEffect } from "react";
+import { initPurchases, loginPurchases, logoutPurchases } from "@/lib/nativePurchases";
+import { useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
@@ -181,12 +184,30 @@ function RouterContent() {
   );
 }
 
+function PurchaseSync() {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    initPurchases(user?.id ?? undefined);
+  }, []);
+
+  useEffect(() => {
+    if (user?.id) {
+      loginPurchases(user.id);
+    } else {
+      logoutPurchases();
+    }
+  }, [user?.id]);
+
+  return null;
+}
+
 function AppContent() {
-  // Initialize native status bar configuration
   useStatusBar();
 
   return (
     <>
+      <PurchaseSync />
       <FeedbackModal />
       <BrowserRouter>
         <RouterContent />

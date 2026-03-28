@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeedbackSafe } from "@/contexts/FeedbackContext";
 import { isNativeApp, openExternalUrl, openPaymentUrl, getMobileHeaders } from "@/lib/platformBrowser";
+import { isNative } from "@/lib/platform";
 
 interface DownloadOptions {
   trackId: string;
@@ -32,12 +33,10 @@ export function useDownload() {
 
       if (error) throw error;
 
-      // iOS native app: Open in browser to trigger "Save to Files"
       if (isNativeApp()) {
         await openExternalUrl(data.downloadUrl);
         showFeedback({ type: "success", title: "Download Ready", message: "Choose 'Save to Files' when prompted" });
       } else {
-        // Web: Use anchor element approach
         const link = document.createElement("a");
         link.href = data.downloadUrl;
         link.download = data.filename;
@@ -54,7 +53,16 @@ export function useDownload() {
     }
   };
 
+  /**
+   * Web-only: creates a Stripe checkout session for track purchase.
+   * On native this should not be called; use native IAP instead.
+   */
   const createPaymentCheckout = async ({ trackId, trackTitle, trackPrice }: DownloadOptions, tipAmount: number) => {
+    if (isNative()) {
+      console.warn("[Checkout] createPaymentCheckout called on native — use native billing instead");
+      return null;
+    }
+
     if (!session) {
       showFeedback({ type: "error", title: "Sign In Required", message: "Please sign in to purchase" });
       return null;
@@ -85,7 +93,16 @@ export function useDownload() {
     }
   };
 
+  /**
+   * Web-only: creates a Stripe subscription checkout.
+   * On native this should not be called; use native IAP subscriptions instead.
+   */
   const createSubscriptionCheckout = async (tier: "fan" | "artist" | "label") => {
+    if (isNative()) {
+      console.warn("[Checkout] createSubscriptionCheckout called on native — use native billing instead");
+      return null;
+    }
+
     if (!session) {
       showFeedback({ type: "error", title: "Sign In Required", message: "Please sign in to subscribe" });
       return null;

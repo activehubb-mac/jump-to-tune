@@ -32,7 +32,7 @@ AI Tools (accessed via "Grow My Music" in nav):
 AI Credits:
 - New users get 15 free credits + 30-day trial
 - Credit packs: 100/$10, 500/$40, 2000/$98
-- Subscriptions: Creator $10/mo (300 credits), Creator Pro $25/mo (800 credits), Label/Studio $79/mo (2000 credits)
+- Subscriptions: Creator $9.99/mo (300 credits), Creator Pro $24.99/mo (800 credits), Label/Studio $79.99/mo (2000 credits)
 - Credits are managed at /wallet
 - Auto-reload: users can enable automatic credit top-up in wallet settings — when credits drop below a threshold, a pack is purchased automatically
 
