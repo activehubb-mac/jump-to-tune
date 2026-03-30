@@ -1,83 +1,50 @@
 
 
-## Fix Terms Page Visibility
+## Fix 6 Issues: Edge Functions, Navbar, Edit Profile, Scroll-to-Top, JumBot Scroll Lock
 
-### Problem
-The Termly iframe at `/terms` is not displaying content. This is likely caused by the Lovable preview sandbox blocking third-party iframes (CSP or sandbox restrictions), or the iframe failing to load in certain browsers.
+### 1. Fix `npm:` imports in 5 edge functions
 
-### Solution
-Dual approach: keep the iframe but add `sandbox` permissions and a loading fallback. If the iframe still fails (common in sandboxed previews), add a direct link fallback so users can always access the terms.
+5 functions use `npm:@supabase/supabase-js@2.57.2` which fails in the edge runtime. Change to `https://esm.sh/@supabase/supabase-js@2.57.2` (matching all other functions).
 
-### Changes
+**Files**: `supabase/functions/qa-admin/index.ts`, `process-message-expiry/index.ts`, `purchase-message-credits/index.ts`, `refund-store-order/index.ts`, `send-paid-message/index.ts`
 
-**File: `src/pages/Terms.tsx`**
+### 2. Fix mobile menu displacing navbar header
 
-Replace current implementation with:
+The mobile menu (line 400-651) renders inline inside the `<nav>`, pushing content down. Change it to `position: fixed` with `top` calculated below the navbar, so it overlays instead of displacing.
 
-```tsx
-import { Layout } from "@/components/layout/Layout";
-import { useState } from "react";
-import { ExternalLink } from "lucide-react";
+**File**: `src/components/layout/Navbar.tsx` — change the mobile nav `<div>` at line 401 from `relative` to `fixed inset-x-0` with `top: calc(4rem + env(safe-area-inset-top))`.
 
-const TERMLY_URL = "https://app.termly.io/policy-viewer/policy.html?policyUUID=7ab0d082-f2d6-4d35-a392-28736c10547f";
+### 3. Add "Edit Profile" to desktop dropdown
 
-export default function Terms() {
-  const [iframeLoaded, setIframeLoaded] = useState(false);
-  const [iframeError, setIframeError] = useState(false);
+The desktop dropdown (lines 267-364) has no "Edit Profile" option. Add a `DropdownMenuItem` with `onClick={() => setIsProfileOpen(true)}` after "Account Settings" (line 356), before the Sign Out separator. Import `Edit` icon or reuse `User`.
 
-  return (
-    <Layout>
-      <div className="w-full bg-background" style={{ minHeight: "100vh" }}>
-        {/* Loading state */}
-        {!iframeLoaded && !iframeError && (
-          <div className="flex items-center justify-center py-20">
-            <p className="text-muted-foreground">Loading Terms and Conditions...</p>
-          </div>
-        )}
+**File**: `src/components/layout/Navbar.tsx`
 
-        {/* Fallback link if iframe fails */}
-        {iframeError && (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <p className="text-muted-foreground">Unable to load terms inline.</p>
-            <a href={TERMLY_URL} target="_blank" rel="noopener noreferrer"
-               className="text-primary flex items-center gap-2 underline">
-              View Terms and Conditions <ExternalLink className="w-4 h-4" />
-            </a>
-          </div>
-        )}
+### 4. Scroll to top on route change
 
-        {/* Iframe */}
-        {!iframeError && (
-          <iframe
-            src={TERMLY_URL}
-            title="Terms and Conditions"
-            onLoad={() => setIframeLoaded(true)}
-            onError={() => setIframeError(true)}
-            style={{
-              width: "100%",
-              height: "100vh",
-              border: "none",
-              display: iframeLoaded ? "block" : "none",
-              colorScheme: "light",
-            }}
-            sandbox="allow-scripts allow-same-origin allow-popups"
-            allowFullScreen
-          />
-        )}
-      </div>
-    </Layout>
-  );
-}
-```
+Add a `ScrollToTop` component using `useLocation` + `useEffect` to call `window.scrollTo(0, 0)` on pathname change. Place it inside `<BrowserRouter>` in `RouterContent`.
 
-Key fixes:
-- `sandbox="allow-scripts allow-same-origin allow-popups"` — explicitly permits the iframe content to run
-- `colorScheme: "light"` — ensures the iframe renders with its native white background (Termly uses light theme)
-- Loading spinner while iframe loads
-- Fallback link if iframe fails entirely
-- `onLoad`/`onError` handlers for state management
+**Files**: Create `src/components/ScrollToTop.tsx`, edit `src/App.tsx` (add import + `<ScrollToTop />` at line 100).
+
+### 5. Lock body scroll when JumBot is open on mobile
+
+Add a `useEffect` in `JumBot` (around line 184) that sets `document.body.style.overflow = 'hidden'` when the chat is open, and restores on close/unmount. Same pattern as Navbar line 55-64.
+
+**File**: `src/components/jumbot/JumBot.tsx`
+
+### 6. AI Generator — resolved by fix #1
+
+The `npm:` import breakage cascades to all edge function deployments. Fixing #1 unblocks the AI generator.
+
+---
+
+### Files Changed
 
 | File | Change |
 |---|---|
-| `src/pages/Terms.tsx` | Add loading/error states, sandbox permissions, fallback link |
+| 5 edge function `index.ts` files | `npm:` → `https://esm.sh/` import |
+| `src/components/layout/Navbar.tsx` | Fixed-position mobile menu; Edit Profile in desktop dropdown |
+| `src/components/ScrollToTop.tsx` | New — scroll to top on route change |
+| `src/App.tsx` | Import + render `<ScrollToTop />` |
+| `src/components/jumbot/JumBot.tsx` | Body scroll lock when open |
 
