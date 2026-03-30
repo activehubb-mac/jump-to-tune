@@ -3108,6 +3108,7 @@ export type Database = {
           founding_user: boolean
           id: string
           legacy_subscription_ended: boolean
+          revenuecat_original_transaction_id: string | null
           status: Database["public"]["Enums"]["subscription_status"]
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -3123,6 +3124,7 @@ export type Database = {
           founding_user?: boolean
           id?: string
           legacy_subscription_ended?: boolean
+          revenuecat_original_transaction_id?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -3138,6 +3140,7 @@ export type Database = {
           founding_user?: boolean
           id?: string
           legacy_subscription_ended?: boolean
+          revenuecat_original_transaction_id?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null

@@ -186,13 +186,7 @@ export function JumBot() {
   }, [messages]);
 
   useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 200);
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
+    if (isOpen) setTimeout(() => inputRef.current?.focus(), 200);
   }, [isOpen]);
 
   const handleSend = () => {
