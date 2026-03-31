@@ -1,26 +1,16 @@
-import { AbsoluteFill, useCurrentFrame, spring, useVideoConfig, interpolate, Img, staticFile } from "remotion";
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Video, staticFile } from "remotion";
 import React from "react";
 import { loadFont } from "@remotion/google-fonts/PlayfairDisplay";
 import { EqualizerBars } from "../components/EqualizerBars";
 
 const { fontFamily: playfair } = loadFont("normal", { weights: ["700"], subsets: ["latin"] });
 
-// Full Avatar Performance Scene
 export const CoverArtScene: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
   // Ken Burns slow zoom
-  const kenBurns = interpolate(frame, [0, 240], [1.0, 1.1], { extrapolateRight: "clamp" });
-
-  // Head bob - stronger here
-  const headBob = Math.sin(frame * 0.18) * 15;
-
-  // Beat pulse - stronger
-  const beatPulse = 1 + Math.sin(frame * 0.35) * 0.025;
-
-  // Rotation drift
-  const rotDrift = Math.sin(frame * 0.1) * 2;
+  const kenBurns = interpolate(frame, [0, 260], [1.0, 1.08], { extrapolateRight: "clamp" });
 
   // Gold light leak pulsing
   const lightPulse = interpolate(Math.sin(frame * 0.08), [-1, 1], [0.1, 0.35]);
@@ -48,18 +38,19 @@ export const CoverArtScene: React.FC = () => {
         opacity: lightPulse,
       }} />
 
-      {/* Avatar - large cinematic fill */}
+      {/* Avatar video - large cinematic fill */}
       <div style={{
         position: "absolute",
         top: 200, left: 80, right: 80, bottom: 800,
         display: "flex", justifyContent: "center", alignItems: "center",
         overflow: "hidden", borderRadius: 60,
+        transform: `scale(${kenBurns})`,
       }}>
-        <Img
-          src={staticFile("images/ai-avatar.png")}
+        <Video
+          src={staticFile("videos/avatar-performance.mp4")}
+          volume={0}
           style={{
-            width: "110%", height: "110%", objectFit: "cover",
-            transform: `scale(${kenBurns * beatPulse}) translateY(${headBob}px) rotate(${rotDrift}deg)`,
+            width: "100%", height: "100%", objectFit: "cover",
           }}
         />
       </div>
