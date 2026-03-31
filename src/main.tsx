@@ -44,14 +44,13 @@ async function checkVersion(): Promise<boolean> {
       if (!reloaded) return false;
       return true;
     }
-      return true;
-    }
 
     // Secondary: localStorage fallback (first visit after deploy)
     const saved = localStorage.getItem('app-version');
     if (saved && saved !== v) {
       localStorage.setItem('app-version', v);
-      await nukeCachesAndReload();
+      const reloaded = await nukeCachesAndReload();
+      if (!reloaded) return false;
       return true;
     }
 
