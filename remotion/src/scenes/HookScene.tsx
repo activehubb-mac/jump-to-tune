@@ -1,4 +1,4 @@
-import { AbsoluteFill, useCurrentFrame, spring, useVideoConfig, interpolate } from "remotion";
+import { AbsoluteFill, useCurrentFrame, spring, useVideoConfig, interpolate, Img, staticFile } from "remotion";
 import React from "react";
 import { loadFont } from "@remotion/google-fonts/PlayfairDisplay";
 
@@ -8,45 +8,59 @@ export const HookScene: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const titleScale = spring({ frame: frame - 30, fps, config: { damping: 200 } });
-  const titleOp = interpolate(frame, [30, 60], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const subtitleOp = interpolate(frame, [55, 85], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const lineWidth = interpolate(frame, [20, 70], [0, 600], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  // Gold flash burst
+  const flashOp = interpolate(frame, [0, 10, 35], [0, 0.4, 0], { extrapolateRight: "clamp" });
 
-  // Gold flash
-  const flashOp = interpolate(frame, [0, 15, 40], [0, 0.3, 0], { extrapolateRight: "clamp" });
+  // Logo scale in
+  const logoScale = spring({ frame: frame - 15, fps, config: { damping: 15 } });
+  const logoOp = interpolate(frame, [15, 35], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+
+  // Tagline
+  const tagOp = interpolate(frame, [50, 70], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const tagY = interpolate(frame, [50, 70], [40, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+
+  // Gold lines
+  const lineWidth = interpolate(frame, [10, 60], [0, 800], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
   return (
-    <AbsoluteFill style={{ background: "linear-gradient(180deg, #141414 0%, #0a0a0a 60%, #141414 100%)", justifyContent: "center", alignItems: "center" }}>
+    <AbsoluteFill style={{ background: "linear-gradient(180deg, #0a0a0a 0%, #141414 60%, #0a0a0a 100%)", justifyContent: "center", alignItems: "center" }}>
       {/* Gold flash */}
       <div style={{
         position: "absolute", inset: 0,
-        background: "radial-gradient(circle at 50% 50%, rgba(184,166,117,0.5) 0%, transparent 60%)",
+        background: "radial-gradient(circle at 50% 50%, rgba(184,166,117,0.6) 0%, transparent 60%)",
         opacity: flashOp,
       }} />
 
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 40 }}>
-        {/* Gold line */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 60 }}>
+        {/* Gold line top */}
         <div style={{ width: lineWidth, height: 3, background: "linear-gradient(90deg, transparent, #B8A675, transparent)" }} />
 
-        {/* Main title */}
+        {/* JumTunes Logo */}
         <div style={{
-          fontFamily: playfair, fontSize: 140, fontWeight: 700, color: "#B8A675",
-          opacity: titleOp, transform: `scale(${0.95 + titleScale * 0.05})`,
-          textAlign: "center", lineHeight: 1.1, letterSpacing: -2,
+          opacity: logoOp,
+          transform: `scale(${0.8 + logoScale * 0.2})`,
         }}>
-          Build Your{"\n"}Artist
+          <Img
+            src={staticFile("images/jumtunes-logo.png")}
+            style={{ width: 800, height: "auto", objectFit: "contain" }}
+          />
         </div>
 
-        {/* Subtitle */}
+        {/* Tagline */}
         <div style={{
-          fontSize: 52, color: "rgba(255,255,255,0.6)", fontFamily: "sans-serif",
-          opacity: subtitleOp, letterSpacing: 12, textTransform: "uppercase",
+          opacity: tagOp,
+          transform: `translateY(${tagY}px)`,
+          textAlign: "center",
         }}>
-          Powered by JumTunes
+          <div style={{
+            fontFamily: playfair, fontSize: 100, fontWeight: 700,
+            color: "#B8A675", letterSpacing: 3, lineHeight: 1.2,
+          }}>
+            Welcome to JumTunes
+          </div>
         </div>
 
-        {/* Gold line */}
+        {/* Gold line bottom */}
         <div style={{ width: lineWidth, height: 3, background: "linear-gradient(90deg, transparent, #B8A675, transparent)" }} />
       </div>
     </AbsoluteFill>

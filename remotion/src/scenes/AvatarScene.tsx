@@ -1,100 +1,104 @@
 import { AbsoluteFill, useCurrentFrame, spring, useVideoConfig, interpolate, Img, staticFile } from "remotion";
 import React from "react";
 import { loadFont } from "@remotion/google-fonts/PlayfairDisplay";
-import { PhoneFrame } from "../components/PhoneFrame";
+import { EqualizerBars } from "../components/EqualizerBars";
 
 const { fontFamily: playfair } = loadFont("normal", { weights: ["700"], subsets: ["latin"] });
 
 export const AvatarScene: React.FC = () => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
 
-  const phoneScale = spring({ frame: frame - 10, fps, config: { damping: 200 } });
-  const phoneOp = interpolate(frame, [10, 40], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  // Avatar entrance
+  const avatarScale = spring({ frame: frame - 5, fps, config: { damping: 200 } });
+  const avatarOp = interpolate(frame, [5, 30], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
-  // Avatar reveal - unblur effect
-  const avatarDelay = 50;
-  const avatarProgress = spring({ frame: frame - avatarDelay, fps, config: { damping: 200 } });
-  const avatarBlur = interpolate(avatarProgress, [0, 1], [30, 0]);
-  const avatarScale = interpolate(avatarProgress, [0, 1], [1.15, 1]);
+  // Ken Burns zoom
+  const kenBurns = interpolate(frame, [0, 180], [1.0, 1.06], { extrapolateRight: "clamp" });
 
-  // Label
-  const labelOp = interpolate(frame, [90, 120], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  // Head bob
+  const headBob = Math.sin(frame * 0.15) * 10;
 
-  // Scanning line effect
-  const scanY = interpolate(frame, [avatarDelay, avatarDelay + 60], [0, 100], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  // Beat pulse
+  const beatPulse = 1 + Math.sin(frame * 0.3) * 0.015;
 
-  // Title
-  const titleSpring = spring({ frame: frame - 20, fps, config: { damping: 200 } });
+  // Slight rotation
+  const rotDrift = Math.sin(frame * 0.08) * 1.2;
+
+  // Gold light leak
+  const lightLeakOp = interpolate(Math.sin(frame * 0.06), [-1, 1], [0.05, 0.2]);
+
+  // Vignette
+  const vignetteOp = 0.7;
+
+  // Simulated navbar
+  const navOp = interpolate(frame, [10, 30], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
   return (
-    <AbsoluteFill style={{ background: "linear-gradient(180deg, #0d0d0d 0%, #141414 50%, #0d0d0d 100%)", justifyContent: "center", alignItems: "center" }}>
-      {/* Title at top */}
+    <AbsoluteFill style={{ background: "#0a0a0a" }}>
+      {/* Gold light leak behind avatar */}
       <div style={{
-        position: "absolute", top: 280,
-        fontFamily: playfair, fontSize: 100, fontWeight: 700,
-        color: "#B8A675", opacity: titleSpring, letterSpacing: 3,
+        position: "absolute", inset: 0,
+        background: "radial-gradient(ellipse at 50% 40%, rgba(184,166,117,0.3) 0%, transparent 60%)",
+        opacity: lightLeakOp,
+      }} />
+
+      {/* Avatar - fills most of frame */}
+      <div style={{
+        position: "absolute",
+        top: 400, left: 0, right: 0, bottom: 600,
+        display: "flex", justifyContent: "center", alignItems: "center",
+        opacity: avatarOp,
       }}>
-        Create Your Identity
+        <div style={{
+          width: 1800, height: 1800, borderRadius: 60, overflow: "hidden",
+          border: "4px solid rgba(184,166,117,0.3)",
+          boxShadow: "0 40px 120px rgba(0,0,0,0.8), 0 0 80px rgba(184,166,117,0.1)",
+          transform: `scale(${(0.9 + avatarScale * 0.1) * kenBurns * beatPulse}) translateY(${headBob}px) rotate(${rotDrift}deg)`,
+        }}>
+          <Img
+            src={staticFile("images/ai-avatar.png")}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </div>
       </div>
 
-      {/* Phone with avatar */}
+      {/* Vignette overlay */}
       <div style={{
-        opacity: phoneOp,
-        transform: `scale(${0.9 + phoneScale * 0.1})`,
-        marginTop: 100,
+        position: "absolute", inset: 0,
+        background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%)",
+        opacity: vignetteOp,
+        pointerEvents: "none",
+      }} />
+
+      {/* Simulated JumTunes navbar */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0,
+        height: 180, opacity: navOp,
+        background: "linear-gradient(180deg, rgba(10,10,10,0.95) 0%, transparent 100%)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "0 80px",
       }}>
-        <PhoneFrame>
-          <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 60 }}>
-            {/* Avatar container */}
-            <div style={{
-              width: 500, height: 500, borderRadius: "50%",
-              overflow: "hidden", position: "relative",
-              border: "4px solid rgba(184,166,117,0.5)",
-              boxShadow: "0 0 60px rgba(184,166,117,0.2)",
-            }}>
-              <Img
-                src={staticFile("images/avatar.jpg")}
-                style={{
-                  width: "100%", height: "100%", objectFit: "cover",
-                  filter: `blur(${avatarBlur}px)`,
-                  transform: `scale(${avatarScale})`,
-                }}
-              />
-              {/* Scan line */}
-              {frame >= avatarDelay && frame < avatarDelay + 60 && (
-                <div style={{
-                  position: "absolute", left: 0, right: 0, top: `${scanY}%`,
-                  height: 4, background: "linear-gradient(90deg, transparent, #B8A675, transparent)",
-                  boxShadow: "0 0 20px rgba(184,166,117,0.5)",
-                }} />
-              )}
-            </div>
+        <Img
+          src={staticFile("images/jumtunes-logo.png")}
+          style={{ height: 80, width: "auto", objectFit: "contain" }}
+        />
+      </div>
 
-            {/* Artist name label */}
-            <div style={{
-              marginTop: 50, opacity: labelOp, textAlign: "center",
-            }}>
-              <div style={{ fontSize: 56, fontWeight: 700, color: "#fff", fontFamily: playfair }}>
-                Kael Rivers
-              </div>
-              <div style={{ fontSize: 32, color: "#B8A675", marginTop: 10, letterSpacing: 4, textTransform: "uppercase" }}>
-                Hip-Hop · Artist
-              </div>
-            </div>
+      {/* Equalizer at bottom */}
+      <div style={{ position: "absolute", bottom: 400, left: 0, right: 0 }}>
+        <EqualizerBars frame={frame} barCount={20} height={200} />
+      </div>
 
-            {/* AI generating badge */}
-            <div style={{
-              marginTop: 40, opacity: labelOp,
-              padding: "16px 40px", borderRadius: 30,
-              background: "rgba(184,166,117,0.15)",
-              border: "1px solid rgba(184,166,117,0.3)",
-              fontSize: 28, color: "#B8A675", letterSpacing: 2,
-            }}>
-              ✨ AI Generated
-            </div>
-          </div>
-        </PhoneFrame>
+      {/* Artist name overlay */}
+      <div style={{
+        position: "absolute", bottom: 650, left: 0, right: 0,
+        textAlign: "center",
+        opacity: interpolate(frame, [40, 60], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+      }}>
+        <div style={{ fontSize: 48, color: "rgba(255,255,255,0.5)", letterSpacing: 8, textTransform: "uppercase" }}>
+          The First AI Music Platform
+        </div>
       </div>
     </AbsoluteFill>
   );

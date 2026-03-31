@@ -1,76 +1,109 @@
 import { AbsoluteFill, useCurrentFrame, spring, useVideoConfig, interpolate, Img, staticFile } from "remotion";
 import React from "react";
 import { loadFont } from "@remotion/google-fonts/PlayfairDisplay";
+import { EqualizerBars } from "../components/EqualizerBars";
 
 const { fontFamily: playfair } = loadFont("normal", { weights: ["700"], subsets: ["latin"] });
 
+// Full Avatar Performance Scene
 export const CoverArtScene: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const titleSpring = spring({ frame: frame - 10, fps, config: { damping: 200 } });
+  // Ken Burns slow zoom
+  const kenBurns = interpolate(frame, [0, 240], [1.0, 1.1], { extrapolateRight: "clamp" });
 
-  // Cover art reveal - dramatic unblur
-  const coverDelay = 30;
-  const coverProgress = spring({ frame: frame - coverDelay, fps, config: { damping: 100 } });
-  const coverBlur = interpolate(coverProgress, [0, 1], [40, 0]);
-  const coverScale = spring({ frame: frame - coverDelay, fps, config: { damping: 15 } });
-  const coverRotate = interpolate(coverProgress, [0, 1], [-5, 0]);
+  // Head bob - stronger here
+  const headBob = Math.sin(frame * 0.18) * 15;
 
-  // Glow pulse
-  const glowOp = interpolate(Math.sin(frame * 0.05), [-1, 1], [0.1, 0.3]);
+  // Beat pulse - stronger
+  const beatPulse = 1 + Math.sin(frame * 0.35) * 0.025;
 
-  const labelOp = interpolate(frame, [100, 130], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  // Rotation drift
+  const rotDrift = Math.sin(frame * 0.1) * 2;
+
+  // Gold light leak pulsing
+  const lightPulse = interpolate(Math.sin(frame * 0.08), [-1, 1], [0.1, 0.35]);
+
+  // Track title entrance
+  const titleOp = interpolate(frame, [30, 60], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const titleY = interpolate(frame, [30, 60], [50, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+
+  // Particle burst at start
+  const burstOp = interpolate(frame, [0, 10, 40], [0, 0.5, 0], { extrapolateRight: "clamp" });
 
   return (
-    <AbsoluteFill style={{ background: "linear-gradient(180deg, #0d0d0d 0%, #141414 50%, #0d0d0d 100%)", justifyContent: "center", alignItems: "center" }}>
-      {/* Title */}
+    <AbsoluteFill style={{ background: "#0a0a0a" }}>
+      {/* Particle burst */}
       <div style={{
-        position: "absolute", top: 400,
-        fontFamily: playfair, fontSize: 100, fontWeight: 700,
-        color: "#B8A675", opacity: titleSpring, letterSpacing: 3,
+        position: "absolute", inset: 0,
+        background: "radial-gradient(circle at 50% 45%, rgba(184,166,117,0.5) 0%, transparent 50%)",
+        opacity: burstOp,
+      }} />
+
+      {/* Gold light leak */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "radial-gradient(ellipse at 50% 35%, rgba(184,166,117,0.25) 0%, transparent 55%)",
+        opacity: lightPulse,
+      }} />
+
+      {/* Avatar - large cinematic fill */}
+      <div style={{
+        position: "absolute",
+        top: 200, left: 80, right: 80, bottom: 800,
+        display: "flex", justifyContent: "center", alignItems: "center",
+        overflow: "hidden", borderRadius: 60,
       }}>
-        Generate Cover Art
+        <Img
+          src={staticFile("images/ai-avatar.png")}
+          style={{
+            width: "110%", height: "110%", objectFit: "cover",
+            transform: `scale(${kenBurns * beatPulse}) translateY(${headBob}px) rotate(${rotDrift}deg)`,
+          }}
+        />
       </div>
 
-      {/* Cover art */}
+      {/* Cinematic vignette */}
       <div style={{
-        position: "relative", marginTop: 150,
-        transform: `scale(${0.8 + coverScale * 0.2}) rotate(${coverRotate}deg)`,
-      }}>
-        {/* Gold glow behind */}
-        <div style={{
-          position: "absolute", inset: -60,
-          background: "radial-gradient(circle, rgba(184,166,117,0.3) 0%, transparent 70%)",
-          opacity: glowOp * coverProgress,
-        }} />
+        position: "absolute", inset: 0,
+        background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.85) 100%)",
+        pointerEvents: "none",
+      }} />
 
+      {/* Top/bottom bars for cinematic feel */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, height: 250,
+        background: "linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%)",
+      }} />
+      <div style={{
+        position: "absolute", bottom: 0, left: 0, right: 0, height: 900,
+        background: "linear-gradient(0deg, rgba(0,0,0,0.95) 0%, transparent 100%)",
+      }} />
+
+      {/* Equalizer bars */}
+      <div style={{ position: "absolute", bottom: 500, left: 0, right: 0 }}>
+        <EqualizerBars frame={frame} barCount={24} height={300} />
+      </div>
+
+      {/* Track title overlay */}
+      <div style={{
+        position: "absolute", bottom: 850, left: 0, right: 0,
+        textAlign: "center",
+        opacity: titleOp,
+        transform: `translateY(${titleY}px)`,
+      }}>
         <div style={{
-          width: 900, height: 900, borderRadius: 40,
-          overflow: "hidden",
-          boxShadow: "0 40px 100px rgba(0,0,0,0.8), 0 0 60px rgba(184,166,117,0.15)",
-          border: "3px solid rgba(184,166,117,0.3)",
+          fontFamily: playfair, fontSize: 80, fontWeight: 700,
+          color: "#fff", letterSpacing: 4,
         }}>
-          <Img
-            src={staticFile("images/cover-art.jpg")}
-            style={{
-              width: "100%", height: "100%", objectFit: "cover",
-              filter: `blur(${coverBlur}px)`,
-            }}
-          />
+          Midnight Empire
         </div>
-      </div>
-
-      {/* Label */}
-      <div style={{
-        position: "absolute", bottom: 600,
-        opacity: labelOp, textAlign: "center",
-      }}>
-        <div style={{ fontSize: 56, fontWeight: 700, color: "#fff", fontFamily: playfair }}>
-          Golden Hour EP
-        </div>
-        <div style={{ fontSize: 32, color: "#B8A675", marginTop: 10, letterSpacing: 4 }}>
-          ✨ AI-GENERATED ARTWORK
+        <div style={{
+          fontSize: 40, color: "#B8A675", letterSpacing: 8,
+          marginTop: 15, textTransform: "uppercase",
+        }}>
+          ♫ Now Playing
         </div>
       </div>
     </AbsoluteFill>
