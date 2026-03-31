@@ -1,56 +1,93 @@
 
 
-## Fix 6 Issues: QA Reset, Navbar Layout, Edit Profile, Scroll-to-Top, JumBot Scroll Lock, AI Generator
+## Fix QA Reset — Test User Cleanup Failing
 
-### 1. Fix `npm:` imports in 5 edge functions (fixes QA reset + AI generator)
+### Problem
+The "Reset All Data" button partially works: dummy assets (204) and test runs (204) delete fine. But `cleanup-all-test-users` fails on all 98 test users (`deleted: 0, errors: 98`). The error from `deleteUser` is silently swallowed — we don't know the specific failure reason.
 
-**Root cause**: 5 edge functions use `npm:@supabase/supabase-js@2.57.2` which fails in the edge runtime. All other functions use `https://esm.sh/`.
+Additionally, `listUsers({ perPage: 100 })` only fetches 100 users max per page, so if more than 100 test users accumulate, some won't even be attempted.
 
-**Fix**: Change import in these files from `npm:` to `https://esm.sh/`:
-- `supabase/functions/qa-admin/index.ts` (line 2)
-- `supabase/functions/process-message-expiry/index.ts` (line 2)
-- `supabase/functions/purchase-message-credits/index.ts` (line 3)
-- `supabase/functions/refund-store-order/index.ts` (line 3)
-- `supabase/functions/send-paid-message/index.ts` (line 2)
+### Root Cause (likely)
+Supabase `auth.admin.deleteUser` fails when the user has related rows in tables with foreign key constraints that don't cascade (e.g., `profiles`, `credit_wallets`, `qa_test_runs.test_user_id`, etc.). The function doesn't clean up dependent data before attempting deletion. It also doesn't log the actual error message, making debugging blind.
 
-This unblocks QA reset and likely fixes the AI generator since broken deployments cascade.
+### Plan
 
-### 2. Fix mobile menu displacing navbar header
+**File: `supabase/functions/qa-admin/index.ts`**
 
-**Root cause**: The mobile menu (line 400-651) renders inline inside the `<nav>`, pushing content down. It uses `relative` positioning with `bg-background` but sits inside the nav flow.
+1. **Log and return error details** in `cleanup-all-test-users` — capture the actual error message from each `deleteUser` call so we can see what's blocking deletion.
 
-**Fix**: Change the mobile nav container at line 401 to `position: fixed` with `inset-x-0` and `top: calc(4rem + env(safe-area-inset-top))`, so it overlays content instead of displacing the header. Add `bottom-0` and `overflow-y-auto` for full-screen scrollable overlay.
+2. **Clean up dependent data before deleting users** — before calling `deleteUser`, delete related rows from tables that reference `auth.users`:
+   - `profiles` (user_id)
+   - `credit_wallets` (user_id)
+   - `user_roles` (user_id)
+   - `followers` (follower_id or following_id)
+   - Any other tables with FK to auth.users
 
-### 3. Add "Edit Profile" to desktop dropdown
+3. **Paginate user listing** — loop through pages to handle >100 test users.
 
-**Root cause**: Desktop dropdown (lines 267-364) has no "Edit Profile" option. Only the mobile menu (line 618-627) has it.
+4. **Add error summary to response** — return the first few error messages so the admin UI can display what went wrong.
 
-**Fix**: Add a `DropdownMenuItem` after "Account Settings" (line 356) with `onClick={() => setIsProfileOpen(true)}`, using the `User` icon and "Edit Profile" label. Import `Edit` from lucide-react or reuse `User`.
+Changes in `cleanup-all-test-users` case (lines 148-163):
 
-### 4. Scroll to top on route change
+```typescript
+case "cleanup-all-test-users": {
+  // Paginate to get ALL test users
+  let allTestUsers: any[] = [];
+  let page = 1;
+  while (true) {
+    const { data: users } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 100 });
+    const batch = (users?.users || []).filter((u: any) => u.user_metadata?.is_test_user === true);
+    allTestUsers.push(...batch);
+    if ((users?.users || []).length < 100) break;
+    page++;
+  }
 
-**Root cause**: No global scroll-to-top on navigation. React Router preserves scroll position.
+  let deleted = 0;
+  let errors = 0;
+  const errorMessages: string[] = [];
 
-**Fix**: Create `src/components/ScrollToTopOnNavigate.tsx` using `useLocation` + `useEffect` calling `window.scrollTo(0, 0)` on `location.pathname` change. Add it inside `RouterContent` in `src/App.tsx`.
+  for (const u of allTestUsers) {
+    try {
+      // Clean up dependent data first
+      await supabaseAdmin.from('credit_wallets').delete().eq('user_id', u.id);
+      await supabaseAdmin.from('user_roles').delete().eq('user_id', u.id);
+      await supabaseAdmin.from('followers').delete().or(`follower_id.eq.${u.id},following_id.eq.${u.id}`);
+      await supabaseAdmin.from('notifications').delete().eq('user_id', u.id);
+      await supabaseAdmin.from('profiles').delete().eq('id', u.id);
 
-### 5. Lock body scroll when JumBot is open
+      const { error } = await supabaseAdmin.auth.admin.deleteUser(u.id);
+      if (error) {
+        errors++;
+        if (errorMessages.length < 3) errorMessages.push(`${u.email}: ${error.message}`);
+      } else {
+        deleted++;
+      }
+    } catch (e: any) {
+      errors++;
+      if (errorMessages.length < 3) errorMessages.push(`${u.email}: ${e.message}`);
+    }
+  }
 
-**Root cause**: JumBot (line 204) is a fixed overlay but doesn't prevent background scrolling. No `overflow: hidden` is set on body.
+  return new Response(JSON.stringify({
+    success: errors === 0,
+    deleted,
+    errors,
+    total: allTestUsers.length,
+    errorSamples: errorMessages,
+  }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+```
 
-**Fix**: Add a `useEffect` in the `JumBot` component (after line 190) that sets `document.body.style.overflow = 'hidden'` when open on mobile (`window.innerWidth < 640`), restoring on close/unmount. Same pattern as Navbar lines 55-64.
+**Also update `cleanup-test-user` (single)** with the same dependent-data cleanup pattern before `deleteUser`.
 
----
-
-### Technical Details
+### Files Changed
 
 | File | Change |
 |---|---|
-| 5 edge function `index.ts` files | `npm:` to `https://esm.sh/` import |
-| `src/components/layout/Navbar.tsx` | Fixed-position mobile menu; Edit Profile in desktop dropdown |
-| `src/components/ScrollToTopOnNavigate.tsx` | New component for scroll reset on route change |
-| `src/App.tsx` | Import + render `<ScrollToTopOnNavigate />` |
-| `src/components/jumbot/JumBot.tsx` | Body scroll lock when open on mobile |
+| `supabase/functions/qa-admin/index.ts` | Add dependent data cleanup before user deletion, pagination, error reporting |
 
 ### Not Touched
-- Payments, credits, pricing, store, existing AI tools logic
+- Payments, credits, AI tools, store, frontend components
 
