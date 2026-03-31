@@ -15,7 +15,7 @@ export const RemotionRoot = () => (
     <Composition
       id="tour"
       component={TourVideo}
-      durationInFrames={2400}
+      durationInFrames={2382}
       fps={30}
       width={1920}
       height={1080}
