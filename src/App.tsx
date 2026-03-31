@@ -99,6 +99,7 @@ function RouterContent() {
 
   return (
     <>
+      <ScrollToTopOnNavigate />
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />

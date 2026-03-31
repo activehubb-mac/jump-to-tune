@@ -189,6 +189,16 @@ export function JumBot() {
     if (isOpen) setTimeout(() => inputRef.current?.focus(), 200);
   }, [isOpen]);
 
+  // Lock body scroll when JumBot is open on mobile
+  useEffect(() => {
+    if (isOpen && window.innerWidth < 640) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
   const handleSend = () => {
     if (!input.trim()) return;
     sendMessage(input);

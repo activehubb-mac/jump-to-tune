@@ -355,6 +355,13 @@ export function Navbar() {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem 
+                        onClick={() => setIsProfileOpen(true)}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <User className="w-4 h-4" />
+                        Edit Profile
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
                         onClick={handleSignOut}
                         className="flex items-center gap-2 cursor-pointer text-destructive hover:bg-destructive/10 focus:bg-destructive/10 focus:text-destructive"
                       >
