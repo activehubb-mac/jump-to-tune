@@ -30,8 +30,13 @@ const composition = await selectComposition({
 });
 console.log("Composition:", composition.width, "x", composition.height, "@", composition.fps, "fps", composition.durationInFrames, "frames");
 
-const finalOutput = process.argv[3] || (compositionId === "main" ? "/mnt/documents/jumtunes-demo-v4.mp4" : "/mnt/documents/jumtunes-tour.mp4");
+const finalOutput = process.argv[3] || (compositionId === "main" ? "/mnt/documents/jumtunes-demo-v4.mp4" : "/mnt/documents/jumtunes-tour-v3.mp4");
 const silentOutput = finalOutput.replace(".mp4", "-silent.mp4");
+
+// Choose audio based on composition
+const audioFile = compositionId === "main"
+  ? path.resolve(__dirname, "../public/voiceover/demo-narration.mp3")
+  : path.resolve(__dirname, "../public/voiceover/tour-narration.mp3");
 
 console.log(`Rendering silent video to ${silentOutput}...`);
 await renderMedia({
@@ -47,11 +52,12 @@ await renderMedia({
 console.log("Silent render complete!");
 await browser.close({ silent: false });
 
-// Mux audio with ffmpeg
-const audioPath = path.resolve(__dirname, "../public/voiceover/demo-narration.mp3");
-console.log(`Muxing audio from ${audioPath}...`);
+// Mux audio with ffmpeg — use -shortest only if composition is main (short demo)
+// For tour, the video should match the full narration length
+console.log(`Muxing audio from ${audioFile}...`);
 try {
-  execSync(`ffmpeg -y -i "${silentOutput}" -i "${audioPath}" -c:v copy -c:a aac -b:a 192k -shortest "${finalOutput}"`, { stdio: "inherit" });
+  const shortestFlag = compositionId === "main" ? "-shortest" : "";
+  execSync(`ffmpeg -y -i "${silentOutput}" -i "${audioFile}" -c:v copy -c:a aac -b:a 192k ${shortestFlag} "${finalOutput}"`, { stdio: "inherit" });
   execSync(`rm "${silentOutput}"`);
   console.log(`Final output with audio: ${finalOutput}`);
 } catch (e) {
