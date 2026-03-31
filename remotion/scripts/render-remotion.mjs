@@ -1,5 +1,6 @@
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition, openBrowser } from "@remotion/renderer";
+import { execSync } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -29,18 +30,31 @@ const composition = await selectComposition({
 });
 console.log("Composition:", composition.width, "x", composition.height, "@", composition.fps, "fps", composition.durationInFrames, "frames");
 
-const outputPath = process.argv[3] || (compositionId === "main" ? "/mnt/documents/jumtunes-demo-v3.mp4" : "/mnt/documents/jumtunes-tour.mp4");
-console.log(`Rendering to ${outputPath}...`);
+const finalOutput = process.argv[3] || (compositionId === "main" ? "/mnt/documents/jumtunes-demo-v4.mp4" : "/mnt/documents/jumtunes-tour.mp4");
+const silentOutput = finalOutput.replace(".mp4", "-silent.mp4");
+
+console.log(`Rendering silent video to ${silentOutput}...`);
 await renderMedia({
   composition,
   serveUrl: bundled,
   codec: "h264",
-  outputLocation: outputPath,
+  outputLocation: silentOutput,
   puppeteerInstance: browser,
   muted: true,
   concurrency: 1,
   crf: 18,
 });
-
-console.log(`Render complete! Output: ${outputPath}`);
+console.log("Silent render complete!");
 await browser.close({ silent: false });
+
+// Mux audio with ffmpeg
+const audioPath = path.resolve(__dirname, "../public/voiceover/demo-narration.mp3");
+console.log(`Muxing audio from ${audioPath}...`);
+try {
+  execSync(`ffmpeg -y -i "${silentOutput}" -i "${audioPath}" -c:v copy -c:a aac -b:a 192k -shortest "${finalOutput}"`, { stdio: "inherit" });
+  execSync(`rm "${silentOutput}"`);
+  console.log(`Final output with audio: ${finalOutput}`);
+} catch (e) {
+  console.error("Audio mux failed, using silent version:", e.message);
+  execSync(`mv "${silentOutput}" "${finalOutput}"`);
+}
