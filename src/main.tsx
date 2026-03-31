@@ -5,6 +5,14 @@ import "./index.css";
 console.log('[App] Build:', __BUILD_TIMESTAMP__, '| Version:', __APP_BUILD_VERSION__);
 
 async function nukeCachesAndReload() {
+  // Guard: only attempt one forced reload per session to prevent infinite loops
+  const reloadKey = 'pwa-reload-attempted';
+  if (sessionStorage.getItem(reloadKey)) {
+    console.log('[PWA] Already attempted reload this session — skipping to prevent loop');
+    return false;
+  }
+  sessionStorage.setItem(reloadKey, '1');
+
   console.log('[PWA] Stale bundle detected — clearing caches and reloading');
 
   if ('serviceWorker' in navigator) {
@@ -18,6 +26,7 @@ async function nukeCachesAndReload() {
   }
 
   window.location.reload();
+  return true;
 }
 
 async function checkVersion(): Promise<boolean> {
