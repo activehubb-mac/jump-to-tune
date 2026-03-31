@@ -3,65 +3,58 @@ import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
 import React from "react";
 import { GoldParticles } from "./components/GoldParticles";
+import { CaptionOverlay } from "./components/CaptionOverlay";
 import { HookScene } from "./scenes/HookScene";
 import { AvatarScene } from "./scenes/AvatarScene";
 import { UploadScene } from "./scenes/UploadScene";
 import { CoverArtScene } from "./scenes/CoverArtScene";
-import { VideoGenScene } from "./scenes/VideoGenScene";
 import { ClosingScene } from "./scenes/ClosingScene";
 
-const T = 20; // transition duration in frames
+const T = 20; // transition duration
 
-// Scene durations (before overlap subtraction):
-// Hook: 140, Avatar: 230, Upload: 170, CoverArt: 200, VideoGen: 170, Closing: 110
-// Total with 5 transitions of 20 frames: 140+230+170+200+170+110 - 5*20 = 920. Composition is 900, close enough.
+// 5 scenes: Hook(100) + Avatar(200) + Montage(290) + Performance(260) + Closing(130)
+// Total: 980 - 4*20 = 900 frames
 
 export const MainVideo: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: "#0a0a0a" }}>
       <TransitionSeries>
-        <TransitionSeries.Sequence durationInFrames={140}>
+        <TransitionSeries.Sequence durationInFrames={100}>
           <HookScene />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
           presentation={fade()}
           timing={linearTiming({ durationInFrames: T })}
         />
-        <TransitionSeries.Sequence durationInFrames={230}>
+        <TransitionSeries.Sequence durationInFrames={200}>
           <AvatarScene />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
           presentation={fade()}
           timing={linearTiming({ durationInFrames: T })}
         />
-        <TransitionSeries.Sequence durationInFrames={170}>
+        <TransitionSeries.Sequence durationInFrames={290}>
           <UploadScene />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
           presentation={fade()}
           timing={linearTiming({ durationInFrames: T })}
         />
-        <TransitionSeries.Sequence durationInFrames={200}>
+        <TransitionSeries.Sequence durationInFrames={260}>
           <CoverArtScene />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
           presentation={fade()}
           timing={linearTiming({ durationInFrames: T })}
         />
-        <TransitionSeries.Sequence durationInFrames={170}>
-          <VideoGenScene />
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition
-          presentation={fade()}
-          timing={linearTiming({ durationInFrames: T })}
-        />
-        <TransitionSeries.Sequence durationInFrames={110}>
+        <TransitionSeries.Sequence durationInFrames={130}>
           <ClosingScene />
         </TransitionSeries.Sequence>
       </TransitionSeries>
 
-      {/* Persistent gold particles over everything */}
+      {/* Persistent layers */}
       <GoldParticles />
+      <CaptionOverlay />
     </AbsoluteFill>
   );
 };
