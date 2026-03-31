@@ -13,27 +13,23 @@ export const TourHomepage: React.FC = () => {
   const titleOp = interpolate(frame, [0, 25], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const titleY = interpolate(frame, [0, 25], [20, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
-  // Screenshot with slow vertical pan (scrolling effect)
   const screenOp = interpolate(frame, [15, 40], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const screenY = interpolate(frame, [15, 40], [30, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const screenPanY = interpolate(frame, [0, 300], [0, -60], { extrapolateRight: "clamp" });
-  const screenScale = interpolate(frame, [0, 300], [1.0, 1.06], { extrapolateRight: "clamp" });
+  const screenPanY = interpolate(frame, [0, 330], [0, -80], { extrapolateRight: "clamp" });
+  const screenScale = interpolate(frame, [0, 330], [1.0, 1.06], { extrapolateRight: "clamp" });
 
-  // Feature callouts staggered
   const callouts = [
-    { text: "Trending Tracks", icon: "🔥", delay: 50, y: 200 },
-    { text: "Featured Artist Spotlight", icon: "⭐", delay: 100, y: 260 },
-    { text: "AI-Powered Discovery", icon: "🤖", delay: 150, y: 320 },
-    { text: "Curated Playlists", icon: "🎵", delay: 200, y: 380 },
+    { text: "Trending Tracks", icon: "🔥", delay: 50, sub: "Real-time popularity ranking" },
+    { text: "Featured Artist Spotlight", icon: "⭐", delay: 100, sub: "Discover new talent daily" },
+    { text: "AI-Powered Discovery", icon: "🤖", delay: 150, sub: "Smart recommendations" },
+    { text: "Curated Playlists", icon: "🎵", delay: 200, sub: "Genre & mood playlists" },
   ];
 
-  // Real artist avatar floating in
-  const artistOp = interpolate(frame, [120, 150], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const artistScale = spring({ frame: frame - 120, fps, config: { damping: 15 } });
+  const artistOp = interpolate(frame, [240, 270], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const artistScale = spring({ frame: frame - 240, fps, config: { damping: 15 } });
 
   return (
     <AbsoluteFill style={{ background: "linear-gradient(180deg, #0a0a0a 0%, #111 50%, #0a0a0a 100%)" }}>
-      {/* Section title */}
       <div style={{
         position: "absolute", top: 36, left: 70,
         opacity: titleOp, transform: `translateY(${titleY}px)`,
@@ -46,7 +42,6 @@ export const TourHomepage: React.FC = () => {
         </div>
       </div>
 
-      {/* Screenshot with vertical scroll pan */}
       <div style={{
         position: "absolute", top: 120, left: 50, right: 420, bottom: 30,
         borderRadius: 16, overflow: "hidden",
@@ -60,7 +55,6 @@ export const TourHomepage: React.FC = () => {
         </div>
       </div>
 
-      {/* Feature callouts on right side */}
       <div style={{ position: "absolute", right: 50, top: 140, width: 340 }}>
         {callouts.map((c) => {
           const op = interpolate(frame, [c.delay, c.delay + 20], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
@@ -68,32 +62,35 @@ export const TourHomepage: React.FC = () => {
           return (
             <div key={c.text} style={{
               opacity: op, transform: `translateX(${x}px)`,
-              padding: "14px 22px", borderRadius: 12, marginBottom: 16,
+              padding: "14px 22px", borderRadius: 12, marginBottom: 14,
               background: "linear-gradient(135deg, rgba(26,26,26,0.9) 0%, rgba(18,18,18,0.9) 100%)",
               border: "1px solid rgba(184,166,117,0.2)",
               boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-              display: "flex", alignItems: "center", gap: 14,
             }}>
-              <span style={{ fontSize: 28 }}>{c.icon}</span>
-              <span style={{ fontFamily: inter, fontSize: 17, fontWeight: 600, color: "#B8A675" }}>{c.text}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <span style={{ fontSize: 28 }}>{c.icon}</span>
+                <div>
+                  <div style={{ fontFamily: inter, fontSize: 17, fontWeight: 600, color: "#B8A675" }}>{c.text}</div>
+                  <div style={{ fontFamily: inter, fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{c.sub}</div>
+                </div>
+              </div>
             </div>
           );
         })}
 
-        {/* Real artist card */}
         <div style={{
           opacity: artistOp, transform: `scale(${0.9 + artistScale * 0.1})`,
-          marginTop: 20, padding: "16px 20px", borderRadius: 16,
+          marginTop: 16, padding: "16px 20px", borderRadius: 16,
           background: "linear-gradient(135deg, rgba(184,166,117,0.08) 0%, rgba(20,20,20,0.95) 100%)",
           border: "1px solid rgba(184,166,117,0.25)",
           display: "flex", alignItems: "center", gap: 16,
         }}>
           <div style={{ width: 56, height: 56, borderRadius: "50%", overflow: "hidden", border: "2px solid rgba(184,166,117,0.3)" }}>
-            <Img src={staticFile("images/real-artist-1.jpg")} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <Img src={staticFile("images/avatar-male-singer.png")} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           </div>
           <div>
-            <div style={{ fontFamily: inter, fontSize: 16, fontWeight: 600, color: "#fff" }}>DFG Prodigy</div>
-            <div style={{ fontFamily: inter, fontSize: 13, color: "rgba(255,255,255,0.4)" }}>Featured Artist • Killa Season</div>
+            <div style={{ fontFamily: inter, fontSize: 16, fontWeight: 600, color: "#fff" }}>Featured Artist</div>
+            <div style={{ fontFamily: inter, fontSize: 13, color: "rgba(255,255,255,0.4)" }}>AI-Powered Discovery</div>
           </div>
         </div>
       </div>
