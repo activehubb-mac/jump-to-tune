@@ -29,7 +29,7 @@ const composition = await selectComposition({
 });
 console.log("Composition:", composition.width, "x", composition.height, "@", composition.fps, "fps", composition.durationInFrames, "frames");
 
-const outputPath = process.argv[3] || "/mnt/documents/jumtunes-tour.mp4";
+const outputPath = process.argv[3] || (compositionId === "main" ? "/mnt/documents/jumtunes-demo-v3.mp4" : "/mnt/documents/jumtunes-tour.mp4");
 console.log(`Rendering to ${outputPath}...`);
 await renderMedia({
   composition,
