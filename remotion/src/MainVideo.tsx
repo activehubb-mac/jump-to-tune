@@ -55,6 +55,7 @@ export const MainVideo: React.FC = () => {
       {/* Persistent layers */}
       <GoldParticles />
       <CaptionOverlay />
+      <Audio src={staticFile("voiceover/demo-narration.mp3")} volume={1} />
     </AbsoluteFill>
   );
 };
