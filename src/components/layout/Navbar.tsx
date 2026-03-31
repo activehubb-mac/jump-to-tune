@@ -399,9 +399,9 @@ export function Navbar() {
           {/* Mobile Navigation */}
           {isOpen && (
             <div 
-              className="md:hidden py-4 overflow-y-auto overscroll-contain touch-pan-y relative bg-background"
+              className="fixed inset-x-0 bottom-0 md:hidden py-4 overflow-y-auto overscroll-contain touch-pan-y bg-background"
               style={{ 
-                maxHeight: 'calc(100vh - 4rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+                top: 'calc(4rem + env(safe-area-inset-top, 0px))',
                 WebkitOverflowScrolling: 'touch',
                 zIndex: 50,
               }}
