@@ -1,89 +1,78 @@
 
 
-## 4K Demo Ad Video — "Build My Artist" Flow
+## Remake Demo Video — Talking Avatar with Voiceover
 
-### What We're Building
-A 30-second, 9:16 vertical (2160×3840), dark luxury cinematic demo video rendered via Remotion. It walks through the Build My Artist journey: creating an avatar → uploading a track → generating cover art → generating a video — all presented as if happening in real-time within JumTunes.
+### What's Changing
 
-### Creative Direction
+The current video uses generic placeholder assets, text-only titles, and no audio. The new version will:
 
-**Movement: "Silent Studio Cinema"**
-- Dark backgrounds (#141414), soft gold (#B8A675) accents, warm charcoal (#6B6560) secondary
-- Slow reveals, dramatic scale shifts, parallax depth
-- Gold light leaks and subtle grain texture
-- Typography: Inter (clean body) + Playfair Display (editorial headlines)
+1. Use the **user's uploaded avatar** (`0F43E362...PNG`) as the performing artist throughout
+2. Use the **real JumTunes logo** (`jumtunes-logo-test.png`)
+3. Add **ElevenLabs voiceover** narrating the provided script
+4. Show the avatar **"performing"** — with lip-sync-simulated motion, Ken Burns zoom, rhythmic pulses, and equalizer bars
+5. Display **captions** synced to the voiceover so viewers can read along
 
-**Motion system:**
-- Elements enter via scale-up from 0.95 + fade (smooth spring, damping: 200)
-- Scene transitions: wipe or cross-fade via `@remotion/transitions`
-- Accent moments: spring with slight overshoot (damping: 15)
-- Persistent floating gold particles throughout
+### Voiceover Script
+
+> "Welcome to JumTunes — the first AI music platform where creators turn ideas into real music, visuals, and income in seconds. Create. Share. Get paid. This is the future of music."
+
+Generated via ElevenLabs API (voice: "Brian" or similar deep cinematic male voice), saved to `remotion/public/voiceover/narration.mp3`. Audio plays throughout. The `muted: true` flag in the render script will be changed to `muted: false` — if the sandbox ffmpeg lacks AAC, we'll use `audioCodec: "pcm-16bit"` or post-process with ffmpeg to mux.
 
 ### Scene Breakdown (30s @ 30fps = 900 frames)
 
-| Scene | Frames | Content |
-|---|---|---|
-| 1. Hook | 0–120 | Dark void → gold particle burst → "Build Your Artist" title fades in with JumTunes wordmark |
-| 2. Avatar Creation | 120–330 | AI-generated avatar photo scales in like it's being created. Simulated UI frame around it. "Create Your Identity" text |
-| 3. Upload Track | 330–480 | Waveform animation draws across screen. Track title + artist name appear. "Upload Your Music" |
-| 4. Cover Art | 480–660 | AI-generated cover art reveals with a cinematic unblur effect. "Generate Cover Art" |
-| 5. Video Generation | 660–810 | Simulated video frames cascade/flip. "Create Your Video" |
-| 6. Closing | 810–900 | All assets compose into a final artist profile card. JumTunes logo. Gold shimmer. |
+| # | Scene | Frames | VO Segment | Visual |
+|---|---|---|---|---|
+| 1 | Logo Intro | 0–90 | "Welcome to JumTunes" | Real JumTunes logo (`jumtunes-logo-test.png`) scales in with gold flash |
+| 2 | Platform Reveal | 90–270 | "...the first AI music platform where creators turn ideas into real music, visuals, and income in seconds" | Avatar shown full-screen with simulated JumTunes UI navbar. Ken Burns zoom, subtle head-bob drift, rhythmic scale pulse. Equalizer bars at bottom. |
+| 3 | Feature Montage | 270–540 | "Create. Share. Get paid." | Three quick beats — each word triggers a visual: (1) Avatar creating/generating, (2) Cover art reveal, (3) Gold coin/earnings animation. Punchy 90-frame segments. |
+| 4 | Avatar Performance | 540–780 | (instrumental beat / silence) | Full avatar performance scene — avatar fills frame with cinematic zoom, heavy equalizer, particle burst, track title overlay "Midnight Empire" |
+| 5 | Closing | 780–900 | "This is the future of music." | Avatar shrinks into profile card, stats appear, real JumTunes logo at bottom with tagline |
 
-### Asset Generation (Pre-render step)
-Before building the Remotion project, I'll use the AI image generation skill to create:
-1. **Avatar photo** — stylized artist portrait, dark/moody lighting
-2. **Cover art** — album artwork matching JumTunes aesthetic
-3. **UI mockup elements** — simulated phone frames / UI chrome (built in code as SVG/CSS)
+### Avatar "Performing" Effect
 
-### Technical Setup
+The uploaded AI avatar (static image) will be animated to simulate performance:
+- **Ken Burns zoom**: Scale from 1.0 → 1.08 over scene duration
+- **Head bob**: `translateY(Math.sin(frame * 0.15) * 12)`
+- **Beat pulse**: `scale(1 + Math.sin(frame * 0.3) * 0.02)` — rhythmic breathing
+- **Slight rotation drift**: `rotate(Math.sin(frame * 0.08) * 1.5)deg`
+- **Equalizer overlay**: 16 animated bars at bottom driven by `Math.sin(frame * speed + offset)`
+- **Vignette**: Dark gradient overlay from edges for cinematic depth
+- **Gold light leak**: Pulsing radial gradient behind avatar
 
-**Project structure:**
-```
-remotion/
-  src/
-    index.ts
-    Root.tsx
-    MainVideo.tsx
-    scenes/
-      HookScene.tsx
-      AvatarScene.tsx
-      UploadScene.tsx
-      CoverArtScene.tsx
-      VideoGenScene.tsx
-      ClosingScene.tsx
-    components/
-      GoldParticles.tsx
-      PhoneFrame.tsx
-      WaveformAnimation.tsx
-  public/
-    images/
-      avatar.png
-      cover-art.png
-  scripts/
-    render-remotion.mjs
-```
+### Captions
 
-**Composition:** 2160×3840, 30fps, 900 frames, codec h264, CRF 18 for quality.
+Captions will be rendered as styled text overlays synced to the voiceover timing. Each phrase appears/disappears in sync with the narration. Gold text on dark semi-transparent background strip at bottom of frame.
 
-### Rendering
-Programmatic render via `scripts/render-remotion.mjs` to `/mnt/documents/jumtunes-demo.mp4`.
+### Technical Steps
 
-### Steps
-1. Generate avatar + cover art images via AI gateway
-2. Scaffold Remotion project with all scenes
-3. Build persistent layers (gold particles, grain overlay)
-4. Build 6 scenes with staggered animations
-5. Wire with TransitionSeries
-6. Spot-check key frames
-7. Render final 4K MP4
+1. **Copy assets**: Upload the user's avatar PNG and JumTunes logo into `remotion/public/images/`
+2. **Generate voiceover**: Use ElevenLabs API via a script (`remotion/scripts/generate-voiceover.mjs`) to create `remotion/public/voiceover/narration.mp3`
+3. **Rewrite all 5 scenes** with new content as described above
+4. **Add CaptionOverlay component**: A persistent layer that shows caption text synced to frame ranges
+5. **Update MainVideo.tsx**: New 5-scene structure with `<Audio>` component for voiceover
+6. **Update Root.tsx**: Keep 2160×3840, 900 frames, 30fps
+7. **Update render script**: Remove `muted: true`, add audio codec handling
+8. **Render**: Output to `/mnt/documents/jumtunes-demo-v2.mp4`
 
 ### Files Changed
 
-| Location | Change |
+| File | Change |
 |---|---|
-| `remotion/` (new directory) | Full Remotion project with 6 scenes |
-| `/mnt/documents/jumtunes-demo.mp4` | Final rendered 4K video output |
+| `remotion/public/images/ai-avatar.png` | User's uploaded avatar |
+| `remotion/public/images/jumtunes-logo.png` | Real logo from `public/images/jumtunes-logo-test.png` |
+| `remotion/public/voiceover/narration.mp3` | Generated ElevenLabs voiceover |
+| `remotion/scripts/generate-voiceover.mjs` | New — TTS generation script |
+| `remotion/src/scenes/HookScene.tsx` | Rewrite — real logo intro |
+| `remotion/src/scenes/AvatarScene.tsx` | Rewrite — avatar performance with UI chrome |
+| `remotion/src/scenes/UploadScene.tsx` | Rewrite → FeatureMontageScene (Create/Share/GetPaid) |
+| `remotion/src/scenes/CoverArtScene.tsx` | Rewrite → PerformanceScene (full avatar performance) |
+| `remotion/src/scenes/VideoGenScene.tsx` | Remove |
+| `remotion/src/scenes/ClosingScene.tsx` | Rewrite — profile card with real logo |
+| `remotion/src/components/CaptionOverlay.tsx` | New — synced caption text |
+| `remotion/src/components/EqualizerBars.tsx` | New — animated equalizer |
+| `remotion/src/MainVideo.tsx` | New scene structure + Audio + CaptionOverlay |
+| `remotion/scripts/render-remotion.mjs` | Remove `muted: true` |
 
-No changes to the JumTunes app codebase.
+### Not Touched
+App codebase — no changes to JumTunes platform code.
 
