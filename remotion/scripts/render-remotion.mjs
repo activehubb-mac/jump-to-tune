@@ -20,25 +20,27 @@ const browser = await openBrowser("chrome", {
   chromeMode: "chrome-for-testing",
 });
 
-console.log("Selecting composition...");
+const compositionId = process.argv[2] || "tour";
+console.log(`Selecting composition: ${compositionId}...`);
 const composition = await selectComposition({
   serveUrl: bundled,
-  id: "main",
+  id: compositionId,
   puppeteerInstance: browser,
 });
 console.log("Composition:", composition.width, "x", composition.height, "@", composition.fps, "fps", composition.durationInFrames, "frames");
 
-console.log("Rendering...");
+const outputPath = process.argv[3] || "/mnt/documents/jumtunes-tour.mp4";
+console.log(`Rendering to ${outputPath}...`);
 await renderMedia({
   composition,
   serveUrl: bundled,
   codec: "h264",
-  outputLocation: "/mnt/documents/jumtunes-demo-v2.mp4",
+  outputLocation: outputPath,
   puppeteerInstance: browser,
   muted: true,
   concurrency: 1,
   crf: 18,
 });
 
-console.log("Render complete! Output: /mnt/documents/jumtunes-demo.mp4");
+console.log(`Render complete! Output: ${outputPath}`);
 await browser.close({ silent: false });
