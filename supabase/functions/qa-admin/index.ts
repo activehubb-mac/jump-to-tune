@@ -133,6 +133,19 @@ serve(async (req: Request) => {
           return new Response(JSON.stringify({ error: "Not a test user - cannot delete" }), { status: 400, headers: corsHeaders });
         }
 
+        // Clean up dependent data first
+        await supabaseAdmin.from('credit_wallets').delete().eq('user_id', targetUserId);
+        await supabaseAdmin.from('user_roles').delete().eq('user_id', targetUserId);
+        await supabaseAdmin.from('follows').delete().or(`follower_id.eq.${targetUserId},following_id.eq.${targetUserId}`);
+        await supabaseAdmin.from('notifications').delete().eq('user_id', targetUserId);
+        await supabaseAdmin.from('likes').delete().eq('user_id', targetUserId);
+        await supabaseAdmin.from('collection_bookmarks').delete().eq('user_id', targetUserId);
+        await supabaseAdmin.from('daily_tasks').delete().eq('user_id', targetUserId);
+        await supabaseAdmin.from('daily_bonus_claims').delete().eq('user_id', targetUserId);
+        await supabaseAdmin.from('fan_loyalty').delete().eq('fan_id', targetUserId);
+        await supabaseAdmin.from('subscriptions').delete().eq('user_id', targetUserId);
+        await supabaseAdmin.from('profiles').delete().eq('id', targetUserId);
+
         const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(targetUserId);
         if (deleteError) {
           return new Response(JSON.stringify({ success: false, error: deleteError.message }), {
@@ -146,18 +159,56 @@ serve(async (req: Request) => {
       }
 
       case "cleanup-all-test-users": {
-        const { data: users } = await supabaseAdmin.auth.admin.listUsers({ perPage: 100 });
-        const testUsers = (users?.users || []).filter((u: any) => u.user_metadata?.is_test_user === true);
-        
-        let deleted = 0;
-        let errors = 0;
-        for (const u of testUsers) {
-          const { error } = await supabaseAdmin.auth.admin.deleteUser(u.id);
-          if (error) errors++;
-          else deleted++;
+        // Paginate to get ALL test users
+        let allTestUsers: any[] = [];
+        let page = 1;
+        while (true) {
+          const { data: users } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 100 });
+          const batch = (users?.users || []).filter((u: any) => u.user_metadata?.is_test_user === true);
+          allTestUsers.push(...batch);
+          if ((users?.users || []).length < 100) break;
+          page++;
         }
 
-        return new Response(JSON.stringify({ success: true, deleted, errors, total: testUsers.length }), {
+        let deleted = 0;
+        let errors = 0;
+        const errorMessages: string[] = [];
+
+        for (const u of allTestUsers) {
+          try {
+            // Clean up dependent data first
+            await supabaseAdmin.from('credit_wallets').delete().eq('user_id', u.id);
+            await supabaseAdmin.from('user_roles').delete().eq('user_id', u.id);
+            await supabaseAdmin.from('follows').delete().or(`follower_id.eq.${u.id},following_id.eq.${u.id}`);
+            await supabaseAdmin.from('notifications').delete().eq('user_id', u.id);
+            await supabaseAdmin.from('likes').delete().eq('user_id', u.id);
+            await supabaseAdmin.from('collection_bookmarks').delete().eq('user_id', u.id);
+            await supabaseAdmin.from('daily_tasks').delete().eq('user_id', u.id);
+            await supabaseAdmin.from('daily_bonus_claims').delete().eq('user_id', u.id);
+            await supabaseAdmin.from('fan_loyalty').delete().eq('fan_id', u.id);
+            await supabaseAdmin.from('subscriptions').delete().eq('user_id', u.id);
+            await supabaseAdmin.from('profiles').delete().eq('id', u.id);
+
+            const { error } = await supabaseAdmin.auth.admin.deleteUser(u.id);
+            if (error) {
+              errors++;
+              if (errorMessages.length < 3) errorMessages.push(`${u.email}: ${error.message}`);
+            } else {
+              deleted++;
+            }
+          } catch (e: any) {
+            errors++;
+            if (errorMessages.length < 3) errorMessages.push(`${u.email}: ${e.message}`);
+          }
+        }
+
+        return new Response(JSON.stringify({
+          success: errors === 0,
+          deleted,
+          errors,
+          total: allTestUsers.length,
+          errorSamples: errorMessages,
+        }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
