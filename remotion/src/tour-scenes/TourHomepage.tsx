@@ -10,94 +10,91 @@ export const TourHomepage: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Title
   const titleOp = interpolate(frame, [0, 25], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const titleY = interpolate(frame, [0, 25], [20, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
-  // Screenshot with Ken Burns
-  const screenScale = interpolate(frame, [0, 330], [1.0, 1.05], { extrapolateRight: "clamp" });
-  const screenOp = interpolate(frame, [20, 50], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const screenY = interpolate(frame, [20, 50], [40, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  // Screenshot with slow vertical pan (scrolling effect)
+  const screenOp = interpolate(frame, [15, 40], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const screenY = interpolate(frame, [15, 40], [30, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const screenPanY = interpolate(frame, [0, 300], [0, -60], { extrapolateRight: "clamp" });
+  const screenScale = interpolate(frame, [0, 300], [1.0, 1.06], { extrapolateRight: "clamp" });
 
-  // Highlight glow pulsing on the screenshot
-  const highlightOp = interpolate(Math.sin(frame * 0.04), [-1, 1], [0, 0.15]);
+  // Feature callouts staggered
+  const callouts = [
+    { text: "Trending Tracks", icon: "🔥", delay: 50, y: 200 },
+    { text: "Featured Artist Spotlight", icon: "⭐", delay: 100, y: 260 },
+    { text: "AI-Powered Discovery", icon: "🤖", delay: 150, y: 320 },
+    { text: "Curated Playlists", icon: "🎵", delay: 200, y: 380 },
+  ];
 
-  // Feature callouts
-  const callout1Op = interpolate(frame, [80, 110], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const callout2Op = interpolate(frame, [140, 170], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const callout3Op = interpolate(frame, [200, 230], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  // Real artist avatar floating in
+  const artistOp = interpolate(frame, [120, 150], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const artistScale = spring({ frame: frame - 120, fps, config: { damping: 15 } });
 
   return (
     <AbsoluteFill style={{ background: "linear-gradient(180deg, #0a0a0a 0%, #111 50%, #0a0a0a 100%)" }}>
       {/* Section title */}
       <div style={{
-        position: "absolute", top: 40, left: 80,
+        position: "absolute", top: 36, left: 70,
         opacity: titleOp, transform: `translateY(${titleY}px)`,
       }}>
-        <div style={{ fontFamily: playfair, fontSize: 42, fontWeight: 700, color: "#B8A675" }}>
-          🏠 Homepage
+        <div style={{ fontFamily: playfair, fontSize: 40, fontWeight: 700, color: "#B8A675" }}>
+          Homepage
         </div>
-        <div style={{ fontFamily: inter, fontSize: 20, color: "rgba(255,255,255,0.4)", marginTop: 8, letterSpacing: 2 }}>
+        <div style={{ fontFamily: inter, fontSize: 18, color: "rgba(255,255,255,0.4)", marginTop: 6, letterSpacing: 2 }}>
           YOUR MUSIC COMMAND CENTER
         </div>
       </div>
 
-      {/* Screenshot */}
+      {/* Screenshot with vertical scroll pan */}
       <div style={{
-        position: "absolute", top: 130, left: 60, right: 60, bottom: 40,
+        position: "absolute", top: 120, left: 50, right: 420, bottom: 30,
         borderRadius: 16, overflow: "hidden",
         border: "2px solid rgba(184,166,117,0.2)",
         boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
         opacity: screenOp,
-        transform: `translateY(${screenY}px) scale(${screenScale})`,
+        transform: `translateY(${screenY}px)`,
       }}>
-        <Img src={staticFile("screenshots/home.png")} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-
-        {/* Gold overlay glow */}
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "radial-gradient(ellipse at 70% 30%, rgba(184,166,117,0.1) 0%, transparent 60%)",
-          opacity: highlightOp,
-        }} />
-      </div>
-
-      {/* Feature callouts - floating labels */}
-      <div style={{
-        position: "absolute", right: 80, top: 200,
-        opacity: callout1Op, display: "flex", alignItems: "center", gap: 12,
-      }}>
-        <div style={{
-          padding: "10px 20px", borderRadius: 10,
-          background: "rgba(184,166,117,0.15)", border: "1px solid rgba(184,166,117,0.3)",
-          fontFamily: inter, fontSize: 16, fontWeight: 600, color: "#B8A675",
-        }}>
-          🔥 Trending Tracks
+        <div style={{ transform: `translateY(${screenPanY}px) scale(${screenScale})`, transformOrigin: "top center" }}>
+          <Img src={staticFile("screenshots/home.png")} style={{ width: "100%", objectFit: "cover" }} />
         </div>
       </div>
 
-      <div style={{
-        position: "absolute", right: 80, top: 260,
-        opacity: callout2Op, display: "flex", alignItems: "center", gap: 12,
-      }}>
-        <div style={{
-          padding: "10px 20px", borderRadius: 10,
-          background: "rgba(184,166,117,0.15)", border: "1px solid rgba(184,166,117,0.3)",
-          fontFamily: inter, fontSize: 16, fontWeight: 600, color: "#B8A675",
-        }}>
-          ⭐ Featured Artist Spotlight
-        </div>
-      </div>
+      {/* Feature callouts on right side */}
+      <div style={{ position: "absolute", right: 50, top: 140, width: 340 }}>
+        {callouts.map((c) => {
+          const op = interpolate(frame, [c.delay, c.delay + 20], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+          const x = interpolate(frame, [c.delay, c.delay + 20], [40, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+          return (
+            <div key={c.text} style={{
+              opacity: op, transform: `translateX(${x}px)`,
+              padding: "14px 22px", borderRadius: 12, marginBottom: 16,
+              background: "linear-gradient(135deg, rgba(26,26,26,0.9) 0%, rgba(18,18,18,0.9) 100%)",
+              border: "1px solid rgba(184,166,117,0.2)",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+              display: "flex", alignItems: "center", gap: 14,
+            }}>
+              <span style={{ fontSize: 28 }}>{c.icon}</span>
+              <span style={{ fontFamily: inter, fontSize: 17, fontWeight: 600, color: "#B8A675" }}>{c.text}</span>
+            </div>
+          );
+        })}
 
-      <div style={{
-        position: "absolute", right: 80, top: 320,
-        opacity: callout3Op, display: "flex", alignItems: "center", gap: 12,
-      }}>
+        {/* Real artist card */}
         <div style={{
-          padding: "10px 20px", borderRadius: 10,
-          background: "rgba(184,166,117,0.15)", border: "1px solid rgba(184,166,117,0.3)",
-          fontFamily: inter, fontSize: 16, fontWeight: 600, color: "#B8A675",
+          opacity: artistOp, transform: `scale(${0.9 + artistScale * 0.1})`,
+          marginTop: 20, padding: "16px 20px", borderRadius: 16,
+          background: "linear-gradient(135deg, rgba(184,166,117,0.08) 0%, rgba(20,20,20,0.95) 100%)",
+          border: "1px solid rgba(184,166,117,0.25)",
+          display: "flex", alignItems: "center", gap: 16,
         }}>
-          🤖 AI-Powered Discovery
+          <div style={{ width: 56, height: 56, borderRadius: "50%", overflow: "hidden", border: "2px solid rgba(184,166,117,0.3)" }}>
+            <Img src={staticFile("images/real-artist-1.jpg")} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+          <div>
+            <div style={{ fontFamily: inter, fontSize: 16, fontWeight: 600, color: "#fff" }}>DFG Prodigy</div>
+            <div style={{ fontFamily: inter, fontSize: 13, color: "rgba(255,255,255,0.4)" }}>Featured Artist • Killa Season</div>
+          </div>
         </div>
       </div>
     </AbsoluteFill>
