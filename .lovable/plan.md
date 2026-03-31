@@ -1,93 +1,89 @@
 
 
-## Fix QA Reset — Test User Cleanup Failing
+## 4K Demo Ad Video — "Build My Artist" Flow
 
-### Problem
-The "Reset All Data" button partially works: dummy assets (204) and test runs (204) delete fine. But `cleanup-all-test-users` fails on all 98 test users (`deleted: 0, errors: 98`). The error from `deleteUser` is silently swallowed — we don't know the specific failure reason.
+### What We're Building
+A 30-second, 9:16 vertical (2160×3840), dark luxury cinematic demo video rendered via Remotion. It walks through the Build My Artist journey: creating an avatar → uploading a track → generating cover art → generating a video — all presented as if happening in real-time within JumTunes.
 
-Additionally, `listUsers({ perPage: 100 })` only fetches 100 users max per page, so if more than 100 test users accumulate, some won't even be attempted.
+### Creative Direction
 
-### Root Cause (likely)
-Supabase `auth.admin.deleteUser` fails when the user has related rows in tables with foreign key constraints that don't cascade (e.g., `profiles`, `credit_wallets`, `qa_test_runs.test_user_id`, etc.). The function doesn't clean up dependent data before attempting deletion. It also doesn't log the actual error message, making debugging blind.
+**Movement: "Silent Studio Cinema"**
+- Dark backgrounds (#141414), soft gold (#B8A675) accents, warm charcoal (#6B6560) secondary
+- Slow reveals, dramatic scale shifts, parallax depth
+- Gold light leaks and subtle grain texture
+- Typography: Inter (clean body) + Playfair Display (editorial headlines)
 
-### Plan
+**Motion system:**
+- Elements enter via scale-up from 0.95 + fade (smooth spring, damping: 200)
+- Scene transitions: wipe or cross-fade via `@remotion/transitions`
+- Accent moments: spring with slight overshoot (damping: 15)
+- Persistent floating gold particles throughout
 
-**File: `supabase/functions/qa-admin/index.ts`**
+### Scene Breakdown (30s @ 30fps = 900 frames)
 
-1. **Log and return error details** in `cleanup-all-test-users` — capture the actual error message from each `deleteUser` call so we can see what's blocking deletion.
+| Scene | Frames | Content |
+|---|---|---|
+| 1. Hook | 0–120 | Dark void → gold particle burst → "Build Your Artist" title fades in with JumTunes wordmark |
+| 2. Avatar Creation | 120–330 | AI-generated avatar photo scales in like it's being created. Simulated UI frame around it. "Create Your Identity" text |
+| 3. Upload Track | 330–480 | Waveform animation draws across screen. Track title + artist name appear. "Upload Your Music" |
+| 4. Cover Art | 480–660 | AI-generated cover art reveals with a cinematic unblur effect. "Generate Cover Art" |
+| 5. Video Generation | 660–810 | Simulated video frames cascade/flip. "Create Your Video" |
+| 6. Closing | 810–900 | All assets compose into a final artist profile card. JumTunes logo. Gold shimmer. |
 
-2. **Clean up dependent data before deleting users** — before calling `deleteUser`, delete related rows from tables that reference `auth.users`:
-   - `profiles` (user_id)
-   - `credit_wallets` (user_id)
-   - `user_roles` (user_id)
-   - `followers` (follower_id or following_id)
-   - Any other tables with FK to auth.users
+### Asset Generation (Pre-render step)
+Before building the Remotion project, I'll use the AI image generation skill to create:
+1. **Avatar photo** — stylized artist portrait, dark/moody lighting
+2. **Cover art** — album artwork matching JumTunes aesthetic
+3. **UI mockup elements** — simulated phone frames / UI chrome (built in code as SVG/CSS)
 
-3. **Paginate user listing** — loop through pages to handle >100 test users.
+### Technical Setup
 
-4. **Add error summary to response** — return the first few error messages so the admin UI can display what went wrong.
-
-Changes in `cleanup-all-test-users` case (lines 148-163):
-
-```typescript
-case "cleanup-all-test-users": {
-  // Paginate to get ALL test users
-  let allTestUsers: any[] = [];
-  let page = 1;
-  while (true) {
-    const { data: users } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 100 });
-    const batch = (users?.users || []).filter((u: any) => u.user_metadata?.is_test_user === true);
-    allTestUsers.push(...batch);
-    if ((users?.users || []).length < 100) break;
-    page++;
-  }
-
-  let deleted = 0;
-  let errors = 0;
-  const errorMessages: string[] = [];
-
-  for (const u of allTestUsers) {
-    try {
-      // Clean up dependent data first
-      await supabaseAdmin.from('credit_wallets').delete().eq('user_id', u.id);
-      await supabaseAdmin.from('user_roles').delete().eq('user_id', u.id);
-      await supabaseAdmin.from('followers').delete().or(`follower_id.eq.${u.id},following_id.eq.${u.id}`);
-      await supabaseAdmin.from('notifications').delete().eq('user_id', u.id);
-      await supabaseAdmin.from('profiles').delete().eq('id', u.id);
-
-      const { error } = await supabaseAdmin.auth.admin.deleteUser(u.id);
-      if (error) {
-        errors++;
-        if (errorMessages.length < 3) errorMessages.push(`${u.email}: ${error.message}`);
-      } else {
-        deleted++;
-      }
-    } catch (e: any) {
-      errors++;
-      if (errorMessages.length < 3) errorMessages.push(`${u.email}: ${e.message}`);
-    }
-  }
-
-  return new Response(JSON.stringify({
-    success: errors === 0,
-    deleted,
-    errors,
-    total: allTestUsers.length,
-    errorSamples: errorMessages,
-  }), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
+**Project structure:**
+```
+remotion/
+  src/
+    index.ts
+    Root.tsx
+    MainVideo.tsx
+    scenes/
+      HookScene.tsx
+      AvatarScene.tsx
+      UploadScene.tsx
+      CoverArtScene.tsx
+      VideoGenScene.tsx
+      ClosingScene.tsx
+    components/
+      GoldParticles.tsx
+      PhoneFrame.tsx
+      WaveformAnimation.tsx
+  public/
+    images/
+      avatar.png
+      cover-art.png
+  scripts/
+    render-remotion.mjs
 ```
 
-**Also update `cleanup-test-user` (single)** with the same dependent-data cleanup pattern before `deleteUser`.
+**Composition:** 2160×3840, 30fps, 900 frames, codec h264, CRF 18 for quality.
+
+### Rendering
+Programmatic render via `scripts/render-remotion.mjs` to `/mnt/documents/jumtunes-demo.mp4`.
+
+### Steps
+1. Generate avatar + cover art images via AI gateway
+2. Scaffold Remotion project with all scenes
+3. Build persistent layers (gold particles, grain overlay)
+4. Build 6 scenes with staggered animations
+5. Wire with TransitionSeries
+6. Spot-check key frames
+7. Render final 4K MP4
 
 ### Files Changed
 
-| File | Change |
+| Location | Change |
 |---|---|
-| `supabase/functions/qa-admin/index.ts` | Add dependent data cleanup before user deletion, pagination, error reporting |
+| `remotion/` (new directory) | Full Remotion project with 6 scenes |
+| `/mnt/documents/jumtunes-demo.mp4` | Final rendered 4K video output |
 
-### Not Touched
-- Payments, credits, AI tools, store, frontend components
+No changes to the JumTunes app codebase.
 
