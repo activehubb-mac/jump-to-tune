@@ -40,7 +40,10 @@ async function checkVersion(): Promise<boolean> {
     if (v !== __APP_BUILD_VERSION__) {
       console.log('[PWA] Bundle mismatch — forcing update');
       localStorage.setItem('app-version', v);
-      await nukeCachesAndReload();
+      const reloaded = await nukeCachesAndReload();
+      if (!reloaded) return false;
+      return true;
+    }
       return true;
     }
 
