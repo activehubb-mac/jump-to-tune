@@ -1,146 +1,91 @@
 
-## Fix App Reload Loop + Rebuild Tour as a True Full-AI Platform Demo
 
-### What I found
-There are two separate issues:
+## Full AI-Guided Tour of JumTunes — Complete Rebuild
 
-1. **The app is stuck in a reload loop, which is why you can’t sign in**
-   - `src/main.tsx` compares `__APP_BUILD_VERSION__` with `/version.json`
-   - Your console logs show a permanent mismatch:
-     - network version: `mndyzdp0`
-     - bundle version: `mne1bhbd`
-   - That triggers `nukeCachesAndReload()` over and over, so the page never settles enough to load auth
+### Root Cause of 14-Second Video
+The render script (`render-remotion.mjs` line 51) hardcodes `demo-narration.mp3` as the audio source for ALL compositions — including the tour. The tour's `narration.mp3` is only ~14 seconds of audio. The composition declares 2382 frames (79s) but `ffmpeg -shortest` truncates the output to match the shortest stream — the 14-second audio. Result: 14-second video.
 
-2. **The current tour video is too generic for what you want**
-   - Timing is hard-coded and not aligned to narration
-   - `TourGrowMyMusic.tsx` uses generic emoji cards instead of the real tabbed tool groups
-   - The tour does not yet leverage your actual account assets even though usable assets already exist in Supabase:
-     - real AI identity avatars from `artist_identities`
-     - your real uploaded track (`Birthday`)
-     - real generated avatar-performance videos from `ai_video_jobs`
-     - real cover art from your track/profile setup
+### What This Rebuild Delivers
+A **2.5-minute** (4500 frames at 30fps) cinematic walkthrough with:
+- Full ElevenLabs narration (~150 seconds) covering every major feature
+- 10 scenes using the user's uploaded AI avatar images throughout
+- Proper audio muxing so video length matches narration
 
-### Plan
+### Narration Script (for ElevenLabs TTS generation)
 
-#### 1) Fix the page loading / sign-in blocker first
-Update the PWA version-check logic in `src/main.tsx` so version mismatch does **not** trap users in an infinite reload loop.
+> Welcome to JumTunes — the first AI music interaction platform. This is where creators turn ideas into real music, real visuals, and real income. Let's take a full tour.
+>
+> The homepage is your command center. Trending tracks, featured artist spotlights, curated playlists — all powered by AI discovery. Find new music or get discovered.
+>
+> Grow My Music is the creative engine. Three powerful sections: Go Viral gives you the AI Video Studio and Viral Generator for TikTok and Reels clips. Build Your Artist includes the AI Identity Builder — create a stunning AI avatar from a selfie. Generate cover art, plan releases, and build your brand. Grow Your Reach helps you curate playlists and expand your audience.
+>
+> The AI Identity Builder transforms a simple photo into a professional animated artist avatar. Choose from Quick, Style, or Full generation modes — each producing unique, stunning results. Your avatar becomes the face of your music across JumTunes.
+>
+> The AI Video Studio brings your avatar to life. Generate cinematic music videos, lyric videos, or short-form viral clips — all synced to your music. Your AI identity performs in every video.
+>
+> Upload your music in seconds. Every track gets a unique Recording ID — JT-2025 format — with timestamp protection and hash verification. Your music is protected from day one.
+>
+> Go DJ is the curator economy. Build mix sessions, compete on leaderboards, and earn from fan submissions. DJs and curators become part of the ecosystem.
+>
+> Artists earn eighty-five percent of every sale. That's the highest split in the industry. Every new creator gets a thirty-day free trial and fifteen free AI credits to explore every tool.
+>
+> Create. Share. Get paid. This is JumTunes — the future of music starts here. Join us at jumtunes dot com.
 
-Implementation:
-- Add a **single-attempt reload guard** in `sessionStorage`
-- If the app already tried a forced refresh once during the session, stop reloading and render the app anyway
-- Make the fallback behavior “render app + let SW update naturally” instead of repeatedly nuking caches
-- Keep service worker updates, but prevent `controllerchange` / mismatch checks from causing endless refreshes
+### Scene Structure (10 scenes, ~4500 frames total)
 
-Likely files:
-- `src/main.tsx`
-- possibly `vite.config.ts` if the current version-file generation approach needs to be softened
+| # | Scene | Frames | Content |
+|---|---|---|---|
+| 1 | Intro | 450 | Logo, tagline, avatar gallery showcase (user's uploaded images) |
+| 2 | Homepage | 400 | Screenshot with scroll pan, discovery callouts |
+| 3 | Grow My Music Hub | 500 | 3-phase tab walkthrough (Go Viral → Build Artist → Grow Reach) |
+| 4 | AI Identity Builder | 500 | Before/after avatar transformation using uploaded images |
+| 5 | AI Video Studio | 400 | Video generation showcase with avatar performing |
+| 6 | Upload & Protection | 380 | Upload flow, Recording ID, protection badges |
+| 7 | Go DJ | 380 | Mix sessions, leaderboards, equalizer bars |
+| 8 | Earnings | 420 | 85% split counter, trial, credits |
+| 9 | Avatar Showcase | 350 | Rotating gallery of all uploaded AI avatars |
+| 10 | Closing | 400 | Create. Share. Get Paid. + jumtunes.com |
 
-Result:
-- preview loads again
-- `/auth` becomes reachable
-- you can sign in normally
+Total with 9 transitions (18 frames each): 4180 - 162 overlap = ~4018 frames. Pad closing to hit ~4500.
 
-#### 2) Rebuild the tour around your real JumTunes assets
-Use the actual platform data already tied to your account instead of generic placeholders.
+### Avatar Images Used Throughout
+Copy all 7 uploaded images into `remotion/public/images/`:
+- `avatar-flames.png` (close-up with flames background)
+- `avatar-street.png` (full body street scene)
+- `avatar-robot.png` (robot DJ performer)
+- `avatar-male-singer.png` (male vocalist performing)
+- `avatar-female-singer.png` (female vocalist)
+- `avatar-braids-singer.png` (braids vocalist)
+- `avatar-dj.png` (DJ at turntables)
 
-Assets I will pull into the tour:
-- your real AI artist identity image(s) from `artist_identities`
-- your real track cover art from `tracks.cover_art_url`
-- your real avatar-performance clip from `ai_video_jobs.output_url`
-- real JumTunes logo and actual page screenshots/layouts
+These appear as:
+- Floating gallery in Intro scene
+- Before/after in Identity Builder scene
+- Performing artist in Video Studio scene
+- Full showcase gallery in Avatar Showcase scene
+- Background accents in other scenes
 
-This avoids needing you to sign in just to fetch assets for the video build.
-
-#### 3) Redesign the tour to feel like a full AI music platform walkthrough
-Instead of a simple screenshot slideshow, rebuild it as a premium product tour with feature-by-feature storytelling:
-
-```text
-Intro
-→ Homepage / discovery
-→ Grow My Music hub
-   → Go Viral
-   → Build Your Artist
-   → Grow Your Reach
-→ AI Identity creation
-→ Cover Art generation
-→ Video Studio / avatar performance
-→ Upload + protection
-→ Go DJ
-→ Earnings / credits / monetization
-→ Closing brand statement
-```
-
-The key change: it will feel like one connected creator journey, not separate slides.
-
-#### 4) Make “Grow My Music” detailed and accurate
-Rewrite `TourGrowMyMusic.tsx` so it shows the real hub structure:
-
-- **Go Viral**
-  - Video Studio
-  - Viral Generator
-- **Build Your Artist**
-  - Artist Drop
-  - Identity Builder
-  - Cover Art
-  - Release Builder
-- **Grow Your Reach**
-  - Playlist Builder
-
-Implementation approach:
-- animate tab highlights
-- zoom into each section of the real page
-- use premium callout cards with the actual tool names and value props
-- include your generated AI identity imagery inside the scene, not just the page shell
-
-#### 5) Re-sync narration, captions, and scene lengths properly
-The current `TourVideo.tsx` durations do not match the audio pacing.
-
-I’ll:
-- remap scene durations to the real narration beats
-- update `TourCaptionOverlay.tsx` so captions line up exactly with what’s on screen
-- add more mid-scene detail so the viewer always sees the feature being described
-- remove the “too fast / too slow” feeling by making pacing consistent and editorial
-
-#### 6) Upgrade the visuals so the tour feels elite
-Refine the motion system across all tour scenes:
-- slower camera pans on screenshots
-- deliberate zoom-ins on specific UI areas
-- richer gold/luxury overlays
-- cleaner hierarchy for titles and callouts
-- less generic floating badges, more product-detail framing
-- use your real AI visuals as featured inserts so the platform looks alive and creator-driven
-
-#### 7) Show the actual AI workflow using your account content
-Add a short sequence that specifically demonstrates:
-- AI identity/avatar already created from your account
-- your real cover art
-- your real generated performance video clip
-- your actual track context
-
-This will make the tour feel like a real JumTunes creator demo instead of a mockup.
-
-### Files likely to change
+### Technical Changes
 
 | File | Change |
 |---|---|
-| `src/main.tsx` | Stop infinite PWA reload loop so app/auth can load |
-| `vite.config.ts` | Possibly soften/update versioning behavior if needed |
-| `remotion/src/TourVideo.tsx` | Re-time all scenes to narration |
-| `remotion/src/tour-components/TourCaptionOverlay.tsx` | Re-sync captions to visuals |
-| `remotion/src/tour-scenes/TourGrowMyMusic.tsx` | Full rewrite with real hub tabs/details |
-| `remotion/src/tour-scenes/TourHomepage.tsx` | Better motion + product-detail framing |
-| `remotion/src/tour-scenes/TourUpload.tsx` | More detailed upload/protection walkthrough |
-| `remotion/src/tour-scenes/TourGoDJ.tsx` | Stronger feature storytelling |
-| `remotion/src/tour-scenes/TourEarnings.tsx` | Monetization/credits visuals with cleaner pacing |
-| `remotion/src/tour-scenes/TourIntro.tsx` | Stronger branded opening |
-| `remotion/src/tour-scenes/TourClosing.tsx` | Premium finish using JumTunes branding |
-| `remotion/public/...` | Real account-derived assets/screenshots used in the tour |
+| `remotion/public/images/avatar-*.png` | 7 new files — copied from uploads |
+| `remotion/public/voiceover/tour-narration.mp3` | New — full 2.5min ElevenLabs narration |
+| `remotion/src/Root.tsx` | Update tour composition to ~4500 frames |
+| `remotion/src/TourVideo.tsx` | 10 scenes, new Audio source pointing to `tour-narration.mp3` |
+| `remotion/src/tour-scenes/TourIntro.tsx` | Rewrite — avatar gallery showcase |
+| `remotion/src/tour-scenes/TourHomepage.tsx` | Enhanced with avatar accents |
+| `remotion/src/tour-scenes/TourGrowMyMusic.tsx` | Expanded 3-phase hub walkthrough |
+| `remotion/src/tour-scenes/TourIdentityBuilder.tsx` | New — avatar transformation scene |
+| `remotion/src/tour-scenes/TourVideoStudio.tsx` | New — video generation with avatar |
+| `remotion/src/tour-scenes/TourUpload.tsx` | Enhanced |
+| `remotion/src/tour-scenes/TourGoDJ.tsx` | Enhanced with DJ avatar |
+| `remotion/src/tour-scenes/TourEarnings.tsx` | Enhanced |
+| `remotion/src/tour-scenes/TourAvatarShowcase.tsx` | New — rotating avatar gallery |
+| `remotion/src/tour-scenes/TourClosing.tsx` | Rewrite with avatar accents |
+| `remotion/src/tour-components/TourCaptionOverlay.tsx` | Full re-sync to new scene timings |
+| `remotion/scripts/render-remotion.mjs` | Fix audio path: use `tour-narration.mp3` for tour comp, `demo-narration.mp3` for main comp |
 
-### Important note
-You do **not** need to sign in first for me to plan the new tour content. I already found real AI-generated assets associated with your account in the connected Supabase data, so I can base the new tour on those while also fixing the login blocker.
+### Output
+`/mnt/documents/jumtunes-tour-v3.mp4` — 1920x1080, ~2.5 minutes, full narration, 10 detailed scenes with real AI avatars
 
-### End result
-After implementation, you’ll have:
-1. a working preview again so sign-in loads normally
-2. a rebuilt JumTunes tour that feels like a **full AI music platform walkthrough**
-3. a more premium, detailed, and believable demo using **your real generated avatar/track/video assets**
